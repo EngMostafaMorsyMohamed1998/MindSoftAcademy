@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// PostgreSQL / Supabase.
+// For local Postgres: postgresql://USER:PASSWORD@localhost:5432/baccalaureate?schema=public
+// For Supabase, set DATABASE_URL to the pooled URI (port 6543) and DIRECT_URL to the direct URI (port 5432).
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  points    Int      @default(0)
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+
+  quizResults QuizResult[]
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Course {
+  id          String    @id @default(uuid())
+  title       String // e.g. الرياضيات, الفيزياء
+  description String?
+  capsules    Capsule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([title])
+}
+
+model Capsule {
+  id         String       @id @default(uuid())
+  title      String
+  videoUrl   String
+  duration   Int          @default(15) // minutes; 2bac capsules are 15 by default
+  courseId   String
+  course     Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions  Question[]
+  quizResults QuizResult[]
+
+  createdAt DateTime @default(now())
+
+  @@index([courseId])
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  text          String
+  options       String[] // ["option A", "option B", "option C", "option D"]
+  correctAnswer String // "A" | "B" | "C" | "D" (index 0–3)
+  explanation   String?
+  capsuleId     String
+  capsule       Capsule  @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+
+  @@index([capsuleId])
+}
+
+model QuizResult {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  capsuleId      String
+  capsule        Capsule  @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+  score          Int
+  totalQuestions Int
+  attemptedAt    DateTime @default(now())
+
+  @@index([userId, attemptedAt])
+  @@index([capsuleId])
+  @@index([userId, capsuleId])
+}
