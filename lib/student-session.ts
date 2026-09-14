@@ -15,8 +15,10 @@ export async function getStudentSession(): Promise<(StudentSession & { points: n
   const session = readStudentToken(store.get(STUDENT_COOKIE)?.value);
   if (!session) return null;
   const record = await getCodeById(session.id);
-  if (!record) return null;
-  return { ...session, name: record.name, phone: record.phone, points: record.points };
+  if (record) {
+    return { ...session, name: record.name, phone: record.phone, points: record.points };
+  }
+  return { ...session, points: 0 };
 }
 
 export async function setStudentCookie(record: AccessCode) {

@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { createHmac, randomBytes } from "crypto";
 import { readStore, writeStore } from "@/lib/access-store-io";
 
 export type AccessCode = {
@@ -73,13 +73,48 @@ export function phonesMatch(a: string, b: string): boolean {
   return left === right || left.endsWith(right) || right.endsWith(left);
 }
 
-function makeCode(): string {
-  const bytes = randomBytes(6);
+function accessSecret(): string {
+  return process.env.TEACHER_PIN || "mostafa2026";
+}
+
+function digestBytes(kind: "code" | "id", name: string, phone: string): Buffer {
+  return createHmac("sha256", accessSecret()).update(
+    `${kind}|${normalizeName(name)}|${normalizePhone(phone)}`,
+  ).digest();
+}
+
+export function codeForStudent(name: string, phone: string): string {
+  const digest = digestBytes("code", name, phone);
   let out = "";
   for (let i = 0; i < 6; i += 1) {
-    out += ALPHABET[bytes[i]! % ALPHABET.length];
+    out += ALPHABET[digest[i]! % ALPHABET.length];
   }
   return `MOST-${out}`;
+}
+
+export function idForStudent(name: string, phone: string): string {
+  return digestBytes("id", name, phone).toString("hex").slice(0, 16);
+}
+
+function normalizeCode(code: string): string {
+  return code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function recordFor(
+  name: string,
+  phone: string,
+  extra?: Partial<AccessCode>,
+): AccessCode {
+  return {
+    id: extra?.id ?? idForStudent(name, phone),
+    code: extra?.code ?? codeForStudent(name, phone),
+    name,
+    phone,
+    createdAt: extra?.createdAt ?? new Date().toISOString(),
+    usedAt: extra?.usedAt ?? null,
+    usedById: extra?.usedById ?? null,
+    points: extra?.points ?? 0,
+  };
 }
 
 export async function listCodes(): Promise<AccessCode[]> {
@@ -101,21 +136,18 @@ export async function issueCode(input: {
   }
 
   const store = await readStore();
-  let code = makeCode();
-  while (store.codes.some((item) => item.code === code)) {
-    code = makeCode();
+  const existing = store.codes.find(
+    (item) =>
+      phonesMatch(item.phone, phone) && normalizeName(item.name) === normalizeName(name),
+  );
+  if (existing) {
+    existing.code = codeForStudent(name, phone);
+    existing.id = existing.id || idForStudent(name, phone);
+    await writeStore(store);
+    return existing;
   }
 
-  const record: AccessCode = {
-    id: randomBytes(8).toString("hex"),
-    code,
-    name,
-    phone,
-    createdAt: new Date().toISOString(),
-    usedAt: null,
-    usedById: null,
-    points: 0,
-  };
+  const record = recordFor(name, phone);
   store.codes.unshift(record);
   await writeStore(store);
   return record;
@@ -126,23 +158,31 @@ export async function redeemCode(input: {
   phone: string;
   code: string;
 }): Promise<AccessCode> {
-  const code = input.code.trim().toUpperCase().replace(/\s+/g, "");
+  const name = input.name.trim();
+  const phone = normalizePhone(input.phone);
+  const code = normalizeCode(input.code);
+  const expected = normalizeCode(codeForStudent(name, phone));
   const store = await readStore();
-  const record = store.codes.find((item) => item.code === code);
+  const record =
+    store.codes.find((item) => normalizeCode(item.code) === code) ??
+    (code === expected ? recordFor(name, phone) : null);
+
   if (!record) {
     throw new Error("NOT_FOUND");
   }
-  if (!phonesMatch(record.phone, input.phone)) {
+  if (!phonesMatch(record.phone, phone)) {
     throw new Error("PHONE_MISMATCH");
   }
-  if (normalizeName(record.name) !== normalizeName(input.name)) {
+  if (normalizeName(record.name) !== normalizeName(name)) {
     throw new Error("NAME_MISMATCH");
   }
-  if (record.usedAt) {
-    return record;
+  if (!record.usedAt) {
+    record.usedAt = new Date().toISOString();
+    record.usedById = record.id;
   }
-  record.usedAt = new Date().toISOString();
-  record.usedById = record.id;
+  if (!store.codes.some((item) => item.id === record.id)) {
+    store.codes.unshift(record);
+  }
   await writeStore(store);
   return record;
 }
