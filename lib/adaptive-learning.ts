@@ -202,7 +202,7 @@ export async function getRecommendedCapsule(
   }
 
   const sequence = capsule.course.capsules;
-  const index = sequence.findIndex((item) => item.id === capsule.id);
+  const index = sequence.findIndex((item: { id: string }) => item.id === capsule.id);
 
   if (actionType === "ADVANCE") {
     const next = index >= 0 ? sequence[index + 1] : undefined;
@@ -232,10 +232,10 @@ export async function getRecommendedCapsule(
   const earlier = index > 0 ? sequence.slice(0, index) : [];
   const best = await bestScoresByCapsule(
     userId,
-    earlier.map((item) => item.id),
+    earlier.map((item: { id: string }) => item.id),
   );
   const weakest = earlier.find(
-    (item) => (best.get(item.id) ?? 0) < ADVANCE_THRESHOLD,
+    (item: { id: string; title: string }) => (best.get(item.id) ?? 0) < ADVANCE_THRESHOLD,
   );
 
   if (weakest) {

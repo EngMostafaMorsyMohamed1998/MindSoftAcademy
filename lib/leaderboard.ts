@@ -1,4 +1,3 @@
-import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/current-user";
 
@@ -33,7 +32,7 @@ async function completedCapsulesByUser(
   });
 
   const counts = new Map<string, number>();
-  for (const pair of pairs) {
+  for (const pair of pairs as { userId: string }[]) {
     counts.set(pair.userId, (counts.get(pair.userId) ?? 0) + 1);
   }
   return counts;
@@ -42,21 +41,21 @@ async function completedCapsulesByUser(
 export async function getLeaderboard(limit = 10): Promise<LeaderboardData> {
   const [top, current, totalStudents] = await Promise.all([
     prisma.user.findMany({
-      where: { role: Role.STUDENT },
+      where: { role: "STUDENT" },
       orderBy: [{ points: "desc" }, { name: "asc" }],
       take: limit,
       select: { id: true, name: true, points: true },
     }),
     getCurrentUser(),
-    prisma.user.count({ where: { role: Role.STUDENT } }),
+    prisma.user.count({ where: { role: "STUDENT" } }),
   ]);
 
-  const ids = [...new Set([...top.map((user) => user.id), current?.id].filter(
+  const ids = [...new Set([...top.map((user: { id: string }) => user.id), current?.id].filter(
     (id): id is string => typeof id === "string",
   ))];
   const completed = await completedCapsulesByUser(ids);
 
-  const rows: LeaderboardRow[] = top.map((user, index) => ({
+  const rows: LeaderboardRow[] = top.map((user: { id: string; name: string; points: number }, index: number) => ({
     id: user.id,
     rank: index + 1,
     name: user.name,
@@ -70,7 +69,7 @@ export async function getLeaderboard(limit = 10): Promise<LeaderboardData> {
   if (!currentRow && current) {
     // Outside the top list: rank is everyone strictly ahead of them, plus one.
     const ahead = await prisma.user.count({
-      where: { role: Role.STUDENT, points: { gt: current.points } },
+      where: { role: "STUDENT", points: { gt: current.points } },
     });
     currentRow = {
       id: current.id,

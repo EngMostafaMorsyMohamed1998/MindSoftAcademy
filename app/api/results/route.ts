@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getRecommendedCapsule } from "@/lib/adaptive-learning";
 import { getCurrentUser } from "@/lib/current-user";
@@ -37,10 +36,11 @@ function parseAnswers(value: unknown): AnswerRecord | null {
 }
 
 function isPrismaNotFound(error: unknown): boolean {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    (error.code === "P2025" || error.code === "P2003")
-  );
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+  const code = "code" in error ? error.code : undefined;
+  return code === "P2025" || code === "P2003";
 }
 
 export async function POST(request: Request) {
