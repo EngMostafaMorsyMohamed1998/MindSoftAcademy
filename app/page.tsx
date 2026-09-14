@@ -6,7 +6,6 @@ import {
   ClipboardCheck,
   Gamepad2,
   Printer,
-  Wallet,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
@@ -87,10 +86,6 @@ export default async function Page() {
                   {t(locale, "ctaExplore")}
                 </a>
               </div>
-              <p className="mt-6 flex max-w-xl items-start gap-2 text-sm text-white/65">
-                <Wallet className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
-                {t(locale, "payNote")}
-              </p>
             </div>
 
             <div className="relative">

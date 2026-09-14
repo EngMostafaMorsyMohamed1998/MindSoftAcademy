@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
@@ -44,11 +43,6 @@ export default async function ActivatePage() {
           <div className="mt-6">
             <ActivateForm locale={locale} />
           </div>
-          <p className="mt-6 text-center text-xs text-white/45">
-            <Link href="/login" className="underline-offset-2 hover:underline">
-              {t(locale, "signInEmail")}
-            </Link>
-          </p>
         </div>
       </main>
     </div>

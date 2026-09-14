@@ -20,6 +20,9 @@ export default async function AdminPage() {
           <BrandMark locale={locale} href="/admin" />
           <div className="flex items-center gap-2">
             <HeaderTools locale={locale} theme={theme} />
+            <Link href="/admin/chat" className="text-xs font-semibold text-primary">
+              {t(locale, "chatTeacherInbox")}
+            </Link>
             <Link href="/" className="text-xs font-semibold text-primary">
               {t(locale, "back")}
             </Link>

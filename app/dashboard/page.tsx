@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, Gamepad2, Printer } from "lucide-react";
+import { BookOpen, ClipboardCheck, Gamepad2, MessageCircle, Printer } from "lucide-react";
 import { HeroRobot } from "@/components/hero-robot";
 import { CHAPTERS } from "@/lib/curriculum";
 import { getCurrentUser } from "@/lib/current-user";
@@ -20,6 +20,7 @@ export default async function DashboardHomePage() {
     { href: "/dashboard/exams", label: t(locale, "navExams"), icon: ClipboardCheck },
     { href: "/dashboard/games", label: t(locale, "navGames"), icon: Gamepad2 },
     { href: "/dashboard/booklet", label: t(locale, "navBooklet"), icon: Printer },
+    { href: "/dashboard/chat-to-teacher", label: t(locale, "navChat"), icon: MessageCircle },
   ];
 
   return (
@@ -38,7 +39,7 @@ export default async function DashboardHomePage() {
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {shortcuts.map((item) => {
           const Icon = item.icon;
           return (

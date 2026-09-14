@@ -1,5 +1,5 @@
 import { LogOut } from "lucide-react";
-import { signOutStudent } from "@/app/login/actions";
+import { signOutStudent } from "@/app/actions/session";
 
 export function LogoutButton({
   className,

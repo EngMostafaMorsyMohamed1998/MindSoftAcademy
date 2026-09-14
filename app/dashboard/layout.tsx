@@ -4,6 +4,7 @@ import { BRAND } from "@/lib/brand";
 import { getCurrentUser } from "@/lib/current-user";
 import { getLocale } from "@/lib/locale";
 import { getTheme } from "@/lib/theme";
+import { ChatToTeacherButton } from "@/components/chat-to-teacher-button";
 import { DashboardNav } from "./nav";
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default async function DashboardLayout({
         <main className="flex-1 px-4 py-6 pb-24 sm:px-6 lg:px-8 md:py-8 md:pb-8">
           {children}
         </main>
+        <ChatToTeacherButton locale={locale} />
       </div>
     </div>
   );

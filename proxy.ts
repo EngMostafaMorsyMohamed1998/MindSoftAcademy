@@ -7,8 +7,6 @@ import { isTeacherToken } from "@/lib/teacher-token";
 
 const PUBLIC_EXACT = new Set([
   "/",
-  "/login",
-  "/signup",
   "/logout",
   "/activate",
   "/favicon.ico",
@@ -18,9 +16,6 @@ const PUBLIC_PREFIXES = ["/_next", "/api", "/public"];
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT.has(pathname)) return true;
-  if (pathname.startsWith("/login/") || pathname.startsWith("/signup/")) {
-    return true;
-  }
   if (pathname.startsWith("/activate/")) return true;
   return PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
@@ -84,7 +79,11 @@ export const proxy = auth(async (request) => {
   const student = readStudentToken(request.cookies.get(STUDENT_COOKIE)?.value);
   const teacher = isTeacherToken(request.cookies.get(TEACHER_COOKIE)?.value);
 
-  if (isPublicPath(pathname) && !pathname.startsWith("/login") && pathname !== "/admin/login") {
+  if (pathname === "/login" || pathname.startsWith("/login/") || pathname === "/signup" || pathname.startsWith("/signup/")) {
+    return NextResponse.redirect(new URL("/activate", request.nextUrl.origin));
+  }
+
+  if (isPublicPath(pathname) && pathname !== "/admin/login") {
     return NextResponse.next();
   }
 
@@ -109,7 +108,7 @@ export const proxy = auth(async (request) => {
   }
 
   if (
-    (pathname === "/login" || pathname === "/activate" || pathname === "/admin/login") &&
+    (pathname === "/activate" || pathname === "/admin/login") &&
     hasAccess
   ) {
     return NextResponse.redirect(new URL("/dashboard", request.nextUrl.origin));

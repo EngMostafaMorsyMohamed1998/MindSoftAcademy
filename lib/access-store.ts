@@ -13,6 +13,27 @@ export type AccessCode = {
   points: number;
 };
 
+export type ChatMessage = {
+  id: string;
+  studentId: string;
+  studentName: string;
+  from: "student" | "teacher";
+  body: string;
+  createdAt: string;
+  readByTeacher: boolean;
+  readByStudent: boolean;
+};
+
+export type ChatThread = {
+  studentId: string;
+  studentName: string;
+  phone?: string;
+  messages: ChatMessage[];
+  lastAt: string;
+  unreadForTeacher: number;
+  unreadForStudent: number;
+};
+
 export type ExamSubmission = {
   id: string;
   chapterId: string;
@@ -29,6 +50,7 @@ export type ExamSubmission = {
 type StoreFile = {
   codes: AccessCode[];
   exams: ExamSubmission[];
+  messages: ChatMessage[];
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "access-store.json");
@@ -36,7 +58,7 @@ const STORE_PATH = path.join(process.cwd(), "data", "access-store.json");
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function emptyStore(): StoreFile {
-  return { codes: [], exams: [] };
+  return { codes: [], exams: [], messages: [] };
 }
 
 async function readStore(): Promise<StoreFile> {
@@ -46,6 +68,7 @@ async function readStore(): Promise<StoreFile> {
     return {
       codes: Array.isArray(parsed.codes) ? parsed.codes : [],
       exams: Array.isArray(parsed.exams) ? parsed.exams : [],
+      messages: Array.isArray(parsed.messages) ? parsed.messages : [],
     };
   } catch {
     return emptyStore();
@@ -189,4 +212,99 @@ export async function latestExam(
   return store.exams.find(
     (item) => item.studentId === studentId && item.chapterId === chapterId,
   );
+}
+
+function sanitizeMessage(body: string): string {
+  return body.replace(/\s+/g, " ").trim().slice(0, 800);
+}
+
+function threadFromMessages(
+  studentId: string,
+  studentName: string,
+  messages: ChatMessage[],
+  phone?: string,
+): ChatThread {
+  const mine = messages
+    .filter((item) => item.studentId === studentId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return {
+    studentId,
+    studentName,
+    phone,
+    messages: mine,
+    lastAt: mine.at(-1)?.createdAt ?? "",
+    unreadForTeacher: mine.filter((item) => item.from === "student" && !item.readByTeacher).length,
+    unreadForStudent: mine.filter((item) => item.from === "teacher" && !item.readByStudent).length,
+  };
+}
+
+export async function listStudentMessages(studentId: string): Promise<ChatMessage[]> {
+  const store = await readStore();
+  return store.messages
+    .filter((item) => item.studentId === studentId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+export async function listChatThreads(): Promise<ChatThread[]> {
+  const store = await readStore();
+  const byStudent = new Map<string, { name: string; phone?: string }>();
+  for (const code of store.codes) {
+    byStudent.set(code.id, { name: code.name, phone: code.phone });
+  }
+  for (const message of store.messages) {
+    if (!byStudent.has(message.studentId)) {
+      byStudent.set(message.studentId, { name: message.studentName });
+    }
+  }
+  return [...byStudent.entries()]
+    .map(([studentId, meta]) =>
+      threadFromMessages(studentId, meta.name, store.messages, meta.phone),
+    )
+    .filter((thread) => thread.messages.length > 0)
+    .sort((a, b) => (b.lastAt || "").localeCompare(a.lastAt || ""));
+}
+
+export async function appendChatMessage(input: {
+  studentId: string;
+  studentName: string;
+  from: "student" | "teacher";
+  body: string;
+}): Promise<ChatMessage | null> {
+  const body = sanitizeMessage(input.body);
+  if (!body || !input.studentId) return null;
+
+  const store = await readStore();
+  const message: ChatMessage = {
+    id: randomBytes(8).toString("hex"),
+    studentId: input.studentId,
+    studentName: input.studentName.trim() || "Student",
+    from: input.from,
+    body,
+    createdAt: new Date().toISOString(),
+    readByTeacher: input.from === "teacher",
+    readByStudent: input.from === "student",
+  };
+  store.messages.push(message);
+  await writeStore(store);
+  return message;
+}
+
+export async function markChatRead(
+  studentId: string,
+  reader: "student" | "teacher",
+): Promise<void> {
+  const store = await readStore();
+  let changed = false;
+  for (const message of store.messages) {
+    if (message.studentId !== studentId) continue;
+    if (reader === "teacher" && message.from === "student" && !message.readByTeacher) {
+      message.readByTeacher = true;
+      changed = true;
+    }
+    if (reader === "student" && message.from === "teacher" && !message.readByStudent) {
+      message.readByStudent = true;
+      changed = true;
+    }
+  }
+  if (changed) await writeStore(store);
 }

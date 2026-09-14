@@ -8,6 +8,7 @@ import {
   Gamepad2,
   Home,
   Library,
+  MessageCircle,
   Printer,
   Trophy,
   type LucideIcon,
@@ -34,6 +35,7 @@ function items(locale: Locale): {
     { href: "/dashboard/exams", label: t(locale, "navExams"), icon: ClipboardCheck },
     { href: "/dashboard/games", label: t(locale, "navGames"), icon: Gamepad2 },
     { href: "/dashboard/booklet", label: t(locale, "navBooklet"), icon: Printer },
+    { href: "/dashboard/chat-to-teacher", label: t(locale, "navChat"), icon: MessageCircle },
   ];
 }
 
@@ -126,7 +128,7 @@ export function DashboardNav({
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-accent bg-nav px-1 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-nav-fg md:hidden">
-        <ul className="grid grid-cols-6 gap-0.5">
+        <ul className="grid grid-cols-7 gap-0.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href, pathname);
