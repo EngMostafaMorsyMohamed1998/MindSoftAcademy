@@ -1,6 +1,5 @@
 import { randomBytes } from "crypto";
-import { mkdir, readFile, writeFile } from "fs/promises";
-import path from "path";
+import { readStore, writeStore } from "@/lib/access-store-io";
 
 export type AccessCode = {
   id: string;
@@ -47,38 +46,7 @@ export type ExamSubmission = {
   submittedAt: string;
 };
 
-type StoreFile = {
-  codes: AccessCode[];
-  exams: ExamSubmission[];
-  messages: ChatMessage[];
-};
-
-const STORE_PATH = path.join(process.cwd(), "data", "access-store.json");
-
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-function emptyStore(): StoreFile {
-  return { codes: [], exams: [], messages: [] };
-}
-
-async function readStore(): Promise<StoreFile> {
-  try {
-    const raw = await readFile(STORE_PATH, "utf8");
-    const parsed = JSON.parse(raw) as StoreFile;
-    return {
-      codes: Array.isArray(parsed.codes) ? parsed.codes : [],
-      exams: Array.isArray(parsed.exams) ? parsed.exams : [],
-      messages: Array.isArray(parsed.messages) ? parsed.messages : [],
-    };
-  } catch {
-    return emptyStore();
-  }
-}
-
-async function writeStore(store: StoreFile) {
-  await mkdir(path.dirname(STORE_PATH), { recursive: true });
-  await writeFile(STORE_PATH, JSON.stringify(store, null, 2), "utf8");
-}
 
 export function normalizeName(name: string): string {
   return name
