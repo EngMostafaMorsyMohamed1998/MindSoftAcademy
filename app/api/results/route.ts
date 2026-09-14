@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getRecommendedCapsule } from "@/lib/adaptive-learning";
+import { getCurrentUser } from "@/lib/current-user";
 import { gradeQuiz, type AnswerRecord } from "@/lib/grade-quiz";
 import { prisma } from "@/lib/prisma";
 
@@ -55,16 +56,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  const sessionUser = await getCurrentUser();
+  if (!sessionUser) {
+    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  }
+  const userId = sessionUser.id;
+
   const payload = body as Record<string, unknown>;
-  const userId = asNonEmptyString(payload.userId);
   const capsuleId = asNonEmptyString(payload.capsuleId);
   const answers = parseAnswers(payload.answers);
 
-  if (userId === null || capsuleId === null || answers === null) {
+  if (capsuleId === null || answers === null) {
     return NextResponse.json(
       {
         error:
-          "userId, capsuleId, and answers (a non-empty { [questionId]: selectedOption } map) are required.",
+          "capsuleId and answers (a non-empty { [questionId]: selectedOption } map) are required.",
       },
       { status: 400 },
     );
@@ -112,7 +118,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const knownIds = new Set(capsule.questions.map((question) => question.id));
+    const knownIds = new Set(
+      capsule.questions.map((question: { id: string }) => question.id),
+    );
     const unknownId = Object.keys(answers).find((id) => !knownIds.has(id));
     if (unknownId) {
       return NextResponse.json(
@@ -133,7 +141,7 @@ export async function POST(request: Request) {
           capsuleId,
           score: graded.score,
           totalQuestions: graded.total,
-        },
+        } as never,
       }),
       prisma.user.update({
         where: { id: userId },

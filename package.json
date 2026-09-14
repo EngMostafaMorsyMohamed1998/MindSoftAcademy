@@ -7,13 +7,19 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "books:fetch": "node scripts/fetch-books.mjs"
+    "books:fetch": "node scripts/fetch-books.mjs",
+    "server": "npm run start --prefix server",
+    "server:dev": "npm run dev --prefix server",
+    "server:seed": "npm run seed --prefix server"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.3",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
     "lucide-react": "^1.44.0",
     "next": "16.3.4",
+    "next-auth": "^5.0.0-beta.32",
     "pdfjs-dist": "^6.3.289",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -21,6 +27,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

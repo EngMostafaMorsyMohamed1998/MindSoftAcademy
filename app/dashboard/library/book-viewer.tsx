@@ -7,10 +7,12 @@ export function BookViewer({
   book,
   backHref,
   backLabel,
+  page,
 }: {
   book: Book;
   backHref: string;
   backLabel: string;
+  page?: number;
 }) {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col">
@@ -64,7 +66,7 @@ export function BookViewer({
       <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(19rem,3fr)]">
         <div className="overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-sm shadow-primary/5">
           <iframe
-            src={book.file}
+            src={page ? `${book.file}#page=${page}` : book.file}
             title={book.titleEn}
             className="h-[75vh] w-full min-h-125"
           />

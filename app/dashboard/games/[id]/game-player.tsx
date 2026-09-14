@@ -1,0 +1,275 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { awardGameXp } from "@/app/actions/study";
+import type { ChapterGame } from "@/lib/games";
+import { t } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
+
+function shuffle<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j]!, copy[i]!];
+  }
+  return copy;
+}
+
+function useShuffledIds(ids: string[], resetKey: string): string[] {
+  const [order, setOrder] = useState(ids);
+  useEffect(() => {
+    setOrder(shuffle(ids));
+    // ids are derived from the chapter; reshuffle only when the game changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetKey]);
+  return order;
+}
+
+export function GamePlayer({ locale, game }: { locale: Locale; game: ChapterGame }) {
+  const [done, setDone] = useState(false);
+  const [score, setScore] = useState(0);
+
+  async function finish(correct: number, total: number) {
+    setScore(Math.round((correct / total) * game.xp));
+    setDone(true);
+    await awardGameXp(game.chapterId);
+  }
+
+  if (done) {
+    return (
+      <div className="mt-6 rounded-3xl bg-white p-6 ring-1 ring-primary/10">
+        <h2 className="text-xl font-semibold">{t(locale, "gameComplete")}</h2>
+        <p className="mt-2 font-serif text-4xl">
+          +{score} {t(locale, "points")}
+        </p>
+      </div>
+    );
+  }
+
+  if (game.data.kind === "sort") {
+    return <SortPlay locale={locale} game={game} onDone={finish} />;
+  }
+  if (game.data.kind === "match") {
+    return <MatchPlay locale={locale} game={game} onDone={finish} />;
+  }
+  if (game.data.kind === "spot") {
+    return <SpotPlay locale={locale} game={game} onDone={finish} />;
+  }
+  return <PickPlay locale={locale} game={game} onDone={finish} />;
+}
+
+function SortPlay({
+  locale,
+  game,
+  onDone,
+}: {
+  locale: Locale;
+  game: ChapterGame;
+  onDone: (correct: number, total: number) => void;
+}) {
+  const data = game.data.kind === "sort" ? game.data : null;
+  const ids = data?.items.map((item) => item.id) ?? [];
+  const [order, setOrder] = useState(ids);
+  useEffect(() => {
+    setOrder(shuffle(ids));
+    // Shuffle once after mount so server and client HTML match.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.chapterId]);
+  if (!data) return null;
+
+  function move(index: number, direction: -1 | 1) {
+    const next = index + direction;
+    if (next < 0 || next >= order.length) return;
+    const copy = [...order];
+    [copy[index], copy[next]] = [copy[next]!, copy[index]!];
+    setOrder(copy);
+  }
+
+  return (
+    <div className="mt-6 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+      <p className="text-sm text-foreground/70">{locale === "ar" ? data.introAr : data.introEn}</p>
+      <ol className="mt-4 space-y-2">
+        {order.map((id, index) => {
+          const item = data.items.find((entry) => entry.id === id);
+          if (!item) return null;
+          return (
+            <li key={id} className="flex items-center gap-2 rounded-xl bg-primary/5 px-3 py-2">
+              <span className="w-6 text-sm font-bold">{index + 1}</span>
+              <span className="flex-1 text-sm">{locale === "ar" ? item.labelAr : item.labelEn}</span>
+              <button type="button" className="text-xs" onClick={() => move(index, -1)}>
+                ↑
+              </button>
+              <button type="button" className="text-xs" onClick={() => move(index, 1)}>
+                ↓
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      <button
+        type="button"
+        className="mt-4 h-11 rounded-full bg-primary px-5 text-sm font-semibold text-white"
+        onClick={() => {
+          const correct = data.items.filter((item) => order[item.order] === item.id).length;
+          onDone(correct, data.items.length);
+        }}
+      >
+        OK
+      </button>
+    </div>
+  );
+}
+
+function MatchPlay({
+  locale,
+  game,
+  onDone,
+}: {
+  locale: Locale;
+  game: ChapterGame;
+  onDone: (correct: number, total: number) => void;
+}) {
+  const data = game.data.kind === "match" ? game.data : null;
+  const pairIds = data?.pairs.map((pair) => pair.id) ?? [];
+  const rights = useShuffledIds(pairIds, game.chapterId);
+  const [picks, setPicks] = useState<Record<string, string>>({});
+  if (!data) return null;
+
+  return (
+    <div className="mt-6 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+      <p className="text-sm text-foreground/70">{locale === "ar" ? data.introAr : data.introEn}</p>
+      <div className="mt-4 space-y-3">
+        {data.pairs.map((pair) => (
+          <label key={pair.id} className="grid gap-2 sm:grid-cols-2">
+            <span className="rounded-xl bg-primary/8 px-3 py-2 text-sm font-medium">
+              {locale === "ar" ? pair.leftAr : pair.leftEn}
+            </span>
+            <select
+              className="h-11 rounded-xl border border-primary/15 px-3 text-sm"
+              value={picks[pair.id] ?? ""}
+              onChange={(event) =>
+                setPicks((current) => ({ ...current, [pair.id]: event.target.value }))
+              }
+            >
+              <option value="">—</option>
+              {rights.map((id) => {
+                const other = data.pairs.find((entry) => entry.id === id);
+                if (!other) return null;
+                return (
+                  <option key={id} value={id}>
+                    {locale === "ar" ? other.rightAr : other.rightEn}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="mt-4 h-11 rounded-full bg-primary px-5 text-sm font-semibold text-white"
+        onClick={() => {
+          const correct = data.pairs.filter((pair) => picks[pair.id] === pair.id).length;
+          onDone(correct, data.pairs.length);
+        }}
+      >
+        OK
+      </button>
+    </div>
+  );
+}
+
+function SpotPlay({
+  locale,
+  game,
+  onDone,
+}: {
+  locale: Locale;
+  game: ChapterGame;
+  onDone: (correct: number, total: number) => void;
+}) {
+  const data = game.data.kind === "spot" ? game.data : null;
+  const [marks, setMarks] = useState<Record<string, boolean>>({});
+  if (!data) return null;
+
+  return (
+    <div className="mt-6 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+      <p className="text-sm text-foreground/70">{locale === "ar" ? data.introAr : data.introEn}</p>
+      <ul className="mt-4 space-y-2">
+        {data.cards.map((card) => {
+          const flagged = marks[card.id] === true;
+          return (
+            <li key={card.id}>
+              <button
+                type="button"
+                onClick={() => setMarks((current) => ({ ...current, [card.id]: !flagged }))}
+                className={`w-full rounded-xl px-3 py-3 text-start text-sm ring-1 ${
+                  flagged ? "bg-red-50 ring-red-400" : "bg-white ring-primary/10"
+                }`}
+              >
+                {locale === "ar" ? card.textAr : card.textEn}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <button
+        type="button"
+        className="mt-4 h-11 rounded-full bg-primary px-5 text-sm font-semibold text-white"
+        onClick={() => {
+          const correct = data.cards.filter((card) => Boolean(marks[card.id]) === card.threat).length;
+          onDone(correct, data.cards.length);
+        }}
+      >
+        OK
+      </button>
+    </div>
+  );
+}
+
+function PickPlay({
+  locale,
+  game,
+  onDone,
+}: {
+  locale: Locale;
+  game: ChapterGame;
+  onDone: (correct: number, total: number) => void;
+}) {
+  const data = game.data.kind === "pick" ? game.data : null;
+  const [index, setIndex] = useState(0);
+  const [correct, setCorrect] = useState(0);
+  if (!data) return null;
+  const round = data.rounds[index];
+  if (!round) return null;
+  const choices = locale === "ar" ? round.choicesAr : round.choicesEn;
+
+  return (
+    <div className="mt-6 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+      <p className="text-sm text-foreground/70">{locale === "ar" ? data.introAr : data.introEn}</p>
+      <p className="mt-4 text-lg font-semibold">
+        {locale === "ar" ? round.promptAr : round.promptEn}
+      </p>
+      <div className="mt-4 grid gap-2">
+        {choices.map((choice, choiceIndex) => (
+          <button
+            key={choice}
+            type="button"
+            className="rounded-xl bg-primary/8 px-3 py-3 text-start text-sm font-medium"
+            onClick={() => {
+              const nextCorrect = correct + (choiceIndex === round.correct ? 1 : 0);
+              if (index + 1 >= data.rounds.length) {
+                onDone(nextCorrect, data.rounds.length);
+              } else {
+                setCorrect(nextCorrect);
+                setIndex(index + 1);
+              }
+            }}
+          >
+            {choice}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Newsreader } from "next/font/google";
+import { Cairo, Geist, Geist_Mono, Newsreader } from "next/font/google";
+import { BRAND } from "@/lib/brand";
+import { getLocale, localeDir } from "@/lib/locale";
+import { getTheme } from "@/lib/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,19 +20,30 @@ const newsreader = Newsreader({
   subsets: ["latin"],
 });
 
+const cairo = Cairo({
+  variable: "--font-cairo",
+  subsets: ["arabic", "latin"],
+});
+
 export const metadata: Metadata = {
-  title: "Lumina — Baccalaureate E-Learning",
-  description:
-    "A modern e-learning platform for High School Baccalaureate students. Adaptive learning, exam simulators, gamification, and live study rooms.",
+  title: `${BRAND.nameAr} — ${BRAND.subjectAr}`,
+  description: `${BRAND.teacherAr} · ${BRAND.titleAr} · ${BRAND.subjectAr} · ${BRAND.gradeAr}`,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
+  const theme = await getTheme();
+
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
+      lang={locale}
+      dir={localeDir(locale)}
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${cairo.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body suppressHydrationWarning className="flex min-h-full flex-col">
+        {children}
+      </body>
     </html>
   );
 }

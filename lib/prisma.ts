@@ -8,7 +8,10 @@ function createClient() {
 
 /** True when this process still holds a client generated from an older schema. */
 function isCurrentSchema(client: PrismaClient) {
-  return typeof client.user?.findUnique === "function";
+  return (
+    typeof client.user?.findUnique === "function" &&
+    typeof client.account?.findUnique === "function"
+  );
 }
 
 const existing = globalForPrisma.prisma;

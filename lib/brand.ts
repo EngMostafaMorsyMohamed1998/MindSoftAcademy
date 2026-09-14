@@ -1,0 +1,15 @@
+export const BRAND = {
+  nameAr: "MindSoft Academy",
+  nameEn: "MindSoft Academy",
+  teacherAr: "م. مصطفى محمد",
+  teacherEn: "Eng. Mostafa Mohamed",
+  titleAr: "مهندس برمجيات",
+  titleEn: "Software Engineer",
+  subjectAr: "البرمجة والذكاء الاصطناعي",
+  subjectEn: "Programming and Artificial Intelligence",
+  gradeAr: "الصف الثاني — البكالوريا المصرية",
+  gradeEn: "Egyptian Baccalaureate · 2nd year",
+  year: "2026–2027",
+  trackAr: "مسار الهندسة وعلوم الحاسب",
+  trackEn: "Engineering and Computer Science",
+} as const;

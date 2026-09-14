@@ -25,15 +25,23 @@ export async function generateMetadata({
 
 export default async function CourseBookPage({
   params,
+  searchParams,
 }: PageProps<"/dashboard/courses/[slug]">) {
   const { slug } = await params;
+  const query = await searchParams;
   const book = getBook(slug);
+  const page = Number(query.page);
 
   if (!book) {
     notFound();
   }
 
   return (
-    <BookViewer book={book} backHref="/dashboard/courses" backLabel="Courses" />
+    <BookViewer
+      book={book}
+      backHref="/dashboard/courses"
+      backLabel="Courses"
+      page={Number.isFinite(page) && page > 0 ? page : undefined}
+    />
   );
 }
