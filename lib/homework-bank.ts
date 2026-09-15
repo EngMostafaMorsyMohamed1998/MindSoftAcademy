@@ -1,3 +1,4 @@
+import { EXTRA_HOMEWORK } from "@/lib/homework-extra";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { ChapterId } from "@/lib/curriculum";
 import { shuffled } from "@/lib/shuffle";
@@ -16,7 +17,8 @@ export type HomeworkQuestion = {
   correctIndex: number;
 };
 
-export const LESSON_HOMEWORK_SIZE = 10;
+export const LESSON_HOMEWORK_SIZE = 15;
+export const MAKEUP_HOMEWORK_SIZE = 5;
 
 function pushQuestion(bank: HomeworkQuestion[], question: HomeworkQuestion) {
   bank.push(question);
@@ -35,8 +37,8 @@ function buildBank(): HomeworkQuestion[] {
         lessonId: note.id,
         chapterId: note.chapterId,
         kind: "tf",
-        promptAr: `${term.term}: ${term.meaning}`,
-        promptEn: `${en.term}: ${en.meaning}`,
+        promptAr: `هل هذا صحيح؟ «${term.term}» ${term.meaning}`,
+        promptEn: `Is this true? “${en.term}” ${en.meaning}`,
         optionsAr: ["صح", "غلط"],
         optionsEn: ["True", "False"],
         correctIndex: 0,
@@ -49,8 +51,8 @@ function buildBank(): HomeworkQuestion[] {
           lessonId: note.id,
           chapterId: note.chapterId,
           kind: "tf",
-          promptAr: `${term.term}: ${other.meaning}`,
-          promptEn: `${en.term}: ${otherEn.meaning}`,
+          promptAr: `هل هذا صحيح؟ «${term.term}» ${other.meaning}`,
+          promptEn: `Is this true? “${en.term}” ${otherEn.meaning}`,
           optionsAr: ["صح", "غلط"],
           optionsEn: ["True", "False"],
           correctIndex: 1,
@@ -77,6 +79,38 @@ function buildBank(): HomeworkQuestion[] {
           optionsEn,
           correctIndex: 0,
         });
+        pushQuestion(bank, {
+          id: `${note.id}-mcq-term-${index}`,
+          lessonId: note.id,
+          chapterId: note.chapterId,
+          kind: "mcq",
+          promptAr: `أي مصطلح يطابق هذا المعنى: «${term.meaning}»؟`,
+          promptEn: `Which term matches this meaning: “${en.meaning}”?`,
+          optionsAr: [term.term, ...wrong.map((item) => item.term)],
+          optionsEn: [
+            en.term,
+            ...wrong.map((item) => {
+              const match = termsEn.find((row) => row.term === item.term);
+              return match?.term ?? item.term;
+            }),
+          ],
+          correctIndex: 0,
+        });
+      }
+      const farther = termsAr[(index + 2) % termsAr.length];
+      const fartherEn = termsEn[(index + 2) % Math.max(termsEn.length, 1)] ?? farther;
+      if (farther && farther.term !== term.term && farther.term !== other?.term) {
+        pushQuestion(bank, {
+          id: `${note.id}-tf-x2-${index}`,
+          lessonId: note.id,
+          chapterId: note.chapterId,
+          kind: "tf",
+          promptAr: `هل هذا صحيح؟ «${term.term}» ${farther.meaning}`,
+          promptEn: `Is this true? “${en.term}” ${fartherEn.meaning}`,
+          optionsAr: ["صح", "غلط"],
+          optionsEn: ["True", "False"],
+          correctIndex: 1,
+        });
       }
     });
 
@@ -91,6 +125,21 @@ function buildBank(): HomeworkQuestion[] {
       optionsEn: ["True", "False"],
       correctIndex: 0,
     });
+
+    const otherNote = LESSON_NOTES.find((item) => item.chapterId === note.chapterId && item.id !== note.id);
+    if (otherNote) {
+      pushQuestion(bank, {
+        id: `${note.id}-take-x`,
+        lessonId: note.id,
+        chapterId: note.chapterId,
+        kind: "tf",
+        promptAr: `هل هذه فكرة هذا الدرس؟ ${otherNote.takeawayAr}`,
+        promptEn: `Is this the idea of this lesson? ${otherNote.takeawayEn}`,
+        optionsAr: ["صح", "غلط"],
+        optionsEn: ["True", "False"],
+        correctIndex: 1,
+      });
+    }
 
     note.bodyAr.forEach((line, index) => {
       const lineEn = note.bodyEn[index] ?? line;
@@ -108,6 +157,10 @@ function buildBank(): HomeworkQuestion[] {
     });
   }
 
+  for (const extra of EXTRA_HOMEWORK) {
+    pushQuestion(bank, extra);
+  }
+
   return bank;
 }
 
@@ -121,15 +174,24 @@ export function questionsForLesson(lessonId: string): HomeworkQuestion[] {
   return BANK.filter((item) => item.lessonId === lessonId);
 }
 
-export function pickLessonHomework(lessonId: string, seed: number): HomeworkQuestion[] {
+export function questionsForChapter(chapterId: ChapterId): HomeworkQuestion[] {
+  return BANK.filter((item) => item.chapterId === chapterId);
+}
+
+export function pickLessonHomework(
+  lessonId: string,
+  seed: number,
+  size = LESSON_HOMEWORK_SIZE,
+): HomeworkQuestion[] {
   const pool = questionsForLesson(lessonId);
-  return shuffled(pool, seed).slice(0, Math.min(LESSON_HOMEWORK_SIZE, pool.length));
+  return shuffled(pool, seed).slice(0, Math.min(size, pool.length));
 }
 
 export function withShuffledOptions(
   question: HomeworkQuestion,
   seed: number,
 ): HomeworkQuestion {
+  if (question.kind === "tf") return question;
   const order = shuffled(
     question.optionsAr.map((_, index) => index),
     seed + question.id.length,

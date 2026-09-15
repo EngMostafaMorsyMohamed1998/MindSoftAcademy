@@ -31,6 +31,7 @@ function items(locale: Locale): {
 }[] {
   return [
     { href: "/dashboard", label: t(locale, "navHome"), icon: Home },
+    { href: "/dashboard/leaderboard", label: t(locale, "navLeaderboard"), icon: Trophy },
     { href: "/dashboard/chapters", label: t(locale, "navChapters"), icon: BookOpen },
     { href: "/dashboard/courses", label: t(locale, "navBook"), icon: Library },
     { href: "/dashboard/exams", label: t(locale, "navExams"), icon: ClipboardCheck },
@@ -39,6 +40,10 @@ function items(locale: Locale): {
     { href: "/dashboard/chat-to-teacher", label: t(locale, "navChat"), icon: MessageCircle },
     { href: "/dashboard/review", label: t(locale, "reviewMistakes"), icon: RotateCcw },
   ];
+}
+
+function mobileItems(locale: Locale) {
+  return items(locale).filter((item) => item.href !== "/dashboard/courses");
 }
 
 function isActive(href: string, pathname: string) {
@@ -96,7 +101,10 @@ export function DashboardNav({
               className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
             />
           </div>
-          <div className="flex items-center gap-3 rounded-2xl bg-white/8 px-3 py-3">
+          <Link
+            href="/dashboard/leaderboard"
+            className="flex items-center gap-3 rounded-2xl bg-white/8 px-3 py-3 hover:bg-white/12"
+          >
             <span className="flex size-10 items-center justify-center rounded-full bg-accent/20 text-sm font-semibold text-accent">
               {initials(user.name)}
             </span>
@@ -107,7 +115,7 @@ export function DashboardNav({
                 {user.points} {t(locale, "points")} · L{level}
               </p>
             </div>
-          </div>
+          </Link>
           <LogoutButton
             label={t(locale, "logout")}
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
@@ -130,8 +138,8 @@ export function DashboardNav({
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-accent bg-nav px-1 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-nav-fg md:hidden">
-        <ul className="grid grid-cols-7 gap-0.5">
-          {navItems.map((item) => {
+        <ul className="grid grid-cols-4 gap-0.5">
+          {mobileItems(locale).map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href, pathname);
             return (

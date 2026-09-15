@@ -7,8 +7,8 @@ export type ObjectiveQuestion = {
   kind: ObjectiveKind;
   promptAr: string;
   promptEn: string;
-  optionsAr?: [string, string, string, string];
-  optionsEn?: [string, string, string, string];
+  optionsAr?: string[];
+  optionsEn?: string[];
   correctIndex: 0 | 1 | 2 | 3;
   points: number;
 };
@@ -22,8 +22,10 @@ export type EssayQuestion = {
   points: number;
 };
 
+export type ExamPaperId = ChapterId | "mix";
+
 export type ChapterExam = {
-  chapterId: ChapterId;
+  chapterId: ExamPaperId;
   objectives: ObjectiveQuestion[];
   essays: EssayQuestion[];
 };
@@ -50,8 +52,8 @@ function tf(
     kind: "tf",
     promptAr,
     promptEn,
-    optionsAr: ["صح", "غلط", "", ""],
-    optionsEn: ["True", "False", "", ""],
+    optionsAr: ["صح", "غلط"],
+    optionsEn: ["True", "False"],
     correctIndex: truth ? 0 : 1,
     points: 2,
   };
@@ -73,8 +75,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
     objectives: [
       mcq(
         "1-m1",
-        "الترتيب الزمني الصحيح لمراحل تقنية المعلومات:",
-        "The correct chronological order of IT stages is:",
+        "ما الترتيب الزمني الصحيح لمراحل تقنية المعلومات؟",
+        "What is the correct chronological order of IT stages?",
         [
           "الهواتف → الإنترنت → الحاسوب → السحابة",
           "الحاسوب → الإنترنت → الهواتف → السحابة",
@@ -91,8 +93,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "1-m2",
-        "العلاقة الصحيحة بين التقنيات:",
-        "The correct relationship is:",
+        "ما العلاقة الصحيحة بين التقنيات؟",
+        "What is the correct relationship between the fields?",
         [
           "تعلم عميق ⊃ تعلم آلي ⊃ ذكاء اصطناعي",
           "ذكاء اصطناعي ⊃ تعلم آلي ⊃ تعلم عميق ⊃ ذكاء توليدي",
@@ -147,6 +149,44 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       tf("1-t2", "التجارة الإلكترونية تعني الشراء النقدي من محل فعلي فقط.", "E-commerce means paying cash in a physical shop only.", false),
       tf("1-t3", "الواقع المعزز يستبدل العالم الحقيقي بالكامل بعالم محاكى.", "Augmented reality fully replaces the real world with a virtual one.", false),
       tf("1-t4", "مشاركة بيانات زميل مع نموذج عام تُعد مشكلة خصوصية.", "Sharing a classmate's data with a public model is a privacy problem.", true),
+      mcq(
+        "1-m5",
+        "ماذا يعني الذكاء الضيق؟",
+        "What does narrow AI mean?",
+        [
+          "نظام يفهم كل المجالات مثل الإنسان",
+          "نظام يتقن مهمة واحدة فقط",
+          "برنامج يعمل من غير بيانات تدريب",
+          "بديل كامل عن المدرس في كل المواد",
+        ],
+        [
+          "A system that understands every domain like a person",
+          "A system that is expert at one task only",
+          "A program that works with no training data",
+          "A full replacement for the teacher in every subject",
+        ],
+        1,
+      ),
+      mcq(
+        "1-m6",
+        "ما أفضل سلوك في الحصة عند استخدام نموذج توليدي؟",
+        "What is the best class habit when using a generative model?",
+        [
+          "لصق الرد في التقرير من غير مراجعة",
+          "فهم الفكرة ثم كتابة إجابتك أنت",
+          "إرسال عنوان البيت للنموذج",
+          "اعتبار اللغة السلسة دليل صدق",
+        ],
+        [
+          "Paste the reply into the report unreviewed",
+          "Understand the idea, then write your own answer",
+          "Send your home address to the model",
+          "Treat fluent language as proof of truth",
+        ],
+        1,
+      ),
+      tf("1-t5", "التحيز في النظام يأتي غالبًا من بيانات تدريب غير عادلة أو ناقصة.", "Bias in a system often comes from unfair or incomplete training data.", true),
+      tf("1-t6", "المساءلة تعني أن الحاسوب وحده يتحمل أثر القرار.", "Accountability means the computer alone bears the effect of the decision.", false),
     ],
     essays: [
       essay(
@@ -170,8 +210,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
     objectives: [
       mcq(
         "2-m1",
-        "التشفير غير المتماثل يستخدم:",
-        "Asymmetric encryption uses:",
+        "ماذا يستخدم التشفير غير المتماثل؟",
+        "What does asymmetric encryption use?",
         [
           "مفتاحًا واحدًا للطرفين",
           "زوج مفاتيح: عام وخاص",
@@ -188,8 +228,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "2-m2",
-        "المصادقة متعددة العوامل تجمع عادة:",
-        "Multi-factor authentication usually combines:",
+        "ماذا تجمع المصادقة متعددة العوامل عادة؟",
+        "What does multi-factor authentication usually combine?",
         [
           "ثلاث كلمات مرور مختلفة",
           "شيء تعرفه وشيء تملكه و/أو شيء أنت عليه",
@@ -206,8 +246,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "2-m3",
-        "مبدأ أقل صلاحية يعني:",
-        "Least privilege means:",
+        "ماذا يعني مبدأ أقل صلاحية؟",
+        "What does least privilege mean?",
         [
           "كل الموظفين يحصلون على صلاحية المدير",
           "إعطاء كل مستخدم أقل ما يكفي لعمله",
@@ -224,8 +264,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "2-m4",
-        "أولوية الاستجابة بعد اكتشاف اختراق:",
-        "After detecting a breach, the first priority is:",
+        "ما أولوية الاستجابة بعد اكتشاف اختراق؟",
+        "After detecting a breach, what is the first priority?",
         [
           "مسح كل الأجهزة فورًا بلا توثيق",
           "إخفاء الأمر عن الإدارة",
@@ -244,6 +284,34 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       tf("2-t2", "الشبكة الخاصة الافتراضية تنشئ نفقًا مشفّرًا عبر شبكة عامة.", "A VPN creates an encrypted tunnel across a public network.", true),
       tf("2-t3", "تقسيم الشبكة يساعد على منع انتشار الاختراق.", "Network segmentation helps stop a breach from spreading.", true),
       tf("2-t4", "إدارة المخاطر تعني تجاهل كل خطر لأنه نادر.", "Risk management means ignoring every risk because it is rare.", false),
+      mcq(
+        "2-m5",
+        "كلمة المرور مع تطبيق على الهاتف مثال على ماذا؟",
+        "A password plus an authenticator app is an example of what?",
+        ["تشفير الملف فقط", "مصادقة متعددة العوامل", "بيانات مفتوحة", "انحدار خطي"],
+        ["File encryption only", "Multi-factor authentication", "Open data", "Linear regression"],
+        1,
+      ),
+      mcq(
+        "2-m6",
+        "بعد اكتشاف اختراق في المعمل، ما القرار الصحيح أولًا؟",
+        "After a lab breach, what is the first sound decision?",
+        [
+          "مسح الأقراص قبل أي تسجيل",
+          "احتواء الضرر ثم حفظ الأدلة",
+          "نشر كلمات المرور في الجروب",
+          "تجاهل الحادث لأنه نادر",
+        ],
+        [
+          "Wipe the disks before any record",
+          "Contain the damage then preserve evidence",
+          "Post passwords in the group chat",
+          "Ignore the incident because it is rare",
+        ],
+        1,
+      ),
+      tf("2-t5", "مبدأ أقل صلاحية يعني إعطاء كل مستخدم أقل ما يكفي لعمله.", "Least privilege means giving each user only what their job needs.", true),
+      tf("2-t6", "الشهادة الرقمية تربط المفتاح العام بهوية موثوقة.", "A digital certificate binds a public key to a trusted identity.", true),
     ],
     essays: [
       essay(
@@ -267,8 +335,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
     objectives: [
       mcq(
         "3-m1",
-        "طبقة الواجهة الأمامية مسؤولة عن:",
-        "The frontend layer is responsible for:",
+        "ما وظيفة طبقة الواجهة الأمامية؟",
+        "What is the job of the frontend layer?",
         [
           "حفظ كلمات المرور في قاعدة بيانات الخادم",
           "ما يراه المستخدم ويتفاعل معه في المتصفح",
@@ -285,16 +353,16 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "3-m2",
-        "طريقة HTTP المناسبة لقراءة قائمة دون تغييرها:",
-        "The HTTP method best used to read a list without changing it:",
+        "ما طريقة HTTP المناسبة لقراءة قائمة من غير تغييرها؟",
+        "Which HTTP method is best to read a list without changing it?",
         ["POST", "DELETE", "GET", "PUT"],
         ["POST", "DELETE", "GET", "PUT"],
         2,
       ),
       mcq(
         "3-m3",
-        "HTTPS يعني:",
-        "HTTPS means:",
+        "ماذا يعني HTTPS؟",
+        "What does HTTPS mean?",
         [
           "HTTP أسرع بلا أمان",
           "HTTP فوق قناة مشفّرة",
@@ -331,6 +399,34 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       tf("3-t2", "رمز الحالة 404 يعني أن الخادم وجد المورد بنجاح.", "Status 404 means the server found the resource successfully.", false),
       tf("3-t3", "HTML يعطي المعنى والهيكل، وCSS يعطي المظهر.", "HTML gives meaning and structure; CSS gives appearance.", true),
       tf("3-t4", "إتاحة الوصول تعني تجاهل لوحة المفاتيح وقارئ الشاشة.", "Accessibility means ignoring the keyboard and screen readers.", false),
+      mcq(
+        "3-m5",
+        "ماذا يعني رمز الحالة 500 غالبًا؟",
+        "What does status 500 usually mean?",
+        ["المورد غير موجود", "خطأ على الخادم", "نجاح القراءة", "الطلب يحتاج صورة فقط"],
+        ["The resource is missing", "A server error", "A successful read", "The request needs a photo only"],
+        1,
+      ),
+      mcq(
+        "3-m6",
+        "ما ترتيب أدوار HTML ثم CSS ثم جافاسكربت؟",
+        "In order, what are the jobs of HTML, then CSS, then JavaScript?",
+        [
+          "مظهر، هيكل، سلوك",
+          "هيكل ومعنى، مظهر، سلوك",
+          "قاعدة بيانات، تشفير، جدار",
+          "ضغط، عينة، انحدار",
+        ],
+        [
+          "Look, structure, behaviour",
+          "Structure and meaning, look, behaviour",
+          "Database, encryption, firewall",
+          "Compression, sample, regression",
+        ],
+        1,
+      ),
+      tf("3-t5", "HTTPS هو HTTP فوق قناة مشفّرة.", "HTTPS is HTTP over an encrypted channel.", true),
+      tf("3-t6", "الكوكيز قد تحفظ حالة تسجيل الدخول بين الطلبات.", "Cookies can keep a login alive across requests.", true),
     ],
     essays: [
       essay(
@@ -354,16 +450,16 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
     objectives: [
       mcq(
         "4-m1",
-        "أفضل وسيط لعرض تغير درجات الصف عبر الشهور:",
-        "The best medium to show class scores changing over months:",
+        "ما أفضل وسيط لعرض تغيّر درجات الصف عبر الشهور؟",
+        "What is the best medium to show class scores changing over months?",
         ["أيقونة واحدة", "رسم خط زمني", "مقطع صوتي بلا أرقام", "خلفية متحركة فقط"],
         ["A single icon", "A line chart over time", "Audio with no numbers", "A moving background only"],
         1,
       ),
       mcq(
         "4-m2",
-        "تجربة المستخدم تهتم أساسًا بـ:",
-        "User experience is mainly about:",
+        "تجربة المستخدم تهتم أساسًا بماذا؟",
+        "What is user experience mainly about?",
         [
           "لون شعار الشركة فقط",
           "سهولة إتمام المهمة بوضوح",
@@ -380,8 +476,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "4-m3",
-        "اختبار أ/ب يعني:",
-        "An A/B test means:",
+        "ماذا يعني اختبار أ/ب؟",
+        "What does an A/B test mean?",
         [
           "مقارنة نسختين وقياس النتيجة",
           "حذف الموقع بالكامل",
@@ -398,8 +494,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "4-m4",
-        "التحسين التكراري يبدأ بـ:",
-        "Iterative improvement starts with:",
+        "التحسين التكراري يبدأ بماذا؟",
+        "What does iterative improvement start with?",
         [
           "النشر النهائي دون اختبار",
           "نموذج أولي رخيص ثم اختبار فتعلم",
@@ -418,6 +514,44 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       tf("4-t2", "الصورة الضخمة غير المضغوطة لا تؤثر على شبكة ضعيفة.", "A huge uncompressed image never affects a weak network.", false),
       tf("4-t3", "الاتساق في مكان القائمة أهم من مفاجأة شكل جديد كل صفحة.", "A consistent menu placement beats a surprise layout on every page.", true),
       tf("4-t4", "قطع محور الرسم ليضخّم فرقًا صغيرًا ممارسة صادقة.", "Cropping a chart axis to inflate a tiny gap is honest practice.", false),
+      mcq(
+        "4-m5",
+        "ماذا يعني اختبار أ/ب لموقع الحضور؟",
+        "What does an A/B test for an attendance site mean?",
+        [
+          "نختار الزر الأجمل بالذوق فقط",
+          "نجرّب نسختين ونقيس زمن المهمة أو الأخطاء",
+          "نحذف الموقع أسبوعًا",
+          "نعتمد أول لون للشعار",
+        ],
+        [
+          "We pick the prettier button by taste only",
+          "We try two versions and measure task time or errors",
+          "We take the site down for a week",
+          "We trust the first logo colour",
+        ],
+        1,
+      ),
+      mcq(
+        "4-m6",
+        "لماذا نغيّر عنصرًا واحدًا في كل دورة تحسين؟",
+        "Why change one element per improvement cycle?",
+        [
+          "حتى يطول المشروع",
+          "حتى نعرف أي تغيير صنع الفرق",
+          "حتى نلغي التوثيق",
+          "حتى نزيد حجم الصور",
+        ],
+        [
+          "So the project lasts longer",
+          "So we know which change made the difference",
+          "So we can skip recording decisions",
+          "So images get larger",
+        ],
+        1,
+      ),
+      tf("4-t5", "النموذج الأولي نسخة رخيصة سريعة تُختبر قبل البناء الكامل.", "A prototype is a cheap, fast version tested before full build.", true),
+      tf("4-t6", "UX هي شكل الزر فقط، وUI هي رحلة المستخدم كلها.", "UX is only the button look, and UI is the whole user journey.", false),
     ],
     essays: [
       essay(
@@ -441,8 +575,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
     objectives: [
       mcq(
         "5-m1",
-        "بيانات أولية هي:",
-        "Primary data is:",
+        "ما البيانات الأولية؟",
+        "What is primary data?",
         [
           "إحصاء حكومي حمّلته كما هو",
           "بيانات تجمعها أنت لغرضك",
@@ -459,8 +593,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "5-m2",
-        "العينة الطبقية:",
-        "Stratified sampling:",
+        "ماذا تعني العينة الطبقية؟",
+        "What does stratified sampling mean?",
         [
           "تختار من يسهل الوصول إليه فقط",
           "تقسم المجتمع ثم تسحب عشوائيًا من كل شريحة",
@@ -477,8 +611,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "5-m3",
-        "إذا كانت القيمة الشاذة ناتجة عن خطأ إدخال:",
-        "If an outlier is an input error:",
+        "إذا كانت القيمة الشاذة ناتجة عن خطأ إدخال، ماذا تفعل؟",
+        "If an outlier is an input error, what do you do?",
         [
           "نتركها دائمًا لأنها «واقع»",
           "نصححها أو نحذفها بعد التأكد من السبب",
@@ -495,8 +629,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "5-m4",
-        "التطبيع إلى المدى 0–1 يفيد عندما:",
-        "Normalising to 0–1 helps when:",
+        "متى يفيد التطبيع إلى المدى من 0 إلى 1؟",
+        "When does normalising to 0–1 help?",
         [
           "المتغيرات بوحدات ومديات مختلفة",
           "كل القيم نصوصًا",
@@ -515,6 +649,34 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       tf("5-t2", "البيانات الثانوية أسرع غالبًا لكنها قد لا تطابق غرضك تمامًا.", "Secondary data is often faster but may not match your purpose exactly.", true),
       tf("5-t3", "حذف كل صف فيه خلية فارغة هو القرار الصحيح دائمًا.", "Deleting every row with a blank cell is always the right decision.", false),
       tf("5-t4", "واجهة البرمجة تسمح بجلب بيانات محدّثة من مصدر وفق عقد واضح.", "An API lets you fetch fresh data from a source under a clear contract.", true),
+      mcq(
+        "5-m5",
+        "استطلاع يردّ عليه المهتمون فقط يعاني غالبًا من ماذا؟",
+        "A poll answered only by the keen often suffers from what?",
+        ["عينة عشوائية كاملة", "تحيز الاختيار الذاتي", "انحدار بلا بيانات", "هلوسة لغوية"],
+        ["A complete random sample", "Self-selection bias", "Regression with no data", "A language hallucination"],
+        1,
+      ),
+      mcq(
+        "5-m6",
+        "قبل أن تستخدم رقمًا من بوابة بيانات مفتوحة، ماذا تفعل؟",
+        "Before you use a number from an open-data portal, what do you do?",
+        [
+          "اخفِ المصدر",
+          "راجع الترخيص وتاريخ التحديث",
+          "افترض أنها بلا تحيز",
+          "احذف العمود كله",
+        ],
+        [
+          "Hide the source",
+          "Check the licence and the update date",
+          "Assume it has no bias",
+          "Delete the whole column",
+        ],
+        1,
+      ),
+      tf("5-t5", "البيانات الأولية تجمعها أنت لغرض محدد.", "Primary data is what you gather fresh for your purpose.", true),
+      tf("5-t6", "العينة الطبقية تسحب من كل شريحة بعد تقسيم المجتمع.", "A stratified sample draws from each stratum after the population is split.", true),
     ],
     essays: [
       essay(
@@ -538,8 +700,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
     objectives: [
       mcq(
         "6-m1",
-        "الاستدلال الإحصائي يهدف إلى:",
-        "Statistical inference aims to:",
+        "إلى ماذا يهدف الاستدلال الإحصائي؟",
+        "What does statistical inference aim to do?",
         [
           "نسخ أرقام العينة كما هي بلا تعميم",
           "تعميم حذر من العينة إلى المجتمع مع عدم يقين",
@@ -564,8 +726,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "6-m3",
-        "الانحدار الخطي يناسب:",
-        "Linear regression fits:",
+        "متى يناسب الانحدار الخطي؟",
+        "When does linear regression fit?",
         [
           "سحابة نقاط بلا اتجاه",
           "اتجاه تقريبي بين متغيرين كميين",
@@ -582,8 +744,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "6-m4",
-        "أفضل رسم لمقارنة عدد الطلاب في ثلاث شعب:",
-        "The best chart to compare student counts in three classes:",
+        "ما أفضل رسم لمقارنة عدد الطلاب في ثلاث شعب؟",
+        "What is the best chart to compare student counts in three classes?",
         ["دائرة بعشرين شريحة", "أعمدة", "خريطة حرارية بلا أرقام", "نص شعري"],
         ["A pie with twenty slices", "Bars", "A heatmap with no numbers", "A poem"],
         1,
@@ -592,6 +754,24 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       tf("6-t2", "عينة صغيرة تعطي غالبًا فترة ثقة أوسع.", "A small sample usually gives a wider confidence interval.", true),
       tf("6-t3", "البواقي الكبيرة تعني أن الخط يصف البيانات جيدًا جدًا.", "Large residuals mean the line describes the data extremely well.", false),
       tf("6-t4", "عنوان الرسم يجب أن يقول الادعاء، مع تسمية المحاور وذكر المصدر.", "A chart title should state the claim, with labelled axes and a source.", true),
+      mcq(
+        "6-m5",
+        "ماذا يُسمّى التنبؤ خارج مدى بيانات الخط؟",
+        "What do we call predicting outside the line's data range?",
+        ["تطبيعًا", "استكمالًا خطرًا", "عينة طبقية", "جدار حماية"],
+        ["Normalising", "Risky extrapolation", "Stratified sampling", "A firewall"],
+        1,
+      ),
+      mcq(
+        "6-m6",
+        "عند وجود قيمة شاذة في الدرجات، ماذا تفعل؟",
+        "When marks include an outlier, what do you do?",
+        ["المتوسط يكفي وحده دائمًا", "انظر الوسيط أيضًا", "أعلن السببية فورًا", "اختر دائرة بعشرين شريحة"],
+        ["The mean is always enough", "Look at the median too", "Announce cause immediately", "Pick a twenty-slice pie"],
+        1,
+      ),
+      tf("6-t5", "الإحصاء الوصفي يلخّص العينة: متوسط ووسيط وانتشار.", "Descriptive stats summarise the sample: mean, median, spread.", true),
+      tf("6-t6", "البواقي الصغيرة تعني أن الخط غالبًا يصف البيانات أفضل من البواقي الكبيرة.", "Small residuals usually mean the line describes the data better than large residuals do.", true),
     ],
     essays: [
       essay(
@@ -615,8 +795,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
     objectives: [
       mcq(
         "7-m1",
-        "التعلم بإشراف يحتاج:",
-        "Supervised learning typically needs:",
+        "ماذا يحتاج التعلم بإشراف؟",
+        "What does supervised learning typically need?",
         [
           "أمثلة بلا أي تسميات",
           "أمثلة معلّمة: مدخل ومخرج معروف",
@@ -651,8 +831,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "7-m3",
-        "التعلم في الشبكة العصبية يتم أساسًا عبر:",
-        "A neural network learns mainly by:",
+        "كيف تتعلم الشبكة العصبية أساسًا؟",
+        "How does a neural network mainly learn?",
         [
           "تغيير دقة الشاشة",
           "تعديل أوزان الروابط من البيانات",
@@ -669,8 +849,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "7-m4",
-        "نموذج اللغة الكبير في جوهره:",
-        "At its core, a large language model:",
+        "ماذا يفعل نموذج اللغة الكبير في جوهره؟",
+        "At its core, what does a large language model do?",
         [
           "يتنبأ بأرجح الكلمة/الرمز التالي",
           "يفهم كالإنسان تمامًا",
@@ -689,6 +869,34 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       tf("7-t2", "اختبار النموذج على بيانات التدريب يعطي تقديرًا صادقًا دائمًا.", "Testing a model on its training data always gives an honest estimate.", false),
       tf("7-t3", "التعلم العميق يحتاج عادة بيانات أكبر من مسألة خطية صغيرة.", "Deep learning usually needs more data than a small linear problem.", true),
       tf("7-t4", "هلوسة النموذج تعني جملة فصيحة قد تكون بلا سند.", "A hallucination is fluent text that may have no grounding.", true),
+      mcq(
+        "7-m5",
+        "التنبؤ بعدد ساعات المذاكرة (رقم) أقرب إلى أي نوع؟",
+        "Predicting study hours (a number) is closer to which type?",
+        ["تصنيف", "انحدار", "جدار حماية", "ضغط ملفات"],
+        ["Classification", "Regression", "A firewall", "Compression"],
+        1,
+      ),
+      mcq(
+        "7-m6",
+        "ما الاستخدام السليم لنموذج اللغة في الواجب؟",
+        "What is a sound use of a language model for homework?",
+        [
+          "لصق الإجابة النهائية من غير فهم",
+          "شرح الفكرة ثم الكتابة من فهمك أنت",
+          "إرسال صورة البطاقة",
+          "نشر درجات الزملاء",
+        ],
+        [
+          "Paste the final answer with no understanding",
+          "Explain the idea, then write from your understanding",
+          "Send an ID photo",
+          "Publish classmates' marks",
+        ],
+        1,
+      ),
+      tf("7-t5", "التعلم بلا إشراف يبحث عن تجمعات بلا تسمية جاهزة.", "Unsupervised learning looks for clusters without ready labels.", true),
+      tf("7-t6", "الصندوق الأسود مشكلة عندما يمس القرار حياة إنسان.", "A black box is a problem when the decision touches a human life.", true),
     ],
     essays: [
       essay(
@@ -709,7 +917,22 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
   },
 ];
 
+export function mixedMinistryExam(): ChapterExam {
+  const objectives = CHAPTER_EXAMS.flatMap((exam) => exam.objectives.slice(0, 1));
+  const extra = CHAPTER_EXAMS[0]?.objectives[1];
+  if (extra) objectives.push(extra);
+  const essays = [CHAPTER_EXAMS[2]?.essays[0], CHAPTER_EXAMS[6]?.essays[0]].filter(
+    (item): item is NonNullable<typeof item> => Boolean(item),
+  );
+  return {
+    chapterId: "mix",
+    objectives: objectives.slice(0, 8),
+    essays,
+  };
+}
+
 export function examForChapter(id: string): ChapterExam | undefined {
+  if (id === "mix") return mixedMinistryExam();
   return CHAPTER_EXAMS.find((exam) => exam.chapterId === id);
 }
 

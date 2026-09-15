@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BookOpen, ClipboardCheck, Gamepad2 } from "lucide-react";
+import { BookOpen, ClipboardCheck, Gamepad2, Network } from "lucide-react";
+import { ChapterMindMap } from "@/components/chapter-mind-map";
 import { chapterHomeworkDone, isChapterUnlocked } from "@/lib/chapter-progress";
 import { studentProgress } from "@/lib/student-progress";
 import { bookSlugFor, getChapter, isChapterId } from "@/lib/curriculum";
+import { gamesForChapter } from "@/lib/games";
 import { notesForChapter } from "@/lib/lessons";
+import { mindMapForChapter } from "@/lib/mind-maps";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { BOOKS } from "@/lib/library";
@@ -25,6 +28,10 @@ export default async function ChapterPage({
   const examReady = chapterHomeworkDone(id, homework);
   const locale = await getLocale();
   const notes = notesForChapter(id);
+  const games = gamesForChapter(id);
+  const mindMap = mindMapForChapter(id);
+  const mapGame = games.find((game) => game.data.kind === "map");
+  const playGames = games.filter((game) => game.data.kind !== "map");
   const book = BOOKS.find((item) => item.slug === bookSlugFor(chapter.part, locale));
 
   return (
@@ -41,6 +48,32 @@ export default async function ChapterPage({
       <p className="mt-2 text-sm text-foreground/65">
         {locale === "ar" ? chapter.blurbAr : chapter.blurbEn}
       </p>
+
+      {mindMap ? (
+        <section className="mt-6">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 className="font-serif text-2xl">{t(locale, "mindMap")}</h2>
+              <p className="mt-1 text-sm text-foreground/60">{t(locale, "mindMapHint")}</p>
+            </div>
+            {mapGame ? (
+              <Link
+                href={`/dashboard/games/${mapGame.id}`}
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white"
+              >
+                <Network className="size-4" />
+                {t(locale, "playMindMap")}
+              </Link>
+            ) : null}
+          </div>
+          <ChapterMindMap
+            locale={locale}
+            root={mindMap}
+            color={chapter.color}
+            accent={chapter.accent}
+          />
+        </section>
+      ) : null}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         {examReady ? (
@@ -59,16 +92,19 @@ export default async function ChapterPage({
             <span className="text-xs font-normal text-white/80">{t(locale, "homeworkLockedExam")}</span>
           </div>
         )}
-        <Link
-          href={`/dashboard/games/${chapter.id}`}
-          className="rounded-2xl bg-white p-4 text-sm font-semibold ring-1 ring-primary/10"
-        >
-          <Gamepad2 className="size-5 text-primary" />
-          <span className="mt-2 block">{t(locale, "playGame")}</span>
-          <span className="text-xs font-normal text-foreground/55">
-            {locale === "ar" ? chapter.gameAr : chapter.gameEn}
-          </span>
-        </Link>
+        {playGames.map((game) => (
+          <Link
+            key={game.id}
+            href={`/dashboard/games/${game.id}`}
+            className="rounded-2xl bg-white p-4 text-sm font-semibold ring-1 ring-primary/10"
+          >
+            <Gamepad2 className="size-5 text-primary" />
+            <span className="mt-2 block">{t(locale, "playGame")}</span>
+            <span className="text-xs font-normal text-foreground/55">
+              {locale === "ar" ? game.titleAr : game.titleEn}
+            </span>
+          </Link>
+        ))}
         {book ? (
           <Link
             href={`/dashboard/courses/${book.slug}?page=${chapter.lessons[0]?.pdfPage ?? 5}`}

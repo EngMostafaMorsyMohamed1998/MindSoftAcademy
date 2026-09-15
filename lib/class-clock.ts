@@ -22,6 +22,9 @@ export function encodeExamChapter(chapterId: string, mode: ExamMode = "class"): 
 }
 
 export function parseExamChapter(raw: string): { chapterId: string; mode: ExamMode } {
+  if (raw === "mix" || raw === "mixm") {
+    return { chapterId: "mix", mode: "ministry" };
+  }
   if (raw.endsWith("m")) {
     const chapterId = raw.slice(0, -1);
     if (isChapterId(chapterId)) return { chapterId, mode: "ministry" };

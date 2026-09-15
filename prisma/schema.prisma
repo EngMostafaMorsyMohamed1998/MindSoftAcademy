@@ -245,6 +245,28 @@ model ClassSessionArchive {
   @@index([date])
 }
 
+model ClassPayment {
+  studentId String
+  month     String
+  paid      Boolean
+  updatedAt DateTime
+
+  @@id([studentId, month])
+}
+
+model ClassMakeup {
+  studentId   String
+  sessionDate String
+  lessonId    String
+  chapterId   String
+  dueDate     String
+  completedAt DateTime?
+  score       Int?
+  total       Int?
+
+  @@id([studentId, sessionDate])
+}
+
 model ClassMiss {
   studentId    String
   questionKey  String

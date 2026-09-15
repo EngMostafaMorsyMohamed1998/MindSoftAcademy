@@ -2,16 +2,21 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Users } from "lucide-react";
+import { ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Users, Wallet } from "lucide-react";
 import {
   createManyStudentCodes,
   createStudentCode,
   deleteWeekSlot,
   markStudentAttendance,
+  markStudentFee,
   openClassExam,
+  openMixedMock,
+  openSurprise,
   saveAnnouncement,
+  saveMonthlyFee,
   saveWeekSlot,
   stopClassExam,
+  stopSurprise,
   toggleStudentSuspend,
   unlockStudentChapter,
   type FormState,
@@ -19,17 +24,23 @@ import {
 import { gradeEssayForm } from "@/app/actions/study";
 import { BRAND } from "@/lib/brand";
 import { cairoDate, cairoMonth, cairoWeekday, type ExamMode } from "@/lib/class-clock";
+import { buildMonthProfits, cairoMonthLabel, type MonthPayment } from "@/lib/fees";
 import { absenteeWhatsappText, sessionsInMonth, type ClassSession } from "@/lib/class-session";
-import { codeWhatsappText, parentWeeklyWhatsappText, whatsappHref, type ClassRow } from "@/lib/class-roster";
+import { codeWhatsappText, feesWhatsappText, parentWeeklyWhatsappText, whatsappHref, type ClassRow } from "@/lib/class-roster";
+import { starLabel } from "@/lib/week-stars";
 import { CHAPTERS } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
-import type { AccessCode, ExamSubmission } from "@/lib/access-store";
+import type { AccessCode, EssayGrade, ExamSubmission } from "@/lib/access-store";
+import { PresenceBoard } from "@/components/presence-board";
+import { SurpriseBoard } from "@/components/surprise-board";
+import { ESSAY_MARKS, markForGrade } from "@/lib/essay-marks";
+import { surpriseOpen, surpriseRemaining, type SurpriseAnswer, type SurpriseQuestion } from "@/lib/surprise";
 import { weekdayName, type WeekSlot } from "@/lib/week-plan";
 
 const initial: FormState = { error: null };
 
-type Tab = "class" | "codes" | "roster" | "grades";
+type Tab = "class" | "codes" | "roster" | "grades" | "profit";
 
 export function AdminShell({
   locale,
@@ -40,6 +51,11 @@ export function AdminShell({
   examWindow,
   weekPlan,
   sessions,
+  essayGrades,
+  payments,
+  monthlyFee,
+  surprise,
+  surpriseAnswers,
 }: {
   locale: Locale;
   codes: AccessCode[];
@@ -49,6 +65,11 @@ export function AdminShell({
   examWindow: { chapterId: string; closesAt: string; mode?: ExamMode } | null;
   weekPlan: WeekSlot[];
   sessions: ClassSession[];
+  essayGrades: EssayGrade[];
+  payments: MonthPayment[];
+  monthlyFee: number;
+  surprise: SurpriseQuestion | null;
+  surpriseAnswers: SurpriseAnswer[];
 }) {
   const [tab, setTab] = useState<Tab>("class");
   const router = useRouter();
@@ -57,22 +78,26 @@ export function AdminShell({
   const [unlockState, unlockAction, unlockPending] = useActionState(unlockStudentChapter, initial);
   const [announceState, announceAction, announcePending] = useActionState(saveAnnouncement, initial);
   const [examState, examAction, examPending] = useActionState(openClassExam, initial);
+  const [mixState, mixAction, mixPending] = useActionState(openMixedMock, initial);
   const [closeState, closeAction, closePending] = useActionState(stopClassExam, initial);
   const [slotState, slotAction, slotPending] = useActionState(saveWeekSlot, initial);
+  const [feeState, feeAction, feePending] = useActionState(saveMonthlyFee, initial);
+  const [surpriseState, surpriseAction, surprisePending] = useActionState(openSurprise, initial);
+  const [surpriseCloseState, surpriseCloseAction, surpriseClosePending] = useActionState(stopSurprise, initial);
   const [slotDeleteState, slotDeleteAction, slotDeletePending] = useActionState(deleteWeekSlot, initial);
   const [windowOverride, setWindowOverride] = useState<"open" | "closed" | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const today = cairoDate();
 
   useEffect(() => {
-    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok) {
+    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok) {
       router.refresh();
     }
-  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, router]);
+  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, mixState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, feeState.ok, surpriseState.ok, surpriseCloseState.ok, router]);
 
   useEffect(() => {
-    if (examState.examChapterId) setWindowOverride("open");
-  }, [examState.examChapterId, examState.examClosesAt]);
+    if (examState.examChapterId || mixState.examChapterId) setWindowOverride("open");
+  }, [examState.examChapterId, examState.examClosesAt, mixState.examChapterId, mixState.examClosesAt]);
 
   useEffect(() => {
     if (closeState.examClosed) setWindowOverride("closed");
@@ -81,21 +106,38 @@ export function AdminShell({
   const liveWindow =
     windowOverride === "closed"
       ? null
-      : windowOverride === "open" && examState.examChapterId
+      : windowOverride === "open" && (examState.examChapterId || mixState.examChapterId)
         ? {
-            chapterId: examState.examChapterId,
-            closesAt: examState.examClosesAt ?? "",
-            mode: examState.examMode,
+            chapterId: examState.examChapterId ?? mixState.examChapterId ?? "",
+            closesAt: examState.examClosesAt ?? mixState.examClosesAt ?? "",
+            mode: examState.examMode ?? mixState.examMode,
           }
         : examWindow;
 
-  const pendingEssays = exams.reduce((sum, exam) => sum + exam.essays.length, 0);
+  const pendingEssays = exams.reduce((sum, exam) => {
+    return (
+      sum +
+      exam.essays.filter(
+        (item) => !essayGrades.some((grade) => grade.examId === exam.id && grade.questionId === item.id),
+      ).length
+    );
+  }, 0);
   const declined = roster.filter((row) => row.declined);
-  const rankedRoster = [...roster].sort((a, b) => Number(b.declined) - Number(a.declined));
+  const unpaid = roster.filter((row) => !row.monthPaid);
+  const rankedRoster = [...roster].sort(
+    (a, b) => Number(a.monthPaid) - Number(b.monthPaid) || Number(b.declined) - Number(a.declined),
+  );
   const todayWeekday = cairoWeekday();
   const month = cairoMonth();
   const monthSessions = sessionsInMonth(sessions, month);
   const latest = sessions[0] ?? null;
+  const profits = buildMonthProfits({
+    payments,
+    studentIds: roster.map((row) => row.id),
+    monthlyFee,
+    currentMonth: month,
+  });
+  const thisMonth = profits[0];
 
   function copy(value: string) {
     void navigator.clipboard.writeText(value);
@@ -126,14 +168,14 @@ export function AdminShell({
     const rows = roster
       .map(
         (row) =>
-          `<tr><td>${row.name}</td><td>${row.phone}</td><td>${row.standing === "done" ? "—" : row.standing}</td><td>${row.lastPercent ?? "—"}%</td><td>${row.attendancePresent}/${row.attendanceTotal}</td><td>${row.suspended ? "stop" : "ok"}</td></tr>`,
+          `<tr><td>${row.name}</td><td>${row.phone}</td><td>${starLabel(row.week.stars)}</td><td>${row.standing === "done" ? "—" : row.standing}</td><td>${row.lastPercent ?? "—"}%</td><td>${row.attendancePresent}/${row.attendanceTotal}</td><td>${row.monthPaid ? t(locale, "monthPaid") : t(locale, "monthDue")}</td><td>${row.suspended ? "stop" : "ok"}</td></tr>`,
       )
       .join("");
     win.document.write(`<!doctype html><html lang="${locale}" dir="${locale === "ar" ? "rtl" : "ltr"}"><head><meta charset="utf-8"><title>${t(locale, "printGrades")}</title>
       <style>body{font-family:system-ui;padding:24px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:8px;text-align:start}h1{font-size:20px}</style></head><body>
       <p>${locale === "ar" ? BRAND.nameAr : BRAND.nameEn}</p>
       <h1>${t(locale, "printGrades")}</h1>
-      <table><thead><tr><th>${t(locale, "student")}</th><th>${t(locale, "phone")}</th><th>${t(locale, "standing")}</th><th>${t(locale, "lastPercent")}</th><th>${t(locale, "attendance")}</th><th>${t(locale, "suspend")}</th></tr></thead><tbody>${rows}</tbody></table>
+      <table><thead><tr><th>${t(locale, "student")}</th><th>${t(locale, "phone")}</th><th>${t(locale, "weekStars")}</th><th>${t(locale, "standing")}</th><th>${t(locale, "lastPercent")}</th><th>${t(locale, "attendance")}</th><th>${t(locale, "monthFees")}</th><th>${t(locale, "suspend")}</th></tr></thead><tbody>${rows}</tbody></table>
       </body></html>`);
     win.document.close();
     win.focus();
@@ -172,11 +214,12 @@ export function AdminShell({
     { id: "codes", label: t(locale, "tabCodes"), icon: KeyRound, count: codes.length },
     { id: "roster", label: t(locale, "tabRoster"), icon: Users, count: roster.length },
     { id: "grades", label: t(locale, "tabGrades"), icon: Printer, count: pendingEssays || undefined },
+    { id: "profit", label: t(locale, "tabProfit"), icon: Wallet, count: thisMonth?.revenue || undefined },
   ];
 
   return (
     <div className="mt-6">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <button
           type="button"
           onClick={() => setTab("class")}
@@ -185,9 +228,9 @@ export function AdminShell({
           <p className="text-xs text-foreground/55">{t(locale, "examStatus")}</p>
           <p className={`mt-1 text-sm font-semibold ${liveWindow ? "text-emerald-700" : "text-foreground/70"}`}>
             {liveWindow
-              ? `${t(locale, "examWindowOpen")} · ${liveWindow.chapterId}${
-                  liveWindow.mode === "ministry" ? ` · ${t(locale, "ministryExam")}` : ""
-                }`
+              ? `${t(locale, "examWindowOpen")} · ${
+                  liveWindow.chapterId === "mix" ? t(locale, "mixedMock") : liveWindow.chapterId
+                }${liveWindow.mode === "ministry" ? ` · ${t(locale, "ministryExam")}` : ""}`
               : t(locale, "examClosedNow")}
           </p>
         </button>
@@ -206,6 +249,16 @@ export function AdminShell({
         >
           <p className="text-xs text-foreground/55">{t(locale, "results")}</p>
           <p className="mt-1 text-sm font-semibold">{exams.length}</p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("profit")}
+          className="rounded-2xl bg-white p-4 text-start ring-1 ring-primary/10"
+        >
+          <p className="text-xs text-foreground/55">{t(locale, "monthProfit")}</p>
+          <p className="mt-1 text-sm font-semibold tabular-nums" dir="ltr">
+            {thisMonth?.revenue ?? 0} {t(locale, "currency")}
+          </p>
         </button>
       </div>
 
@@ -236,6 +289,13 @@ export function AdminShell({
 
       {tab === "class" ? (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
+            <h2 className="text-lg font-semibold">{t(locale, "presenceTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "presenceHint")}</p>
+            <div className="mt-4">
+              <PresenceBoard locale={locale} />
+            </div>
+          </section>
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
             <h2 className="text-lg font-semibold">{t(locale, "startClassExam")}</h2>
             <p className="mt-1 text-sm text-foreground/60">{t(locale, "examWindowHint")}</p>
@@ -277,6 +337,29 @@ export function AdminShell({
                 {t(locale, "startClassExam")}
               </button>
             </form>
+            <form action={mixAction} className="mt-4 grid gap-3 rounded-2xl bg-accent/15 p-3">
+              <p className="text-sm font-semibold">{t(locale, "mixedMock")}</p>
+              <p className="text-xs text-foreground/60">{t(locale, "mixedMockHint")}</p>
+              <label className="grid gap-1 text-sm font-medium">
+                {t(locale, "examMinutes")}
+                <input
+                  name="minutes"
+                  type="number"
+                  min={30}
+                  max={180}
+                  step={5}
+                  defaultValue={90}
+                  className="h-11 rounded-2xl border border-primary/15 bg-white px-3 text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={mixPending}
+                className="h-12 rounded-full bg-primary-dark text-sm font-semibold text-white"
+              >
+                {t(locale, "startMixedMock")}
+              </button>
+            </form>
             <form action={closeAction} className="mt-3">
               <button
                 type="submit"
@@ -288,18 +371,85 @@ export function AdminShell({
             </form>
             <p className={`mt-3 rounded-2xl px-3 py-2 text-sm ${liveWindow ? "bg-emerald-50 text-emerald-800" : "bg-primary/5 text-foreground/65"}`}>
               {liveWindow
-                ? `${t(locale, "examStarted")} ${t(locale, "chapterExam")} ${liveWindow.chapterId}${
+                ? `${t(locale, "examStarted")} ${
+                    liveWindow.chapterId === "mix"
+                      ? t(locale, "mixedMock")
+                      : `${t(locale, "chapterExam")} ${liveWindow.chapterId}`
+                  }${
                     liveWindow.closesAt
                       ? ` · ${new Date(liveWindow.closesAt).toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-GB", { hour: "2-digit", minute: "2-digit" })}`
                       : ""
                   }`
                 : t(locale, "examClosedNow")}
             </p>
-            {examState.error || closeState.error ? (
-              <p className="mt-2 text-sm text-red-700">{examState.error || closeState.error}</p>
+            {examState.error || mixState.error || closeState.error ? (
+              <p className="mt-2 text-sm text-red-700">{examState.error || mixState.error || closeState.error}</p>
             ) : null}
             {closeState.sessionSaved ? (
               <p className="mt-2 text-sm text-emerald-700">{t(locale, "sessionReport")} ✓</p>
+            ) : null}
+          </section>
+
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "surpriseTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "surpriseHint")}</p>
+            <form action={surpriseAction} className="mt-4 grid gap-3">
+              <label className="grid gap-1 text-sm font-medium">
+                {t(locale, "chapterExam")}
+                <select name="chapterId" className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" defaultValue="1">
+                  {CHAPTERS.map((chapter) => (
+                    <option key={chapter.id} value={chapter.id}>
+                      {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="submit"
+                disabled={surprisePending}
+                className="h-12 rounded-full bg-amber-600 text-sm font-semibold text-white"
+              >
+                {t(locale, "startSurprise")}
+              </button>
+            </form>
+            {surpriseOpen(surprise) ? (
+              <form action={surpriseCloseAction} className="mt-3">
+                <button
+                  type="submit"
+                  disabled={surpriseClosePending}
+                  className="h-11 w-full rounded-full bg-primary-dark text-sm font-semibold text-white"
+                >
+                  {t(locale, "closeSurprise")}
+                </button>
+              </form>
+            ) : null}
+            <div className="mt-4">
+              <SurpriseBoard
+                locale={locale}
+                initial={{
+                  open: surpriseOpen(surprise),
+                  remaining: surpriseRemaining(surprise),
+                  chapterId: surprise?.chapterId,
+                  promptAr: surprise?.promptAr,
+                  answered: surpriseAnswers.length,
+                  correct: surpriseAnswers.filter((row) => row.correct).length,
+                  rows: roster.map((row) => {
+                    const hit = surpriseAnswers.find((item) => item.studentId === row.id);
+                    return {
+                      id: row.id,
+                      name: row.name,
+                      answered: Boolean(hit),
+                      correct: hit?.correct ?? null,
+                      seconds: hit && surprise
+                        ? Math.max(0, Math.round((Date.parse(hit.answeredAt) - Date.parse(surprise.opensAt)) / 1000))
+                        : null,
+                    };
+                  }),
+                }}
+              />
+            </div>
+            {surpriseState.error || surpriseCloseState.error ? (
+              <p className="mt-2 text-sm text-red-700">{surpriseState.error || surpriseCloseState.error}</p>
             ) : null}
           </section>
 
@@ -616,6 +766,14 @@ export function AdminShell({
                 {t(locale, "printGrades")}
               </button>
             </div>
+            <p className="mt-2 text-xs text-foreground/55">
+              {t(locale, "monthFees")} · {cairoMonthLabel(cairoMonth(), locale)} · {t(locale, "monthFeesHint")}
+            </p>
+            {unpaid.length > 0 ? (
+              <p className="mt-3 rounded-2xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
+                {t(locale, "monthFeesAlert")}: {unpaid.map((row) => row.name).join(" · ")}
+              </p>
+            ) : null}
             {declined.length > 0 ? (
               <p className="mt-3 rounded-2xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-800">
                 {t(locale, "declinedAlert")}: {declined.map((row) => row.name).join(" · ")}
@@ -625,19 +783,26 @@ export function AdminShell({
               <p className="mt-3 text-sm text-foreground/55">{t(locale, "noCodes")}</p>
             ) : (
               <div className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-primary/10">
-                <table className="w-full min-w-[56rem] text-sm">
+                <table className="w-full min-w-[64rem] text-sm">
                   <thead className="bg-primary/5 text-start">
                     <tr>
                       <th className="px-3 py-2 font-semibold">{t(locale, "student")}</th>
+                      <th className="px-3 py-2 font-semibold">{t(locale, "weekStars")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "standing")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "lastPercent")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "attendance")}</th>
+                      <th className="px-3 py-2 font-semibold">{t(locale, "monthFees")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "suspend")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rankedRoster.map((row) => (
-                      <tr key={row.id} className={`border-t border-primary/8 ${row.declined ? "bg-red-50" : ""}`}>
+                      <tr
+                        key={row.id}
+                        className={`border-t border-primary/8 ${
+                          !row.monthPaid ? "bg-amber-50" : row.declined ? "bg-red-50" : ""
+                        }`}
+                      >
                         <td className="px-3 py-2">
                           <p className="font-medium">{row.name}</p>
                           <p className="font-mono text-xs text-foreground/55">{row.phone}</p>
@@ -649,6 +814,10 @@ export function AdminShell({
                           >
                             {t(locale, "parentReport")}
                           </a>
+                        </td>
+                        <td className="px-3 py-2">
+                          <p className="tracking-wide text-accent">{starLabel(row.week.stars)}</p>
+                          <p className="text-xs text-foreground/55">{row.week.score}</p>
                         </td>
                         <td className="px-3 py-2">
                           {row.standing === "done" ? t(locale, "finishedAll") : `${t(locale, "chapterExam")} ${row.standing}`}
@@ -692,6 +861,66 @@ export function AdminShell({
                                 {t(locale, "absent")}
                               </button>
                             </form>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex flex-wrap items-center gap-1">
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                row.monthPaid ? "bg-emerald-600 text-white" : "bg-amber-600 text-white"
+                              }`}
+                            >
+                              {row.monthPaid ? t(locale, "monthPaid") : t(locale, "monthDue")}
+                            </span>
+                            <form
+                              action={async (formData) => {
+                                await markStudentFee({ error: null }, formData);
+                                router.refresh();
+                              }}
+                            >
+                              <input type="hidden" name="studentId" value={row.id} />
+                              <input type="hidden" name="paid" value="1" />
+                              <button type="submit" className="rounded-full bg-emerald-600 px-2 py-1 text-xs text-white">
+                                {t(locale, "monthPaid")}
+                              </button>
+                            </form>
+                            <form
+                              action={async (formData) => {
+                                await markStudentFee({ error: null }, formData);
+                                router.refresh();
+                              }}
+                            >
+                              <input type="hidden" name="studentId" value={row.id} />
+                              <input type="hidden" name="paid" value="0" />
+                              <button type="submit" className="rounded-full bg-amber-600 px-2 py-1 text-xs text-white">
+                                {t(locale, "monthDue")}
+                              </button>
+                            </form>
+                            {!row.monthPaid && !row.suspended ? (
+                              <form
+                                action={async (formData) => {
+                                  await toggleStudentSuspend({ error: null }, formData);
+                                  router.refresh();
+                                }}
+                              >
+                                <input type="hidden" name="studentId" value={row.id} />
+                                <input type="hidden" name="suspended" value="1" />
+                                <input type="hidden" name="reason" value="اشتراك" />
+                                <button type="submit" className="rounded-full bg-primary px-2 py-1 text-xs font-semibold text-white">
+                                  {t(locale, "suspend")}
+                                </button>
+                              </form>
+                            ) : null}
+                            {!row.monthPaid ? (
+                              <a
+                                href={whatsappHref(row.phone, feesWhatsappText(row, locale))}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="rounded-full bg-emerald-700 px-2 py-1 text-xs font-semibold text-white"
+                              >
+                                {t(locale, "feesWhatsapp")}
+                              </a>
+                            ) : null}
                           </div>
                         </td>
                         <td className="px-3 py-2">
@@ -740,39 +969,133 @@ export function AdminShell({
                   </div>
                   <p className="mt-1 text-xs text-foreground/45">{exam.submittedAt.replace("T", " ").slice(0, 16)}</p>
                   <ol className="mt-3 space-y-2 text-sm">
-                    {exam.essays.map((item) => (
-                      <li key={item.id} className="rounded-xl bg-primary/4 p-3">
-                        <p className="font-medium">{item.prompt}</p>
-                        <p className="mt-1 whitespace-pre-wrap text-foreground/75">{item.answer || "—"}</p>
-                        <form action={gradeEssayForm} className="mt-3 grid gap-2 sm:grid-cols-[6rem_1fr_auto]">
-                          <input type="hidden" name="examId" value={exam.id} />
-                          <input type="hidden" name="studentId" value={exam.studentId} />
-                          <input type="hidden" name="questionId" value={item.id} />
-                          <input
-                            name="score"
-                            type="number"
-                            min={0}
-                            max={16}
-                            step={1}
-                            placeholder={t(locale, "essayScore")}
-                            className="h-10 rounded-xl border border-primary/15 px-2 text-sm"
-                          />
-                          <input
-                            name="note"
-                            placeholder={t(locale, "essayNote")}
-                            className="h-10 rounded-xl border border-primary/15 px-2 text-sm"
-                          />
-                          <button type="submit" className="h-10 rounded-full bg-primary px-3 text-xs font-semibold text-white">
-                            {t(locale, "gradeEssay")}
-                          </button>
-                        </form>
-                      </li>
-                    ))}
+                    {exam.essays.map((item) => {
+                      const grade = essayGrades.find(
+                        (row) => row.examId === exam.id && row.questionId === item.id,
+                      );
+                      const selected = grade ? markForGrade(grade.score, grade.note) : null;
+                      return (
+                        <li key={item.id} className="rounded-xl bg-primary/4 p-3">
+                          <p className="font-medium">{item.prompt}</p>
+                          <p className="mt-1 whitespace-pre-wrap text-foreground/75">{item.answer || "—"}</p>
+                          {grade ? (
+                            <p className="mt-2 text-xs font-semibold text-primary">
+                              {t(locale, "essayMarked")} · {grade.score}/8
+                              {grade.note ? ` · ${grade.note}` : ""}
+                            </p>
+                          ) : null}
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {ESSAY_MARKS.map((mark) => (
+                              <form key={mark.id} action={gradeEssayForm}>
+                                <input type="hidden" name="examId" value={exam.id} />
+                                <input type="hidden" name="studentId" value={exam.studentId} />
+                                <input type="hidden" name="questionId" value={item.id} />
+                                <input type="hidden" name="score" value={mark.score} />
+                                <input
+                                  type="hidden"
+                                  name="note"
+                                  value={locale === "ar" ? mark.noteAr : mark.noteEn}
+                                />
+                                <button
+                                  type="submit"
+                                  className={`h-10 rounded-full px-4 text-xs font-semibold ${
+                                    selected === mark.id
+                                      ? "bg-primary text-white"
+                                      : "bg-white text-primary ring-1 ring-primary/20"
+                                  }`}
+                                >
+                                  {t(locale, mark.labelKey)}
+                                </button>
+                              </form>
+                            ))}
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ol>
                 </article>
               ))}
             </div>
           )}
+        </section>
+      ) : null}
+
+      {tab === "profit" ? (
+        <section className="mt-6 space-y-4">
+          <div className="rounded-3xl bg-primary-dark p-5 text-white">
+            <p className="text-xs text-white/60">{cairoMonthLabel(month, locale)}</p>
+            <p className="mt-1 font-serif text-3xl tabular-nums" dir="ltr">
+              {thisMonth?.revenue ?? 0} {t(locale, "currency")}
+            </p>
+            <p className="mt-2 text-sm text-white/75">
+              {t(locale, "collected")} · {thisMonth?.paid ?? 0} {t(locale, "paidCount")}
+              {" · "}
+              {t(locale, "outstanding")}{" "}
+              <span className="tabular-nums" dir="ltr">
+                {thisMonth?.outstanding ?? 0}
+              </span>{" "}
+              {t(locale, "currency")}
+            </p>
+          </div>
+
+          <div className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "monthlyFee")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "profitHint")}</p>
+            <form action={feeAction} className="mt-4 flex flex-wrap items-end gap-2">
+              <label className="grid gap-1 text-sm font-medium">
+                {t(locale, "monthlyFee")}
+                <input
+                  name="monthlyFee"
+                  type="number"
+                  min={0}
+                  step={1}
+                  key={monthlyFee}
+                  defaultValue={monthlyFee}
+                  className="h-11 w-32 rounded-2xl border border-primary/15 px-3 text-sm tabular-nums"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={feePending}
+                className="inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white disabled:opacity-70"
+              >
+                {feePending ? <LoaderCircle className="size-4 animate-spin" /> : t(locale, "saveFee")}
+              </button>
+            </form>
+          </div>
+
+          <div className="overflow-x-auto rounded-3xl bg-white ring-1 ring-primary/10">
+            <table className="min-w-full text-sm">
+              <thead className="bg-primary/5 text-start">
+                <tr>
+                  <th className="px-3 py-2 font-semibold">{t(locale, "monthProfit")}</th>
+                  <th className="px-3 py-2 font-semibold">{t(locale, "paidCount")}</th>
+                  <th className="px-3 py-2 font-semibold">{t(locale, "dueCount")}</th>
+                  <th className="px-3 py-2 font-semibold">{t(locale, "collected")}</th>
+                  <th className="px-3 py-2 font-semibold">{t(locale, "outstanding")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {profits.map((row) => (
+                  <tr key={row.month} className="border-t border-primary/8">
+                    <td className="px-3 py-2 font-medium">{cairoMonthLabel(row.month, locale)}</td>
+                    <td className="px-3 py-2 tabular-nums" dir="ltr">
+                      {row.paid}/{row.students}
+                    </td>
+                    <td className="px-3 py-2 tabular-nums" dir="ltr">
+                      {row.due}
+                    </td>
+                    <td className="px-3 py-2 font-semibold tabular-nums" dir="ltr">
+                      {row.revenue} {t(locale, "currency")}
+                    </td>
+                    <td className="px-3 py-2 tabular-nums" dir="ltr">
+                      {row.outstanding} {t(locale, "currency")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       ) : null}
     </div>

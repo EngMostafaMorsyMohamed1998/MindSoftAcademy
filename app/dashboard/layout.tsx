@@ -7,6 +7,8 @@ import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { getTheme } from "@/lib/theme";
 import { ChatToTeacherButton } from "@/components/chat-to-teacher-button";
+import { PresenceBeacon } from "@/components/presence-beacon";
+import { SurpriseCatcher } from "@/components/surprise-catcher";
 import { LogoutButton } from "./logout-button";
 import { DashboardNav } from "./nav";
 
@@ -53,6 +55,8 @@ export default async function DashboardLayout({
         <main className="flex-1 px-4 py-6 pb-24 sm:px-6 lg:px-8 md:py-8 md:pb-8">
           {children}
         </main>
+        <PresenceBeacon />
+        <SurpriseCatcher locale={locale} />
         <ChatToTeacherButton locale={locale} />
       </div>
     </div>

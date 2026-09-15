@@ -1,7 +1,9 @@
 import type { AccessCode, AttendanceRow, ExamSubmission, HomeworkResult } from "@/lib/access-store";
 import { CHAPTERS, type ChapterId } from "@/lib/curriculum";
 import { passedObjective } from "@/lib/chapter-progress";
-import { cairoDate } from "@/lib/class-clock";
+import { cairoDate, cairoMonth } from "@/lib/class-clock";
+import { cairoMonthLabel, paidThisMonth, type MonthPayment } from "@/lib/fees";
+import { buildWeekStars, starLabel, type WeekStars } from "@/lib/week-stars";
 
 export const SCORE_DROP = 15;
 
@@ -24,6 +26,8 @@ export type ClassRow = {
   presentToday: boolean | null;
   attendancePresent: number;
   attendanceTotal: number;
+  week: WeekStars;
+  monthPaid: boolean;
 };
 
 function examPercent(exam: ExamSubmission): number {
@@ -37,6 +41,7 @@ export function buildClassRoster(
   exams: ExamSubmission[],
   homework: HomeworkResult[],
   attendance: AttendanceRow[] = [],
+  payments: MonthPayment[] = [],
   today = cairoDate(),
 ): ClassRow[] {
   return codes.map((code) => {
@@ -65,6 +70,11 @@ export function buildClassRoster(
       .filter((lessonId) => !passedLessons.has(lessonId));
     const days = attendance.filter((row) => row.studentId === code.id);
     const todayRow = days.find((row) => row.date === today);
+    const week = buildWeekStars({
+      attendance: days,
+      homework: homework.filter((item) => item.studentId === code.id),
+      exams: studentExams,
+    });
 
     return {
       id: code.id,
@@ -88,6 +98,8 @@ export function buildClassRoster(
       presentToday: todayRow ? todayRow.present : null,
       attendancePresent: days.filter((row) => row.present).length,
       attendanceTotal: days.length,
+      week,
+      monthPaid: paidThisMonth(payments, code.id),
     };
   });
 }
@@ -123,8 +135,31 @@ export function parentWeeklyWhatsappText(row: ClassRow, locale: "ar" | "en"): st
   const missing = shown.length ? `${shown.join(locale === "ar" ? "، " : ", ")}${extra}` : locale === "ar" ? "لا يوجد" : "None";
   const score =
     row.lastPercent === null ? (locale === "ar" ? "لسه مفيش امتحان" : "No exam yet") : `${row.lastScore} (${row.lastPercent}%)`;
+  const stars = `${starLabel(row.week.stars)} (${row.week.score})`;
+  const weekExam =
+    row.week.examPercent === null
+      ? locale === "ar"
+        ? "لسه مفيش"
+        : "None yet"
+      : `${row.week.examPercent}%`;
+  const fee = row.monthPaid
+    ? locale === "ar"
+      ? "اتسدد"
+      : "Paid"
+    : locale === "ar"
+      ? "باقي"
+      : "Due";
+  const month = cairoMonthLabel(cairoMonth(), locale);
   if (locale === "ar") {
-    return `ولي أمر ${row.name}\nتقرير الأسبوع — MindSoft Academy\nالحضور: ${row.attendancePresent}/${row.attendanceTotal}\nآخر درجة: ${score}\nالواجب الناقص: ${missing}\nم. مصطفى محمد`;
+    return `ولي أمر ${row.name}\nتقرير الأسبوع — MindSoft Academy\nنجوم الأسبوع: ${stars}\nحضور الأسبوع: ${row.week.present} حاضر / ${row.week.absent} غايب\nواجبات الأسبوع: ${row.week.homework}\nامتحان الأسبوع: ${weekExam}\nآخر درجة: ${score}\nالواجب الناقص: ${missing}\nاشتراك ${month}: ${fee}\nم. مصطفى محمد`;
   }
-  return `Parent of ${row.name}\nWeekly report — MindSoft Academy\nAttendance: ${row.attendancePresent}/${row.attendanceTotal}\nLast score: ${score}\nMissing homework: ${missing}\nEng. Mostafa Mohamed`;
+  return `Parent of ${row.name}\nWeekly report — MindSoft Academy\nWeek stars: ${stars}\nThis week: ${row.week.present} present / ${row.week.absent} absent\nHomework this week: ${row.week.homework}\nExam this week: ${weekExam}\nLast score: ${score}\nMissing homework: ${missing}\nFees ${month}: ${fee}\nEng. Mostafa Mohamed`;
+}
+
+export function feesWhatsappText(row: ClassRow, locale: "ar" | "en"): string {
+  const month = cairoMonthLabel(cairoMonth(), locale);
+  if (locale === "ar") {
+    return `ولي أمر ${row.name}\nاشتراك ${month} لسه باقي.\nMindSoft Academy\nم. مصطفى محمد`;
+  }
+  return `Parent of ${row.name}\n${month} fees are still due.\nMindSoft Academy\nEng. Mostafa Mohamed`;
 }

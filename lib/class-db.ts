@@ -14,6 +14,8 @@ import type {
 } from "@/lib/access-store";
 import { encodeExamChapter, parseExamChapter } from "@/lib/class-clock";
 import { parseClassSessions, type ClassSession } from "@/lib/class-session";
+import { DEFAULT_MONTHLY_FEE, parsePayments, type MonthPayment } from "@/lib/fees";
+import { parseMakeups, type MakeupTask } from "@/lib/makeup";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
 function asExamWindow(row: { id: string; chapterId: string; opensAt: Date; closesAt: Date }): ExamWindow {
@@ -197,6 +199,96 @@ export async function writeSessionRows(sessions: ClassSession[]): Promise<boolea
   }
 }
 
+export async function readMakeupRows(): Promise<MakeupTask[] | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const rows = await prisma.classMakeup.findMany();
+    return parseMakeups(
+      rows.map((row) => ({
+        studentId: row.studentId,
+        date: row.sessionDate,
+        lessonId: row.lessonId,
+        chapterId: row.chapterId,
+        dueDate: row.dueDate,
+        completedAt: row.completedAt?.toISOString() ?? null,
+        score: row.score,
+        total: row.total,
+      })),
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function writeMakeupRows(tasks: MakeupTask[]): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.$transaction([
+      prisma.classMakeup.deleteMany(),
+      ...(tasks.length
+        ? [
+            prisma.classMakeup.createMany({
+              data: tasks.map((row) => ({
+                studentId: row.studentId,
+                sessionDate: row.date,
+                lessonId: row.lessonId,
+                chapterId: row.chapterId,
+                dueDate: row.dueDate,
+                completedAt: row.completedAt ? asDate(row.completedAt) : null,
+                score: row.score,
+                total: row.total,
+              })),
+            }),
+          ]
+        : []),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readPaymentRows(): Promise<MonthPayment[] | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const rows = await prisma.classPayment.findMany();
+    return parsePayments(
+      rows.map((row) => ({
+        studentId: row.studentId,
+        month: row.month,
+        paid: row.paid,
+        updatedAt: row.updatedAt.toISOString(),
+      })),
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function writePaymentRows(rows: MonthPayment[]): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.$transaction([
+      prisma.classPayment.deleteMany(),
+      ...(rows.length
+        ? [
+            prisma.classPayment.createMany({
+              data: rows.map((row) => ({
+                studentId: row.studentId,
+                month: row.month,
+                paid: row.paid,
+                updatedAt: asDate(row.updatedAt),
+              })),
+            }),
+          ]
+        : []),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function readClassDb(): Promise<StoreFile | null> {
   if (!hasLiveDatabase()) return null;
   try {
@@ -291,6 +383,12 @@ export async function readClassDb(): Promise<StoreFile | null> {
       examWindow: window ? asExamWindow(window) : null,
       weekPlan: parseWeekSlots(weekPlans[0]?.slots),
       sessions: sessionRows.map(asSession),
+      makeups: [],
+      payments: [],
+      monthlyFee: DEFAULT_MONTHLY_FEE,
+      surprise: null,
+      surpriseAnswers: [],
+      presence: [],
       misses: misses.map((row): MissedQuestion => ({
         studentId: row.studentId,
         questionKey: row.questionKey,

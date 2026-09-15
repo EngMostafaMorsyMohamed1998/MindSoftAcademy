@@ -1,12 +1,24 @@
 import { createHmac, randomBytes } from "crypto";
 import { readLocalStore, readStore, writeStore } from "@/lib/access-store-io";
-import type { ExamMode } from "@/lib/class-clock";
+import { cairoMonth, type ExamMode } from "@/lib/class-clock";
 import {
   buildClassSession,
   parseClassSessions,
   upsertSession,
   type ClassSession,
 } from "@/lib/class-session";
+import { parseMonthlyFee, parsePayments, type MonthPayment } from "@/lib/fees";
+import { addCairoDays, lessonForMakeup, MAKEUP_DAYS, parseMakeups, type MakeupTask } from "@/lib/makeup";
+import type { ChapterId } from "@/lib/curriculum";
+import { parsePresence, screenFromPath, type PresencePing } from "@/lib/presence";
+import {
+  parseSurprise,
+  parseSurpriseAnswers,
+  pickSurpriseQuestion,
+  surpriseOpen,
+  type SurpriseAnswer,
+  type SurpriseQuestion,
+} from "@/lib/surprise";
 import { parseWeekSlots, sortWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
 export type AccessCode = {
@@ -103,7 +115,19 @@ export type ExamWindow = {
   mode: ExamMode;
 };
 
-export type { WeekSlot, ClassSession };
+export type { WeekSlot, ClassSession, MakeupTask, MonthPayment, SurpriseAnswer, SurpriseQuestion, PresencePing };
+
+export async function getMonthlyFee(): Promise<number> {
+  return parseMonthlyFee((await readStore()).monthlyFee);
+}
+
+export async function setMonthlyFee(amount: number): Promise<number> {
+  const monthlyFee = parseMonthlyFee(amount);
+  const store = await readStore();
+  store.monthlyFee = monthlyFee;
+  await writeStore(store);
+  return monthlyFee;
+}
 
 export type MissedQuestion = {
   studentId: string;
@@ -379,6 +403,10 @@ export async function listEssayGrades(studentId: string, examId?: string): Promi
   );
 }
 
+export async function listAllEssayGrades(): Promise<EssayGrade[]> {
+  return (await readStore()).essayGrades;
+}
+
 function sanitizeMessage(body: string): string {
   return body.replace(/\s+/g, " ").trim().slice(0, 800);
 }
@@ -483,7 +511,7 @@ export async function markAttendance(input: {
   date: string;
   present: boolean;
 }): Promise<void> {
-  const store = await readStore();
+  const [store, makeups, window] = await Promise.all([readStore(), listMakeups(), getExamWindow()]);
   store.attendance = store.attendance.filter(
     (row) => !(row.studentId === input.studentId && row.date === input.date),
   );
@@ -493,7 +521,71 @@ export async function markAttendance(input: {
     present: input.present,
     createdAt: new Date().toISOString(),
   });
+  store.makeups = makeups;
   await writeStore(store);
+  if (input.present) {
+    const next = makeups.filter(
+      (task) => !(task.studentId === input.studentId && task.date === input.date && !task.completedAt),
+    );
+    if (next.length !== makeups.length) await persistMakeups(next);
+    return;
+  }
+  await assignMakeup({
+    studentId: input.studentId,
+    date: input.date,
+    chapterId: window?.chapterId,
+  });
+}
+
+export async function listPayments(): Promise<MonthPayment[]> {
+  let fromDb: MonthPayment[] | null = null;
+  try {
+    const { readPaymentRows } = await import("@/lib/class-db");
+    fromDb = await readPaymentRows();
+  } catch {
+    fromDb = null;
+  }
+  const local = parsePayments((await readLocalStore())?.payments);
+  if (fromDb && fromDb.length) return fromDb;
+  if (local.length) return local;
+  return fromDb ?? [];
+}
+
+async function persistPayments(rows: MonthPayment[]): Promise<void> {
+  try {
+    const { writePaymentRows } = await import("@/lib/class-db");
+    await writePaymentRows(rows);
+  } catch {
+    // Fall through to the class store.
+  }
+  const store = await readStore();
+  store.payments = rows;
+  await writeStore(store, { replacePayments: true });
+  try {
+    const { writePaymentRows } = await import("@/lib/class-db");
+    await writePaymentRows(rows);
+  } catch {
+    // Local /tmp still has the fees if Postgres is down.
+  }
+}
+
+export async function setMonthPaid(input: { studentId: string; paid: boolean }): Promise<void> {
+  const month = cairoMonth();
+  const rows = await listPayments();
+  const next = rows.filter((row) => !(row.studentId === input.studentId && row.month === month));
+  next.unshift({
+    studentId: input.studentId,
+    month,
+    paid: input.paid,
+    updatedAt: new Date().toISOString(),
+  });
+  await persistPayments(next);
+  if (!input.paid) return;
+  const store = await readStore();
+  const record = store.codes.find((item) => item.id === input.studentId);
+  if (record?.suspendedAt && (!record.suspendReason || record.suspendReason === "اشتراك")) {
+    await setSuspended({ studentId: input.studentId, suspended: false });
+  }
 }
 
 export async function setSuspended(input: {
@@ -626,6 +718,85 @@ export async function closeExamWindow(): Promise<void> {
   await persistExamWindow(null);
 }
 
+export async function getSurprise(): Promise<SurpriseQuestion | null> {
+  return parseSurprise((await readStore()).surprise);
+}
+
+export async function listSurpriseAnswers(surpriseId?: string): Promise<SurpriseAnswer[]> {
+  const store = await readStore();
+  const rows = parseSurpriseAnswers(store.surpriseAnswers);
+  return surpriseId ? rows.filter((row) => row.surpriseId === surpriseId) : rows;
+}
+
+export async function startSurprise(chapterId: ChapterId): Promise<SurpriseQuestion> {
+  const question = pickSurpriseQuestion(chapterId);
+  if (!question) {
+    throw new Error("NO_QUESTION");
+  }
+  const store = await readStore();
+  store.surprise = question;
+  store.surpriseAnswers = [];
+  await writeStore(store, { replaceSurprise: true });
+  return question;
+}
+
+export async function closeSurprise(): Promise<void> {
+  const store = await readStore();
+  if (store.surprise) {
+    store.surprise = { ...store.surprise, closesAt: new Date().toISOString() };
+  }
+  await writeStore(store, { replaceSurprise: true });
+}
+
+export async function answerSurprise(input: {
+  studentId: string;
+  choice: number;
+}): Promise<SurpriseAnswer | null> {
+  const store = await readStore();
+  const question = parseSurprise(store.surprise);
+  if (!question || !surpriseOpen(question)) return null;
+  const existing = parseSurpriseAnswers(store.surpriseAnswers).find(
+    (row) => row.studentId === input.studentId && row.surpriseId === question.id,
+  );
+  if (existing) return existing;
+  const choice = Math.floor(input.choice);
+  if (!Number.isFinite(choice) || choice < 0 || choice >= question.optionsAr.length) {
+    return null;
+  }
+  const row: SurpriseAnswer = {
+    studentId: input.studentId,
+    surpriseId: question.id,
+    choice,
+    correct: choice === question.correctIndex,
+    answeredAt: new Date().toISOString(),
+  };
+  store.surpriseAnswers = [...parseSurpriseAnswers(store.surpriseAnswers), row];
+  await writeStore(store, { replaceSurprise: true });
+  return row;
+}
+
+export async function listPresence(): Promise<PresencePing[]> {
+  return parsePresence((await readStore()).presence);
+}
+
+export async function pingPresence(input: {
+  studentId: string;
+  name: string;
+  path: string;
+}): Promise<PresencePing> {
+  const row: PresencePing = {
+    studentId: input.studentId,
+    name: input.name.replace(/\s+/g, " ").trim().slice(0, 80) || input.studentId,
+    path: input.path.slice(0, 180),
+    screen: screenFromPath(input.path),
+    at: new Date().toISOString(),
+  };
+  const store = await readStore();
+  store.presence = [...parsePresence(store.presence).filter((item) => item.studentId !== row.studentId), row];
+  await writeStore(store, { replacePresence: true });
+  return row;
+}
+
 export async function listClassSessions(): Promise<ClassSession[]> {
   let fromDb: ClassSession[] | null = null;
   try {
@@ -658,6 +829,80 @@ async function persistSessions(sessions: ClassSession[]): Promise<void> {
   }
 }
 
+export async function listMakeups(): Promise<MakeupTask[]> {
+  let fromDb: MakeupTask[] | null = null;
+  try {
+    const { readMakeupRows } = await import("@/lib/class-db");
+    fromDb = await readMakeupRows();
+  } catch {
+    fromDb = null;
+  }
+  const local = parseMakeups((await readLocalStore())?.makeups);
+  if (fromDb && fromDb.length) return fromDb;
+  if (local.length) return local;
+  return fromDb ?? [];
+}
+
+async function persistMakeups(tasks: MakeupTask[]): Promise<void> {
+  try {
+    const { writeMakeupRows } = await import("@/lib/class-db");
+    await writeMakeupRows(tasks);
+  } catch {
+    // Fall through to the class store.
+  }
+  const store = await readStore();
+  store.makeups = tasks;
+  await writeStore(store, { replaceMakeups: true });
+  try {
+    const { writeMakeupRows } = await import("@/lib/class-db");
+    await writeMakeupRows(tasks);
+  } catch {
+    // Local /tmp still has the makeup if Postgres is down.
+  }
+}
+
+export async function listStudentMakeups(studentId: string): Promise<MakeupTask[]> {
+  return (await listMakeups()).filter((task) => task.studentId === studentId);
+}
+
+export async function assignMakeup(input: {
+  studentId: string;
+  date: string;
+  chapterId?: string | null;
+}): Promise<MakeupTask> {
+  const tasks = await listMakeups();
+  const existing = tasks.find((task) => task.studentId === input.studentId && task.date === input.date);
+  if (existing) return existing;
+  const lesson = lessonForMakeup(input.chapterId === "mix" ? undefined : input.chapterId);
+  const task: MakeupTask = {
+    studentId: input.studentId,
+    date: input.date,
+    lessonId: lesson.lessonId,
+    chapterId: lesson.chapterId,
+    dueDate: addCairoDays(input.date, MAKEUP_DAYS),
+    completedAt: null,
+    score: null,
+    total: null,
+  };
+  await persistMakeups([task, ...tasks]);
+  return task;
+}
+
+export async function completeMakeup(
+  studentId: string,
+  date: string,
+  score: number,
+  total: number,
+): Promise<void> {
+  const tasks = await listMakeups();
+  const row = tasks.find((task) => task.studentId === studentId && task.date === date);
+  if (!row || row.completedAt) return;
+  row.completedAt = new Date().toISOString();
+  row.score = score;
+  row.total = total;
+  await persistMakeups(tasks);
+}
+
 export async function archiveClassSession(codes: AccessCode[]): Promise<ClassSession> {
   const [exams, attendance, window] = await Promise.all([listExams(), listAttendance(), getExamWindow()]);
   const session = buildClassSession({
@@ -669,6 +914,27 @@ export async function archiveClassSession(codes: AccessCode[]): Promise<ClassSes
   });
   const next = upsertSession(await listClassSessions(), session);
   await persistSessions(next);
+  const absentees = session.students.filter((row) => row.present === false);
+  if (absentees.length) {
+    const tasks = await listMakeups();
+    let changed = false;
+    for (const row of absentees) {
+      if (tasks.some((task) => task.studentId === row.studentId && task.date === session.date)) continue;
+      const lesson = lessonForMakeup(session.chapterId === "mix" ? undefined : session.chapterId);
+      tasks.unshift({
+        studentId: row.studentId,
+        date: session.date,
+        lessonId: lesson.lessonId,
+        chapterId: lesson.chapterId,
+        dueDate: addCairoDays(session.date, MAKEUP_DAYS),
+        completedAt: null,
+        score: null,
+        total: null,
+      });
+      changed = true;
+    }
+    if (changed) await persistMakeups(tasks);
+  }
   return session;
 }
 

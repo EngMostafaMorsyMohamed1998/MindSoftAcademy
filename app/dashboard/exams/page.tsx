@@ -20,6 +20,20 @@ export default async function ExamsIndexPage() {
       <h1 className="font-serif text-3xl">{t(locale, "navExams")}</h1>
       <p className="mt-2 text-sm text-foreground/65">{t(locale, "examWindowHint")}</p>
       <ul className="mt-6 space-y-3">
+        {examWindowOpen(examWindow, "mix") ? (
+          <li>
+            <Link
+              href="/dashboard/exam/mix"
+              className="flex items-center justify-between rounded-2xl bg-accent/20 p-4 ring-1 ring-accent"
+            >
+              <span>
+                <span className="block font-semibold">{t(locale, "mixedMock")}</span>
+                <span className="text-xs text-foreground/55">{t(locale, "mixedMockHint")}</span>
+              </span>
+              <span className="text-sm font-semibold text-primary">{t(locale, "startExam")}</span>
+            </Link>
+          </li>
+        ) : null}
         {CHAPTERS.map((chapter) => {
           const open = examWindowOpen(examWindow, chapter.id);
           const ready =

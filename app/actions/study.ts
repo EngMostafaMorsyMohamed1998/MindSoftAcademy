@@ -1,9 +1,11 @@
 "use server";
 
 import { randomBytes } from "crypto";
+import { revalidatePath } from "next/cache";
 import {
   addPoints,
   clearMiss,
+  completeMakeup,
   getCodeById,
   getExamWindow,
   latestExam,
@@ -11,6 +13,7 @@ import {
   listEssayGrades,
   listExamChapterIds,
   listPassedHomework,
+  listStudentMakeups,
   recordMisses,
   saveEssayGrade,
   saveExam,
@@ -19,23 +22,22 @@ import {
 } from "@/lib/access-store";
 import { examWindowOpen, REVIEW_AFTER_MS } from "@/lib/class-clock";
 import { mergeCompleted, mergeIds, passedObjective } from "@/lib/chapter-progress";
-import { pickLessonHomework, withShuffledOptions } from "@/lib/homework-bank";
-import { examForChapter, objectiveTotal } from "@/lib/exams";
+import { MAKEUP_HOMEWORK_SIZE, pickLessonHomework, withShuffledOptions } from "@/lib/homework-bank";
+import { examForChapter, objectiveTotal, type ExamPaperId } from "@/lib/exams";
 import { getLocale } from "@/lib/locale";
 import { getStudentSession, setStudentCookie } from "@/lib/student-session";
-import { gameForChapter } from "@/lib/games";
-import type { ChapterId } from "@/lib/curriculum";
+import { getGame } from "@/lib/games";
 
-export async function awardGameXp(chapterId: ChapterId): Promise<number> {
+export async function awardGameXp(gameId: string): Promise<number> {
   const student = await getStudentSession();
   if (!student) return 0;
-  const game = gameForChapter(chapterId);
+  const game = getGame(gameId);
   if (!game) return student.points;
   return addPoints(student.id, game.xp);
 }
 
 export async function submitChapterExam(input: {
-  chapterId: ChapterId;
+  chapterId: ExamPaperId;
   objectiveAnswers: Record<string, number>;
   essayAnswers: Record<string, string>;
 }): Promise<
@@ -104,7 +106,7 @@ export async function submitChapterExam(input: {
     const exams = mergeCompleted(
       student.exams,
       await listExamChapterIds(student.id),
-      passed ? [input.chapterId] : [],
+      input.chapterId !== "mix" && passed ? [input.chapterId] : [],
     );
     await setStudentCookie({
       id: student.id,
@@ -121,6 +123,7 @@ export async function submitChapterExam(input: {
     objectiveTotal: total,
     id,
     passed,
+    answers: input.objectiveAnswers,
   };
 }
 
@@ -128,12 +131,21 @@ export async function submitLessonHomework(input: {
   lessonId: string;
   answers: Record<string, number>;
   seed: number;
+  size?: number;
+  makeupDate?: string;
 }): Promise<{ score: number; total: number; passed: boolean } | { error: string }> {
   const student = await getStudentSession();
   if (!student) return { error: "AUTH" };
   const record = await getCodeById(student.id);
   if (record?.suspendedAt) return { error: "SUSPENDED" };
-  const paper = pickLessonHomework(input.lessonId, input.seed).map((question, index) =>
+  if (input.makeupDate) {
+    const task = (await listStudentMakeups(student.id)).find(
+      (item) => item.date === input.makeupDate && item.lessonId === input.lessonId,
+    );
+    if (!task) return { error: "MAKEUP" };
+  }
+  const size = input.makeupDate ? (input.size ?? MAKEUP_HOMEWORK_SIZE) : input.size;
+  const paper = pickLessonHomework(input.lessonId, input.seed, size).map((question, index) =>
     withShuffledOptions(question, input.seed + index * 17),
   );
   if (paper.length === 0) return { error: "NO_HOMEWORK" };
@@ -180,6 +192,9 @@ export async function submitLessonHomework(input: {
     }));
   await recordMisses(missed);
   if (passed) await addPoints(student.id, score);
+  if (input.makeupDate && passed) {
+    await completeMakeup(student.id, input.makeupDate, score, paper.length);
+  }
   return { score, total: paper.length, passed };
 }
 
@@ -228,6 +243,7 @@ export async function gradeEssay(input: {
     note: input.note.trim().slice(0, 400),
     gradedAt: new Date().toISOString(),
   });
+  revalidatePath("/admin");
   return { ok: true };
 }
 

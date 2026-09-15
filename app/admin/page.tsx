@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
 import { AdminShell } from "./admin-shell";
-import { getAnnouncement, getExamWindow, getWeekPlan, listAttendance, listClassSessions, listExams, listHomeworkResults } from "@/lib/access-store";
+import { getAnnouncement, getExamWindow, getMonthlyFee, getSurprise, getWeekPlan, listAllEssayGrades, listAttendance, listClassSessions, listExams, listHomeworkResults, listPayments, listSurpriseAnswers } from "@/lib/access-store";
 import { buildClassRoster } from "@/lib/class-roster";
 import { listVisibleCodes } from "@/lib/teacher-roster";
 import { t } from "@/lib/i18n";
@@ -15,17 +15,22 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const locale = await getLocale();
   const theme = await getTheme();
-  const [codes, exams, homework, attendance, announcement, examWindow, weekPlan, sessions] = await Promise.all([
+  const [codes, exams, homework, attendance, payments, announcement, examWindow, weekPlan, sessions, essayGrades, monthlyFee, surprise] = await Promise.all([
     listVisibleCodes(),
     listExams(),
     listHomeworkResults(),
     listAttendance(),
+    listPayments(),
     getAnnouncement(),
     getExamWindow(),
     getWeekPlan(),
     listClassSessions(),
+    listAllEssayGrades(),
+    getMonthlyFee(),
+    getSurprise(),
   ]);
-  const roster = buildClassRoster(codes, exams, homework, attendance);
+  const surpriseAnswers = surprise ? await listSurpriseAnswers(surprise.id) : [];
+  const roster = buildClassRoster(codes, exams, homework, attendance, payments);
 
   return (
     <div className="min-h-full bg-background text-foreground">
@@ -59,6 +64,11 @@ export default async function AdminPage() {
           examWindow={examWindow}
           weekPlan={weekPlan}
           sessions={sessions}
+          essayGrades={essayGrades}
+          payments={payments}
+          monthlyFee={monthlyFee}
+          surprise={surprise}
+          surpriseAnswers={surpriseAnswers}
         />
       </main>
     </div>

@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { awardGameXp } from "@/app/actions/study";
+import { ChapterMindMap } from "@/components/chapter-mind-map";
 import type { ChapterGame } from "@/lib/games";
+import { getChapter } from "@/lib/curriculum";
+import { buildMapRounds, mindMapForChapter } from "@/lib/mind-maps";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 
@@ -32,7 +35,7 @@ export function GamePlayer({ locale, game }: { locale: Locale; game: ChapterGame
   async function finish(correct: number, total: number) {
     setScore(Math.round((correct / total) * game.xp));
     setDone(true);
-    await awardGameXp(game.chapterId);
+    await awardGameXp(game.id);
   }
 
   if (done) {
@@ -55,6 +58,9 @@ export function GamePlayer({ locale, game }: { locale: Locale; game: ChapterGame
   if (game.data.kind === "spot") {
     return <SpotPlay locale={locale} game={game} onDone={finish} />;
   }
+  if (game.data.kind === "map") {
+    return <MapPlay locale={locale} game={game} onDone={finish} />;
+  }
   return <PickPlay locale={locale} game={game} onDone={finish} />;
 }
 
@@ -74,7 +80,7 @@ function SortPlay({
     setOrder(shuffle(ids));
     // Shuffle once after mount so server and client HTML match.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [game.chapterId]);
+  }, [game.id]);
   if (!data) return null;
 
   function move(index: number, direction: -1 | 1) {
@@ -131,7 +137,7 @@ function MatchPlay({
 }) {
   const data = game.data.kind === "match" ? game.data : null;
   const pairIds = data?.pairs.map((pair) => pair.id) ?? [];
-  const rights = useShuffledIds(pairIds, game.chapterId);
+  const rights = useShuffledIds(pairIds, game.id);
   const [picks, setPicks] = useState<Record<string, string>>({});
   if (!data) return null;
 
@@ -269,6 +275,67 @@ function PickPlay({
             {choice}
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function MapPlay({
+  locale,
+  game,
+  onDone,
+}: {
+  locale: Locale;
+  game: ChapterGame;
+  onDone: (correct: number, total: number) => void;
+}) {
+  const data = game.data.kind === "map" ? game.data : null;
+  const root = mindMapForChapter(game.chapterId);
+  const chapter = getChapter(game.chapterId);
+  const rounds = buildMapRounds(game.chapterId);
+  const [index, setIndex] = useState(0);
+  const [correct, setCorrect] = useState(0);
+  if (!data || !root || !chapter) return null;
+  const round = rounds[index];
+  if (!round) return null;
+  const choices = locale === "ar" ? round.choicesAr : round.choicesEn;
+
+  return (
+    <div className="mt-6 space-y-4">
+      <p className="text-sm text-foreground/70">{locale === "ar" ? data.introAr : data.introEn}</p>
+      <ChapterMindMap
+        locale={locale}
+        root={root}
+        color={chapter.color}
+        accent={chapter.accent}
+        hiddenId={round.nodeId}
+      />
+      <div className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+        <p className="text-sm font-semibold">{t(locale, "mindMapMissing")}</p>
+        <p className="mt-2 text-sm leading-relaxed">{locale === "ar" ? round.promptAr : round.promptEn}</p>
+        <div className="mt-4 grid gap-2">
+          {choices.map((choice, choiceIndex) => (
+            <button
+              key={`${round.nodeId}-${choice}`}
+              type="button"
+              className="rounded-xl bg-primary/8 px-3 py-3 text-start text-sm font-medium"
+              onClick={() => {
+                const nextCorrect = correct + (choiceIndex === round.correct ? 1 : 0);
+                if (index + 1 >= rounds.length) {
+                  onDone(nextCorrect, rounds.length);
+                } else {
+                  setCorrect(nextCorrect);
+                  setIndex(index + 1);
+                }
+              }}
+            >
+              {choice}
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-foreground/50" dir="ltr">
+          {index + 1} / {rounds.length}
+        </p>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ export type ReviewItem = {
   correct: string;
   hint: string;
   ok: boolean;
+  answered: boolean;
 };
 
 function optionLabel(
@@ -18,11 +19,13 @@ function optionLabel(
   locale: Locale,
 ): string {
   if (index === undefined) return "—";
+  const label = options?.[index]?.trim();
+  if (label) return label;
   if (kind === "tf") {
     if (locale === "ar") return index === 0 ? "صح" : "غلط";
     return index === 0 ? "True" : "False";
   }
-  return options?.[index]?.trim() || "—";
+  return "—";
 }
 
 export function reviewObjectives(
@@ -39,7 +42,8 @@ export function reviewObjectives(
   return questions.map((question) => {
     const options = locale === "ar" ? question.optionsAr : question.optionsEn;
     const chosenIndex = answers[question.id];
-    const ok = chosenIndex === question.correctIndex;
+    const answered = chosenIndex !== undefined;
+    const ok = answered && chosenIndex === question.correctIndex;
     return {
       id: question.id,
       prompt: locale === "ar" ? question.promptAr : question.promptEn,
@@ -47,6 +51,7 @@ export function reviewObjectives(
       correct: optionLabel(options, question.correctIndex, question.kind, locale),
       hint,
       ok,
+      answered,
     };
   });
 }
@@ -60,7 +65,8 @@ export function reviewHomework(
   return questions.map((question) => {
     const options = locale === "ar" ? question.optionsAr : question.optionsEn;
     const chosenIndex = answers[question.id];
-    const ok = chosenIndex === question.correctIndex;
+    const answered = chosenIndex !== undefined;
+    const ok = answered && chosenIndex === question.correctIndex;
     return {
       id: question.id,
       prompt: locale === "ar" ? question.promptAr : question.promptEn,
@@ -68,6 +74,7 @@ export function reviewHomework(
       correct: optionLabel(options, question.correctIndex, question.kind, locale),
       hint,
       ok,
+      answered,
     };
   });
 }

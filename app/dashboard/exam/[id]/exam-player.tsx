@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnswerReview } from "@/components/answer-review";
+import { TrueFalsePick } from "@/components/true-false-pick";
 import { submitChapterExam } from "@/app/actions/study";
 import type { ChapterExam, ObjectiveQuestion } from "@/lib/exams";
 import { t } from "@/lib/i18n";
@@ -12,14 +13,20 @@ import { newAttemptSeed, shuffled } from "@/lib/shuffle";
 
 type PaperQuestion = ObjectiveQuestion & { optionOrder: number[] };
 
+function optionCount(question: ObjectiveQuestion) {
+  if (question.kind === "tf") return 2;
+  return (question.optionsAr ?? []).filter((option) => option.trim()).length;
+}
+
 function buildPaper(exam: ChapterExam, seed: number): PaperQuestion[] {
   return shuffled(exam.objectives, seed).map((question, index) => {
-    const optionOrder = shuffled(
-      question.optionsAr
-        ? question.optionsAr.map((_, optionIndex) => optionIndex)
-        : [0, 1],
-      seed + index * 31 + question.id.length,
-    );
+    const optionOrder =
+      question.kind === "tf"
+        ? [0, 1]
+        : shuffled(
+            Array.from({ length: optionCount(question) }, (_, optionIndex) => optionIndex),
+            seed + index * 31 + question.id.length,
+          );
     return { ...question, optionOrder };
   });
 }
@@ -58,6 +65,7 @@ export function ChapterExamPlayer({
     objectiveScore: number;
     objectiveTotal: number;
     passed: boolean;
+    answers?: Record<string, number>;
   } | null>(null);
   const [saving, setSaving] = useState(false);
   const [seed, setSeed] = useState(0);
@@ -129,8 +137,8 @@ export function ChapterExamPlayer({
     return (
       <div className="mt-6 rounded-3xl bg-white p-6 ring-1 ring-primary/10">
         <p className="text-sm text-foreground/55">{t(locale, "objectiveScore")}</p>
-        <p className="font-serif text-4xl">
-          {result.objectiveScore} / {result.objectiveTotal}
+        <p className="font-serif text-4xl" dir="ltr">
+          {result.objectiveScore}/{result.objectiveTotal}
           <span className="ms-2 text-2xl text-foreground/45">
             ({Math.round((result.objectiveScore / Math.max(result.objectiveTotal, 1)) * 100)}%)
           </span>
@@ -141,7 +149,8 @@ export function ChapterExamPlayer({
         <p className="mt-2 text-sm text-accent">{t(locale, "pendingReview")}</p>
         <AnswerReview
           locale={locale}
-          items={reviewObjectives(exam.objectives, objective, locale, lessonHint)}
+          items={reviewObjectives(exam.objectives, result.answers ?? objective, locale, "")}
+          takeaway={lessonHint}
         />
         {result.passed && nextHref ? (
           <Link
@@ -182,27 +191,39 @@ export function ChapterExamPlayer({
         : locale === "ar"
           ? question.optionsAr ?? []
           : question.optionsEn ?? [];
-    const options = optionOrder
-      ? optionOrder.map((original) => rawOptions[original] ?? "")
-      : rawOptions;
+    const visible = (optionOrder.length ? optionOrder : rawOptions.map((_, optionIndex) => optionIndex))
+      .map((original) => ({
+        original,
+        label: (rawOptions[original] ?? "").trim(),
+      }))
+      .filter((row) => row.label);
+
     return (
-      <li key={question.id}>
-        <p className="text-sm font-medium">
-          {index + 1}. {prompt}
-          <span className="ms-2 text-xs text-foreground/45">
-            {question.kind === "tf" ? t(locale, "trueFalse") : t(locale, "mcq")}
+      <div key={question.id}>
+        <div className="flex items-start gap-2 text-sm font-medium">
+          <span className="tabular-nums leading-6">{index + 1}.</span>
+          <span className="min-w-0 flex-1 leading-6" lang={locale}>
+            {prompt}
           </span>
-        </p>
-        <div className="mt-2 grid gap-2">
-          {options.filter(Boolean).map((option, optionIndex) => {
-            const originalIndex = optionOrder?.[optionIndex] ?? optionIndex;
-            return (
+        </div>
+        {question.kind === "tf" ? (
+          <TrueFalsePick
+            locale={locale}
+            value={objective[question.id]}
+            disabled={locked}
+            onChange={(choice) =>
+              setObjective((current) => ({ ...current, [question.id]: choice }))
+            }
+          />
+        ) : (
+          <div className="mt-2 grid gap-2">
+            {visible.map((row) => (
               <label
-                key={`${question.id}-${originalIndex}`}
+                key={`${question.id}-${row.original}`}
                 className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm ring-1 ${
                   locked ? "cursor-default" : "cursor-pointer"
                 } ${
-                  objective[question.id] === originalIndex
+                  objective[question.id] === row.original
                     ? "bg-primary/10 ring-primary"
                     : "ring-primary/10"
                 }`}
@@ -211,17 +232,19 @@ export function ChapterExamPlayer({
                   type="radio"
                   name={question.id}
                   disabled={locked}
-                  checked={objective[question.id] === originalIndex}
+                  checked={objective[question.id] === row.original}
                   onChange={() =>
-                    setObjective((current) => ({ ...current, [question.id]: originalIndex }))
+                    setObjective((current) => ({ ...current, [question.id]: row.original }))
                   }
                 />
-                {option}
+                <span className="block" lang={locale}>
+                  {row.label}
+                </span>
               </label>
-            );
-          })}
-        </div>
-      </li>
+            ))}
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -236,12 +259,15 @@ export function ChapterExamPlayer({
             {t(locale, "timeLeft")}: {formatTime(seconds)}
           </span>
           <span>
-            {t(locale, "ministryQuestion")} {Math.min(step + 1, ministryTotal)}/{ministryTotal}
+            {t(locale, "ministryQuestion")}{" "}
+            <span className="tabular-nums" dir="ltr">
+              {Math.min(step + 1, ministryTotal)}/{ministryTotal}
+            </span>
           </span>
         </div>
         <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
           {!onEssay && paper[step] ? (
-            <ol>{renderObjective(paper[step], step, false)}</ol>
+            renderObjective(paper[step], step, false)
           ) : essay ? (
             <div>
               <h2 className="font-semibold">{t(locale, "essay")}</h2>
@@ -285,7 +311,10 @@ export function ChapterExamPlayer({
           {t(locale, "timeLeft")}: {formatTime(seconds)}
         </span>
         <span>
-          {answered}/{exam.objectives.length} {t(locale, "objective")}
+          {t(locale, "objective")}{" "}
+          <span className="tabular-nums" dir="ltr">
+            {answered}/{exam.objectives.length}
+          </span>
         </span>
       </div>
 
@@ -293,21 +322,24 @@ export function ChapterExamPlayer({
         <h2 className="font-semibold">
           {t(locale, "objective")} · 50%
         </h2>
-        <ol className="mt-4 space-y-5">
+        <div className="mt-4 space-y-5">
           {paper.map((question, index) => renderObjective(question, index, false))}
-        </ol>
+        </div>
       </section>
 
       <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
         <h2 className="font-semibold">{t(locale, "essay")} · 50%</h2>
         <p className="mt-1 text-xs text-foreground/55">{t(locale, "essayHint")}</p>
-        <ol className="mt-4 space-y-5">
+        <div className="mt-4 space-y-5">
           {exam.essays.map((question, index) => (
-            <li key={question.id}>
-              <p className="text-sm font-medium">
-                {index + 1}. {locale === "ar" ? question.promptAr : question.promptEn}
-              </p>
-              <p className="mt-1 text-xs text-foreground/50">
+            <div key={question.id}>
+              <div className="flex items-start gap-2 text-sm font-medium">
+                <span className="tabular-nums leading-6">{index + 1}.</span>
+                <span className="min-w-0 flex-1 leading-6" lang={locale}>
+                  {locale === "ar" ? question.promptAr : question.promptEn}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-foreground/50" lang={locale}>
                 {locale === "ar" ? question.guideAr : question.guideEn}
               </p>
               <textarea
@@ -319,9 +351,9 @@ export function ChapterExamPlayer({
                 placeholder={t(locale, "writeAnswer")}
                 className="mt-2 w-full rounded-2xl border border-primary/15 p-3 text-sm"
               />
-            </li>
+            </div>
           ))}
-        </ol>
+        </div>
       </section>
 
       <button

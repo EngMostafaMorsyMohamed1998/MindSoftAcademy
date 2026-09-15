@@ -11,7 +11,11 @@ import {
   normalizePhone,
   redeemCode,
   setAnnouncement,
+  setMonthPaid,
+  setMonthlyFee,
   setSuspended,
+  startSurprise,
+  closeSurprise,
   addWeekSlot,
   archiveClassSession,
   closeExamWindow,
@@ -33,6 +37,8 @@ export type FormState = {
   examClosed?: boolean;
   examMode?: "class" | "ministry";
   sessionSaved?: boolean;
+  surpriseId?: string;
+  surpriseClosesAt?: string;
 };
 
 function read(formData: FormData, key: string): string {
@@ -166,6 +172,52 @@ export async function toggleStudentSuspend(
   return { error: null, ok: true };
 }
 
+export async function markStudentFee(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const studentId = read(formData, "studentId");
+  if (!studentId) return { error: "MISSING" };
+  await setMonthPaid({ studentId, paid: read(formData, "paid") === "1" });
+  return { error: null, ok: true };
+}
+
+export async function saveMonthlyFee(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const amount = Number(read(formData, "monthlyFee"));
+  if (!Number.isFinite(amount) || amount < 0) return { error: "MISSING" };
+  await setMonthlyFee(amount);
+  return { error: null, ok: true };
+}
+
+export async function openSurprise(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const chapterId = read(formData, "chapterId");
+  if (!isChapterId(chapterId)) return { error: "MISSING" };
+  try {
+    const question = await startSurprise(chapterId);
+    return { error: null, ok: true, surpriseId: question.id, surpriseClosesAt: question.closesAt };
+  } catch {
+    return { error: "MISSING" };
+  }
+}
+
+export async function stopSurprise(
+  _prev: FormState,
+  _formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  await closeSurprise();
+  return { error: null, ok: true };
+}
+
 export async function saveAnnouncement(
   _prev: FormState,
   formData: FormData,
@@ -186,6 +238,23 @@ export async function openClassExam(
   const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 30 * 60;
   const mode = read(formData, "ministry") === "1" ? "ministry" : "class";
   const window = await startExamWindow(chapterId, duration, mode);
+  return {
+    error: null,
+    ok: true,
+    examChapterId: window.chapterId,
+    examClosesAt: window.closesAt,
+    examMode: window.mode,
+  };
+}
+
+export async function openMixedMock(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const minutes = Number(read(formData, "minutes") || "90");
+  const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 90 * 60;
+  const window = await startExamWindow("mix", duration, "ministry");
   return {
     error: null,
     ok: true,

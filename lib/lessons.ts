@@ -74,12 +74,16 @@ export const LESSON_NOTES: LessonNote[] = [
     id: "1-3",
     chapterId: "1",
     termsAr: [
-      { term: "الذكاء الضيق", meaning: "يتقن مهمة واحدة فقط، وهذا شكل معظم أنظمة اليوم." },
+      { term: "الذكاء الضيق", meaning: "نظام يتقن مهمة واحدة فقط، وهذا شكل معظم أنظمة اليوم." },
       { term: "التحيز", meaning: "أخطاء متكررة لأن بيانات التدريب غير عادلة أو ناقصة." },
+      { term: "نظام توصية", meaning: "يقترح محتوى أو منتجًا من أنماط سابقة." },
+      { term: "صيانة تنبؤية", meaning: "توقع عطل الآلة قبل حدوثه من بيانات الحساسات." },
     ],
     termsEn: [
       { term: "Narrow AI", meaning: "Expert at one task only — the form of most systems today." },
       { term: "Bias", meaning: "Repeated errors because training data is unfair or incomplete." },
+      { term: "Recommender", meaning: "Suggests content or a product from past patterns." },
+      { term: "Predictive maintenance", meaning: "Forecast a machine fault from sensor data before it happens." },
     ],
     bodyAr: [
       "أمثلة يومية: ترجمة، توصيات، فلترة بريد، تشخيص طبي مساعد، صيانة تنبؤية في المصانع.",
@@ -101,11 +105,13 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "الخصوصية", meaning: "حق الشخص في السيطرة على بياناته." },
       { term: "الشفافية", meaning: "أن نفهم لماذا اتخذ النظام قرارًا." },
       { term: "المساءلة", meaning: "وجود مسؤول بشري عن أثر القرار." },
+      { term: "التزييف العميق", meaning: "صوت أو صورة مُصنَّعة تبدو حقيقية." },
     ],
     termsEn: [
       { term: "Privacy", meaning: "A person's right to control their data." },
       { term: "Transparency", meaning: "Being able to understand why a system decided." },
       { term: "Accountability", meaning: "A human remains responsible for the decision's effect." },
+      { term: "Deepfake", meaning: "A fabricated voice or image that looks real." },
     ],
     bodyAr: [
       "قضايا أخلاقية: التحيز، انتهاك الخصوصية، التزييف العميق، فقدان وظائف، الاعتماد الأعمى على النموذج.",
@@ -185,11 +191,13 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "الحادث", meaning: "حدث يهدد سرية أو سلامة أو إتاحة المعلومات." },
       { term: "إدارة المخاطر", meaning: "تحديد الخطر، تقديره، ثم قبوله أو تخفيفه أو نقله." },
       { term: "خطة الاستجابة", meaning: "خطوات جاهزة: اكتشاف، احتواء، إزالة، تعافٍ، مراجعة." },
+      { term: "الاحتواء", meaning: "عزل الجهاز أو الحساب حتى لا يتسع الضرر." },
     ],
     termsEn: [
       { term: "Incident", meaning: "An event that threatens confidentiality, integrity, or availability." },
       { term: "Risk management", meaning: "Identify, estimate, then accept, reduce, or transfer the risk." },
       { term: "Response plan", meaning: "Ready steps: detect, contain, eradicate, recover, review." },
+      { term: "Containment", meaning: "Isolate the device or account so the damage does not spread." },
     ],
     bodyAr: [
       "لا تخفِ الحادث. الوقت الضائع يوسّع الضرر.",
@@ -294,10 +302,14 @@ export const LESSON_NOTES: LessonNote[] = [
     termsAr: [
       { term: "وسائط متعددة", meaning: "نص، صورة، صوت، فيديو، رسوم متحركة." },
       { term: "ضغط الملفات", meaning: "تقليل الحجم مع أو بغير فقد في الجودة." },
+      { term: "النص البديل", meaning: "وصف الصورة لمن لا يراها أو يستخدم قارئ شاشة." },
+      { term: "الدقة مقابل الحجم", meaning: "موازنة وضوح الوسيط وسرعة التحميل." },
     ],
     termsEn: [
       { term: "Multimedia", meaning: "Text, image, audio, video, animation." },
       { term: "Compression", meaning: "Shrink file size, with or without quality loss." },
+      { term: "Alt text", meaning: "A description of the image for someone who cannot see it." },
+      { term: "Quality vs size", meaning: "Balance how sharp a medium is against how fast it loads." },
     ],
     bodyAr: [
       "كل وسيط يناسب رسالة: جدول للأرقام، فيديو للحركة، أيقونة للفعل السريع.",
@@ -319,11 +331,13 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "تجربة المستخدم UX", meaning: "سهولة ووضوح الرحلة حتى يحقق المستخدم هدفه." },
       { term: "واجهة المستخدم UI", meaning: "العناصر المرئية التي يلمسها." },
       { term: "التسلسل البصري", meaning: "العين تعرف أين تبدأ وأين تضغط." },
+      { term: "عدد النقرات", meaning: "كم خطوة يحتاجها المستخدم حتى يتم المهمة." },
     ],
     termsEn: [
       { term: "UX", meaning: "How easy and clear the journey is until the user reaches a goal." },
       { term: "UI", meaning: "The visible controls the user touches." },
       { term: "Visual hierarchy", meaning: "The eye knows where to start and where to click." },
+      { term: "Click count", meaning: "How many steps the user needs to finish the task." },
     ],
     bodyAr: [
       "صمّم للمهمة: يسجّل الطالب حضوره في أقل خطوات.",
@@ -344,10 +358,14 @@ export const LESSON_NOTES: LessonNote[] = [
     termsAr: [
       { term: "قابلية الاستخدام", meaning: "هل ينجز المستخدم المهمة بسرعة وبلا أخطاء؟" },
       { term: "اختبار أ/ب", meaning: "مقارنة نسختين وقياس أيهما أفضل." },
+      { term: "زمن المهمة", meaning: "كم يستغرق المستخدم حتى ينهي الهدف." },
+      { term: "رضا المستخدم", meaning: "هل يشعر أن التجربة واضحة ومريحة." },
     ],
     termsEn: [
       { term: "Usability", meaning: "Can the user finish the task quickly with few errors?" },
       { term: "A/B test", meaning: "Compare two versions and measure which works better." },
+      { term: "Task time", meaning: "How long the user takes to finish the goal." },
+      { term: "Satisfaction", meaning: "Whether the experience feels clear and comfortable." },
     ],
     bodyAr: [
       "قيّم بمعايير: وضوح الهدف، زمن المهمة، عدد الأخطاء، رضا المستخدم.",
@@ -368,10 +386,14 @@ export const LESSON_NOTES: LessonNote[] = [
     termsAr: [
       { term: "التكرار", meaning: "صمّم → اختبر → تعلّم → حسّن → أعد." },
       { term: "النموذج الأولي", meaning: "نسخة رخيصة سريعة للاختبار قبل البناء الكامل." },
+      { term: "معدل الخروج", meaning: "أين يغادر الزائر الصفحة قبل إتمام المهمة." },
+      { term: "دليل القرار", meaning: "سبب مكتوب للتغيير مبني على ملاحظة لا ذوق فقط." },
     ],
     termsEn: [
       { term: "Iteration", meaning: "Design → test → learn → improve → repeat." },
       { term: "Prototype", meaning: "A cheap, fast version used to test before full build." },
+      { term: "Drop-off", meaning: "Where a visitor leaves the page before finishing the task." },
+      { term: "Decision record", meaning: "A written reason for a change, based on evidence not taste alone." },
     ],
     bodyAr: [
       "الموقع لا يُنشر مرة ويُنسى. راقب أين يغادر الزائر.",
@@ -421,11 +443,13 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "قيمة مفقودة", meaning: "خلية فارغة؛ احذف أو املأ أو علّم حسب المعنى." },
       { term: "قيمة شاذة", meaning: "بعيدة جدًا؛ قد تكون خطأ أو حقيقة نادرة." },
       { term: "تطبيع / تقييس", meaning: "0–1 للمقارنة / متوسط 0 وانحراف 1." },
+      { term: "تكرار", meaning: "صفّان متشابهان قد يكونان خطأ نسخ أو عمليتين حقيقيتين." },
     ],
     termsEn: [
       { term: "Missing value", meaning: "A blank; delete, impute, or flag by meaning." },
       { term: "Outlier", meaning: "Far from the rest; error or a rare truth." },
       { term: "Normalise / standardise", meaning: "Scale to 0–1 / mean 0 and SD 1." },
+      { term: "Duplicate", meaning: "Two similar rows that may be a copy error or two real events." },
     ],
     bodyAr: [
       "مدخلات سيئة = مخرجات سيئة، حتى لو كان الحساب أنيقًا.",
@@ -446,10 +470,14 @@ export const LESSON_NOTES: LessonNote[] = [
     termsAr: [
       { term: "بيانات مفتوحة", meaning: "بيانات عامة يمكن إعادة استخدامها بشروط واضحة." },
       { term: "واجهة برمجة", meaning: "طلب منظّم لجلب بيانات محدّثة من مصدر." },
+      { term: "الترخيص", meaning: "شروط إعادة استخدام البيانات: هل يجوز النسخ والنشر." },
+      { term: "تاريخ التحديث", meaning: "متى جُمعت الأرقام آخر مرة حتى لا تعتمد رقمًا قديمًا." },
     ],
     termsEn: [
       { term: "Open data", meaning: "Public data that can be reused under a clear licence." },
       { term: "API", meaning: "A structured way to fetch fresh data from a source." },
+      { term: "Licence", meaning: "The reuse rules: whether you may copy and publish." },
+      { term: "Update date", meaning: "When the numbers were last collected, so you do not trust a stale figure." },
     ],
     bodyAr: [
       "البيانات المفتوحة تختصر الوقت، لكن راجع الترخيص وتاريخ التحديث والتحيز المحتمل.",
@@ -471,11 +499,13 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "إحصاء وصفي", meaning: "يلخّص العينة: متوسط، وسيط، تباين." },
       { term: "استدلال", meaning: "تعميم حذر من العينة إلى المجتمع مع مقدار عدم اليقين." },
       { term: "فرضية", meaning: "ادعاء نختبره بالبيانات لا بالشعور." },
+      { term: "فترة ثقة", meaning: "مدى نضع فيه تقدير المجتمع مع مقدار عدم اليقين." },
     ],
     termsEn: [
       { term: "Descriptive stats", meaning: "Summarise the sample: mean, median, spread." },
       { term: "Inference", meaning: "A cautious generalisation from sample to population, with uncertainty." },
       { term: "Hypothesis", meaning: "A claim we test with data, not with feeling." },
+      { term: "Confidence interval", meaning: "A range for the population estimate, with uncertainty." },
     ],
     bodyAr: [
       "المتوسط يخدع إن وُجدت قيمة شاذة؛ انظر الوسيط أيضًا.",
@@ -496,10 +526,14 @@ export const LESSON_NOTES: LessonNote[] = [
     termsAr: [
       { term: "انحدار خطي", meaning: "خط يصف علاقة تقريبية بين متغيرين." },
       { term: "بواقي", meaning: "فرق الواقع عن الخط؛ إن كبرت فالخط ضعيف." },
+      { term: "استكمال", meaning: "التنبؤ خارج مدى البيانات التي بنيت عليها الخط." },
+      { term: "متغير تفسيري", meaning: "المتغير الذي نستخدمه لشرح أو توقع الآخر." },
     ],
     termsEn: [
       { term: "Linear regression", meaning: "A line that roughly describes a relationship between two variables." },
       { term: "Residuals", meaning: "Reality minus the line; large residuals mean a weak fit." },
+      { term: "Extrapolation", meaning: "Predicting outside the data range the line was built on." },
+      { term: "Explanatory variable", meaning: "The variable we use to explain or predict the other." },
     ],
     bodyAr: [
       "استخدم الانحدار عندما تتوقع اتجاهًا، لا عندما تكون النقاط سحابة بلا شكل.",
@@ -521,11 +555,13 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "رسم أعمدة", meaning: "مقارنة فئات." },
       { term: "خط زمني", meaning: "تتبع التغير عبر الوقت." },
       { term: "دائرة", meaning: "أجزاء من كل — بحذر إن كثرت الشرائح." },
+      { term: "المصدر", meaning: "من أين جاءت الأرقام، ويُذكر تحت الرسم." },
     ],
     termsEn: [
       { term: "Bar chart", meaning: "Compare categories." },
       { term: "Line chart", meaning: "Track change over time." },
       { term: "Pie", meaning: "Parts of a whole — weak when there are many slices." },
+      { term: "Source", meaning: "Where the numbers came from; cited under the chart." },
     ],
     bodyAr: [
       "اختر الرسم الذي يخدم السؤال لا الذي يبدو أجمل.",
@@ -547,11 +583,13 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "تعلم بإشراف", meaning: "أمثلة معلّمة: مدخل ومخرج معروف." },
       { term: "تعلم بلا إشراف", meaning: "بحث عن تجمعات أو أنماط بلا تسمية جاهزة." },
       { term: "تدريب / اختبار", meaning: "تعلّم على جزء، وقِس على جزء لم يره النموذج." },
+      { term: "تصنيف", meaning: "التنبؤ بفئة مثل ناجح أو راسب." },
     ],
     termsEn: [
       { term: "Supervised", meaning: "Labeled examples: known input and output." },
       { term: "Unsupervised", meaning: "Find clusters or patterns without ready labels." },
       { term: "Train / test", meaning: "Learn on one split; measure on a split the model has not seen." },
+      { term: "Classification", meaning: "Predict a class such as pass or fail." },
     ],
     bodyAr: [
       "جودة النموذج = جودة البيانات + مناسبة الخوارزمية + تقييم صادق.",
@@ -573,11 +611,13 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "عصبون اصطناعي", meaning: "وحدة تجمع مدخلات موزونة ثم تفعّل خرجًا." },
       { term: "وزن", meaning: "قوة الصلة؛ التعلم يعدّل الأوزان." },
       { term: "طبقة", meaning: "مجموعة عصبونات؛ العمق = طبقات مخفية أكثر." },
+      { term: "الصندوق الأسود", meaning: "نموذج يصعب شرح لماذا اتخذ قرارًا." },
     ],
     termsEn: [
       { term: "Artificial neuron", meaning: "A unit that combines weighted inputs then activates an output." },
       { term: "Weight", meaning: "Connection strength; learning adjusts weights." },
       { term: "Layer", meaning: "A group of neurons; depth means more hidden layers." },
+      { term: "Black box", meaning: "A model that is hard to explain after it decides." },
     ],
     bodyAr: [
       "الشبكة تتعلم تمثيلات: الحواف ثم الأشكال ثم الوجه في صور القيادة الذاتية.",
@@ -599,11 +639,13 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "نموذج لغة كبير", meaning: "شبكة تدربت على نص هائل لتوقع الكلمة التالية." },
       { term: "توجيه الأوامر", meaning: "صياغة السؤال تؤثر على جودة الرد." },
       { term: "هلوسة", meaning: "جملة فصيحة بلا سند." },
+      { term: "رمز / توكن", meaning: "وحدة النص التي يتوقعها النموذج كلمةً بعد كلمة." },
     ],
     termsEn: [
       { term: "LLM", meaning: "A network trained on huge text to predict the next token." },
       { term: "Prompting", meaning: "How you ask changes the quality of the reply." },
       { term: "Hallucination", meaning: "Fluent text with no grounding." },
+      { term: "Token", meaning: "The text unit the model predicts, one after another." },
     ],
     bodyAr: [
       "النموذج لا «يعرف» كالإنسان؛ يحسب أرجح تكملة.",

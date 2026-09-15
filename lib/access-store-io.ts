@@ -14,6 +14,15 @@ import type {
 } from "@/lib/access-store";
 import { parseExamChapter } from "@/lib/class-clock";
 import { parseClassSessions, type ClassSession } from "@/lib/class-session";
+import { DEFAULT_MONTHLY_FEE, parseMonthlyFee, parsePayments, type MonthPayment } from "@/lib/fees";
+import { parseMakeups, type MakeupTask } from "@/lib/makeup";
+import {
+  parseSurprise,
+  parseSurpriseAnswers,
+  type SurpriseAnswer,
+  type SurpriseQuestion,
+} from "@/lib/surprise";
+import { parsePresence, type PresencePing } from "@/lib/presence";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
 export type StoreFile = {
@@ -29,6 +38,12 @@ export type StoreFile = {
   misses: MissedQuestion[];
   weekPlan: WeekSlot[];
   sessions: ClassSession[];
+  makeups: MakeupTask[];
+  payments: MonthPayment[];
+  monthlyFee: number;
+  surprise: SurpriseQuestion | null;
+  surpriseAnswers: SurpriseAnswer[];
+  presence: PresencePing[];
 };
 
 const BLOB_KEY = "mindsoft-access-store.json";
@@ -54,6 +69,12 @@ export function emptyStore(): StoreFile {
     misses: [],
     weekPlan: [],
     sessions: [],
+    makeups: [],
+    payments: [],
+    monthlyFee: DEFAULT_MONTHLY_FEE,
+    surprise: null,
+    surpriseAnswers: [],
+    presence: [],
   };
 }
 
@@ -95,6 +116,12 @@ export function parseStore(value: unknown): StoreFile {
     misses: Array.isArray(parsed.misses) ? parsed.misses : [],
     weekPlan: parseWeekSlots(parsed.weekPlan),
     sessions: parseClassSessions(parsed.sessions),
+    makeups: parseMakeups(parsed.makeups),
+    payments: parsePayments(parsed.payments),
+    monthlyFee: parseMonthlyFee(parsed.monthlyFee),
+    surprise: parseSurprise(parsed.surprise),
+    surpriseAnswers: parseSurpriseAnswers(parsed.surpriseAnswers),
+    presence: parsePresence(parsed.presence),
   };
 }
 
@@ -150,7 +177,16 @@ export async function readStore(): Promise<StoreFile> {
   try {
     const { readClassDb } = await import("@/lib/class-db");
     const fromDb = await readClassDb();
-    if (fromDb) return fromDb;
+    if (fromDb) {
+      const local = await readLocalStore();
+      if (local) {
+        fromDb.monthlyFee = parseMonthlyFee(local.monthlyFee);
+        fromDb.surprise = parseSurprise(local.surprise);
+        fromDb.surpriseAnswers = parseSurpriseAnswers(local.surpriseAnswers);
+        fromDb.presence = parsePresence(local.presence);
+      }
+      return fromDb;
+    }
   } catch {
     // Prisma client or database may not be ready yet.
   }
@@ -159,7 +195,48 @@ export async function readStore(): Promise<StoreFile> {
     return (await readLocalStore()) ?? emptyStore();
 }
 
-export async function writeStore(store: StoreFile): Promise<void> {
+export async function writeStore(
+  store: StoreFile,
+  options?: {
+    replaceMakeups?: boolean;
+    replacePayments?: boolean;
+    replaceSurprise?: boolean;
+    replacePresence?: boolean;
+  },
+): Promise<void> {
+  if (!options?.replaceMakeups && !store.makeups.length) {
+    let dedicated: MakeupTask[] | null = null;
+    try {
+      const { readMakeupRows } = await import("@/lib/class-db");
+      dedicated = await readMakeupRows();
+    } catch {
+      dedicated = null;
+    }
+    const local = parseMakeups((await readLocalStore())?.makeups);
+    store.makeups = dedicated?.length ? dedicated : local;
+  }
+  if (!options?.replacePayments && !store.payments.length) {
+    let dedicated: MonthPayment[] | null = null;
+    try {
+      const { readPaymentRows } = await import("@/lib/class-db");
+      dedicated = await readPaymentRows();
+    } catch {
+      dedicated = null;
+    }
+    const local = parsePayments((await readLocalStore())?.payments);
+    store.payments = dedicated?.length ? dedicated : local;
+  }
+  if (store.monthlyFee == null) {
+    store.monthlyFee = parseMonthlyFee((await readLocalStore())?.monthlyFee);
+  }
+  if (!options?.replaceSurprise) {
+    const local = await readLocalStore();
+    if (!store.surprise) store.surprise = parseSurprise(local?.surprise);
+    if (!store.surpriseAnswers.length) store.surpriseAnswers = parseSurpriseAnswers(local?.surpriseAnswers);
+  }
+  if (!options?.replacePresence && !store.presence.length) {
+    store.presence = parsePresence((await readLocalStore())?.presence);
+  }
   let wroteDb = false;
   try {
     const { writeClassDb } = await import("@/lib/class-db");
