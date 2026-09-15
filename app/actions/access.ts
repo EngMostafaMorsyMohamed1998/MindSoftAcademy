@@ -12,7 +12,9 @@ import {
   redeemCode,
   setAnnouncement,
   setSuspended,
+  addWeekSlot,
   closeExamWindow,
+  removeWeekSlot,
   startExamWindow,
 } from "@/lib/access-store";
 import { parseBulkStudents } from "@/lib/class-clock";
@@ -28,6 +30,7 @@ export type FormState = {
   examChapterId?: string;
   examClosesAt?: string;
   examClosed?: boolean;
+  examMode?: "class" | "ministry";
 };
 
 function read(formData: FormData, key: string): string {
@@ -179,13 +182,41 @@ export async function openClassExam(
   if (!isChapterId(chapterId)) return { error: "MISSING" };
   const minutes = Number(read(formData, "minutes") || "30");
   const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 30 * 60;
-  const window = await startExamWindow(chapterId, duration);
+  const mode = read(formData, "ministry") === "1" ? "ministry" : "class";
+  const window = await startExamWindow(chapterId, duration, mode);
   return {
     error: null,
     ok: true,
     examChapterId: window.chapterId,
     examClosesAt: window.closesAt,
+    examMode: window.mode,
   };
+}
+
+export async function saveWeekSlot(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const weekday = Number(read(formData, "weekday"));
+  const startTime = read(formData, "startTime");
+  const topic = read(formData, "topic");
+  if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6 || !startTime || topic.length < 2) {
+    return { error: "MISSING" };
+  }
+  await addWeekSlot({ weekday, startTime, topic });
+  return { error: null, ok: true };
+}
+
+export async function deleteWeekSlot(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const id = read(formData, "slotId");
+  if (!id) return { error: "MISSING" };
+  await removeWeekSlot(id);
+  return { error: null, ok: true };
 }
 
 export async function stopClassExam(

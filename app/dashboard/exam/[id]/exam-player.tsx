@@ -38,6 +38,7 @@ export function ChapterExamPlayer({
   lessonHint,
   durationSeconds,
   closesAt,
+  mode = "class",
 }: {
   locale: Locale;
   exam: ChapterExam;
@@ -46,6 +47,7 @@ export function ChapterExamPlayer({
   lessonHint: string;
   durationSeconds: number;
   closesAt?: string;
+  mode?: "class" | "ministry";
 }) {
   const limit = Math.max(60, durationSeconds);
   const [phase, setPhase] = useState<"ready" | "run" | "done">("ready");
@@ -59,8 +61,11 @@ export function ChapterExamPlayer({
   } | null>(null);
   const [saving, setSaving] = useState(false);
   const [seed, setSeed] = useState(0);
+  const [step, setStep] = useState(0);
   const submitted = useRef(false);
   const paper = useMemo(() => (seed ? buildPaper(exam, seed) : []), [exam, seed]);
+  const ministry = mode === "ministry";
+  const ministryTotal = paper.length + exam.essays.length;
 
   const low = seconds <= 60;
 
@@ -101,7 +106,9 @@ export function ChapterExamPlayer({
     return (
       <div className="mt-6 rounded-3xl bg-white p-6 ring-1 ring-primary/10">
         <h2 className="text-xl font-semibold">{t(locale, "examReady")}</h2>
-        <p className="mt-2 text-sm text-foreground/65">{t(locale, "examRules")}</p>
+        <p className="mt-2 text-sm text-foreground/65">
+          {ministry ? t(locale, "ministryRules") : t(locale, "examRules")}
+        </p>
         <p className="mt-2 text-sm font-medium text-primary">{t(locale, "examPassMark")}</p>
         <p className="mt-1 text-xs text-foreground/55">{t(locale, "bankHint")}</p>
         <button
@@ -144,7 +151,7 @@ export function ChapterExamPlayer({
             {nextLabel ?? t(locale, "nextChapter")}
           </Link>
         ) : null}
-        {!result.passed ? (
+        {!result.passed && !ministry ? (
           <button
             type="button"
             onClick={() => {
@@ -154,6 +161,7 @@ export function ChapterExamPlayer({
               setEssays({});
               setSeconds(limit);
               setSeed(0);
+              setStep(0);
               setPhase("ready");
             }}
             className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white"
@@ -161,6 +169,111 @@ export function ChapterExamPlayer({
             {t(locale, "retryExam")}
           </button>
         ) : null}
+      </div>
+    );
+  }
+
+  function renderObjective(question: PaperQuestion, index: number, locked: boolean) {
+    const prompt = locale === "ar" ? question.promptAr : question.promptEn;
+    const optionOrder = question.optionOrder;
+    const rawOptions =
+      question.kind === "tf"
+        ? [t(locale, "trueLabel"), t(locale, "falseLabel")]
+        : locale === "ar"
+          ? question.optionsAr ?? []
+          : question.optionsEn ?? [];
+    const options = optionOrder
+      ? optionOrder.map((original) => rawOptions[original] ?? "")
+      : rawOptions;
+    return (
+      <li key={question.id}>
+        <p className="text-sm font-medium">
+          {index + 1}. {prompt}
+          <span className="ms-2 text-xs text-foreground/45">
+            {question.kind === "tf" ? t(locale, "trueFalse") : t(locale, "mcq")}
+          </span>
+        </p>
+        <div className="mt-2 grid gap-2">
+          {options.filter(Boolean).map((option, optionIndex) => {
+            const originalIndex = optionOrder?.[optionIndex] ?? optionIndex;
+            return (
+              <label
+                key={`${question.id}-${originalIndex}`}
+                className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm ring-1 ${
+                  locked ? "cursor-default" : "cursor-pointer"
+                } ${
+                  objective[question.id] === originalIndex
+                    ? "bg-primary/10 ring-primary"
+                    : "ring-primary/10"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={question.id}
+                  disabled={locked}
+                  checked={objective[question.id] === originalIndex}
+                  onChange={() =>
+                    setObjective((current) => ({ ...current, [question.id]: originalIndex }))
+                  }
+                />
+                {option}
+              </label>
+            );
+          })}
+        </div>
+      </li>
+    );
+  }
+
+  if (ministry && paper.length > 0) {
+    const onEssay = step >= paper.length;
+    const essay = onEssay ? exam.essays[step - paper.length] : null;
+    const last = step >= ministryTotal - 1;
+    return (
+      <div className="mt-6 space-y-6">
+        <div className={`sticky top-16 z-20 flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold ${low ? "bg-red-600 text-white" : "bg-primary-dark text-white"}`}>
+          <span>
+            {t(locale, "timeLeft")}: {formatTime(seconds)}
+          </span>
+          <span>
+            {t(locale, "ministryQuestion")} {Math.min(step + 1, ministryTotal)}/{ministryTotal}
+          </span>
+        </div>
+        <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+          {!onEssay && paper[step] ? (
+            <ol>{renderObjective(paper[step], step, false)}</ol>
+          ) : essay ? (
+            <div>
+              <h2 className="font-semibold">{t(locale, "essay")}</h2>
+              <p className="mt-3 text-sm font-medium">
+                {locale === "ar" ? essay.promptAr : essay.promptEn}
+              </p>
+              <p className="mt-1 text-xs text-foreground/50">
+                {locale === "ar" ? essay.guideAr : essay.guideEn}
+              </p>
+              <textarea
+                value={essays[essay.id] ?? ""}
+                onChange={(event) =>
+                  setEssays((current) => ({ ...current, [essay.id]: event.target.value }))
+                }
+                rows={8}
+                placeholder={t(locale, "writeAnswer")}
+                className="mt-3 w-full rounded-2xl border border-primary/15 p-3 text-sm"
+              />
+            </div>
+          ) : null}
+        </section>
+        <button
+          type="button"
+          disabled={saving || (!onEssay && paper[step] && objective[paper[step].id] === undefined)}
+          onClick={() => {
+            if (last) void finish();
+            else setStep((current) => current + 1);
+          }}
+          className="inline-flex h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-white disabled:opacity-70"
+        >
+          {last ? t(locale, "submitExam") : t(locale, "ministryNext")}
+        </button>
       </div>
     );
   }
@@ -181,54 +294,7 @@ export function ChapterExamPlayer({
           {t(locale, "objective")} · 50%
         </h2>
         <ol className="mt-4 space-y-5">
-          {paper.map((question, index) => {
-            const prompt = locale === "ar" ? question.promptAr : question.promptEn;
-            const optionOrder = question.optionOrder;
-            const rawOptions =
-              question.kind === "tf"
-                ? [t(locale, "trueLabel"), t(locale, "falseLabel")]
-                : locale === "ar"
-                  ? question.optionsAr ?? []
-                  : question.optionsEn ?? [];
-            const options = optionOrder
-              ? optionOrder.map((original) => rawOptions[original] ?? "")
-              : rawOptions;
-            return (
-              <li key={question.id}>
-                <p className="text-sm font-medium">
-                  {index + 1}. {prompt}
-                  <span className="ms-2 text-xs text-foreground/45">
-                    {question.kind === "tf" ? t(locale, "trueFalse") : t(locale, "mcq")}
-                  </span>
-                </p>
-                <div className="mt-2 grid gap-2">
-                  {options.filter(Boolean).map((option, optionIndex) => {
-                    const originalIndex = optionOrder?.[optionIndex] ?? optionIndex;
-                    return (
-                    <label
-                      key={`${question.id}-${originalIndex}`}
-                      className={`flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm ring-1 ${
-                        objective[question.id] === originalIndex
-                          ? "bg-primary/10 ring-primary"
-                          : "ring-primary/10"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name={question.id}
-                        checked={objective[question.id] === originalIndex}
-                        onChange={() =>
-                          setObjective((current) => ({ ...current, [question.id]: originalIndex }))
-                        }
-                      />
-                      {option}
-                    </label>
-                    );
-                  })}
-                </div>
-              </li>
-            );
-          })}
+          {paper.map((question, index) => renderObjective(question, index, false))}
         </ol>
       </section>
 

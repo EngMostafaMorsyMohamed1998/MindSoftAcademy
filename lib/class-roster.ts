@@ -3,6 +3,8 @@ import { CHAPTERS, type ChapterId } from "@/lib/curriculum";
 import { passedObjective } from "@/lib/chapter-progress";
 import { cairoDate } from "@/lib/class-clock";
 
+export const SCORE_DROP = 15;
+
 export type ClassRow = {
   id: string;
   name: string;
@@ -16,10 +18,17 @@ export type ClassRow = {
   homeworkNeed: number;
   lastScore: string;
   lastPercent: number | null;
+  previousPercent: number | null;
+  declined: boolean;
+  missingHomework: string[];
   presentToday: boolean | null;
   attendancePresent: number;
   attendanceTotal: number;
 };
+
+function examPercent(exam: ExamSubmission): number {
+  return Math.round((exam.objectiveScore / Math.max(exam.objectiveTotal, 1)) * 100);
+}
 
 const HOMEWORK_NEED = CHAPTERS.reduce((sum, chapter) => sum + chapter.lessons.length, 0);
 
@@ -31,7 +40,9 @@ export function buildClassRoster(
   today = cairoDate(),
 ): ClassRow[] {
   return codes.map((code) => {
-    const studentExams = exams.filter((item) => item.studentId === code.id);
+    const studentExams = exams
+      .filter((item) => item.studentId === code.id)
+      .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
     const passed = CHAPTERS.map((chapter) => chapter.id).filter((chapterId) =>
       studentExams.some(
         (item) =>
@@ -41,11 +52,17 @@ export function buildClassRoster(
     );
     const standing = CHAPTERS.find((chapter) => !passed.includes(chapter.id))?.id ?? "done";
     const latest = studentExams[0];
-    const homeworkDone = new Set(
+    const previous = studentExams[1];
+    const lastPercent = latest ? examPercent(latest) : null;
+    const previousPercent = previous ? examPercent(previous) : null;
+    const passedLessons = new Set(
       homework
         .filter((item) => item.studentId === code.id && item.passed)
         .map((item) => item.lessonId),
-    ).size;
+    );
+    const missingHomework = CHAPTERS.flatMap((chapter) => chapter.lessons)
+      .map((lesson) => lesson.id)
+      .filter((lessonId) => !passedLessons.has(lessonId));
     const days = attendance.filter((row) => row.studentId === code.id);
     const todayRow = days.find((row) => row.date === today);
 
@@ -58,12 +75,16 @@ export function buildClassRoster(
       suspended: Boolean(code.suspendedAt),
       passed,
       standing,
-      homeworkDone,
+      homeworkDone: passedLessons.size,
       homeworkNeed: HOMEWORK_NEED,
       lastScore: latest ? `${latest.objectiveScore}/${latest.objectiveTotal}` : "—",
-      lastPercent: latest
-        ? Math.round((latest.objectiveScore / Math.max(latest.objectiveTotal, 1)) * 100)
-        : null,
+      lastPercent,
+      previousPercent,
+      declined:
+        lastPercent !== null &&
+        previousPercent !== null &&
+        previousPercent - lastPercent >= SCORE_DROP,
+      missingHomework,
       presentToday: todayRow ? todayRow.present : null,
       attendancePresent: days.filter((row) => row.present).length,
       attendanceTotal: days.length,
@@ -94,4 +115,16 @@ export function codeWhatsappText(name: string, code: string, locale: "ar" | "en"
     return `أهلًا ${name}\nكود اشتراك MindSoft Academy: ${code}\nفعّل من هنا: ${activate}\nالاسم والرقم لازم يطابقوا التسجيل.\nم. مصطفى محمد`;
   }
   return `Hi ${name}\nMindSoft Academy class code: ${code}\nActivate here: ${activate}\nName and phone must match the register.\nEng. Mostafa Mohamed`;
+}
+
+export function parentWeeklyWhatsappText(row: ClassRow, locale: "ar" | "en"): string {
+  const shown = row.missingHomework.slice(0, 6);
+  const extra = row.missingHomework.length > 6 ? ` +${row.missingHomework.length - 6}` : "";
+  const missing = shown.length ? `${shown.join(locale === "ar" ? "، " : ", ")}${extra}` : locale === "ar" ? "لا يوجد" : "None";
+  const score =
+    row.lastPercent === null ? (locale === "ar" ? "لسه مفيش امتحان" : "No exam yet") : `${row.lastScore} (${row.lastPercent}%)`;
+  if (locale === "ar") {
+    return `ولي أمر ${row.name}\nتقرير الأسبوع — MindSoft Academy\nالحضور: ${row.attendancePresent}/${row.attendanceTotal}\nآخر درجة: ${score}\nالواجب الناقص: ${missing}\nم. مصطفى محمد`;
+  }
+  return `Parent of ${row.name}\nWeekly report — MindSoft Academy\nAttendance: ${row.attendancePresent}/${row.attendanceTotal}\nLast score: ${score}\nMissing homework: ${missing}\nEng. Mostafa Mohamed`;
 }

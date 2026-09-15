@@ -12,6 +12,8 @@ import type {
   HomeworkResult,
   MissedQuestion,
 } from "@/lib/access-store";
+import { parseExamChapter } from "@/lib/class-clock";
+import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
 export type StoreFile = {
   codes: AccessCode[];
@@ -24,6 +26,7 @@ export type StoreFile = {
   announcement: ClassAnnouncement | null;
   examWindow: ExamWindow | null;
   misses: MissedQuestion[];
+  weekPlan: WeekSlot[];
 };
 
 const BLOB_KEY = "mindsoft-access-store.json";
@@ -47,6 +50,19 @@ export function emptyStore(): StoreFile {
     announcement: null,
     examWindow: null,
     misses: [],
+    weekPlan: [],
+  };
+}
+
+function asExamWindow(value: ExamWindow | null | undefined): ExamWindow | null {
+  if (!value) return null;
+  const parsed = parseExamChapter(value.chapterId);
+  return {
+    id: value.id || "current",
+    chapterId: parsed.chapterId,
+    opensAt: value.opensAt,
+    closesAt: value.closesAt,
+    mode: value.mode === "ministry" || parsed.mode === "ministry" ? "ministry" : "class",
   };
 }
 
@@ -72,8 +88,9 @@ export function parseStore(value: unknown): StoreFile {
     essayGrades: Array.isArray(parsed.essayGrades) ? parsed.essayGrades : [],
     attendance: Array.isArray(parsed.attendance) ? parsed.attendance : [],
     announcement: parsed.announcement ?? null,
-    examWindow: parsed.examWindow ?? null,
+    examWindow: asExamWindow(parsed.examWindow),
     misses: Array.isArray(parsed.misses) ? parsed.misses : [],
+    weekPlan: parseWeekSlots(parsed.weekPlan),
   };
 }
 

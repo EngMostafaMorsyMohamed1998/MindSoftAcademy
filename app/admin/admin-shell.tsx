@@ -6,9 +6,11 @@ import { ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Users } from "lu
 import {
   createManyStudentCodes,
   createStudentCode,
+  deleteWeekSlot,
   markStudentAttendance,
   openClassExam,
   saveAnnouncement,
+  saveWeekSlot,
   stopClassExam,
   toggleStudentSuspend,
   unlockStudentChapter,
@@ -16,12 +18,13 @@ import {
 } from "@/app/actions/access";
 import { gradeEssayForm } from "@/app/actions/study";
 import { BRAND } from "@/lib/brand";
-import { cairoDate } from "@/lib/class-clock";
-import { codeWhatsappText, whatsappHref, type ClassRow } from "@/lib/class-roster";
+import { cairoDate, cairoWeekday, type ExamMode } from "@/lib/class-clock";
+import { codeWhatsappText, parentWeeklyWhatsappText, whatsappHref, type ClassRow } from "@/lib/class-roster";
 import { CHAPTERS } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 import type { AccessCode, ExamSubmission } from "@/lib/access-store";
+import { weekdayName, type WeekSlot } from "@/lib/week-plan";
 
 const initial: FormState = { error: null };
 
@@ -34,13 +37,15 @@ export function AdminShell({
   roster,
   announcement,
   examWindow,
+  weekPlan,
 }: {
   locale: Locale;
   codes: AccessCode[];
   exams: ExamSubmission[];
   roster: ClassRow[];
   announcement: string;
-  examWindow: { chapterId: string; closesAt: string } | null;
+  examWindow: { chapterId: string; closesAt: string; mode?: ExamMode } | null;
+  weekPlan: WeekSlot[];
 }) {
   const [tab, setTab] = useState<Tab>("class");
   const router = useRouter();
@@ -50,15 +55,17 @@ export function AdminShell({
   const [announceState, announceAction, announcePending] = useActionState(saveAnnouncement, initial);
   const [examState, examAction, examPending] = useActionState(openClassExam, initial);
   const [closeState, closeAction, closePending] = useActionState(stopClassExam, initial);
+  const [slotState, slotAction, slotPending] = useActionState(saveWeekSlot, initial);
+  const [slotDeleteState, slotDeleteAction, slotDeletePending] = useActionState(deleteWeekSlot, initial);
   const [windowOverride, setWindowOverride] = useState<"open" | "closed" | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const today = cairoDate();
 
   useEffect(() => {
-    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || closeState.ok || unlockState.ok) {
+    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok) {
       router.refresh();
     }
-  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, closeState.ok, unlockState.ok, router]);
+  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, router]);
 
   useEffect(() => {
     if (examState.examChapterId) setWindowOverride("open");
@@ -72,10 +79,17 @@ export function AdminShell({
     windowOverride === "closed"
       ? null
       : windowOverride === "open" && examState.examChapterId
-        ? { chapterId: examState.examChapterId, closesAt: examState.examClosesAt ?? "" }
+        ? {
+            chapterId: examState.examChapterId,
+            closesAt: examState.examClosesAt ?? "",
+            mode: examState.examMode,
+          }
         : examWindow;
 
   const pendingEssays = exams.reduce((sum, exam) => sum + exam.essays.length, 0);
+  const declined = roster.filter((row) => row.declined);
+  const rankedRoster = [...roster].sort((a, b) => Number(b.declined) - Number(a.declined));
+  const todayWeekday = cairoWeekday();
 
   function copy(value: string) {
     void navigator.clipboard.writeText(value);
@@ -138,7 +152,9 @@ export function AdminShell({
           <p className="text-xs text-foreground/55">{t(locale, "examStatus")}</p>
           <p className={`mt-1 text-sm font-semibold ${liveWindow ? "text-emerald-700" : "text-foreground/70"}`}>
             {liveWindow
-              ? `${t(locale, "examWindowOpen")} · ${liveWindow.chapterId}`
+              ? `${t(locale, "examWindowOpen")} · ${liveWindow.chapterId}${
+                  liveWindow.mode === "ministry" ? ` · ${t(locale, "ministryExam")}` : ""
+                }`
               : t(locale, "examClosedNow")}
           </p>
         </button>
@@ -213,6 +229,13 @@ export function AdminShell({
                   className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
                 />
               </label>
+              <label className="flex items-start gap-2 rounded-2xl bg-primary/5 px-3 py-3 text-sm">
+                <input type="checkbox" name="ministry" value="1" className="mt-1" />
+                <span>
+                  <span className="font-semibold">{t(locale, "ministryExam")}</span>
+                  <span className="mt-1 block text-xs text-foreground/60">{t(locale, "ministryExamHint")}</span>
+                </span>
+              </label>
               <button
                 type="submit"
                 disabled={examPending}
@@ -245,6 +268,47 @@ export function AdminShell({
           </section>
 
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "weekPlan")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "weekPlanHint")}</p>
+            <form action={slotAction} className="mt-4 grid gap-3 sm:grid-cols-[8rem_7rem_1fr_auto]">
+              <select name="weekday" defaultValue={String(todayWeekday)} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm">
+                {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                  <option key={day} value={day}>
+                    {weekdayName(locale, day)}
+                  </option>
+                ))}
+              </select>
+              <input name="startTime" type="time" required defaultValue="17:00" className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
+              <input name="topic" required minLength={2} placeholder={t(locale, "slotTopic")} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
+              <button type="submit" disabled={slotPending} className="h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white">
+                {t(locale, "addSlot")}
+              </button>
+            </form>
+            {slotState.error ? <p className="mt-2 text-sm text-red-700">{slotState.error}</p> : null}
+            {weekPlan.length === 0 ? (
+              <p className="mt-3 text-sm text-foreground/55">{t(locale, "noWeekPlan")}</p>
+            ) : (
+              <ul className="mt-4 space-y-2">
+                {weekPlan.map((slot) => (
+                  <li key={slot.id} className="flex items-center justify-between gap-2 rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                    <span>
+                      <strong>{weekdayName(locale, slot.weekday)}</strong>
+                      <span className="mx-2 text-foreground/55">{slot.startTime}</span>
+                      {slot.topic}
+                    </span>
+                    <form action={slotDeleteAction}>
+                      <input type="hidden" name="slotId" value={slot.id} />
+                      <button type="submit" disabled={slotDeletePending} className="rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">
+                        {t(locale, "removeSlot")}
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
             <h2 className="text-lg font-semibold">{t(locale, "announce")}</h2>
             <p className="mt-1 text-sm text-foreground/60">{t(locale, "announceHint")}</p>
             <form action={announceAction} className="mt-4 grid gap-3">
@@ -433,6 +497,11 @@ export function AdminShell({
                 {t(locale, "printGrades")}
               </button>
             </div>
+            {declined.length > 0 ? (
+              <p className="mt-3 rounded-2xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-800">
+                {t(locale, "declinedAlert")}: {declined.map((row) => row.name).join(" · ")}
+              </p>
+            ) : null}
             {roster.length === 0 ? (
               <p className="mt-3 text-sm text-foreground/55">{t(locale, "noCodes")}</p>
             ) : (
@@ -448,16 +517,31 @@ export function AdminShell({
                     </tr>
                   </thead>
                   <tbody>
-                    {roster.map((row) => (
-                      <tr key={row.id} className="border-t border-primary/8">
+                    {rankedRoster.map((row) => (
+                      <tr key={row.id} className={`border-t border-primary/8 ${row.declined ? "bg-red-50" : ""}`}>
                         <td className="px-3 py-2">
                           <p className="font-medium">{row.name}</p>
                           <p className="font-mono text-xs text-foreground/55">{row.phone}</p>
+                          <a
+                            href={whatsappHref(row.phone, parentWeeklyWhatsappText(row, locale))}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1 inline-flex rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white"
+                          >
+                            {t(locale, "parentReport")}
+                          </a>
                         </td>
                         <td className="px-3 py-2">
                           {row.standing === "done" ? t(locale, "finishedAll") : `${t(locale, "chapterExam")} ${row.standing}`}
                         </td>
-                        <td className="px-3 py-2">{row.lastPercent === null ? "—" : `${row.lastPercent}%`}</td>
+                        <td className="px-3 py-2">
+                          {row.lastPercent === null ? "—" : `${row.lastPercent}%`}
+                          {row.declined && row.previousPercent !== null ? (
+                            <span className="ms-2 rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                              {t(locale, "declinedBadge")} {row.previousPercent}→{row.lastPercent}
+                            </span>
+                          ) : null}
+                        </td>
                         <td className="px-3 py-2">
                           <div className="flex flex-wrap items-center gap-1">
                             <span>

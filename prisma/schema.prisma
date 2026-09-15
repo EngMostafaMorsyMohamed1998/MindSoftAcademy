@@ -224,6 +224,12 @@ model ClassExamWindow {
   closesAt  DateTime
 }
 
+model ClassWeekPlan {
+  id        String   @id
+  slots     Json
+  updatedAt DateTime
+}
+
 model ClassMiss {
   studentId    String
   questionKey  String
