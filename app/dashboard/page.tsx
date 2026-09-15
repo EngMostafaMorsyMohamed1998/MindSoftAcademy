@@ -3,6 +3,7 @@ import { BookOpen, ClipboardCheck, Gamepad2, MessageCircle, Printer, RotateCcw }
 import { HeroRobot } from "@/components/hero-robot";
 import { StudyProgress } from "@/components/study-progress";
 import { allChaptersPassed } from "@/lib/chapter-progress";
+import { getWeekPlan } from "@/lib/access-store";
 import { studentProgress } from "@/lib/student-progress";
 import { CHAPTERS } from "@/lib/curriculum";
 import { getCurrentUser } from "@/lib/current-user";
@@ -10,12 +11,13 @@ import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { levelFromPoints } from "@/lib/student-profile";
 import { QuestMap } from "./quest-map";
+import { WeekBoard } from "./week-board";
 
 export default async function DashboardHomePage() {
   const user = await getCurrentUser();
   if (!user) return null;
   const locale = await getLocale();
-  const { completed, unlocks } = await studentProgress();
+  const [{ completed, unlocks }, weekPlan] = await Promise.all([studentProgress(), getWeekPlan()]);
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
   const { level } = levelFromPoints(user.points);
 
@@ -43,6 +45,8 @@ export default async function DashboardHomePage() {
           <HeroRobot alt={t(locale, "robotAlt")} size="compact" />
         </div>
       </section>
+
+      <WeekBoard locale={locale} slots={weekPlan} />
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {shortcuts.map((item) => {

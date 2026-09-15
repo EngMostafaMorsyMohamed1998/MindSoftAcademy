@@ -12,6 +12,19 @@ import type {
   HomeworkResult,
   MissedQuestion,
 } from "@/lib/access-store";
+import { encodeExamChapter, parseExamChapter } from "@/lib/class-clock";
+import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
+
+function asExamWindow(row: { id: string; chapterId: string; opensAt: Date; closesAt: Date }): ExamWindow {
+  const parsed = parseExamChapter(row.chapterId);
+  return {
+    id: row.id,
+    chapterId: parsed.chapterId,
+    opensAt: row.opensAt.toISOString(),
+    closesAt: row.closesAt.toISOString(),
+    mode: parsed.mode,
+  };
+}
 
 function hasLiveDatabase(): boolean {
   const url =
@@ -44,12 +57,7 @@ export async function readExamWindowRow(): Promise<ExamWindow | null> {
   try {
     const row = await prisma.classExamWindow.findUnique({ where: { id: "current" } });
     if (!row) return null;
-    return {
-      id: row.id,
-      chapterId: row.chapterId,
-      opensAt: row.opensAt.toISOString(),
-      closesAt: row.closesAt.toISOString(),
-    };
+    return asExamWindow(row);
   } catch {
     return null;
   }
@@ -66,12 +74,12 @@ export async function writeExamWindowRow(window: ExamWindow | null): Promise<boo
       where: { id: "current" },
       create: {
         id: "current",
-        chapterId: window.chapterId,
+        chapterId: encodeExamChapter(window.chapterId, window.mode),
         opensAt: asDate(window.opensAt),
         closesAt: asDate(window.closesAt),
       },
       update: {
-        chapterId: window.chapterId,
+        chapterId: encodeExamChapter(window.chapterId, window.mode),
         opensAt: asDate(window.opensAt),
         closesAt: asDate(window.closesAt),
       },
@@ -82,10 +90,35 @@ export async function writeExamWindowRow(window: ExamWindow | null): Promise<boo
   }
 }
 
+export async function readWeekPlanRow(): Promise<WeekSlot[] | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const row = await prisma.classWeekPlan.findUnique({ where: { id: "current" } });
+    if (!row) return null;
+    return parseWeekSlots(row.slots);
+  } catch {
+    return null;
+  }
+}
+
+export async function writeWeekPlanRow(slots: WeekSlot[]): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.classWeekPlan.upsert({
+      where: { id: "current" },
+      create: { id: "current", slots, updatedAt: new Date() },
+      update: { slots, updatedAt: new Date() },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function readClassDb(): Promise<StoreFile | null> {
   if (!hasLiveDatabase()) return null;
   try {
-    const [codes, messages, exams, homework, unlocks, essayGrades, attendance, announcements, windows, misses] =
+    const [codes, messages, exams, homework, unlocks, essayGrades, attendance, announcements, windows, misses, weekPlans] =
       await Promise.all([
         prisma.classCode.findMany(),
         prisma.classMessage.findMany(),
@@ -97,6 +130,7 @@ export async function readClassDb(): Promise<StoreFile | null> {
         safeMany(prisma.classAnnouncement?.findMany()),
         safeMany(prisma.classExamWindow?.findMany()),
         safeMany(prisma.classMiss?.findMany()),
+        safeMany(prisma.classWeekPlan?.findMany()),
       ]);
     const announcement = announcements.find((row) => row.active) ?? announcements[0] ?? null;
     const window = windows[0] ?? null;
@@ -171,14 +205,8 @@ export async function readClassDb(): Promise<StoreFile | null> {
             active: announcement.active,
           } satisfies ClassAnnouncement)
         : null,
-      examWindow: window
-        ? ({
-            id: window.id,
-            chapterId: window.chapterId,
-            opensAt: window.opensAt.toISOString(),
-            closesAt: window.closesAt.toISOString(),
-          } satisfies ExamWindow)
-        : null,
+      examWindow: window ? asExamWindow(window) : null,
+      weekPlan: parseWeekSlots(weekPlans[0]?.slots),
       misses: misses.map((row): MissedQuestion => ({
         studentId: row.studentId,
         questionKey: row.questionKey,

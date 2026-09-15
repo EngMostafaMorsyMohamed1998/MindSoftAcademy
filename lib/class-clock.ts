@@ -1,7 +1,28 @@
+import { isChapterId } from "@/lib/curriculum";
+
 export const REVIEW_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
+
+export type ExamMode = "class" | "ministry";
 
 export function cairoDate(value = new Date()): string {
   return value.toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+}
+
+export function cairoWeekday(value = new Date()): number {
+  const day = value.toLocaleDateString("en-US", { timeZone: "Africa/Cairo", weekday: "short" });
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(day);
+}
+
+export function encodeExamChapter(chapterId: string, mode: ExamMode = "class"): string {
+  return mode === "ministry" ? `${chapterId}m` : chapterId;
+}
+
+export function parseExamChapter(raw: string): { chapterId: string; mode: ExamMode } {
+  if (raw.endsWith("m")) {
+    const chapterId = raw.slice(0, -1);
+    if (isChapterId(chapterId)) return { chapterId, mode: "ministry" };
+  }
+  return { chapterId: raw, mode: "class" };
 }
 
 export function daysUntilReview(missedAt: string, now = Date.now()): number {

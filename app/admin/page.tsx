@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
 import { AdminShell } from "./admin-shell";
-import { getAnnouncement, getExamWindow, listAttendance, listExams, listHomeworkResults } from "@/lib/access-store";
+import { getAnnouncement, getExamWindow, getWeekPlan, listAttendance, listExams, listHomeworkResults } from "@/lib/access-store";
 import { buildClassRoster } from "@/lib/class-roster";
 import { listVisibleCodes } from "@/lib/teacher-roster";
 import { t } from "@/lib/i18n";
@@ -15,13 +15,14 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const locale = await getLocale();
   const theme = await getTheme();
-  const [codes, exams, homework, attendance, announcement, examWindow] = await Promise.all([
+  const [codes, exams, homework, attendance, announcement, examWindow, weekPlan] = await Promise.all([
     listVisibleCodes(),
     listExams(),
     listHomeworkResults(),
     listAttendance(),
     getAnnouncement(),
     getExamWindow(),
+    getWeekPlan(),
   ]);
   const roster = buildClassRoster(codes, exams, homework, attendance);
 
@@ -55,6 +56,7 @@ export default async function AdminPage() {
           roster={roster}
           announcement={announcement?.body ?? ""}
           examWindow={examWindow}
+          weekPlan={weekPlan}
         />
       </main>
     </div>

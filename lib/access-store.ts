@@ -1,5 +1,7 @@
 import { createHmac, randomBytes } from "crypto";
 import { readStore, writeStore } from "@/lib/access-store-io";
+import type { ExamMode } from "@/lib/class-clock";
+import { parseWeekSlots, sortWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
 export type AccessCode = {
   id: string;
@@ -92,7 +94,10 @@ export type ExamWindow = {
   chapterId: string;
   opensAt: string;
   closesAt: string;
+  mode: ExamMode;
 };
+
+export type { WeekSlot };
 
 export type MissedQuestion = {
   studentId: string;
@@ -545,7 +550,11 @@ async function persistExamWindow(window: ExamWindow | null): Promise<void> {
   }
 }
 
-export async function startExamWindow(chapterId: string, seconds: number): Promise<ExamWindow> {
+export async function startExamWindow(
+  chapterId: string,
+  seconds: number,
+  mode: ExamMode = "class",
+): Promise<ExamWindow> {
   const duration = Math.min(Math.max(seconds, 60), 3 * 60 * 60);
   const opensAt = new Date();
   const window: ExamWindow = {
@@ -553,9 +562,58 @@ export async function startExamWindow(chapterId: string, seconds: number): Promi
     chapterId,
     opensAt: opensAt.toISOString(),
     closesAt: new Date(opensAt.getTime() + duration * 1000).toISOString(),
+    mode,
   };
   await persistExamWindow(window);
   return window;
+}
+
+export async function getWeekPlan(): Promise<WeekSlot[]> {
+  try {
+    const { readWeekPlanRow } = await import("@/lib/class-db");
+    const fromDb = await readWeekPlanRow();
+    if (fromDb) return fromDb;
+  } catch {
+    // Table may not exist yet.
+  }
+  return parseWeekSlots((await readStore()).weekPlan);
+}
+
+async function persistWeekPlan(slots: WeekSlot[]): Promise<void> {
+  const next = sortWeekSlots(slots);
+  try {
+    const { writeWeekPlanRow } = await import("@/lib/class-db");
+    await writeWeekPlanRow(next);
+  } catch {
+    // Fall through to the class store.
+  }
+  const store = await readStore();
+  store.weekPlan = next;
+  await writeStore(store);
+  try {
+    const { writeWeekPlanRow } = await import("@/lib/class-db");
+    await writeWeekPlanRow(next);
+  } catch {
+    // Local /tmp still has the plan if Postgres is down.
+  }
+}
+
+export async function addWeekSlot(input: { weekday: number; startTime: string; topic: string }): Promise<WeekSlot[]> {
+  const slots = await getWeekPlan();
+  slots.push({
+    id: randomBytes(4).toString("hex"),
+    weekday: input.weekday,
+    startTime: input.startTime,
+    topic: input.topic.trim(),
+  });
+  await persistWeekPlan(slots);
+  return slots;
+}
+
+export async function removeWeekSlot(id: string): Promise<WeekSlot[]> {
+  const slots = (await getWeekPlan()).filter((slot) => slot.id !== id);
+  await persistWeekPlan(slots);
+  return slots;
 }
 
 export async function closeExamWindow(): Promise<void> {

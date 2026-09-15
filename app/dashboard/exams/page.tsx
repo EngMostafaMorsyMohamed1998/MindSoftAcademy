@@ -37,7 +37,9 @@ export default async function ExamsIndexPage() {
                       {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
                     </span>
                     <span className="text-xs text-foreground/55">
-                      {t(locale, "minutes30")} · 50% {t(locale, "objective")} · 50% {t(locale, "essay")}
+                      {examWindow?.mode === "ministry"
+                        ? t(locale, "ministryExamHint")
+                        : `${t(locale, "minutes30")} · 50% ${t(locale, "objective")} · 50% ${t(locale, "essay")}`}
                     </span>
                   </span>
                   <span className="text-sm font-semibold text-primary">{t(locale, "startExam")}</span>

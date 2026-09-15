@@ -57,6 +57,7 @@ export default async function ChapterExamPage({
           lessonHint={lessonHint}
           durationSeconds={durationSeconds}
           closesAt={examWindow?.closesAt}
+          mode={examWindow?.mode ?? "class"}
         />
       ) : (
         <p className="mt-6 rounded-3xl bg-white p-5 text-sm text-foreground/70 ring-1 ring-primary/10">
