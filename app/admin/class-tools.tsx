@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createManyStudentCodes,
   markStudentAttendance,
   openClassExam,
   saveAnnouncement,
+  stopClassExam,
   toggleStudentSuspend,
   type FormState,
 } from "@/app/actions/access";
@@ -34,15 +35,28 @@ export function ClassTools({
   const [bulkState, bulkAction, bulkPending] = useActionState(createManyStudentCodes, initial);
   const [announceState, announceAction, announcePending] = useActionState(saveAnnouncement, initial);
   const [examState, examAction, examPending] = useActionState(openClassExam, initial);
+  const [closeState, closeAction, closePending] = useActionState(stopClassExam, initial);
+  const [windowOverride, setWindowOverride] = useState<"open" | "closed" | null>(null);
   const today = cairoDate();
 
   useEffect(() => {
-    if (bulkState.ok || announceState.ok || examState.ok) router.refresh();
-  }, [bulkState.ok, announceState.ok, examState.ok, router]);
+    if (bulkState.ok || announceState.ok || examState.ok || closeState.ok) router.refresh();
+  }, [bulkState.ok, announceState.ok, examState.ok, closeState.ok, router]);
 
-  const liveWindow = examState.examChapterId
-    ? { chapterId: examState.examChapterId, closesAt: examState.examClosesAt ?? "" }
-    : examWindow;
+  useEffect(() => {
+    if (examState.examChapterId) setWindowOverride("open");
+  }, [examState.examChapterId, examState.examClosesAt]);
+
+  useEffect(() => {
+    if (closeState.examClosed) setWindowOverride("closed");
+  }, [closeState.examClosed, closeState.ok]);
+
+  const liveWindow =
+    windowOverride === "closed"
+      ? null
+      : windowOverride === "open" && examState.examChapterId
+        ? { chapterId: examState.examChapterId, closesAt: examState.examClosesAt ?? "" }
+        : examWindow;
 
   function printGrades() {
     const win = window.open("", "_blank");
@@ -93,20 +107,44 @@ export function ClassTools({
 
       <section>
         <h2 className="text-lg font-semibold">{t(locale, "startClassExam")}</h2>
-        <form action={examAction} className="mt-3 flex flex-wrap gap-3 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-          <select name="chapterId" className="h-11 min-w-52 rounded-2xl border border-primary/15 px-3 text-sm" defaultValue="1">
-            {CHAPTERS.map((chapter) => (
-              <option key={chapter.id} value={chapter.id}>
-                {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
-              </option>
-            ))}
-          </select>
+        <p className="mt-1 text-sm text-foreground/60">{t(locale, "examWindowHint")}</p>
+        <form action={examAction} className="mt-3 flex flex-wrap items-end gap-3 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+          <label className="grid gap-1 text-xs font-medium">
+            {t(locale, "chapterExam")}
+            <select name="chapterId" className="h-11 min-w-52 rounded-2xl border border-primary/15 px-3 text-sm" defaultValue="1">
+              {CHAPTERS.map((chapter) => (
+                <option key={chapter.id} value={chapter.id}>
+                  {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs font-medium">
+            {t(locale, "examMinutes")}
+            <input
+              name="minutes"
+              type="number"
+              min={5}
+              max={180}
+              step={5}
+              defaultValue={30}
+              className="h-11 w-28 rounded-2xl border border-primary/15 px-3 text-sm"
+            />
+          </label>
           <button
             type="submit"
             disabled={examPending}
             className="h-11 rounded-full bg-primary px-5 text-sm font-semibold text-white"
           >
             {t(locale, "startClassExam")}
+          </button>
+          <button
+            type="submit"
+            formAction={closeAction}
+            disabled={closePending}
+            className="h-11 rounded-full bg-red-600 px-5 text-sm font-semibold text-white"
+          >
+            {t(locale, "closeClassExam")}
           </button>
           {liveWindow ? (
             <p className="w-full text-sm text-emerald-700">
@@ -115,9 +153,11 @@ export function ClassTools({
                 ? ` · ${new Date(liveWindow.closesAt).toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-GB", { hour: "2-digit", minute: "2-digit" })}`
                 : ""}
             </p>
+          ) : closeState.examClosed ? (
+            <p className="w-full text-sm text-foreground/70">{t(locale, "examClosedNow")}</p>
           ) : null}
-          {examState.error ? (
-            <p className="w-full text-sm text-red-700">{examState.error}</p>
+          {examState.error || closeState.error ? (
+            <p className="w-full text-sm text-red-700">{examState.error || closeState.error}</p>
           ) : null}
         </form>
       </section>

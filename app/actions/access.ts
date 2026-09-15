@@ -12,10 +12,11 @@ import {
   redeemCode,
   setAnnouncement,
   setSuspended,
+  closeExamWindow,
   startExamWindow,
 } from "@/lib/access-store";
 import { parseBulkStudents } from "@/lib/class-clock";
-import { EXAM_DURATION_SECONDS, isChapterId } from "@/lib/curriculum";
+import { isChapterId } from "@/lib/curriculum";
 import { setStudentCookie } from "@/lib/student-session";
 import { rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
@@ -26,6 +27,7 @@ export type FormState = {
   ok?: boolean;
   examChapterId?: string;
   examClosesAt?: string;
+  examClosed?: boolean;
 };
 
 function read(formData: FormData, key: string): string {
@@ -175,11 +177,22 @@ export async function openClassExam(
   if (!(await isTeacher())) return { error: "FORBIDDEN" };
   const chapterId = read(formData, "chapterId");
   if (!isChapterId(chapterId)) return { error: "MISSING" };
-  const window = await startExamWindow(chapterId, EXAM_DURATION_SECONDS);
+  const minutes = Number(read(formData, "minutes") || "30");
+  const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 30 * 60;
+  const window = await startExamWindow(chapterId, duration);
   return {
     error: null,
     ok: true,
     examChapterId: window.chapterId,
     examClosesAt: window.closesAt,
   };
+}
+
+export async function stopClassExam(
+  _prev: FormState,
+  _formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  await closeExamWindow();
+  return { error: null, ok: true, examClosed: true };
 }

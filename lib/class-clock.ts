@@ -14,10 +14,20 @@ export function examWindowOpen(
   chapterId: string,
   now = Date.now(),
 ): boolean {
-  if (!window || window.chapterId !== chapterId) return false;
+  return remainingExamSeconds(window, chapterId, now) > 0;
+}
+
+export function remainingExamSeconds(
+  window: { chapterId: string; opensAt: string; closesAt: string } | null,
+  chapterId?: string,
+  now = Date.now(),
+): number {
+  if (!window) return 0;
+  if (chapterId && window.chapterId !== chapterId) return 0;
   const opens = new Date(window.opensAt).getTime();
   const closes = new Date(window.closesAt).getTime();
-  return now >= opens && now <= closes;
+  if (now < opens || now > closes) return 0;
+  return Math.max(0, Math.ceil((closes - now) / 1000));
 }
 
 export function parseBulkStudents(raw: string): { name: string; phone: string }[] {

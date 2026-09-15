@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnswerReview } from "@/components/answer-review";
 import { submitChapterExam } from "@/app/actions/study";
-import { EXAM_DURATION_SECONDS } from "@/lib/curriculum";
 import type { ChapterExam, ObjectiveQuestion } from "@/lib/exams";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
@@ -37,15 +36,20 @@ export function ChapterExamPlayer({
   nextHref,
   nextLabel,
   lessonHint,
+  durationSeconds,
+  closesAt,
 }: {
   locale: Locale;
   exam: ChapterExam;
   nextHref?: string;
   nextLabel?: string;
   lessonHint: string;
+  durationSeconds: number;
+  closesAt?: string;
 }) {
+  const limit = Math.max(60, durationSeconds);
   const [phase, setPhase] = useState<"ready" | "run" | "done">("ready");
-  const [seconds, setSeconds] = useState(EXAM_DURATION_SECONDS);
+  const [seconds, setSeconds] = useState(limit);
   const [objective, setObjective] = useState<Record<string, number>>({});
   const [essays, setEssays] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{
@@ -62,7 +66,8 @@ export function ChapterExamPlayer({
 
   useEffect(() => {
     if (phase !== "run") return;
-    const end = Date.now() + EXAM_DURATION_SECONDS * 1000;
+    const closeAt = closesAt ? new Date(closesAt).getTime() : Date.now() + limit * 1000;
+    const end = Math.min(Date.now() + limit * 1000, closeAt);
     const id = window.setInterval(() => {
       const left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
       setSeconds(left);
@@ -147,7 +152,7 @@ export function ChapterExamPlayer({
               setResult(null);
               setObjective({});
               setEssays({});
-              setSeconds(EXAM_DURATION_SECONDS);
+              setSeconds(limit);
               setSeed(0);
               setPhase("ready");
             }}

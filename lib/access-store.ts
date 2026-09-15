@@ -527,14 +527,7 @@ export async function getExamWindow(): Promise<ExamWindow | null> {
   return (await readStore()).examWindow;
 }
 
-export async function startExamWindow(chapterId: string, seconds: number): Promise<ExamWindow> {
-  const opensAt = new Date();
-  const window: ExamWindow = {
-    id: "current",
-    chapterId,
-    opensAt: opensAt.toISOString(),
-    closesAt: new Date(opensAt.getTime() + seconds * 1000).toISOString(),
-  };
+async function persistExamWindow(window: ExamWindow | null): Promise<void> {
   try {
     const { writeExamWindowRow } = await import("@/lib/class-db");
     await writeExamWindowRow(window);
@@ -550,7 +543,23 @@ export async function startExamWindow(chapterId: string, seconds: number): Promi
   } catch {
     // Local /tmp still has the window if Postgres is down.
   }
+}
+
+export async function startExamWindow(chapterId: string, seconds: number): Promise<ExamWindow> {
+  const duration = Math.min(Math.max(seconds, 60), 3 * 60 * 60);
+  const opensAt = new Date();
+  const window: ExamWindow = {
+    id: "current",
+    chapterId,
+    opensAt: opensAt.toISOString(),
+    closesAt: new Date(opensAt.getTime() + duration * 1000).toISOString(),
+  };
+  await persistExamWindow(window);
   return window;
+}
+
+export async function closeExamWindow(): Promise<void> {
+  await persistExamWindow(null);
 }
 
 export async function recordMisses(rows: MissedQuestion[]): Promise<void> {

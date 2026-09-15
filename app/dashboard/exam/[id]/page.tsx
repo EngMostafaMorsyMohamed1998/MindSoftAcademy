@@ -8,7 +8,7 @@ import {
 import { studentProgress } from "@/lib/student-progress";
 import { getChapter, isChapterId } from "@/lib/curriculum";
 import { getExamWindow } from "@/lib/access-store";
-import { examWindowOpen } from "@/lib/class-clock";
+import { examWindowOpen, remainingExamSeconds } from "@/lib/class-clock";
 import { examForChapter } from "@/lib/exams";
 import { t } from "@/lib/i18n";
 import { notesForChapter } from "@/lib/lessons";
@@ -29,7 +29,9 @@ export default async function ChapterExamPage({
   const nextId = nextChapterId(id);
   const note = notesForChapter(id)[0];
   const lessonHint = note ? (locale === "ar" ? note.takeawayAr : note.takeawayEn) : "";
-  const windowOpen = examWindowOpen(await getExamWindow(), id);
+  const examWindow = await getExamWindow();
+  const windowOpen = examWindowOpen(examWindow, id);
+  const durationSeconds = remainingExamSeconds(examWindow, id);
   if (!windowOpen) {
     const { completed, unlocks, homework } = await studentProgress();
     if (!isChapterUnlocked(completed, id, unlocks) || !chapterHomeworkDone(id, homework)) {
@@ -53,6 +55,8 @@ export default async function ChapterExamPage({
           nextHref={nextId ? `/dashboard/chapters/${nextId}` : "/dashboard/chapters"}
           nextLabel={nextId ? t(locale, "nextChapter") : t(locale, "navChapters")}
           lessonHint={lessonHint}
+          durationSeconds={durationSeconds}
+          closesAt={examWindow?.closesAt}
         />
       ) : (
         <p className="mt-6 rounded-3xl bg-white p-5 text-sm text-foreground/70 ring-1 ring-primary/10">
