@@ -30,7 +30,7 @@ export default async function ExamsIndexPage() {
               {open ? (
                 <Link
                   href={`/dashboard/exam/${chapter.id}`}
-                  className="flex items-center justify-between rounded-2xl bg-white p-4 ring-1 ring-primary/10"
+                  className="flex items-center justify-between rounded-2xl bg-surface p-4 ring-1 ring-primary/15"
                 >
                   <span>
                     <span className="block font-semibold">
@@ -45,16 +45,16 @@ export default async function ExamsIndexPage() {
                   <span className="text-sm font-semibold text-primary">{t(locale, "startExam")}</span>
                 </Link>
               ) : (
-                <div className="flex items-center justify-between rounded-2xl bg-white/80 p-4 ring-1 ring-primary/10 opacity-70">
+                <div className="flex items-center justify-between rounded-2xl bg-surface/70 p-4 ring-1 ring-primary/10">
                   <span>
-                    <span className="block font-semibold">
+                    <span className="block font-semibold text-foreground/80">
                       {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
                     </span>
-                    <span className="text-xs text-foreground/55">
+                    <span className="text-xs text-foreground/50">
                       {ready ? t(locale, "examWindowClosed") : t(locale, "chapterLockedHint")}
                     </span>
                   </span>
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary/60">
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-foreground/45">
                     <Lock className="size-3.5" />
                     {t(locale, "chapterLocked")}
                   </span>

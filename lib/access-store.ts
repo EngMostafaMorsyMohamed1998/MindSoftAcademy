@@ -1,6 +1,12 @@
 import { createHmac, randomBytes } from "crypto";
-import { readStore, writeStore } from "@/lib/access-store-io";
+import { readLocalStore, readStore, writeStore } from "@/lib/access-store-io";
 import type { ExamMode } from "@/lib/class-clock";
+import {
+  buildClassSession,
+  parseClassSessions,
+  upsertSession,
+  type ClassSession,
+} from "@/lib/class-session";
 import { parseWeekSlots, sortWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
 export type AccessCode = {
@@ -97,7 +103,7 @@ export type ExamWindow = {
   mode: ExamMode;
 };
 
-export type { WeekSlot };
+export type { WeekSlot, ClassSession };
 
 export type MissedQuestion = {
   studentId: string;
@@ -618,6 +624,52 @@ export async function removeWeekSlot(id: string): Promise<WeekSlot[]> {
 
 export async function closeExamWindow(): Promise<void> {
   await persistExamWindow(null);
+}
+
+export async function listClassSessions(): Promise<ClassSession[]> {
+  let fromDb: ClassSession[] | null = null;
+  try {
+    const { readSessionRows } = await import("@/lib/class-db");
+    fromDb = await readSessionRows();
+  } catch {
+    fromDb = null;
+  }
+  const local = parseClassSessions((await readLocalStore())?.sessions);
+  if (fromDb && fromDb.length) return fromDb;
+  if (local.length) return local;
+  return fromDb ?? [];
+}
+
+async function persistSessions(sessions: ClassSession[]): Promise<void> {
+  try {
+    const { writeSessionRows } = await import("@/lib/class-db");
+    await writeSessionRows(sessions);
+  } catch {
+    // Fall through to the class store.
+  }
+  const store = await readStore();
+  store.sessions = sessions;
+  await writeStore(store);
+  try {
+    const { writeSessionRows } = await import("@/lib/class-db");
+    await writeSessionRows(sessions);
+  } catch {
+    // Local /tmp still has the archive if Postgres is down.
+  }
+}
+
+export async function archiveClassSession(codes: AccessCode[]): Promise<ClassSession> {
+  const [exams, attendance, window] = await Promise.all([listExams(), listAttendance(), getExamWindow()]);
+  const session = buildClassSession({
+    id: randomBytes(6).toString("hex"),
+    codes,
+    exams,
+    attendance,
+    window,
+  });
+  const next = upsertSession(await listClassSessions(), session);
+  await persistSessions(next);
+  return session;
 }
 
 export async function recordMisses(rows: MissedQuestion[]): Promise<void> {

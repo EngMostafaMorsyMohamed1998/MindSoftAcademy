@@ -6,7 +6,7 @@ import { weekdayName, type WeekSlot } from "@/lib/week-plan";
 export function WeekBoard({ locale, slots }: { locale: Locale; slots: WeekSlot[] }) {
   const today = cairoWeekday();
   return (
-    <section className="rounded-3xl border border-primary/8 bg-white p-5 sm:p-6">
+    <section className="rounded-3xl border border-primary/10 bg-surface p-5 sm:p-6">
       <h2 className="font-serif text-2xl">{t(locale, "weekPlan")}</h2>
       {slots.length === 0 ? (
         <p className="mt-3 text-sm text-foreground/55">{t(locale, "noWeekPlan")}</p>

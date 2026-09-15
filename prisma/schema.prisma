@@ -230,6 +230,21 @@ model ClassWeekPlan {
   updatedAt DateTime
 }
 
+model ClassSessionArchive {
+  id             String   @id
+  date           String
+  chapterId      String?
+  closedAt       DateTime
+  presentCount   Int
+  absentCount    Int
+  unmarkedCount  Int
+  examCount      Int
+  averagePercent Int?
+  students       Json
+
+  @@index([date])
+}
+
 model ClassMiss {
   studentId    String
   questionKey  String

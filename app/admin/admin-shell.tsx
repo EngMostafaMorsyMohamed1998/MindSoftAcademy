@@ -18,7 +18,8 @@ import {
 } from "@/app/actions/access";
 import { gradeEssayForm } from "@/app/actions/study";
 import { BRAND } from "@/lib/brand";
-import { cairoDate, cairoWeekday, type ExamMode } from "@/lib/class-clock";
+import { cairoDate, cairoMonth, cairoWeekday, type ExamMode } from "@/lib/class-clock";
+import { absenteeWhatsappText, sessionsInMonth, type ClassSession } from "@/lib/class-session";
 import { codeWhatsappText, parentWeeklyWhatsappText, whatsappHref, type ClassRow } from "@/lib/class-roster";
 import { CHAPTERS } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
@@ -38,6 +39,7 @@ export function AdminShell({
   announcement,
   examWindow,
   weekPlan,
+  sessions,
 }: {
   locale: Locale;
   codes: AccessCode[];
@@ -46,6 +48,7 @@ export function AdminShell({
   announcement: string;
   examWindow: { chapterId: string; closesAt: string; mode?: ExamMode } | null;
   weekPlan: WeekSlot[];
+  sessions: ClassSession[];
 }) {
   const [tab, setTab] = useState<Tab>("class");
   const router = useRouter();
@@ -90,6 +93,9 @@ export function AdminShell({
   const declined = roster.filter((row) => row.declined);
   const rankedRoster = [...roster].sort((a, b) => Number(b.declined) - Number(a.declined));
   const todayWeekday = cairoWeekday();
+  const month = cairoMonth();
+  const monthSessions = sessionsInMonth(sessions, month);
+  const latest = sessions[0] ?? null;
 
   function copy(value: string) {
     void navigator.clipboard.writeText(value);
@@ -128,6 +134,33 @@ export function AdminShell({
       <p>${locale === "ar" ? BRAND.nameAr : BRAND.nameEn}</p>
       <h1>${t(locale, "printGrades")}</h1>
       <table><thead><tr><th>${t(locale, "student")}</th><th>${t(locale, "phone")}</th><th>${t(locale, "standing")}</th><th>${t(locale, "lastPercent")}</th><th>${t(locale, "attendance")}</th><th>${t(locale, "suspend")}</th></tr></thead><tbody>${rows}</tbody></table>
+      </body></html>`);
+    win.document.close();
+    win.focus();
+    win.print();
+  }
+
+  function printMonth() {
+    const win = window.open("", "_blank");
+    if (!win) return;
+    const blocks = monthSessions
+      .map((session) => {
+        const rows = session.students
+          .map(
+            (row) =>
+              `<tr><td>${row.name}</td><td>${row.present === true ? t(locale, "present") : row.present === false ? t(locale, "absent") : "—"}</td><td>${row.examScore ?? "—"}</td><td>${row.examPercent ?? "—"}</td></tr>`,
+          )
+          .join("");
+        return `<h2>${session.date}${session.chapterId ? ` · ${t(locale, "chapterExam")} ${session.chapterId}` : ""}</h2>
+          <p>${t(locale, "presentCount")} ${session.presentCount} · ${t(locale, "absentCount")} ${session.absentCount} · ${t(locale, "examCount")} ${session.examCount} · ${t(locale, "classAverage")} ${session.averagePercent ?? "—"}%</p>
+          <table><thead><tr><th>${t(locale, "student")}</th><th>${t(locale, "attendance")}</th><th>${t(locale, "results")}</th><th>${t(locale, "lastPercent")}</th></tr></thead><tbody>${rows}</tbody></table>`;
+      })
+      .join("");
+    win.document.write(`<!doctype html><html lang="${locale}" dir="${locale === "ar" ? "rtl" : "ltr"}"><head><meta charset="utf-8"><title>${t(locale, "printMonth")} ${month}</title>
+      <style>body{font-family:system-ui;padding:24px}table{width:100%;border-collapse:collapse;margin-bottom:24px}th,td{border:1px solid #ccc;padding:8px;text-align:start}h1{font-size:20px}h2{font-size:16px;margin-top:24px}</style></head><body>
+      <p>${locale === "ar" ? BRAND.nameAr : BRAND.nameEn}</p>
+      <h1>${t(locale, "printMonth")} · ${month}</h1>
+      ${blocks || `<p>${t(locale, "noSession")}</p>`}
       </body></html>`);
     win.document.close();
     win.focus();
@@ -250,7 +283,7 @@ export function AdminShell({
                 disabled={closePending}
                 className="h-12 w-full rounded-full bg-red-600 text-sm font-semibold text-white"
               >
-                {t(locale, "closeClassExam")}
+                {t(locale, "closeClassSave")}
               </button>
             </form>
             <p className={`mt-3 rounded-2xl px-3 py-2 text-sm ${liveWindow ? "bg-emerald-50 text-emerald-800" : "bg-primary/5 text-foreground/65"}`}>
@@ -264,6 +297,9 @@ export function AdminShell({
             </p>
             {examState.error || closeState.error ? (
               <p className="mt-2 text-sm text-red-700">{examState.error || closeState.error}</p>
+            ) : null}
+            {closeState.sessionSaved ? (
+              <p className="mt-2 text-sm text-emerald-700">{t(locale, "sessionReport")} ✓</p>
             ) : null}
           </section>
 
@@ -336,6 +372,89 @@ export function AdminShell({
                 </button>
               </div>
             </form>
+          </section>
+
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-lg font-semibold">{t(locale, "sessionReport")}</h2>
+                <p className="mt-1 text-sm text-foreground/60">{t(locale, "sessionHint")}</p>
+              </div>
+              <button
+                type="button"
+                onClick={printMonth}
+                className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
+              >
+                {t(locale, "printMonth")}
+              </button>
+            </div>
+            {latest ? (
+              <div className="mt-4 space-y-3">
+                <p className="text-sm font-semibold">
+                  {latest.date}
+                  {latest.chapterId ? ` · ${t(locale, "chapterExam")} ${latest.chapterId}` : ""}
+                </p>
+                <div className="grid gap-2 sm:grid-cols-4">
+                  <p className="rounded-2xl bg-emerald-50 px-3 py-2 text-sm">
+                    {t(locale, "presentCount")}: <strong>{latest.presentCount}</strong>
+                  </p>
+                  <p className="rounded-2xl bg-red-50 px-3 py-2 text-sm">
+                    {t(locale, "absentCount")}: <strong>{latest.absentCount}</strong>
+                  </p>
+                  <p className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                    {t(locale, "examCount")}: <strong>{latest.examCount}</strong>
+                  </p>
+                  <p className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                    {t(locale, "classAverage")}: <strong>{latest.averagePercent ?? "—"}%</strong>
+                  </p>
+                </div>
+                <ul className="space-y-2">
+                  {latest.students.map((row) => (
+                    <li key={row.studentId} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                      <span>
+                        <strong>{row.name}</strong>
+                        <span className="mx-2 text-foreground/55">
+                          {row.present === true
+                            ? t(locale, "present")
+                            : row.present === false
+                              ? t(locale, "absent")
+                              : t(locale, "unmarkedCount")}
+                        </span>
+                        {row.examScore ? `${row.examScore} (${row.examPercent}%)` : "—"}
+                      </span>
+                      {row.present === false ? (
+                        <a
+                          href={whatsappHref(row.phone, absenteeWhatsappText(row.name, latest.date, locale))}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white"
+                        >
+                          {t(locale, "whatsappAbsent")}
+                        </a>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-foreground/55">{t(locale, "noSession")}</p>
+            )}
+            <h3 className="mt-6 text-sm font-semibold">{t(locale, "sessionArchive")}</h3>
+            {monthSessions.length === 0 ? (
+              <p className="mt-2 text-sm text-foreground/55">{t(locale, "noSession")}</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {monthSessions.map((session) => (
+                  <li key={session.id} className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                    <strong>{session.date}</strong>
+                    {session.chapterId ? ` · ${t(locale, "chapterExam")} ${session.chapterId}` : ""}
+                    <span className="mx-2 text-foreground/55">
+                      {t(locale, "presentCount")} {session.presentCount} · {t(locale, "absentCount")} {session.absentCount} · {t(locale, "classAverage")} {session.averagePercent ?? "—"}%
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </div>
       ) : null}

@@ -49,9 +49,19 @@ body {
   background-color: var(--surface);
 }
 
+.dark .bg-white\/70,
+.dark .bg-white\/80,
 .dark .bg-white\/90,
 .dark .bg-white\/95 {
-  background-color: color-mix(in srgb, var(--surface) 94%, transparent);
+  background-color: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+.dark .bg-red-50 {
+  background-color: color-mix(in srgb, #ef4444 18%, var(--surface));
+}
+
+.dark .bg-emerald-50 {
+  background-color: color-mix(in srgb, #10b981 18%, var(--surface));
 }
 
 .keep-white,

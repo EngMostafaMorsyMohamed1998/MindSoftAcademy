@@ -13,6 +13,7 @@ import type {
   MissedQuestion,
 } from "@/lib/access-store";
 import { parseExamChapter } from "@/lib/class-clock";
+import { parseClassSessions, type ClassSession } from "@/lib/class-session";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
 export type StoreFile = {
@@ -27,6 +28,7 @@ export type StoreFile = {
   examWindow: ExamWindow | null;
   misses: MissedQuestion[];
   weekPlan: WeekSlot[];
+  sessions: ClassSession[];
 };
 
 const BLOB_KEY = "mindsoft-access-store.json";
@@ -51,6 +53,7 @@ export function emptyStore(): StoreFile {
     examWindow: null,
     misses: [],
     weekPlan: [],
+    sessions: [],
   };
 }
 
@@ -91,10 +94,11 @@ export function parseStore(value: unknown): StoreFile {
     examWindow: asExamWindow(parsed.examWindow),
     misses: Array.isArray(parsed.misses) ? parsed.misses : [],
     weekPlan: parseWeekSlots(parsed.weekPlan),
+    sessions: parseClassSessions(parsed.sessions),
   };
 }
 
-async function readLocal(): Promise<StoreFile | null> {
+export async function readLocalStore(): Promise<StoreFile | null> {
   try {
     const raw = await readFile(localPath(), "utf8");
     return parseStore(JSON.parse(raw));
@@ -152,7 +156,7 @@ export async function readStore(): Promise<StoreFile> {
   }
   const fromBlob = await readBlob();
   if (fromBlob) return fromBlob;
-  return (await readLocal()) ?? emptyStore();
+    return (await readLocalStore()) ?? emptyStore();
 }
 
 export async function writeStore(store: StoreFile): Promise<void> {

@@ -13,6 +13,7 @@ import type {
   MissedQuestion,
 } from "@/lib/access-store";
 import { encodeExamChapter, parseExamChapter } from "@/lib/class-clock";
+import { parseClassSessions, type ClassSession } from "@/lib/class-session";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
 function asExamWindow(row: { id: string; chapterId: string; opensAt: Date; closesAt: Date }): ExamWindow {
@@ -115,10 +116,91 @@ export async function writeWeekPlanRow(slots: WeekSlot[]): Promise<boolean> {
   }
 }
 
+function asSession(row: {
+  id: string;
+  date: string;
+  chapterId: string | null;
+  closedAt: Date;
+  presentCount: number;
+  absentCount: number;
+  unmarkedCount: number;
+  examCount: number;
+  averagePercent: number | null;
+  students: unknown;
+}): ClassSession {
+  return (
+    parseClassSessions([
+      {
+        id: row.id,
+        date: row.date,
+        chapterId: row.chapterId,
+        closedAt: row.closedAt.toISOString(),
+        presentCount: row.presentCount,
+        absentCount: row.absentCount,
+        unmarkedCount: row.unmarkedCount,
+        examCount: row.examCount,
+        averagePercent: row.averagePercent,
+        students: row.students,
+      },
+    ])[0] ?? {
+      id: row.id,
+      date: row.date,
+      chapterId: row.chapterId,
+      closedAt: row.closedAt.toISOString(),
+      presentCount: row.presentCount,
+      absentCount: row.absentCount,
+      unmarkedCount: row.unmarkedCount,
+      examCount: row.examCount,
+      averagePercent: row.averagePercent,
+      students: [],
+    }
+  );
+}
+
+export async function readSessionRows(): Promise<ClassSession[] | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const rows = await prisma.classSessionArchive.findMany({ orderBy: { date: "desc" } });
+    return rows.map(asSession);
+  } catch {
+    return null;
+  }
+}
+
+export async function writeSessionRows(sessions: ClassSession[]): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.$transaction([
+      prisma.classSessionArchive.deleteMany(),
+      ...(sessions.length
+        ? [
+            prisma.classSessionArchive.createMany({
+              data: sessions.map((row) => ({
+                id: row.id,
+                date: row.date,
+                chapterId: row.chapterId,
+                closedAt: asDate(row.closedAt),
+                presentCount: row.presentCount,
+                absentCount: row.absentCount,
+                unmarkedCount: row.unmarkedCount,
+                examCount: row.examCount,
+                averagePercent: row.averagePercent,
+                students: row.students,
+              })),
+            }),
+          ]
+        : []),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function readClassDb(): Promise<StoreFile | null> {
   if (!hasLiveDatabase()) return null;
   try {
-    const [codes, messages, exams, homework, unlocks, essayGrades, attendance, announcements, windows, misses, weekPlans] =
+    const [codes, messages, exams, homework, unlocks, essayGrades, attendance, announcements, windows, misses, weekPlans, sessionRows] =
       await Promise.all([
         prisma.classCode.findMany(),
         prisma.classMessage.findMany(),
@@ -131,6 +213,7 @@ export async function readClassDb(): Promise<StoreFile | null> {
         safeMany(prisma.classExamWindow?.findMany()),
         safeMany(prisma.classMiss?.findMany()),
         safeMany(prisma.classWeekPlan?.findMany()),
+        safeMany(prisma.classSessionArchive?.findMany()),
       ]);
     const announcement = announcements.find((row) => row.active) ?? announcements[0] ?? null;
     const window = windows[0] ?? null;
@@ -207,6 +290,7 @@ export async function readClassDb(): Promise<StoreFile | null> {
         : null,
       examWindow: window ? asExamWindow(window) : null,
       weekPlan: parseWeekSlots(weekPlans[0]?.slots),
+      sessions: sessionRows.map(asSession),
       misses: misses.map((row): MissedQuestion => ({
         studentId: row.studentId,
         questionKey: row.questionKey,

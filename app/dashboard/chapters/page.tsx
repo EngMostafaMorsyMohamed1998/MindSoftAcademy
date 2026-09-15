@@ -15,7 +15,7 @@ export default async function ChaptersPage() {
     <div className="mx-auto w-full max-w-5xl">
       <h1 className="font-serif text-3xl">{t(locale, "navChapters")}</h1>
       <p className="mt-2 text-sm text-foreground/65">{t(locale, "dashboardHint")}</p>
-      <div className="mt-5 rounded-3xl border border-primary/8 bg-white p-5">
+      <div className="mt-5 rounded-3xl border border-primary/10 bg-surface p-5">
         <StudyProgress locale={locale} completed={completed} />
       </div>
       <div className="mt-6 grid gap-4">
@@ -24,8 +24,8 @@ export default async function ChaptersPage() {
           return (
             <article
               key={chapter.id}
-              className={`rounded-3xl border bg-white p-5 shadow-sm ${
-                unlocked ? "border-primary/8" : "border-primary/8 opacity-70"
+              className={`rounded-3xl border bg-surface p-5 shadow-sm ${
+                unlocked ? "border-primary/10" : "border-primary/10"
               }`}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">

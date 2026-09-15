@@ -196,6 +196,18 @@ const ar = {
   ministryNext: "التالي",
   ministryQuestion: "سؤال",
   missingHomework: "واجب ناقص",
+  closeClassSave: "أقفل الحصة واحفظ التقرير",
+  sessionReport: "تقرير الحصة",
+  sessionArchive: "أرشيف الحصص",
+  sessionHint: "بيتحفظ الحضور والدرجات. الغُيّاب يظهروا هنا عشان تبعت واتساب.",
+  presentCount: "حضر",
+  absentCount: "غاب",
+  unmarkedCount: "من غير تسجيل",
+  examCount: "امتحنوا",
+  classAverage: "متوسط الحصة",
+  noSession: "لسه مفيش تقرير محفوظ.",
+  printMonth: "طباعة شهر الحصص",
+  whatsappAbsent: "واتساب للغائب",
 } as const;
 
 const en: { [K in keyof typeof ar]: string } = {
@@ -393,6 +405,18 @@ const en: { [K in keyof typeof ar]: string } = {
   ministryNext: "Next",
   ministryQuestion: "Question",
   missingHomework: "Missing homework",
+  closeClassSave: "Close class and save the report",
+  sessionReport: "Class report",
+  sessionArchive: "Class archive",
+  sessionHint: "Attendance and scores are saved. Absentees appear here so you can WhatsApp them.",
+  presentCount: "Present",
+  absentCount: "Absent",
+  unmarkedCount: "Not marked",
+  examCount: "Sat the exam",
+  classAverage: "Class average",
+  noSession: "No class report saved yet.",
+  printMonth: "Print this month",
+  whatsappAbsent: "WhatsApp absentee",
 };
 
 export const messages = { ar, en };

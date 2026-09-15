@@ -13,6 +13,7 @@ import {
   setAnnouncement,
   setSuspended,
   addWeekSlot,
+  archiveClassSession,
   closeExamWindow,
   removeWeekSlot,
   startExamWindow,
@@ -20,7 +21,7 @@ import {
 import { parseBulkStudents } from "@/lib/class-clock";
 import { isChapterId } from "@/lib/curriculum";
 import { setStudentCookie } from "@/lib/student-session";
-import { rememberIssuedCode } from "@/lib/teacher-roster";
+import { listVisibleCodes, rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
 
 export type FormState = {
@@ -31,6 +32,7 @@ export type FormState = {
   examClosesAt?: string;
   examClosed?: boolean;
   examMode?: "class" | "ministry";
+  sessionSaved?: boolean;
 };
 
 function read(formData: FormData, key: string): string {
@@ -224,6 +226,7 @@ export async function stopClassExam(
   _formData: FormData,
 ): Promise<FormState> {
   if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  await archiveClassSession(await listVisibleCodes());
   await closeExamWindow();
-  return { error: null, ok: true, examClosed: true };
+  return { error: null, ok: true, examClosed: true, sessionSaved: true };
 }

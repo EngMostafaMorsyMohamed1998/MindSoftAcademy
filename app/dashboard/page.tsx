@@ -55,7 +55,7 @@ export default async function DashboardHomePage() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-2xl border border-primary/8 bg-white p-4 text-sm font-semibold shadow-sm"
+              className="rounded-2xl border border-primary/10 bg-surface p-4 text-sm font-semibold shadow-sm"
             >
               <Icon className="size-5 text-primary" />
               <span className="mt-3 block">{item.label}</span>
@@ -64,7 +64,7 @@ export default async function DashboardHomePage() {
         })}
       </section>
 
-      <section className="rounded-3xl border border-primary/8 bg-white p-5 sm:p-6">
+      <section className="rounded-3xl border border-primary/10 bg-surface p-5 sm:p-6">
         <StudyProgress locale={locale} completed={completed} />
         <h2 className="mt-6 font-serif text-2xl">{t(locale, "samplePath")}</h2>
         <QuestMap locale={locale} chapters={CHAPTERS} completed={completed} unlocks={unlocks} />
