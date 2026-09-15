@@ -2,7 +2,8 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
 import { AdminDesk } from "./admin-desk";
-import { listCodes, listExams } from "@/lib/access-store";
+import { listExams } from "@/lib/access-store";
+import { listVisibleCodes } from "@/lib/teacher-roster";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { getTheme } from "@/lib/theme";
@@ -11,7 +12,7 @@ import { LogoutButton } from "@/app/dashboard/logout-button";
 export default async function AdminPage() {
   const locale = await getLocale();
   const theme = await getTheme();
-  const [codes, exams] = await Promise.all([listCodes(), listExams()]);
+  const [codes, exams] = await Promise.all([listVisibleCodes(), listExams()]);
 
   return (
     <div className="min-h-full bg-background text-foreground">

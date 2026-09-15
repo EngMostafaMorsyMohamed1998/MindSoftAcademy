@@ -2,6 +2,7 @@
 
 import { issueCode, listExamChapterIds, redeemCode } from "@/lib/access-store";
 import { setStudentCookie } from "@/lib/student-session";
+import { rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
 
 export type FormState = { error: string | null; code?: string; ok?: boolean };
@@ -57,6 +58,7 @@ export async function createStudentCode(
   const phone = read(formData, "phone");
   try {
     const record = await issueCode({ name, phone });
+    await rememberIssuedCode(record);
     return { error: null, code: record.code };
   } catch (error) {
     const message = error instanceof Error ? error.message : "FAILED";
