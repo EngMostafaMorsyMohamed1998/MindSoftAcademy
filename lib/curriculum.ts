@@ -342,10 +342,10 @@ export const CHAPTERS: Chapter[] = [
   },
 ];
 
-export const EXAM_DURATION_SECONDS = 30 * 60;
-export const EXAM_OBJECTIVE_POINTS = 16;
+export const EXAM_DURATION_SECONDS = 60 * 60;
+export const EXAM_OBJECTIVE_POINTS = 48;
 export const EXAM_ESSAY_POINTS = 16;
-export const EXAM_TOTAL_POINTS = 32;
+export const EXAM_TOTAL_POINTS = 64;
 
 export function isChapterId(value: string): value is ChapterId {
   return CHAPTERS.some((chapter) => chapter.id === value);

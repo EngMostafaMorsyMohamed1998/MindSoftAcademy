@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, Gamepad2, MessageCircle, Printer, RotateCcw, Trophy } from "lucide-react";
+import { Award, BookOpen, ClipboardCheck, Gamepad2, MessageCircle, Printer, RotateCcw, Trophy } from "lucide-react";
 import { HeroRobot } from "@/components/hero-robot";
 import { StudyProgress } from "@/components/study-progress";
 import { allChaptersPassed } from "@/lib/chapter-progress";
@@ -22,6 +22,7 @@ import { levelFromPoints } from "@/lib/student-profile";
 import { buildWeekStars, starLabel } from "@/lib/week-stars";
 import { QuestMap } from "./quest-map";
 import { WeekBoard } from "./week-board";
+import { telegramBotHref } from "@/lib/telegram";
 
 export default async function DashboardHomePage() {
   const user = await getCurrentUser();
@@ -37,6 +38,7 @@ export default async function DashboardHomePage() {
       listHomeworkResults(),
       listCodes(),
     ]);
+  const telegramHref = telegramBotHref();
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
   const { level } = levelFromPoints(user.points);
   const ranks = buildClassRanks(codes);
@@ -56,6 +58,7 @@ export default async function DashboardHomePage() {
     { href: "/dashboard/booklet", label: t(locale, "navBooklet"), icon: Printer },
     { href: "/dashboard/chat-to-teacher", label: t(locale, "navChat"), icon: MessageCircle },
     { href: "/dashboard/review", label: t(locale, "reviewMistakes"), icon: RotateCcw },
+    { href: "/dashboard/certificate", label: t(locale, "certificate"), icon: Award },
   ];
 
   return (
@@ -100,6 +103,17 @@ export default async function DashboardHomePage() {
           {week.score} · {t(locale, "present")} {week.present} · {t(locale, "absent")} {week.absent} ·{" "}
           {t(locale, "homeworkShort")} {week.homework}
           {week.examPercent !== null ? ` · ${week.examPercent}%` : ""}
+        </p>
+        <p className="mt-4 text-sm">
+          {t(locale, "telegramHint")}
+          {telegramHref ? (
+            <>
+              {" "}
+              <a href={telegramHref} target="_blank" rel="noreferrer" className="font-semibold text-primary">
+                {t(locale, "telegramOpen")}
+              </a>
+            </>
+          ) : null}
         </p>
       </section>
 

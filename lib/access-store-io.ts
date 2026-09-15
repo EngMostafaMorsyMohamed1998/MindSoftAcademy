@@ -22,6 +22,9 @@ import {
   type SurpriseAnswer,
   type SurpriseQuestion,
 } from "@/lib/surprise";
+import { parseCertificates, type CourseCertificate } from "@/lib/certificates";
+import { parseTelegramLinks, type TelegramLink } from "@/lib/telegram";
+import { DEFAULT_DEVICE_LIMIT, parseDeviceLimit, parseDevices, type DeviceLimit, type StudentDevice } from "@/lib/devices";
 import { parsePresence, type PresencePing } from "@/lib/presence";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
@@ -41,6 +44,10 @@ export type StoreFile = {
   makeups: MakeupTask[];
   payments: MonthPayment[];
   monthlyFee: number;
+  devices: StudentDevice[];
+  deviceLimit: DeviceLimit;
+  certificates: CourseCertificate[];
+  telegramLinks: TelegramLink[];
   surprise: SurpriseQuestion | null;
   surpriseAnswers: SurpriseAnswer[];
   presence: PresencePing[];
@@ -72,6 +79,10 @@ export function emptyStore(): StoreFile {
     makeups: [],
     payments: [],
     monthlyFee: DEFAULT_MONTHLY_FEE,
+    devices: [],
+    deviceLimit: DEFAULT_DEVICE_LIMIT,
+    certificates: [],
+    telegramLinks: [],
     surprise: null,
     surpriseAnswers: [],
     presence: [],
@@ -119,6 +130,10 @@ export function parseStore(value: unknown): StoreFile {
     makeups: parseMakeups(parsed.makeups),
     payments: parsePayments(parsed.payments),
     monthlyFee: parseMonthlyFee(parsed.monthlyFee),
+    devices: parseDevices(parsed.devices),
+    deviceLimit: parseDeviceLimit(parsed.deviceLimit),
+    certificates: parseCertificates(parsed.certificates),
+    telegramLinks: parseTelegramLinks(parsed.telegramLinks),
     surprise: parseSurprise(parsed.surprise),
     surpriseAnswers: parseSurpriseAnswers(parsed.surpriseAnswers),
     presence: parsePresence(parsed.presence),
@@ -178,9 +193,28 @@ export async function readStore(): Promise<StoreFile> {
     const { readClassDb } = await import("@/lib/class-db");
     const fromDb = await readClassDb();
     if (fromDb) {
+      try {
+        const { readDeviceLimitRow, readDeviceRows } = await import("@/lib/class-db");
+        const dedicated = await readDeviceRows();
+        if (dedicated?.length) fromDb.devices = dedicated;
+        const limit = await readDeviceLimitRow();
+        if (limit) fromDb.deviceLimit = limit;
+        const { readCertificateRows } = await import("@/lib/class-db");
+        const certs = await readCertificateRows();
+        if (certs?.length) fromDb.certificates = certs;
+        const { readTelegramLinkRows } = await import("@/lib/class-db");
+        const telegram = await readTelegramLinkRows();
+        if (telegram?.length) fromDb.telegramLinks = telegram;
+      } catch {
+        // Dedicated device tables may not exist yet.
+      }
       const local = await readLocalStore();
       if (local) {
         fromDb.monthlyFee = parseMonthlyFee(local.monthlyFee);
+        if (!fromDb.devices.length) fromDb.devices = parseDevices(local.devices);
+        if (!fromDb.deviceLimit) fromDb.deviceLimit = parseDeviceLimit(local.deviceLimit);
+        if (!fromDb.certificates.length) fromDb.certificates = parseCertificates(local.certificates);
+        if (!fromDb.telegramLinks?.length) fromDb.telegramLinks = parseTelegramLinks(local.telegramLinks);
         fromDb.surprise = parseSurprise(local.surprise);
         fromDb.surpriseAnswers = parseSurpriseAnswers(local.surpriseAnswers);
         fromDb.presence = parsePresence(local.presence);
@@ -202,6 +236,9 @@ export async function writeStore(
     replacePayments?: boolean;
     replaceSurprise?: boolean;
     replacePresence?: boolean;
+    replaceDevices?: boolean;
+    replaceCertificates?: boolean;
+    replaceTelegramLinks?: boolean;
   },
 ): Promise<void> {
   if (!options?.replaceMakeups && !store.makeups.length) {
@@ -236,6 +273,42 @@ export async function writeStore(
   }
   if (!options?.replacePresence && !store.presence.length) {
     store.presence = parsePresence((await readLocalStore())?.presence);
+  }
+  if (!options?.replaceDevices && !store.devices.length) {
+    let dedicated: StudentDevice[] | null = null;
+    try {
+      const { readDeviceRows } = await import("@/lib/class-db");
+      dedicated = await readDeviceRows();
+    } catch {
+      dedicated = null;
+    }
+    const local = parseDevices((await readLocalStore())?.devices);
+    store.devices = dedicated?.length ? dedicated : local;
+  }
+  if (store.deviceLimit == null) {
+    store.deviceLimit = parseDeviceLimit((await readLocalStore())?.deviceLimit);
+  }
+  if (!options?.replaceCertificates && !store.certificates.length) {
+    let dedicated: CourseCertificate[] | null = null;
+    try {
+      const { readCertificateRows } = await import("@/lib/class-db");
+      dedicated = await readCertificateRows();
+    } catch {
+      dedicated = null;
+    }
+    const local = parseCertificates((await readLocalStore())?.certificates);
+    store.certificates = dedicated?.length ? dedicated : local;
+  }
+  if (!options?.replaceTelegramLinks && !store.telegramLinks?.length) {
+    let dedicated: TelegramLink[] | null = null;
+    try {
+      const { readTelegramLinkRows } = await import("@/lib/class-db");
+      dedicated = await readTelegramLinkRows();
+    } catch {
+      dedicated = null;
+    }
+    const local = parseTelegramLinks((await readLocalStore())?.telegramLinks);
+    store.telegramLinks = dedicated?.length ? dedicated : local;
   }
   let wroteDb = false;
   try {

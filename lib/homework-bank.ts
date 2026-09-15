@@ -1,6 +1,7 @@
 import { EXTRA_HOMEWORK } from "@/lib/homework-extra";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { ChapterId } from "@/lib/curriculum";
+import { BANK_MCQ } from "@/lib/question-bank";
 import { shuffled } from "@/lib/shuffle";
 
 export type HomeworkKind = "mcq" | "tf";
@@ -161,6 +162,10 @@ function buildBank(): HomeworkQuestion[] {
     pushQuestion(bank, extra);
   }
 
+  for (const extra of BANK_MCQ) {
+    pushQuestion(bank, extra);
+  }
+
   return bank;
 }
 
@@ -184,7 +189,22 @@ export function pickLessonHomework(
   size = LESSON_HOMEWORK_SIZE,
 ): HomeworkQuestion[] {
   const pool = questionsForLesson(lessonId);
-  return shuffled(pool, seed).slice(0, Math.min(size, pool.length));
+  const mcq = shuffled(
+    pool.filter((question) => question.kind === "mcq"),
+    seed,
+  );
+  const tf = shuffled(
+    pool.filter((question) => question.kind === "tf"),
+    seed + 41,
+  );
+  const mcqWanted = Math.min(mcq.length, Math.max(size - 3, Math.ceil(size * 0.8)));
+  const picked = [...mcq.slice(0, mcqWanted)];
+  const remaining = size - picked.length;
+  picked.push(...tf.slice(0, remaining));
+  if (picked.length < size) {
+    picked.push(...mcq.slice(mcqWanted, mcqWanted + (size - picked.length)));
+  }
+  return shuffled(picked, seed + 7).slice(0, Math.min(size, picked.length));
 }
 
 export function withShuffledOptions(

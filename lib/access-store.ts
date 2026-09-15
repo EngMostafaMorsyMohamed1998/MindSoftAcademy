@@ -1,6 +1,13 @@
 import { createHmac, randomBytes } from "crypto";
 import { readLocalStore, readStore, writeStore } from "@/lib/access-store-io";
-import { cairoMonth, type ExamMode } from "@/lib/class-clock";
+import {
+  canIssueCertificate,
+  courseAverage,
+  nextCertificateSerial,
+  stampCertificate,
+  type CourseCertificate,
+} from "@/lib/certificates";
+import { cairoDate, cairoMonth, type ExamMode } from "@/lib/class-clock";
 import {
   buildClassSession,
   parseClassSessions,
@@ -19,6 +26,7 @@ import {
   type SurpriseAnswer,
   type SurpriseQuestion,
 } from "@/lib/surprise";
+import { parseTelegramLinks, type TelegramLink } from "@/lib/telegram";
 import { parseWeekSlots, sortWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
 export type AccessCode = {
@@ -115,7 +123,7 @@ export type ExamWindow = {
   mode: ExamMode;
 };
 
-export type { WeekSlot, ClassSession, MakeupTask, MonthPayment, SurpriseAnswer, SurpriseQuestion, PresencePing };
+export type { WeekSlot, ClassSession, MakeupTask, MonthPayment, SurpriseAnswer, SurpriseQuestion, PresencePing, CourseCertificate, TelegramLink };
 
 export async function getMonthlyFee(): Promise<number> {
   return parseMonthlyFee((await readStore()).monthlyFee);
@@ -974,4 +982,108 @@ export async function clearMiss(studentId: string, questionKey: string): Promise
   if (!row) return;
   row.clearedAt = new Date().toISOString();
   await writeStore(store);
+}
+
+export async function getCertificate(studentId: string): Promise<CourseCertificate | null> {
+  const store = await readStore();
+  return store.certificates.find((row) => row.studentId === studentId) ?? null;
+}
+
+export async function getCertificateBySerial(serial: string): Promise<CourseCertificate | null> {
+  const store = await readStore();
+  const key = serial.trim().toUpperCase();
+  return store.certificates.find((row) => row.serial.toUpperCase() === key) ?? null;
+}
+
+export async function listCertificates(): Promise<CourseCertificate[]> {
+  return (await readStore()).certificates;
+}
+
+export async function issueCourseCertificate(input: {
+  studentId: string;
+  name: string;
+  completed: Iterable<string>;
+}): Promise<CourseCertificate | null> {
+  if (!canIssueCertificate(input.completed)) return null;
+  const existing = await getCertificate(input.studentId);
+  if (existing) return existing;
+  const store = await readStore();
+  const year = cairoDate().slice(0, 4);
+  const serial = nextCertificateSerial(store.certificates, year);
+  const issued: CourseCertificate = {
+    serial,
+    studentId: input.studentId,
+    name: input.name,
+    issuedAt: new Date().toISOString(),
+    average: courseAverage(store.exams, input.studentId),
+    verifyCode: stampCertificate(serial, input.studentId),
+    year,
+  };
+  store.certificates.unshift(issued);
+  await writeStore(store, { replaceCertificates: true });
+  try {
+    const { upsertCertificateRow } = await import("@/lib/class-db");
+    await upsertCertificateRow(issued);
+  } catch {
+    // Local store is enough if Prisma migrate has not run yet.
+  }
+  try {
+    const { after } = await import("next/server");
+    after(async () => {
+      const { notifyCertificateIssued } = await import("@/lib/telegram-notify");
+      await notifyCertificateIssued(issued);
+    });
+  } catch {
+    // Notification is best-effort.
+  }
+  return issued;
+}
+
+export async function listTelegramLinks(studentId?: string): Promise<TelegramLink[]> {
+  const rows = parseTelegramLinks((await readStore()).telegramLinks);
+  return studentId ? rows.filter((row) => row.studentId === studentId) : rows;
+}
+
+export async function linkTelegramChat(input: {
+  chatId: string;
+  studentId: string;
+  phone: string;
+  parentName: string;
+}): Promise<TelegramLink> {
+  const store = await readStore();
+  const linked: TelegramLink = {
+    chatId: String(input.chatId),
+    studentId: input.studentId,
+    phone: input.phone,
+    parentName: input.parentName,
+    linkedAt: new Date().toISOString(),
+  };
+  store.telegramLinks = [
+    linked,
+    ...parseTelegramLinks(store.telegramLinks).filter((row) => row.chatId !== linked.chatId),
+  ];
+  await writeStore(store, { replaceTelegramLinks: true });
+  try {
+    const { upsertTelegramLinkRow } = await import("@/lib/class-db");
+    await upsertTelegramLinkRow(linked);
+  } catch {
+    // Local store is enough if Prisma migrate has not run yet.
+  }
+  return linked;
+}
+
+export async function unlinkTelegramChat(chatId: string): Promise<void> {
+  const store = await readStore();
+  store.telegramLinks = parseTelegramLinks(store.telegramLinks).filter((row) => row.chatId !== chatId);
+  await writeStore(store, { replaceTelegramLinks: true });
+  try {
+    const { deleteTelegramLinkRow } = await import("@/lib/class-db");
+    await deleteTelegramLinkRow(chatId);
+  } catch {
+    // Local store is enough if Prisma migrate has not run yet.
+  }
+}
+
+export function findCodeByPhone(phone: string, codes: { id: string; name: string; phone: string }[]) {
+  return codes.find((row) => phonesMatch(row.phone, phone)) ?? null;
 }

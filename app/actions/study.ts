@@ -8,6 +8,7 @@ import {
   completeMakeup,
   getCodeById,
   getExamWindow,
+  issueCourseCertificate,
   latestExam,
   listDueMisses,
   listEssayGrades,
@@ -21,12 +22,13 @@ import {
   type MissedQuestion,
 } from "@/lib/access-store";
 import { examWindowOpen, REVIEW_AFTER_MS } from "@/lib/class-clock";
-import { mergeCompleted, mergeIds, passedObjective } from "@/lib/chapter-progress";
+import { allChaptersPassed, mergeCompleted, mergeIds, passedObjective } from "@/lib/chapter-progress";
 import { MAKEUP_HOMEWORK_SIZE, pickLessonHomework, withShuffledOptions } from "@/lib/homework-bank";
-import { examForChapter, objectiveTotal, type ExamPaperId } from "@/lib/exams";
+import { examForChapter, examPaperSeed, objectiveTotal, type ExamPaperId } from "@/lib/exams";
 import { getLocale } from "@/lib/locale";
 import { getStudentSession, setStudentCookie } from "@/lib/student-session";
 import { getGame } from "@/lib/games";
+import { after } from "next/server";
 
 export async function awardGameXp(gameId: string): Promise<number> {
   const student = await getStudentSession();
@@ -41,16 +43,23 @@ export async function submitChapterExam(input: {
   objectiveAnswers: Record<string, number>;
   essayAnswers: Record<string, string>;
 }): Promise<
-  | { objectiveScore: number; objectiveTotal: number; id: string; passed: boolean }
+  | {
+      objectiveScore: number;
+      objectiveTotal: number;
+      id: string;
+      passed: boolean;
+      answers: Record<string, number>;
+    }
   | { error: string }
 > {
   const student = await getStudentSession();
-  const exam = examForChapter(input.chapterId);
+  const window = await getExamWindow();
+  const exam = examForChapter(input.chapterId, examPaperSeed(input.chapterId, window?.opensAt));
   if (!exam) return { error: "NO_EXAM" };
   if (student) {
     const record = await getCodeById(student.id);
     if (record?.suspendedAt) return { error: "SUSPENDED" };
-    if (!examWindowOpen(await getExamWindow(), input.chapterId)) {
+    if (!examWindowOpen(window, input.chapterId)) {
       return { error: "WINDOW" };
     }
   }
@@ -115,6 +124,25 @@ export async function submitChapterExam(input: {
       exams,
       homework: student.homework,
       unlocks: student.unlocks,
+    });
+    if (allChaptersPassed(exams)) {
+      await issueCourseCertificate({
+        studentId: student.id,
+        name: student.name,
+        completed: exams,
+      });
+    }
+    after(async () => {
+      const { notifyExamResult } = await import("@/lib/telegram-notify");
+      await notifyExamResult({
+        studentId: student.id,
+        name: student.name,
+        chapterId: input.chapterId,
+        objectiveScore,
+        objectiveTotal: total,
+        passed,
+        locale,
+      });
     });
   }
 

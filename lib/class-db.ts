@@ -14,6 +14,9 @@ import type {
 } from "@/lib/access-store";
 import { encodeExamChapter, parseExamChapter } from "@/lib/class-clock";
 import { parseClassSessions, type ClassSession } from "@/lib/class-session";
+import { parseCertificates, type CourseCertificate } from "@/lib/certificates";
+import { parseTelegramLinks, type TelegramLink } from "@/lib/telegram";
+import { DEFAULT_DEVICE_LIMIT, type DeviceLimit, type StudentDevice } from "@/lib/devices";
 import { DEFAULT_MONTHLY_FEE, parsePayments, type MonthPayment } from "@/lib/fees";
 import { parseMakeups, type MakeupTask } from "@/lib/makeup";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
@@ -386,6 +389,10 @@ export async function readClassDb(): Promise<StoreFile | null> {
       makeups: [],
       payments: [],
       monthlyFee: DEFAULT_MONTHLY_FEE,
+      devices: [],
+      deviceLimit: DEFAULT_DEVICE_LIMIT,
+      certificates: [],
+      telegramLinks: [],
       surprise: null,
       surpriseAnswers: [],
       presence: [],
@@ -559,6 +566,116 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
           ]
         : []),
     ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readCertificateRows(): Promise<CourseCertificate[] | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const rows = await prisma.classCertificate.findMany();
+    return parseCertificates(
+      rows.map((row) => ({
+        serial: row.serial,
+        studentId: row.studentId,
+        name: row.name,
+        issuedAt: row.issuedAt.toISOString(),
+        average: row.average,
+        verifyCode: row.verifyCode,
+        year: row.year,
+      })),
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertCertificateRow(row: CourseCertificate): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.classCertificate.upsert({
+      where: { studentId: row.studentId },
+      create: {
+        serial: row.serial,
+        studentId: row.studentId,
+        name: row.name,
+        issuedAt: asDate(row.issuedAt),
+        average: row.average,
+        verifyCode: row.verifyCode,
+        year: row.year,
+      },
+      update: {
+        serial: row.serial,
+        name: row.name,
+        issuedAt: asDate(row.issuedAt),
+        average: row.average,
+        verifyCode: row.verifyCode,
+        year: row.year,
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readTelegramLinkRows(): Promise<TelegramLink[] | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const rows = await prisma.classTelegramLink.findMany();
+    return parseTelegramLinks(
+      rows.map((row) => ({
+        chatId: row.chatId,
+        studentId: row.studentId,
+        phone: row.phone,
+        parentName: row.parentName,
+        linkedAt: row.linkedAt.toISOString(),
+      })),
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertTelegramLinkRow(row: TelegramLink): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.classTelegramLink.upsert({
+      where: { chatId: row.chatId },
+      create: {
+        chatId: row.chatId,
+        studentId: row.studentId,
+        phone: row.phone,
+        parentName: row.parentName,
+        linkedAt: asDate(row.linkedAt),
+      },
+      update: {
+        studentId: row.studentId,
+        phone: row.phone,
+        parentName: row.parentName,
+        linkedAt: asDate(row.linkedAt),
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readDeviceRows(): Promise<StudentDevice[] | null> {
+  return null;
+}
+
+export async function readDeviceLimitRow(): Promise<DeviceLimit | null> {
+  return null;
+}
+
+export async function deleteTelegramLinkRow(chatId: string): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.classTelegramLink.delete({ where: { chatId } });
     return true;
   } catch {
     return false;

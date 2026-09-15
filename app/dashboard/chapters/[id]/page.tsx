@@ -83,7 +83,7 @@ export default async function ChapterPage({
           >
             <ClipboardCheck className="size-5" />
             <span className="mt-2 block">{t(locale, "chapterExam")}</span>
-            <span className="text-xs font-normal text-white/70">{t(locale, "minutes30")}</span>
+            <span className="text-xs font-normal text-white/70">{t(locale, "examSize")}</span>
           </Link>
         ) : (
           <div className="rounded-2xl bg-primary/40 p-4 text-sm font-semibold text-white">
@@ -170,6 +170,12 @@ export default async function ChapterPage({
                   {homework.includes(note.id)
                     ? t(locale, "homeworkPassed")
                     : t(locale, "startHomework")}
+                </Link>
+                <Link
+                  href={`/dashboard/analyze/${note.id}`}
+                  className="inline-flex rounded-full border border-primary/20 px-4 py-2 text-xs font-semibold text-primary"
+                >
+                  {t(locale, "startAnalyze")}
                 </Link>
               </div>
             </article>

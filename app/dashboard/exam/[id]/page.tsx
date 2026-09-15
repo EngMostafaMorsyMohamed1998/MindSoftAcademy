@@ -9,7 +9,7 @@ import { studentProgress } from "@/lib/student-progress";
 import { getChapter, isChapterId } from "@/lib/curriculum";
 import { getExamWindow } from "@/lib/access-store";
 import { examWindowOpen, remainingExamSeconds } from "@/lib/class-clock";
-import { examForChapter } from "@/lib/exams";
+import { examForChapter, examPaperSeed } from "@/lib/exams";
 import { t } from "@/lib/i18n";
 import { notesForChapter } from "@/lib/lessons";
 import { getLocale } from "@/lib/locale";
@@ -24,13 +24,13 @@ export default async function ChapterExamPage({
   const mixed = id === "mix";
   if (!mixed && !isChapterId(id)) notFound();
   const chapter = mixed ? null : getChapter(id);
-  const exam = examForChapter(id);
+  const examWindow = await getExamWindow();
+  const exam = examForChapter(id, examPaperSeed(id, examWindow?.opensAt));
   if (!exam || (!mixed && !chapter)) notFound();
   const locale = await getLocale();
   const nextId = mixed || !isChapterId(id) ? null : nextChapterId(id);
   const note = mixed || !isChapterId(id) ? undefined : notesForChapter(id)[0];
   const lessonHint = note ? (locale === "ar" ? note.takeawayAr : note.takeawayEn) : "";
-  const examWindow = await getExamWindow();
   const windowOpen = examWindowOpen(examWindow, id);
   const durationSeconds = remainingExamSeconds(examWindow, id);
   if (!windowOpen) {

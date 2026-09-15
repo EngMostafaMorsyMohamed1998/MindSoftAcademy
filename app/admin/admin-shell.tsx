@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Users, Wallet } from "lucide-react";
+import { Award, ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Send, Users, Wallet } from "lucide-react";
 import {
   createManyStudentCodes,
   createStudentCode,
@@ -22,6 +22,12 @@ import {
   type FormState,
 } from "@/app/actions/access";
 import { gradeEssayForm } from "@/app/actions/study";
+import {
+  activateTelegramWebhook,
+  sendTelegramAllReports,
+  sendTelegramStudentReport,
+  type TelegramState,
+} from "@/app/actions/telegram";
 import { BRAND } from "@/lib/brand";
 import { cairoDate, cairoMonth, cairoWeekday, type ExamMode } from "@/lib/class-clock";
 import { buildMonthProfits, cairoMonthLabel, type MonthPayment } from "@/lib/fees";
@@ -31,7 +37,9 @@ import { starLabel } from "@/lib/week-stars";
 import { CHAPTERS } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
-import type { AccessCode, EssayGrade, ExamSubmission } from "@/lib/access-store";
+import type { AccessCode, CourseCertificate, EssayGrade, ExamSubmission, TelegramLink } from "@/lib/access-store";
+import { CertificateCard } from "@/components/certificate-card";
+import { PrintButton } from "@/app/dashboard/certificate/print-button";
 import { PresenceBoard } from "@/components/presence-board";
 import { SurpriseBoard } from "@/components/surprise-board";
 import { ESSAY_MARKS, markForGrade } from "@/lib/essay-marks";
@@ -40,7 +48,7 @@ import { weekdayName, type WeekSlot } from "@/lib/week-plan";
 
 const initial: FormState = { error: null };
 
-type Tab = "class" | "codes" | "roster" | "grades" | "profit";
+type Tab = "class" | "codes" | "roster" | "grades" | "certificates" | "profit";
 
 export function AdminShell({
   locale,
@@ -56,6 +64,11 @@ export function AdminShell({
   monthlyFee,
   surprise,
   surpriseAnswers,
+  certificates,
+  telegramLinks,
+  telegramConfigured,
+  telegramHref,
+  initialTab = "class",
 }: {
   locale: Locale;
   codes: AccessCode[];
@@ -70,8 +83,13 @@ export function AdminShell({
   monthlyFee: number;
   surprise: SurpriseQuestion | null;
   surpriseAnswers: SurpriseAnswer[];
+  certificates: CourseCertificate[];
+  telegramLinks: TelegramLink[];
+  telegramConfigured: boolean;
+  telegramHref: string | null;
+  initialTab?: Tab;
 }) {
-  const [tab, setTab] = useState<Tab>("class");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const router = useRouter();
   const [issueState, issueAction, issuePending] = useActionState(createStudentCode, initial);
   const [bulkState, bulkAction, bulkPending] = useActionState(createManyStudentCodes, initial);
@@ -84,16 +102,29 @@ export function AdminShell({
   const [feeState, feeAction, feePending] = useActionState(saveMonthlyFee, initial);
   const [surpriseState, surpriseAction, surprisePending] = useActionState(openSurprise, initial);
   const [surpriseCloseState, surpriseCloseAction, surpriseClosePending] = useActionState(stopSurprise, initial);
+  const telegramInitial: TelegramState = { error: null };
+  const [telegramHookState, telegramHookAction, telegramHookPending] = useActionState(
+    activateTelegramWebhook,
+    telegramInitial,
+  );
+  const [telegramOneState, telegramOneAction, telegramOnePending] = useActionState(
+    sendTelegramStudentReport,
+    telegramInitial,
+  );
+  const [telegramAllState, telegramAllAction, telegramAllPending] = useActionState(
+    sendTelegramAllReports,
+    telegramInitial,
+  );
   const [slotDeleteState, slotDeleteAction, slotDeletePending] = useActionState(deleteWeekSlot, initial);
   const [windowOverride, setWindowOverride] = useState<"open" | "closed" | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const today = cairoDate();
 
   useEffect(() => {
-    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok) {
+    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok || telegramHookState.ok || telegramOneState.ok || telegramAllState.ok) {
       router.refresh();
     }
-  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, mixState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, feeState.ok, surpriseState.ok, surpriseCloseState.ok, router]);
+  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, mixState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, feeState.ok, surpriseState.ok, surpriseCloseState.ok, telegramHookState.ok, telegramOneState.ok, telegramAllState.ok, router]);
 
   useEffect(() => {
     if (examState.examChapterId || mixState.examChapterId) setWindowOverride("open");
@@ -214,6 +245,7 @@ export function AdminShell({
     { id: "codes", label: t(locale, "tabCodes"), icon: KeyRound, count: codes.length },
     { id: "roster", label: t(locale, "tabRoster"), icon: Users, count: roster.length },
     { id: "grades", label: t(locale, "tabGrades"), icon: Printer, count: pendingEssays || undefined },
+    { id: "certificates", label: t(locale, "tabCertificates"), icon: Award, count: certificates.length },
     { id: "profit", label: t(locale, "tabProfit"), icon: Wallet, count: thisMonth?.revenue || undefined },
   ];
 
@@ -249,6 +281,14 @@ export function AdminShell({
         >
           <p className="text-xs text-foreground/55">{t(locale, "results")}</p>
           <p className="mt-1 text-sm font-semibold">{exams.length}</p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("certificates")}
+          className="rounded-2xl bg-white p-4 text-start ring-1 ring-primary/10"
+        >
+          <p className="text-xs text-foreground/55">{t(locale, "tabCertificates")}</p>
+          <p className="mt-1 text-sm font-semibold">{certificates.length}</p>
         </button>
         <button
           type="button"
@@ -296,6 +336,67 @@ export function AdminShell({
               <PresenceBoard locale={locale} />
             </div>
           </section>
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
+            <h2 className="text-lg font-semibold">{t(locale, "telegramTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "telegramLead")}</p>
+            <p className="mt-2 text-sm font-semibold">
+              {t(locale, "telegramCount")}: {telegramLinks.length}
+            </p>
+            {!telegramConfigured ? (
+              <p className="mt-3 text-sm text-amber-800">{t(locale, "telegramMissingToken")}</p>
+            ) : (
+              <p className="mt-3 text-sm text-emerald-800">{t(locale, "telegramReady")}</p>
+            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {telegramHref ? (
+                <a
+                  href={telegramHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-sky-600 px-4 text-sm font-semibold text-white"
+                >
+                  <Send className="size-4" />
+                  {t(locale, "telegramOpen")}
+                </a>
+              ) : null}
+              <form action={telegramHookAction}>
+                <button
+                  type="submit"
+                  disabled={telegramHookPending || !telegramConfigured}
+                  className="inline-flex h-11 items-center rounded-full bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {t(locale, "telegramActivate")}
+                </button>
+              </form>
+              <form action={telegramAllAction}>
+                <button
+                  type="submit"
+                  disabled={telegramAllPending || telegramLinks.length === 0}
+                  className="inline-flex h-11 items-center rounded-full bg-primary-dark px-4 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {t(locale, "telegramSendAll")}
+                </button>
+              </form>
+            </div>
+            {telegramHookState.ok || telegramAllState.ok || telegramOneState.ok ? (
+              <p className="mt-3 text-sm text-emerald-700">{t(locale, "telegramSent")}</p>
+            ) : null}
+            {telegramLinks.length === 0 ? (
+              <p className="mt-3 text-sm text-foreground/55">{t(locale, "telegramNone")}</p>
+            ) : (
+              <ul className="mt-3 space-y-1 text-sm">
+                {telegramLinks.map((link) => {
+                  const student = roster.find((row) => row.id === link.studentId);
+                  return (
+                    <li key={link.chatId}>
+                      {student?.name || link.phone}
+                      {link.parentName ? ` · ${link.parentName}` : ""}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
             <h2 className="text-lg font-semibold">{t(locale, "startClassExam")}</h2>
             <p className="mt-1 text-sm text-foreground/60">{t(locale, "examWindowHint")}</p>
@@ -318,7 +419,7 @@ export function AdminShell({
                   min={5}
                   max={180}
                   step={5}
-                  defaultValue={30}
+                  defaultValue={60}
                   className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
                 />
               </label>
@@ -814,6 +915,20 @@ export function AdminShell({
                           >
                             {t(locale, "parentReport")}
                           </a>
+                          {telegramLinks.some((link) => link.studentId === row.id) ? (
+                            <form action={telegramOneAction} className="mt-1">
+                              <input type="hidden" name="studentId" value={row.id} />
+                              <button
+                                type="submit"
+                                disabled={telegramOnePending}
+                                className="inline-flex rounded-full bg-sky-600 px-2 py-0.5 text-xs font-semibold text-white disabled:opacity-50"
+                              >
+                                {t(locale, "telegramReport")}
+                              </button>
+                            </form>
+                          ) : (
+                            <p className="mt-1 text-xs text-foreground/45">{t(locale, "telegramNotLinked")}</p>
+                          )}
                         </td>
                         <td className="px-3 py-2">
                           <p className="tracking-wide text-accent">{starLabel(row.week.stars)}</p>
@@ -950,6 +1065,39 @@ export function AdminShell({
             )}
           </section>
         </div>
+      ) : null}
+
+      {tab === "certificates" ? (
+        <section className="mt-6 space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold">{t(locale, "tabCertificates")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">
+              {certificates.length === 0 ? t(locale, "certificatePreview") : t(locale, "certificateLead")}
+            </p>
+          </div>
+          {(certificates.length ? certificates : [
+            {
+              serial: `MSA-${cairoDate().slice(0, 4)}-0000`,
+              studentId: "preview",
+              name: locale === "ar" ? "اسم الطالب" : "Student name",
+              issuedAt: new Date().toISOString(),
+              average: 92,
+              verifyCode: "SAMPLE",
+              year: cairoDate().slice(0, 4),
+            },
+          ]).map((row) => (
+            <CertificateCard
+              key={row.serial}
+              locale={locale}
+              certificate={row}
+              preview={certificates.length === 0}
+            />
+          ))}
+          {certificates.length === 0 ? (
+            <p className="text-sm text-foreground/55">{t(locale, "certificateNone")}</p>
+          ) : null}
+          <PrintButton label={t(locale, "printCertificate")} />
+        </section>
       ) : null}
 
       {tab === "grades" ? (

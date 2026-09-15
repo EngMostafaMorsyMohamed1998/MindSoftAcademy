@@ -2,7 +2,8 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
 import { AdminShell } from "./admin-shell";
-import { getAnnouncement, getExamWindow, getMonthlyFee, getSurprise, getWeekPlan, listAllEssayGrades, listAttendance, listClassSessions, listExams, listHomeworkResults, listPayments, listSurpriseAnswers } from "@/lib/access-store";
+import { getAnnouncement, getExamWindow, getMonthlyFee, getSurprise, getWeekPlan, listAllEssayGrades, listAttendance, listCertificates, listClassSessions, listExams, listHomeworkResults, listPayments, listSurpriseAnswers, listTelegramLinks } from "@/lib/access-store";
+import { fetchTelegramBotUsername, telegramBotHref, telegramConfigured } from "@/lib/telegram";
 import { buildClassRoster } from "@/lib/class-roster";
 import { listVisibleCodes } from "@/lib/teacher-roster";
 import { t } from "@/lib/i18n";
@@ -12,10 +13,19 @@ import { LogoutButton } from "@/app/dashboard/logout-button";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const locale = await getLocale();
   const theme = await getTheme();
-  const [codes, exams, homework, attendance, payments, announcement, examWindow, weekPlan, sessions, essayGrades, monthlyFee, surprise] = await Promise.all([
+  const { tab } = await searchParams;
+  const initialTab =
+    tab === "certificates" || tab === "class" || tab === "codes" || tab === "roster" || tab === "grades" || tab === "profit"
+      ? tab
+      : "class";
+  const [codes, exams, homework, attendance, payments, announcement, examWindow, weekPlan, sessions, essayGrades, monthlyFee, surprise, certificates, telegramLinks, telegramUsername] = await Promise.all([
     listVisibleCodes(),
     listExams(),
     listHomeworkResults(),
@@ -28,6 +38,9 @@ export default async function AdminPage() {
     listAllEssayGrades(),
     getMonthlyFee(),
     getSurprise(),
+    listCertificates(),
+    listTelegramLinks(),
+    fetchTelegramBotUsername(),
   ]);
   const surpriseAnswers = surprise ? await listSurpriseAnswers(surprise.id) : [];
   const roster = buildClassRoster(codes, exams, homework, attendance, payments);
@@ -39,6 +52,9 @@ export default async function AdminPage() {
           <BrandMark locale={locale} href="/admin" />
           <div className="flex items-center gap-2">
             <HeaderTools locale={locale} theme={theme} />
+            <Link href="/admin?tab=certificates" className="text-xs font-semibold text-primary">
+              {t(locale, "tabCertificates")}
+            </Link>
             <Link href="/admin/chat" className="text-xs font-semibold text-primary">
               {t(locale, "chatTeacherInbox")}
             </Link>
@@ -56,6 +72,7 @@ export default async function AdminPage() {
         <h1 className="font-serif text-3xl">{t(locale, "adminTitle")}</h1>
         <p className="mt-2 text-sm text-foreground/65">{t(locale, "adminLead")}</p>
         <AdminShell
+          initialTab={initialTab}
           locale={locale}
           codes={codes}
           exams={exams}
@@ -69,6 +86,10 @@ export default async function AdminPage() {
           monthlyFee={monthlyFee}
           surprise={surprise}
           surpriseAnswers={surpriseAnswers}
+          certificates={certificates}
+          telegramLinks={telegramLinks}
+          telegramConfigured={telegramConfigured()}
+          telegramHref={telegramUsername ? `https://t.me/${telegramUsername}` : telegramBotHref()}
         />
       </main>
     </div>

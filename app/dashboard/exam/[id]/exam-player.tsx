@@ -320,7 +320,7 @@ export function ChapterExamPlayer({
 
       <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
         <h2 className="font-semibold">
-          {t(locale, "objective")} · 50%
+          {t(locale, "objective")} · {t(locale, "examObjectiveCount")}
         </h2>
         <div className="mt-4 space-y-5">
           {paper.map((question, index) => renderObjective(question, index, false))}
@@ -328,7 +328,7 @@ export function ChapterExamPlayer({
       </section>
 
       <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-        <h2 className="font-semibold">{t(locale, "essay")} · 50%</h2>
+        <h2 className="font-semibold">{t(locale, "essay")} · {t(locale, "examEssayCount")}</h2>
         <p className="mt-1 text-xs text-foreground/55">{t(locale, "essayHint")}</p>
         <div className="mt-4 space-y-5">
           {exam.essays.map((question, index) => (

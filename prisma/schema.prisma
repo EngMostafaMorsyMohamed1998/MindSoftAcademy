@@ -282,3 +282,26 @@ model ClassMiss {
 
   @@id([studentId, questionKey])
 }
+
+model ClassCertificate {
+  serial     String   @id
+  studentId  String   @unique
+  name       String
+  issuedAt   DateTime
+  average    Int
+  verifyCode String
+  year       String
+
+  @@index([studentId])
+}
+
+model ClassTelegramLink {
+  chatId     String   @id
+  studentId  String
+  phone      String
+  parentName String   @default("")
+  linkedAt   DateTime
+
+  @@index([studentId])
+  @@index([phone])
+}

@@ -234,8 +234,8 @@ export async function openClassExam(
   if (!(await isTeacher())) return { error: "FORBIDDEN" };
   const chapterId = read(formData, "chapterId");
   if (!isChapterId(chapterId)) return { error: "MISSING" };
-  const minutes = Number(read(formData, "minutes") || "30");
-  const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 30 * 60;
+  const minutes = Number(read(formData, "minutes") || "60");
+  const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 60 * 60;
   const mode = read(formData, "ministry") === "1" ? "ministry" : "class";
   const window = await startExamWindow(chapterId, duration, mode);
   return {

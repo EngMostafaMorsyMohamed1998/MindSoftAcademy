@@ -1,4 +1,7 @@
-import type { ChapterId } from "@/lib/curriculum";
+import { CHAPTERS, isChapterId, type ChapterId } from "@/lib/curriculum";
+import { questionsForChapter, type HomeworkQuestion } from "@/lib/homework-bank";
+import { analysisForChapter } from "@/lib/question-bank";
+import { shuffled } from "@/lib/shuffle";
 
 export type ObjectiveKind = "mcq" | "tf";
 
@@ -29,6 +32,10 @@ export type ChapterExam = {
   objectives: ObjectiveQuestion[];
   essays: EssayQuestion[];
 };
+
+export const EXAM_SIZE = 50;
+export const EXAM_ESSAY_COUNT = 2;
+export const EXAM_OBJECTIVE_COUNT = EXAM_SIZE - EXAM_ESSAY_COUNT;
 
 function mcq(
   id: string,
@@ -917,23 +924,122 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
   },
 ];
 
-export function mixedMinistryExam(): ChapterExam {
-  const objectives = CHAPTER_EXAMS.flatMap((exam) => exam.objectives.slice(0, 1));
-  const extra = CHAPTER_EXAMS[0]?.objectives[1];
-  if (extra) objectives.push(extra);
-  const essays = [CHAPTER_EXAMS[2]?.essays[0], CHAPTER_EXAMS[6]?.essays[0]].filter(
-    (item): item is NonNullable<typeof item> => Boolean(item),
-  );
+export function examPaperSeed(chapterId: string, opensAt?: string | null): number {
+  const text = `${chapterId}:${opensAt ?? "open"}`;
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0 || 1;
+}
+
+function uniqueById<T extends { id: string }>(rows: T[]): T[] {
+  const seen = new Set<string>();
+  const next: T[] = [];
+  for (const row of rows) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    next.push(row);
+  }
+  return next;
+}
+
+function asObjective(question: HomeworkQuestion): ObjectiveQuestion {
+  const correctIndex = Math.min(3, Math.max(0, question.correctIndex)) as 0 | 1 | 2 | 3;
   return {
-    chapterId: "mix",
-    objectives: objectives.slice(0, 8),
-    essays,
+    id: question.id,
+    kind: question.kind,
+    promptAr: question.promptAr,
+    promptEn: question.promptEn,
+    optionsAr: question.optionsAr,
+    optionsEn: question.optionsEn,
+    correctIndex,
+    points: 1,
   };
 }
 
-export function examForChapter(id: string): ChapterExam | undefined {
-  if (id === "mix") return mixedMinistryExam();
-  return CHAPTER_EXAMS.find((exam) => exam.chapterId === id);
+function asEssay(row: {
+  id: string;
+  promptAr: string;
+  promptEn: string;
+  guideAr: string;
+  guideEn: string;
+}): EssayQuestion {
+  return {
+    id: row.id,
+    promptAr: row.promptAr,
+    promptEn: row.promptEn,
+    guideAr: row.guideAr,
+    guideEn: row.guideEn,
+    points: 8,
+  };
+}
+
+function chapterObjectivePool(chapterId: ChapterId): ObjectiveQuestion[] {
+  const official = CHAPTER_EXAMS.find((exam) => exam.chapterId === chapterId)?.objectives ?? [];
+  return uniqueById([
+    ...official.map((question) => ({ ...question, points: 1 })),
+    ...questionsForChapter(chapterId).map(asObjective),
+  ]);
+}
+
+function chapterEssayPool(chapterId: ChapterId): EssayQuestion[] {
+  const official = CHAPTER_EXAMS.find((exam) => exam.chapterId === chapterId)?.essays ?? [];
+  return uniqueById([...official, ...analysisForChapter(chapterId).map(asEssay)]);
+}
+
+function pickObjectives(pool: ObjectiveQuestion[], seed: number): ObjectiveQuestion[] {
+  const mcq = shuffled(
+    pool.filter((question) => question.kind === "mcq"),
+    seed,
+  );
+  const tf = shuffled(
+    pool.filter((question) => question.kind === "tf"),
+    seed + 17,
+  );
+  const picked = [...mcq.slice(0, EXAM_OBJECTIVE_COUNT)];
+  if (picked.length < EXAM_OBJECTIVE_COUNT) {
+    picked.push(...tf.slice(0, EXAM_OBJECTIVE_COUNT - picked.length));
+  }
+  return shuffled(picked, seed + 3).slice(0, EXAM_OBJECTIVE_COUNT);
+}
+
+function pickEssays(pool: EssayQuestion[], seed: number): EssayQuestion[] {
+  return shuffled(pool, seed + 91).slice(0, EXAM_ESSAY_COUNT);
+}
+
+export function mixedMinistryExam(seed = examPaperSeed("mix")): ChapterExam {
+  return (
+    examForChapter("mix", seed) ?? {
+      chapterId: "mix",
+      objectives: [],
+      essays: [],
+    }
+  );
+}
+
+export function examForChapter(id: string, seed = examPaperSeed(id)): ChapterExam | undefined {
+  if (id === "mix") {
+    const objectives = pickObjectives(
+      uniqueById(CHAPTERS.flatMap((chapter) => chapterObjectivePool(chapter.id))),
+      seed,
+    );
+    const essays = pickEssays(
+      uniqueById([
+        ...CHAPTER_EXAMS.flatMap((exam) => exam.essays),
+        ...CHAPTERS.flatMap((chapter) => analysisForChapter(chapter.id).map(asEssay)),
+      ]),
+      seed,
+    );
+    if (objectives.length < EXAM_OBJECTIVE_COUNT || essays.length < EXAM_ESSAY_COUNT) return undefined;
+    return { chapterId: "mix", objectives, essays };
+  }
+  if (!isChapterId(id)) return undefined;
+  const objectives = pickObjectives(chapterObjectivePool(id), seed);
+  const essays = pickEssays(chapterEssayPool(id), seed);
+  if (objectives.length < EXAM_OBJECTIVE_COUNT || essays.length < EXAM_ESSAY_COUNT) return undefined;
+  return { chapterId: id, objectives, essays };
 }
 
 export function objectiveTotal(exam: ChapterExam): number {

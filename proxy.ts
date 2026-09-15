@@ -11,12 +11,13 @@ const PUBLIC_EXACT = new Set([
   "/activate",
   "/favicon.ico",
   "/admin/login",
+  "/verify",
 ]);
 const PUBLIC_PREFIXES = ["/_next", "/api", "/public"];
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT.has(pathname)) return true;
-  if (pathname.startsWith("/activate/")) return true;
+  if (pathname.startsWith("/activate/") || pathname.startsWith("/verify/")) return true;
   return PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
