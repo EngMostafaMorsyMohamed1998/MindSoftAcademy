@@ -107,11 +107,12 @@ export const proxy = auth(async (request) => {
     return response;
   }
 
-  if (
-    (pathname === "/activate" || pathname === "/admin/login") &&
-    hasAccess
-  ) {
+  if (pathname === "/activate" && hasAccess) {
     return NextResponse.redirect(new URL("/dashboard", request.nextUrl.origin));
+  }
+
+  if (pathname === "/admin/login" && teacher) {
+    return NextResponse.redirect(new URL("/admin", request.nextUrl.origin));
   }
 
   return NextResponse.next();
