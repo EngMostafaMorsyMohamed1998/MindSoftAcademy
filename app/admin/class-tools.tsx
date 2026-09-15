@@ -40,6 +40,10 @@ export function ClassTools({
     if (bulkState.ok || announceState.ok || examState.ok) router.refresh();
   }, [bulkState.ok, announceState.ok, examState.ok, router]);
 
+  const liveWindow = examState.examChapterId
+    ? { chapterId: examState.examChapterId, closesAt: examState.examClosesAt ?? "" }
+    : examWindow;
+
   function printGrades() {
     const win = window.open("", "_blank");
     if (!win) return;
@@ -104,10 +108,16 @@ export function ClassTools({
           >
             {t(locale, "startClassExam")}
           </button>
-          {examWindow ? (
+          {liveWindow ? (
             <p className="w-full text-sm text-emerald-700">
-              {t(locale, "examWindowOpen")}: {examWindow.chapterId} · {examWindow.closesAt.replace("T", " ").slice(11, 16)}
+              {t(locale, "examStarted")} {t(locale, "chapterExam")} {liveWindow.chapterId}
+              {liveWindow.closesAt
+                ? ` · ${new Date(liveWindow.closesAt).toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                : ""}
             </p>
+          ) : null}
+          {examState.error ? (
+            <p className="w-full text-sm text-red-700">{examState.error}</p>
           ) : null}
         </form>
       </section>

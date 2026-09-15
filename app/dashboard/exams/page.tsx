@@ -21,10 +21,10 @@ export default async function ExamsIndexPage() {
       <p className="mt-2 text-sm text-foreground/65">{t(locale, "examWindowHint")}</p>
       <ul className="mt-6 space-y-3">
         {CHAPTERS.map((chapter) => {
+          const open = examWindowOpen(examWindow, chapter.id);
           const ready =
             isChapterUnlocked(completed, chapter.id, unlocks) &&
             chapterHomeworkDone(chapter.id, homework);
-          const open = ready && examWindowOpen(examWindow, chapter.id);
           return (
             <li key={chapter.id}>
               {open ? (

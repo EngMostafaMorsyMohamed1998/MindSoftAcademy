@@ -11,7 +11,6 @@ import {
   listEssayGrades,
   listExamChapterIds,
   listPassedHomework,
-  listUnlocks,
   recordMisses,
   saveEssayGrade,
   saveExam,
@@ -19,13 +18,7 @@ import {
   type MissedQuestion,
 } from "@/lib/access-store";
 import { examWindowOpen, REVIEW_AFTER_MS } from "@/lib/class-clock";
-import {
-  chapterHomeworkDone,
-  isChapterUnlocked,
-  mergeCompleted,
-  mergeIds,
-  passedObjective,
-} from "@/lib/chapter-progress";
+import { mergeCompleted, mergeIds, passedObjective } from "@/lib/chapter-progress";
 import { pickLessonHomework, withShuffledOptions } from "@/lib/homework-bank";
 import { examForChapter, objectiveTotal } from "@/lib/exams";
 import { getLocale } from "@/lib/locale";
@@ -57,20 +50,6 @@ export async function submitChapterExam(input: {
     if (record?.suspendedAt) return { error: "SUSPENDED" };
     if (!examWindowOpen(await getExamWindow(), input.chapterId)) {
       return { error: "WINDOW" };
-    }
-    const [exams, homework, unlocks] = await Promise.all([
-      listExamChapterIds(student.id),
-      listPassedHomework(student.id),
-      listUnlocks(student.id),
-    ]);
-    const completed = mergeCompleted(student.exams, exams);
-    const open = mergeIds(student.unlocks, unlocks);
-    const done = mergeIds(student.homework, homework);
-    if (!isChapterUnlocked(completed, input.chapterId, open)) {
-      return { error: "LOCKED" };
-    }
-    if (!chapterHomeworkDone(input.chapterId, done)) {
-      return { error: "HOMEWORK" };
     }
   }
 

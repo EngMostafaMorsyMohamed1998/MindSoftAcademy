@@ -517,11 +517,17 @@ export async function setAnnouncement(body: string): Promise<void> {
 }
 
 export async function getExamWindow(): Promise<ExamWindow | null> {
+  try {
+    const { readExamWindowRow } = await import("@/lib/class-db");
+    const fromDb = await readExamWindowRow();
+    if (fromDb) return fromDb;
+  } catch {
+    // Table may not exist yet.
+  }
   return (await readStore()).examWindow;
 }
 
 export async function startExamWindow(chapterId: string, seconds: number): Promise<ExamWindow> {
-  const store = await readStore();
   const opensAt = new Date();
   const window: ExamWindow = {
     id: "current",
@@ -529,8 +535,21 @@ export async function startExamWindow(chapterId: string, seconds: number): Promi
     opensAt: opensAt.toISOString(),
     closesAt: new Date(opensAt.getTime() + seconds * 1000).toISOString(),
   };
+  try {
+    const { writeExamWindowRow } = await import("@/lib/class-db");
+    await writeExamWindowRow(window);
+  } catch {
+    // Fall through to the class store.
+  }
+  const store = await readStore();
   store.examWindow = window;
   await writeStore(store);
+  try {
+    const { writeExamWindowRow } = await import("@/lib/class-db");
+    await writeExamWindowRow(window);
+  } catch {
+    // Local /tmp still has the window if Postgres is down.
+  }
   return window;
 }
 

@@ -20,7 +20,13 @@ import { setStudentCookie } from "@/lib/student-session";
 import { rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
 
-export type FormState = { error: string | null; code?: string; ok?: boolean };
+export type FormState = {
+  error: string | null;
+  code?: string;
+  ok?: boolean;
+  examChapterId?: string;
+  examClosesAt?: string;
+};
 
 function read(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -169,6 +175,11 @@ export async function openClassExam(
   if (!(await isTeacher())) return { error: "FORBIDDEN" };
   const chapterId = read(formData, "chapterId");
   if (!isChapterId(chapterId)) return { error: "MISSING" };
-  await startExamWindow(chapterId, EXAM_DURATION_SECONDS);
-  return { error: null, ok: true };
+  const window = await startExamWindow(chapterId, EXAM_DURATION_SECONDS);
+  return {
+    error: null,
+    ok: true,
+    examChapterId: window.chapterId,
+    examClosesAt: window.closesAt,
+  };
 }

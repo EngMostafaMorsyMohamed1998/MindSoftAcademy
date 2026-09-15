@@ -31,6 +31,57 @@ function asStrings(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
+async function safeMany<T>(query: Promise<T[]> | undefined): Promise<T[]> {
+  try {
+    return (await query) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function readExamWindowRow(): Promise<ExamWindow | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const row = await prisma.classExamWindow.findUnique({ where: { id: "current" } });
+    if (!row) return null;
+    return {
+      id: row.id,
+      chapterId: row.chapterId,
+      opensAt: row.opensAt.toISOString(),
+      closesAt: row.closesAt.toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function writeExamWindowRow(window: ExamWindow | null): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    if (!window) {
+      await prisma.classExamWindow.deleteMany();
+      return true;
+    }
+    await prisma.classExamWindow.upsert({
+      where: { id: "current" },
+      create: {
+        id: "current",
+        chapterId: window.chapterId,
+        opensAt: asDate(window.opensAt),
+        closesAt: asDate(window.closesAt),
+      },
+      update: {
+        chapterId: window.chapterId,
+        opensAt: asDate(window.opensAt),
+        closesAt: asDate(window.closesAt),
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function readClassDb(): Promise<StoreFile | null> {
   if (!hasLiveDatabase()) return null;
   try {
@@ -42,10 +93,10 @@ export async function readClassDb(): Promise<StoreFile | null> {
         prisma.classHomework.findMany(),
         prisma.classUnlock.findMany(),
         prisma.classEssayGrade.findMany(),
-        prisma.classAttendance.findMany(),
-        prisma.classAnnouncement.findMany(),
-        prisma.classExamWindow.findMany(),
-        prisma.classMiss.findMany(),
+        safeMany(prisma.classAttendance?.findMany()),
+        safeMany(prisma.classAnnouncement?.findMany()),
+        safeMany(prisma.classExamWindow?.findMany()),
+        safeMany(prisma.classMiss?.findMany()),
       ]);
     const announcement = announcements.find((row) => row.active) ?? announcements[0] ?? null;
     const window = windows[0] ?? null;
@@ -159,7 +210,6 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
       prisma.classEssayGrade.deleteMany(),
       prisma.classAttendance.deleteMany(),
       prisma.classAnnouncement.deleteMany(),
-      prisma.classExamWindow.deleteMany(),
       prisma.classMiss.deleteMany(),
       ...(store.codes.length
         ? [
@@ -274,20 +324,6 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
                   body: store.announcement.body,
                   createdAt: asDate(store.announcement.createdAt),
                   active: store.announcement.active,
-                },
-              ],
-            }),
-          ]
-        : []),
-      ...(store.examWindow
-        ? [
-            prisma.classExamWindow.createMany({
-              data: [
-                {
-                  id: store.examWindow.id,
-                  chapterId: store.examWindow.chapterId,
-                  opensAt: asDate(store.examWindow.opensAt),
-                  closesAt: asDate(store.examWindow.closesAt),
                 },
               ],
             }),

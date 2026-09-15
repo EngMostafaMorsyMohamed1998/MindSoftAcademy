@@ -25,15 +25,17 @@ export default async function ChapterExamPage({
   const chapter = getChapter(id);
   const exam = examForChapter(id);
   if (!chapter || !exam) notFound();
-  const { completed, unlocks, homework } = await studentProgress();
-  if (!isChapterUnlocked(completed, id, unlocks) || !chapterHomeworkDone(id, homework)) {
-    redirect("/dashboard/exams");
-  }
   const locale = await getLocale();
   const nextId = nextChapterId(id);
   const note = notesForChapter(id)[0];
   const lessonHint = note ? (locale === "ar" ? note.takeawayAr : note.takeawayEn) : "";
   const windowOpen = examWindowOpen(await getExamWindow(), id);
+  if (!windowOpen) {
+    const { completed, unlocks, homework } = await studentProgress();
+    if (!isChapterUnlocked(completed, id, unlocks) || !chapterHomeworkDone(id, homework)) {
+      redirect("/dashboard/exams");
+    }
+  }
 
   return (
     <div className="mx-auto w-full max-w-3xl">
