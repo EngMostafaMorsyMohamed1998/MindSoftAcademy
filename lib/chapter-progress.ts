@@ -1,10 +1,4 @@
 import { CHAPTERS, type ChapterId, isChapterId } from "@/lib/curriculum";
-import {
-  listExamChapterIds,
-  listPassedHomework,
-  listUnlocks,
-} from "@/lib/access-store";
-import { getStudentSession } from "@/lib/student-session";
 
 export const EXAM_PASS_RATIO = 0.7;
 
@@ -71,27 +65,4 @@ export function chapterHomeworkDone(
 export function allChaptersPassed(completed: Iterable<string>): boolean {
   const set = new Set(completed);
   return CHAPTERS.every((chapter) => set.has(chapter.id));
-}
-
-export async function studentProgress(): Promise<{
-  completed: ChapterId[];
-  unlocks: string[];
-  homework: string[];
-}> {
-  const student = await getStudentSession();
-  if (!student) return { completed: [], unlocks: [], homework: [] };
-  const [storedExams, storedHomework, storedUnlocks] = await Promise.all([
-    listExamChapterIds(student.id),
-    listPassedHomework(student.id),
-    listUnlocks(student.id),
-  ]);
-  return {
-    completed: mergeCompleted(student.exams, storedExams),
-    unlocks: mergeIds(student.unlocks, storedUnlocks),
-    homework: mergeIds(student.homework, storedHomework),
-  };
-}
-
-export async function studentCompletedChapters(): Promise<ChapterId[]> {
-  return (await studentProgress()).completed;
 }

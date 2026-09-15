@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { isChapterUnlocked, studentProgress } from "@/lib/chapter-progress";
+import { isChapterUnlocked } from "@/lib/chapter-progress";
+import { studentProgress } from "@/lib/student-progress";
 import { getChapter, isChapterId } from "@/lib/curriculum";
 import { gameForChapter } from "@/lib/games";
 import { t } from "@/lib/i18n";

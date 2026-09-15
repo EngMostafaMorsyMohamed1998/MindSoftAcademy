@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BookOpen, ClipboardCheck, Gamepad2 } from "lucide-react";
-import { chapterHomeworkDone, isChapterUnlocked, studentProgress } from "@/lib/chapter-progress";
+import { chapterHomeworkDone, isChapterUnlocked } from "@/lib/chapter-progress";
+import { studentProgress } from "@/lib/student-progress";
 import { bookSlugFor, getChapter, isChapterId } from "@/lib/curriculum";
 import { notesForChapter } from "@/lib/lessons";
 import { t } from "@/lib/i18n";

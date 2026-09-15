@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BRAND } from "@/lib/brand";
-import { allChaptersPassed, studentProgress } from "@/lib/chapter-progress";
+import { allChaptersPassed } from "@/lib/chapter-progress";
+import { studentProgress } from "@/lib/student-progress";
 import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";

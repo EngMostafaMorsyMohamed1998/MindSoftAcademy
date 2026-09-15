@@ -4,8 +4,8 @@ import {
   chapterHomeworkDone,
   isChapterUnlocked,
   nextChapterId,
-  studentProgress,
 } from "@/lib/chapter-progress";
+import { studentProgress } from "@/lib/student-progress";
 import { getChapter, isChapterId } from "@/lib/curriculum";
 import { examForChapter } from "@/lib/exams";
 import { t } from "@/lib/i18n";

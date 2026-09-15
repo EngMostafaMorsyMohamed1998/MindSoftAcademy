@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { isChapterUnlocked, studentProgress } from "@/lib/chapter-progress";
+import { isChapterUnlocked } from "@/lib/chapter-progress";
+import { studentProgress } from "@/lib/student-progress";
 import { getLesson, isChapterId } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
 import { notesForLesson } from "@/lib/lessons";

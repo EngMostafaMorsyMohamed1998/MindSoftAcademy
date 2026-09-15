@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
-import { chapterHomeworkDone, isChapterUnlocked, studentProgress } from "@/lib/chapter-progress";
+import { chapterHomeworkDone, isChapterUnlocked } from "@/lib/chapter-progress";
+import { studentProgress } from "@/lib/student-progress";
 import { CHAPTERS } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
