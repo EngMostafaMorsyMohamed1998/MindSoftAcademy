@@ -108,58 +108,65 @@ export function ClassTools({
       <section>
         <h2 className="text-lg font-semibold">{t(locale, "startClassExam")}</h2>
         <p className="mt-1 text-sm text-foreground/60">{t(locale, "examWindowHint")}</p>
-        <form action={examAction} className="mt-3 flex flex-wrap items-end gap-3 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-          <label className="grid gap-1 text-xs font-medium">
-            {t(locale, "chapterExam")}
-            <select name="chapterId" className="h-11 min-w-52 rounded-2xl border border-primary/15 px-3 text-sm" defaultValue="1">
-              {CHAPTERS.map((chapter) => (
-                <option key={chapter.id} value={chapter.id}>
-                  {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-1 text-xs font-medium">
-            {t(locale, "examMinutes")}
-            <input
-              name="minutes"
-              type="number"
-              min={5}
-              max={180}
-              step={5}
-              defaultValue={30}
-              className="h-11 w-28 rounded-2xl border border-primary/15 px-3 text-sm"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={examPending}
-            className="h-11 rounded-full bg-primary px-5 text-sm font-semibold text-white"
-          >
-            {t(locale, "startClassExam")}
-          </button>
-          <button
-            type="submit"
-            formAction={closeAction}
-            disabled={closePending}
-            className="h-11 rounded-full bg-red-600 px-5 text-sm font-semibold text-white"
-          >
-            {t(locale, "closeClassExam")}
-          </button>
+        <div className="mt-3 space-y-4 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+          <form action={examAction} className="grid gap-3 sm:grid-cols-[1fr_8rem]">
+            <label className="grid gap-1 text-sm font-medium">
+              {t(locale, "chapterExam")}
+              <select
+                name="chapterId"
+                className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+                defaultValue="1"
+              >
+                {CHAPTERS.map((chapter) => (
+                  <option key={chapter.id} value={chapter.id}>
+                    {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1 text-sm font-medium">
+              {t(locale, "examMinutes")}
+              <input
+                name="minutes"
+                type="number"
+                min={5}
+                max={180}
+                step={5}
+                defaultValue={30}
+                className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={examPending}
+              className="h-12 rounded-full bg-primary text-sm font-semibold text-white sm:col-span-2"
+            >
+              {t(locale, "startClassExam")}
+            </button>
+          </form>
+          <form action={closeAction}>
+            <button
+              type="submit"
+              disabled={closePending}
+              className="h-12 w-full rounded-full bg-red-600 text-sm font-semibold text-white"
+            >
+              {t(locale, "closeClassExam")}
+            </button>
+          </form>
           {liveWindow ? (
-            <p className="w-full text-sm text-emerald-700">
+            <p className="rounded-2xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
               {t(locale, "examStarted")} {t(locale, "chapterExam")} {liveWindow.chapterId}
               {liveWindow.closesAt
                 ? ` · ${new Date(liveWindow.closesAt).toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-GB", { hour: "2-digit", minute: "2-digit" })}`
                 : ""}
             </p>
-          ) : closeState.examClosed ? (
-            <p className="w-full text-sm text-foreground/70">{t(locale, "examClosedNow")}</p>
-          ) : null}
+          ) : (
+            <p className="text-sm text-foreground/60">{t(locale, "examClosedNow")}</p>
+          )}
           {examState.error || closeState.error ? (
-            <p className="w-full text-sm text-red-700">{examState.error || closeState.error}</p>
+            <p className="text-sm text-red-700">{examState.error || closeState.error}</p>
           ) : null}
-        </form>
+        </div>
       </section>
 
       <section>
