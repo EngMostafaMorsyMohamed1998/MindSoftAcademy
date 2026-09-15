@@ -5,6 +5,7 @@ import { addPoints, latestExam, listExamChapterIds, saveExam } from "@/lib/acces
 import {
   isChapterUnlocked,
   mergeCompleted,
+  passedObjective,
 } from "@/lib/chapter-progress";
 import { examForChapter, objectiveTotal } from "@/lib/exams";
 import { getLocale } from "@/lib/locale";
@@ -24,7 +25,10 @@ export async function submitChapterExam(input: {
   chapterId: ChapterId;
   objectiveAnswers: Record<string, number>;
   essayAnswers: Record<string, string>;
-}): Promise<{ objectiveScore: number; objectiveTotal: number; id: string } | { error: string }> {
+}): Promise<
+  | { objectiveScore: number; objectiveTotal: number; id: string; passed: boolean }
+  | { error: string }
+> {
   const student = await getStudentSession();
   const exam = examForChapter(input.chapterId);
   if (!exam) return { error: "NO_EXAM" };
@@ -64,13 +68,16 @@ export async function submitChapterExam(input: {
     submittedAt: new Date().toISOString(),
   };
 
+  const total = objectiveTotal(exam);
+  const passed = passedObjective(objectiveScore, total);
+
   await saveExam(submission);
   if (student) {
     await addPoints(student.id, objectiveScore);
     const exams = mergeCompleted(
       student.exams,
       await listExamChapterIds(student.id),
-      [input.chapterId],
+      passed ? [input.chapterId] : [],
     );
     await setStudentCookie({
       id: student.id,
@@ -82,8 +89,9 @@ export async function submitChapterExam(input: {
 
   return {
     objectiveScore,
-    objectiveTotal: objectiveTotal(exam),
+    objectiveTotal: total,
     id,
+    passed,
   };
 }
 

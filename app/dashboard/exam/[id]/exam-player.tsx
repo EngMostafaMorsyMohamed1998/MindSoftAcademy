@@ -29,7 +29,11 @@ export function ChapterExamPlayer({
   const [seconds, setSeconds] = useState(EXAM_DURATION_SECONDS);
   const [objective, setObjective] = useState<Record<string, number>>({});
   const [essays, setEssays] = useState<Record<string, string>>({});
-  const [result, setResult] = useState<{ objectiveScore: number; objectiveTotal: number } | null>(null);
+  const [result, setResult] = useState<{
+    objectiveScore: number;
+    objectiveTotal: number;
+    passed: boolean;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
   const submitted = useRef(false);
 
@@ -72,6 +76,7 @@ export function ChapterExamPlayer({
       <div className="mt-6 rounded-3xl bg-white p-6 ring-1 ring-primary/10">
         <h2 className="text-xl font-semibold">{t(locale, "examReady")}</h2>
         <p className="mt-2 text-sm text-foreground/65">{t(locale, "examRules")}</p>
+        <p className="mt-2 text-sm font-medium text-primary">{t(locale, "examPassMark")}</p>
         <button
           type="button"
           onClick={() => setPhase("run")}
@@ -89,15 +94,37 @@ export function ChapterExamPlayer({
         <p className="text-sm text-foreground/55">{t(locale, "objectiveScore")}</p>
         <p className="font-serif text-4xl">
           {result.objectiveScore} / {result.objectiveTotal}
+          <span className="ms-2 text-2xl text-foreground/45">
+            ({Math.round((result.objectiveScore / Math.max(result.objectiveTotal, 1)) * 100)}%)
+          </span>
         </p>
-        <p className="mt-3 text-sm text-accent">{t(locale, "pendingReview")}</p>
-        {nextHref ? (
+        <p className={`mt-3 text-sm font-medium ${result.passed ? "text-emerald-700" : "text-red-700"}`}>
+          {result.passed ? t(locale, "examPassed") : t(locale, "examFailed")}
+        </p>
+        <p className="mt-2 text-sm text-accent">{t(locale, "pendingReview")}</p>
+        {result.passed && nextHref ? (
           <Link
             href={nextHref}
             className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white"
           >
             {nextLabel ?? t(locale, "nextChapter")}
           </Link>
+        ) : null}
+        {!result.passed ? (
+          <button
+            type="button"
+            onClick={() => {
+              submitted.current = false;
+              setResult(null);
+              setObjective({});
+              setEssays({});
+              setSeconds(EXAM_DURATION_SECONDS);
+              setPhase("ready");
+            }}
+            className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white"
+          >
+            {t(locale, "retryExam")}
+          </button>
         ) : null}
       </div>
     );

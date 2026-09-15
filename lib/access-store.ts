@@ -227,7 +227,12 @@ export async function listExamChapterIds(studentId: string): Promise<string[]> {
   return [
     ...new Set(
       store.exams
-        .filter((item) => item.studentId === studentId)
+        .filter(
+          (item) =>
+            item.studentId === studentId &&
+            item.objectiveTotal > 0 &&
+            item.objectiveScore / item.objectiveTotal >= 0.7,
+        )
         .map((item) => item.chapterId),
     ),
   ];

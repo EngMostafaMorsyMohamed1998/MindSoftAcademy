@@ -2,6 +2,13 @@ import { CHAPTERS, type ChapterId, isChapterId } from "@/lib/curriculum";
 import { listExamChapterIds } from "@/lib/access-store";
 import { getStudentSession } from "@/lib/student-session";
 
+export const EXAM_PASS_RATIO = 0.7;
+
+export function passedObjective(score: number, total: number): boolean {
+  if (total <= 0) return false;
+  return score / total >= EXAM_PASS_RATIO;
+}
+
 export function previousChapterId(id: ChapterId): ChapterId | null {
   const index = CHAPTERS.findIndex((chapter) => chapter.id === id);
   if (index <= 0) return null;
