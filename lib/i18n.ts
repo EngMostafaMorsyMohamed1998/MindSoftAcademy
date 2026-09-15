@@ -128,6 +128,19 @@ const ar = {
   chatTeacherInbox: "رسائل الطلاب",
   chatTeacherLead: "كل طالب له محادثة خاصة معك.",
   chatNoThreads: "لسه مفيش رسائل من الطلبة.",
+  reviewTitle: "راجع اللي غلطت فيه",
+  reviewYours: "إجابتك",
+  reviewCorrect: "الإجابة الصحيحة",
+  reviewHint: "من الدرس",
+  reviewAllCorrect: "كل الإجابات الموضوعية صح.",
+  progressLabel: "تقدمك في المنهج",
+  of: "من",
+  classRoster: "كشف الفصل",
+  standing: "واقف عند",
+  homeworkShort: "واجبات",
+  sendWhatsapp: "واتساب",
+  finishedAll: "خلّص المنهج",
+  notActivated: "لسه ما فعّلش",
 } as const;
 
 const en: { [K in keyof typeof ar]: string } = {
@@ -257,6 +270,19 @@ const en: { [K in keyof typeof ar]: string } = {
   chatTeacherInbox: "Student messages",
   chatTeacherLead: "Each student has a private thread with you.",
   chatNoThreads: "No student messages yet.",
+  reviewTitle: "Review what you missed",
+  reviewYours: "Your answer",
+  reviewCorrect: "Correct answer",
+  reviewHint: "From the lesson",
+  reviewAllCorrect: "Every objective answer was correct.",
+  progressLabel: "Course progress",
+  of: "of",
+  classRoster: "Class roster",
+  standing: "Standing at",
+  homeworkShort: "Homework",
+  sendWhatsapp: "WhatsApp",
+  finishedAll: "Finished the course",
+  notActivated: "Not activated yet",
 };
 
 export const messages = { ar, en };

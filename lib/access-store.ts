@@ -279,6 +279,11 @@ export async function listPassedHomework(studentId: string): Promise<string[]> {
     .map((item) => item.lessonId);
 }
 
+export async function listHomeworkResults(): Promise<HomeworkResult[]> {
+  const store = await readStore();
+  return store.homework;
+}
+
 export async function grantChapterUnlock(input: {
   studentId: string;
   chapterId: string;

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { AnswerReview } from "@/components/answer-review";
 import { submitLessonHomework } from "@/app/actions/study";
 import {
   pickLessonHomework,
@@ -10,16 +11,19 @@ import {
 } from "@/lib/homework-bank";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
+import { reviewHomework } from "@/lib/review";
 import { newAttemptSeed } from "@/lib/shuffle";
 
 export function HomeworkPlayer({
   locale,
   lessonId,
   chapterId,
+  lessonHint,
 }: {
   locale: Locale;
   lessonId: string;
   chapterId: string;
+  lessonHint: string;
 }) {
   const [seed, setSeed] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -55,6 +59,10 @@ export function HomeworkPlayer({
         <p className={`mt-3 text-sm font-medium ${result.passed ? "text-emerald-700" : "text-red-700"}`}>
           {result.passed ? t(locale, "homeworkPassed") : t(locale, "homeworkFailed")}
         </p>
+        <AnswerReview
+          locale={locale}
+          items={reviewHomework(paper, answers, locale, lessonHint)}
+        />
         {result.passed ? (
           <Link
             href={`/dashboard/chapters/${chapterId}`}

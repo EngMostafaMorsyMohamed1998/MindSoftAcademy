@@ -9,6 +9,7 @@ import {
 import { getChapter, isChapterId } from "@/lib/curriculum";
 import { examForChapter } from "@/lib/exams";
 import { t } from "@/lib/i18n";
+import { notesForChapter } from "@/lib/lessons";
 import { getLocale } from "@/lib/locale";
 import { ChapterExamPlayer } from "./exam-player";
 
@@ -28,6 +29,8 @@ export default async function ChapterExamPage({
   }
   const locale = await getLocale();
   const nextId = nextChapterId(id);
+  const note = notesForChapter(id)[0];
+  const lessonHint = note ? (locale === "ar" ? note.takeawayAr : note.takeawayEn) : "";
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -43,6 +46,7 @@ export default async function ChapterExamPage({
         exam={exam}
         nextHref={nextId ? `/dashboard/chapters/${nextId}` : "/dashboard/chapters"}
         nextLabel={nextId ? t(locale, "nextChapter") : t(locale, "navChapters")}
+        lessonHint={lessonHint}
       />
     </div>
   );

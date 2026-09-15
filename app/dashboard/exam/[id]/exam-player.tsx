@@ -2,11 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { AnswerReview } from "@/components/answer-review";
 import { submitChapterExam } from "@/app/actions/study";
 import { EXAM_DURATION_SECONDS } from "@/lib/curriculum";
 import type { ChapterExam, ObjectiveQuestion } from "@/lib/exams";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
+import { reviewObjectives } from "@/lib/review";
 import { newAttemptSeed, shuffled } from "@/lib/shuffle";
 
 type PaperQuestion = ObjectiveQuestion & { optionOrder: number[] };
@@ -34,11 +36,13 @@ export function ChapterExamPlayer({
   exam,
   nextHref,
   nextLabel,
+  lessonHint,
 }: {
   locale: Locale;
   exam: ChapterExam;
   nextHref?: string;
   nextLabel?: string;
+  lessonHint: string;
 }) {
   const [phase, setPhase] = useState<"ready" | "run" | "done">("ready");
   const [seconds, setSeconds] = useState(EXAM_DURATION_SECONDS);
@@ -123,6 +127,10 @@ export function ChapterExamPlayer({
           {result.passed ? t(locale, "examPassed") : t(locale, "examFailed")}
         </p>
         <p className="mt-2 text-sm text-accent">{t(locale, "pendingReview")}</p>
+        <AnswerReview
+          locale={locale}
+          items={reviewObjectives(exam.objectives, objective, locale, lessonHint)}
+        />
         {result.passed && nextHref ? (
           <Link
             href={nextHref}

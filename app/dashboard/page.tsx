@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen, ClipboardCheck, Gamepad2, MessageCircle, Printer } from "lucide-react";
 import { HeroRobot } from "@/components/hero-robot";
+import { StudyProgress } from "@/components/study-progress";
 import { allChaptersPassed, studentProgress } from "@/lib/chapter-progress";
 import { CHAPTERS } from "@/lib/curriculum";
 import { getCurrentUser } from "@/lib/current-user";
@@ -58,7 +59,8 @@ export default async function DashboardHomePage() {
       </section>
 
       <section className="rounded-3xl border border-primary/8 bg-white p-5 sm:p-6">
-        <h2 className="font-serif text-2xl">{t(locale, "samplePath")}</h2>
+        <StudyProgress locale={locale} completed={completed} />
+        <h2 className="mt-6 font-serif text-2xl">{t(locale, "samplePath")}</h2>
         <QuestMap locale={locale} chapters={CHAPTERS} completed={completed} unlocks={unlocks} />
         {allChaptersPassed(completed) ? (
           <Link

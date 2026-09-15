@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { isChapterUnlocked, studentProgress } from "@/lib/chapter-progress";
 import { getLesson, isChapterId } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
+import { notesForLesson } from "@/lib/lessons";
 import { getLocale } from "@/lib/locale";
 import { HomeworkPlayer } from "./homework-player";
 
@@ -19,6 +20,8 @@ export default async function HomeworkPage({
     redirect("/dashboard/chapters");
   }
   const locale = await getLocale();
+  const note = notesForLesson(lesson.id);
+  const lessonHint = note ? (locale === "ar" ? note.takeawayAr : note.takeawayEn) : "";
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -29,7 +32,12 @@ export default async function HomeworkPage({
       <p className="mt-1 text-sm text-foreground/65">
         {lesson.id} · {locale === "ar" ? lesson.titleAr : lesson.titleEn}
       </p>
-      <HomeworkPlayer locale={locale} lessonId={lesson.id} chapterId={lesson.chapterId} />
+      <HomeworkPlayer
+        locale={locale}
+        lessonId={lesson.id}
+        chapterId={lesson.chapterId}
+        lessonHint={lessonHint}
+      />
     </div>
   );
 }
