@@ -10,23 +10,36 @@ import {
 export { STUDENT_COOKIE, encodeStudentSession, readStudentToken };
 export type { StudentSession };
 
-export async function getStudentSession(): Promise<(StudentSession & { points: number }) | null> {
+export async function getStudentSession(): Promise<(StudentSession & { points: number; exams: string[] }) | null> {
   const store = await cookies();
   const session = readStudentToken(store.get(STUDENT_COOKIE)?.value);
   if (!session) return null;
+  const exams = session.exams ?? [];
   const record = await getCodeById(session.id);
   if (record) {
-    return { ...session, name: record.name, phone: record.phone, points: record.points };
+    return {
+      ...session,
+      name: record.name,
+      phone: record.phone,
+      points: record.points,
+      exams,
+    };
   }
-  return { ...session, points: 0 };
+  return { ...session, points: 0, exams };
 }
 
-export async function setStudentCookie(record: AccessCode) {
+export async function setStudentCookie(record: {
+  id: string;
+  name: string;
+  phone: string;
+  exams?: string[];
+}) {
   const store = await cookies();
   store.set(STUDENT_COOKIE, encodeStudentSession({
     id: record.id,
     name: record.name,
     phone: record.phone,
+    exams: record.exams ?? [],
   }), {
     httpOnly: true,
     sameSite: "lax",

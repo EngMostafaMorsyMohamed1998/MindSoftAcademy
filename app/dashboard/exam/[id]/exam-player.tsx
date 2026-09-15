@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { submitChapterExam } from "@/app/actions/study";
 import { EXAM_DURATION_SECONDS } from "@/lib/curriculum";
 import type { ChapterExam } from "@/lib/exams";
@@ -16,9 +17,13 @@ function formatTime(total: number) {
 export function ChapterExamPlayer({
   locale,
   exam,
+  nextHref,
+  nextLabel,
 }: {
   locale: Locale;
   exam: ChapterExam;
+  nextHref?: string;
+  nextLabel?: string;
 }) {
   const [phase, setPhase] = useState<"ready" | "run" | "done">("ready");
   const [seconds, setSeconds] = useState(EXAM_DURATION_SECONDS);
@@ -86,6 +91,14 @@ export function ChapterExamPlayer({
           {result.objectiveScore} / {result.objectiveTotal}
         </p>
         <p className="mt-3 text-sm text-accent">{t(locale, "pendingReview")}</p>
+        {nextHref ? (
+          <Link
+            href={nextHref}
+            className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white"
+          >
+            {nextLabel ?? t(locale, "nextChapter")}
+          </Link>
+        ) : null}
       </div>
     );
   }

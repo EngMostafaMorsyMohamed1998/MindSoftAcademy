@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen, ClipboardCheck, Gamepad2, MessageCircle, Printer } from "lucide-react";
 import { HeroRobot } from "@/components/hero-robot";
+import { studentCompletedChapters } from "@/lib/chapter-progress";
 import { CHAPTERS } from "@/lib/curriculum";
 import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
@@ -12,6 +13,7 @@ export default async function DashboardHomePage() {
   const user = await getCurrentUser();
   if (!user) return null;
   const locale = await getLocale();
+  const completed = await studentCompletedChapters();
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
   const { level } = levelFromPoints(user.points);
 
@@ -57,7 +59,7 @@ export default async function DashboardHomePage() {
 
       <section className="rounded-3xl border border-primary/8 bg-white p-5 sm:p-6">
         <h2 className="font-serif text-2xl">{t(locale, "samplePath")}</h2>
-        <QuestMap locale={locale} chapters={CHAPTERS} />
+        <QuestMap locale={locale} chapters={CHAPTERS} completed={completed} />
       </section>
     </div>
   );

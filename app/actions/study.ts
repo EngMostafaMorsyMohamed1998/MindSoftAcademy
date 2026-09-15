@@ -1,10 +1,14 @@
 "use server";
 
 import { randomBytes } from "crypto";
-import { addPoints, latestExam, saveExam } from "@/lib/access-store";
+import { addPoints, latestExam, listExamChapterIds, saveExam } from "@/lib/access-store";
+import {
+  isChapterUnlocked,
+  mergeCompleted,
+} from "@/lib/chapter-progress";
 import { examForChapter, objectiveTotal } from "@/lib/exams";
 import { getLocale } from "@/lib/locale";
-import { getStudentSession } from "@/lib/student-session";
+import { getStudentSession, setStudentCookie } from "@/lib/student-session";
 import { gameForChapter } from "@/lib/games";
 import type { ChapterId } from "@/lib/curriculum";
 
@@ -24,6 +28,15 @@ export async function submitChapterExam(input: {
   const student = await getStudentSession();
   const exam = examForChapter(input.chapterId);
   if (!exam) return { error: "NO_EXAM" };
+  if (student) {
+    const completed = mergeCompleted(
+      student.exams,
+      await listExamChapterIds(student.id),
+    );
+    if (!isChapterUnlocked(completed, input.chapterId)) {
+      return { error: "LOCKED" };
+    }
+  }
 
   let objectiveScore = 0;
   for (const question of exam.objectives) {
@@ -54,6 +67,17 @@ export async function submitChapterExam(input: {
   await saveExam(submission);
   if (student) {
     await addPoints(student.id, objectiveScore);
+    const exams = mergeCompleted(
+      student.exams,
+      await listExamChapterIds(student.id),
+      [input.chapterId],
+    );
+    await setStudentCookie({
+      id: student.id,
+      name: student.name,
+      phone: student.phone,
+      exams,
+    });
   }
 
   return {

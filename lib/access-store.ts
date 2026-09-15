@@ -222,6 +222,17 @@ export async function latestExam(
   );
 }
 
+export async function listExamChapterIds(studentId: string): Promise<string[]> {
+  const store = await readStore();
+  return [
+    ...new Set(
+      store.exams
+        .filter((item) => item.studentId === studentId)
+        .map((item) => item.chapterId),
+    ),
+  ];
+}
+
 function sanitizeMessage(body: string): string {
   return body.replace(/\s+/g, " ").trim().slice(0, 800);
 }

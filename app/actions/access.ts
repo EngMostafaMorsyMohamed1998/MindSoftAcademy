@@ -1,6 +1,6 @@
 "use server";
 
-import { issueCode, redeemCode } from "@/lib/access-store";
+import { issueCode, listExamChapterIds, redeemCode } from "@/lib/access-store";
 import { setStudentCookie } from "@/lib/student-session";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
 
@@ -23,7 +23,10 @@ export async function activateAccess(
   }
   try {
     const record = await redeemCode({ name, phone, code });
-    await setStudentCookie(record);
+    await setStudentCookie({
+      ...record,
+      exams: await listExamChapterIds(record.id),
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "FAILED";
     return { error: message };

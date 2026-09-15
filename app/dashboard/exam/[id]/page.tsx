@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { nextChapterId, isChapterUnlocked, studentCompletedChapters } from "@/lib/chapter-progress";
 import { getChapter, isChapterId } from "@/lib/curriculum";
 import { examForChapter } from "@/lib/exams";
 import { t } from "@/lib/i18n";
@@ -16,7 +17,12 @@ export default async function ChapterExamPage({
   const chapter = getChapter(id);
   const exam = examForChapter(id);
   if (!chapter || !exam) notFound();
+  const completed = await studentCompletedChapters();
+  if (!isChapterUnlocked(completed, id)) {
+    redirect("/dashboard/exams");
+  }
   const locale = await getLocale();
+  const nextId = nextChapterId(id);
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -27,7 +33,12 @@ export default async function ChapterExamPage({
       <p className="mt-1 text-sm text-foreground/65">
         {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
       </p>
-      <ChapterExamPlayer locale={locale} exam={exam} />
+      <ChapterExamPlayer
+        locale={locale}
+        exam={exam}
+        nextHref={nextId ? `/dashboard/chapters/${nextId}` : "/dashboard/chapters"}
+        nextLabel={nextId ? t(locale, "nextChapter") : t(locale, "navChapters")}
+      />
     </div>
   );
 }

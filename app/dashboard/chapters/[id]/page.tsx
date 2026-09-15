@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BookOpen, ClipboardCheck, Gamepad2 } from "lucide-react";
+import { isChapterUnlocked, studentCompletedChapters } from "@/lib/chapter-progress";
 import { bookSlugFor, getChapter, isChapterId } from "@/lib/curriculum";
 import { notesForChapter } from "@/lib/lessons";
 import { t } from "@/lib/i18n";
@@ -16,6 +17,10 @@ export default async function ChapterPage({
   if (!isChapterId(id)) notFound();
   const chapter = getChapter(id);
   if (!chapter) notFound();
+  const completed = await studentCompletedChapters();
+  if (!isChapterUnlocked(completed, id)) {
+    redirect("/dashboard/chapters");
+  }
   const locale = await getLocale();
   const notes = notesForChapter(id);
   const book = BOOKS.find((item) => item.slug === bookSlugFor(chapter.part, locale));
