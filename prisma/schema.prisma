@@ -126,3 +126,75 @@ model QuizResult {
   @@index([capsuleId])
   @@index([userId, capsuleId])
 }
+
+model ClassCode {
+  id        String    @id
+  code      String    @unique
+  name      String
+  phone     String
+  createdAt DateTime
+  usedAt    DateTime?
+  usedById  String?
+  points    Int       @default(0)
+
+  @@index([phone])
+}
+
+model ClassMessage {
+  id            String   @id
+  studentId     String
+  studentName   String
+  from          String
+  body          String
+  createdAt     DateTime
+  readByTeacher Boolean  @default(false)
+  readByStudent Boolean  @default(false)
+
+  @@index([studentId, createdAt])
+}
+
+model ClassExam {
+  id             String   @id
+  chapterId      String
+  studentId      String
+  name           String
+  phone          String
+  locale         String
+  objectiveScore Int
+  objectiveTotal Int
+  essays         Json
+  submittedAt    DateTime
+
+  @@index([studentId, chapterId])
+}
+
+model ClassHomework {
+  studentId   String
+  lessonId    String
+  score       Int
+  total       Int
+  passed      Boolean
+  submittedAt DateTime
+
+  @@id([studentId, lessonId])
+}
+
+model ClassUnlock {
+  studentId String
+  chapterId String
+  reason    String
+  createdAt DateTime
+
+  @@id([studentId, chapterId])
+}
+
+model ClassEssayGrade {
+  examId     String
+  studentId  String
+  questionId String
+  score      Int
+  note       String
+  gradedAt   DateTime
+
+  @@id([examId, questionId])
+}

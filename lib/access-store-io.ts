@@ -102,12 +102,28 @@ async function writeBlob(store: StoreFile): Promise<void> {
 }
 
 export async function readStore(): Promise<StoreFile> {
+  try {
+    const { readClassDb } = await import("@/lib/class-db");
+    const fromDb = await readClassDb();
+    if (fromDb) return fromDb;
+  } catch {
+    // Prisma client or database may not be ready yet.
+  }
   const fromBlob = await readBlob();
   if (fromBlob) return fromBlob;
   return (await readLocal()) ?? emptyStore();
 }
 
 export async function writeStore(store: StoreFile): Promise<void> {
+  let wroteDb = false;
+  try {
+    const { writeClassDb } = await import("@/lib/class-db");
+    wroteDb = await writeClassDb(store);
+  } catch {
+    wroteDb = false;
+  }
   await writeLocal(store);
-  await writeBlob(store);
+  if (!wroteDb) {
+    await writeBlob(store);
+  }
 }
