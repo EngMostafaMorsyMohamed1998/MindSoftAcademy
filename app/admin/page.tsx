@@ -2,7 +2,8 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
 import { AdminDesk } from "./admin-desk";
-import { listExams, listHomeworkResults } from "@/lib/access-store";
+import { ClassTools } from "./class-tools";
+import { getAnnouncement, getExamWindow, listAttendance, listExams, listHomeworkResults } from "@/lib/access-store";
 import { buildClassRoster } from "@/lib/class-roster";
 import { listVisibleCodes } from "@/lib/teacher-roster";
 import { t } from "@/lib/i18n";
@@ -13,12 +14,15 @@ import { LogoutButton } from "@/app/dashboard/logout-button";
 export default async function AdminPage() {
   const locale = await getLocale();
   const theme = await getTheme();
-  const [codes, exams, homework] = await Promise.all([
+  const [codes, exams, homework, attendance, announcement, examWindow] = await Promise.all([
     listVisibleCodes(),
     listExams(),
     listHomeworkResults(),
+    listAttendance(),
+    getAnnouncement(),
+    getExamWindow(),
   ]);
-  const roster = buildClassRoster(codes, exams, homework);
+  const roster = buildClassRoster(codes, exams, homework, attendance);
 
   return (
     <div className="min-h-full bg-background text-foreground">
@@ -43,7 +47,15 @@ export default async function AdminPage() {
       <main className="mx-auto max-w-5xl px-4 py-8">
         <h1 className="font-serif text-3xl">{t(locale, "adminTitle")}</h1>
         <p className="mt-2 text-sm text-foreground/65">{t(locale, "adminLead")}</p>
-        <AdminDesk locale={locale} codes={codes} exams={exams} roster={roster} />
+        <AdminDesk locale={locale} codes={codes} exams={exams} />
+        <div className="mt-10">
+          <ClassTools
+            locale={locale}
+            roster={roster}
+            announcement={announcement?.body ?? ""}
+            examWindow={examWindow}
+          />
+        </div>
       </main>
     </div>
   );

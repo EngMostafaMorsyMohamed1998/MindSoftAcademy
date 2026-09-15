@@ -1,6 +1,7 @@
-import type { AccessCode, ExamSubmission, HomeworkResult } from "@/lib/access-store";
+import type { AccessCode, AttendanceRow, ExamSubmission, HomeworkResult } from "@/lib/access-store";
 import { CHAPTERS, type ChapterId } from "@/lib/curriculum";
 import { passedObjective } from "@/lib/chapter-progress";
+import { cairoDate } from "@/lib/class-clock";
 
 export type ClassRow = {
   id: string;
@@ -8,11 +9,16 @@ export type ClassRow = {
   phone: string;
   code: string;
   activated: boolean;
+  suspended: boolean;
   passed: ChapterId[];
   standing: ChapterId | "done";
   homeworkDone: number;
   homeworkNeed: number;
   lastScore: string;
+  lastPercent: number | null;
+  presentToday: boolean | null;
+  attendancePresent: number;
+  attendanceTotal: number;
 };
 
 const HOMEWORK_NEED = CHAPTERS.reduce((sum, chapter) => sum + chapter.lessons.length, 0);
@@ -21,6 +27,8 @@ export function buildClassRoster(
   codes: AccessCode[],
   exams: ExamSubmission[],
   homework: HomeworkResult[],
+  attendance: AttendanceRow[] = [],
+  today = cairoDate(),
 ): ClassRow[] {
   return codes.map((code) => {
     const studentExams = exams.filter((item) => item.studentId === code.id);
@@ -38,6 +46,8 @@ export function buildClassRoster(
         .filter((item) => item.studentId === code.id && item.passed)
         .map((item) => item.lessonId),
     ).size;
+    const days = attendance.filter((row) => row.studentId === code.id);
+    const todayRow = days.find((row) => row.date === today);
 
     return {
       id: code.id,
@@ -45,13 +55,18 @@ export function buildClassRoster(
       phone: code.phone,
       code: code.code,
       activated: Boolean(code.usedAt),
+      suspended: Boolean(code.suspendedAt),
       passed,
       standing,
       homeworkDone,
       homeworkNeed: HOMEWORK_NEED,
-      lastScore: latest
-        ? `${latest.objectiveScore}/${latest.objectiveTotal}`
-        : "—",
+      lastScore: latest ? `${latest.objectiveScore}/${latest.objectiveTotal}` : "—",
+      lastPercent: latest
+        ? Math.round((latest.objectiveScore / Math.max(latest.objectiveTotal, 1)) * 100)
+        : null,
+      presentToday: todayRow ? todayRow.present : null,
+      attendancePresent: days.filter((row) => row.present).length,
+      attendanceTotal: days.length,
     };
   });
 }

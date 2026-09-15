@@ -30,6 +30,8 @@ function toRecord(row: RosterRow): AccessCode {
     usedAt: null,
     usedById: null,
     points: 0,
+    suspendedAt: null,
+    suspendReason: "",
   };
 }
 
@@ -85,7 +87,18 @@ export async function listVisibleCodes(): Promise<AccessCode[]> {
   }
   for (const record of stored) {
     const current = byId.get(record.id);
-    byId.set(record.id, current ? { ...record, ...current, usedAt: record.usedAt ?? current.usedAt } : record);
+    byId.set(
+      record.id,
+      current
+        ? {
+            ...record,
+            ...current,
+            usedAt: record.usedAt ?? current.usedAt,
+            suspendedAt: record.suspendedAt ?? current.suspendedAt,
+            suspendReason: record.suspendReason || current.suspendReason,
+          }
+        : record,
+    );
   }
   return [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

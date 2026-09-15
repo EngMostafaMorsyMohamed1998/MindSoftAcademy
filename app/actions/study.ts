@@ -3,15 +3,22 @@
 import { randomBytes } from "crypto";
 import {
   addPoints,
+  clearMiss,
+  getCodeById,
+  getExamWindow,
   latestExam,
+  listDueMisses,
   listEssayGrades,
   listExamChapterIds,
   listPassedHomework,
   listUnlocks,
+  recordMisses,
   saveEssayGrade,
   saveExam,
   saveHomework,
+  type MissedQuestion,
 } from "@/lib/access-store";
+import { examWindowOpen, REVIEW_AFTER_MS } from "@/lib/class-clock";
 import {
   chapterHomeworkDone,
   isChapterUnlocked,
@@ -46,6 +53,11 @@ export async function submitChapterExam(input: {
   const exam = examForChapter(input.chapterId);
   if (!exam) return { error: "NO_EXAM" };
   if (student) {
+    const record = await getCodeById(student.id);
+    if (record?.suspendedAt) return { error: "SUSPENDED" };
+    if (!examWindowOpen(await getExamWindow(), input.chapterId)) {
+      return { error: "WINDOW" };
+    }
     const [exams, homework, unlocks] = await Promise.all([
       listExamChapterIds(student.id),
       listPassedHomework(student.id),
@@ -93,6 +105,22 @@ export async function submitChapterExam(input: {
 
   await saveExam(submission);
   if (student) {
+    const missed: MissedQuestion[] = exam.objectives
+      .filter((question) => input.objectiveAnswers[question.id] !== question.correctIndex)
+      .map((question) => ({
+        studentId: student.id,
+        questionKey: `exam:${input.chapterId}:${question.id}`,
+        lessonId: "",
+        chapterId: input.chapterId,
+        promptAr: question.promptAr,
+        promptEn: question.promptEn,
+        optionsAr: [...(question.optionsAr ?? ["صح", "غلط"])],
+        optionsEn: [...(question.optionsEn ?? ["True", "False"])],
+        correctIndex: question.correctIndex,
+        missedAt: new Date().toISOString(),
+        clearedAt: null,
+      }));
+    await recordMisses(missed);
     await addPoints(student.id, objectiveScore);
     const exams = mergeCompleted(
       student.exams,
@@ -124,6 +152,8 @@ export async function submitLessonHomework(input: {
 }): Promise<{ score: number; total: number; passed: boolean } | { error: string }> {
   const student = await getStudentSession();
   if (!student) return { error: "AUTH" };
+  const record = await getCodeById(student.id);
+  if (record?.suspendedAt) return { error: "SUSPENDED" };
   const paper = pickLessonHomework(input.lessonId, input.seed).map((question, index) =>
     withShuffledOptions(question, input.seed + index * 17),
   );
@@ -154,8 +184,41 @@ export async function submitLessonHomework(input: {
     ),
     unlocks: student.unlocks,
   });
+  const missed: MissedQuestion[] = paper
+    .filter((question) => input.answers[question.id] !== question.correctIndex)
+    .map((question) => ({
+      studentId: student.id,
+      questionKey: `hw:${question.id}`,
+      lessonId: input.lessonId,
+      chapterId: question.chapterId,
+      promptAr: question.promptAr,
+      promptEn: question.promptEn,
+      optionsAr: question.optionsAr,
+      optionsEn: question.optionsEn,
+      correctIndex: question.correctIndex,
+      missedAt: new Date().toISOString(),
+      clearedAt: null,
+    }));
+  await recordMisses(missed);
   if (passed) await addPoints(student.id, score);
   return { score, total: paper.length, passed };
+}
+
+export async function submitMistakeReview(input: {
+  answers: Record<string, number>;
+}): Promise<{ score: number; total: number } | { error: string }> {
+  const student = await getStudentSession();
+  if (!student) return { error: "AUTH" };
+  const due = await listDueMisses(student.id, REVIEW_AFTER_MS);
+  if (due.length === 0) return { error: "NONE" };
+  let score = 0;
+  for (const question of due) {
+    if (input.answers[question.questionKey] === question.correctIndex) {
+      score += 1;
+      await clearMiss(student.id, question.questionKey);
+    }
+  }
+  return { score, total: due.length };
 }
 
 export async function gradeEssayForm(formData: FormData): Promise<void> {

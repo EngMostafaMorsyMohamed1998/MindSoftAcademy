@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
+import { getExamWindow } from "@/lib/access-store";
 import { chapterHomeworkDone, isChapterUnlocked } from "@/lib/chapter-progress";
+import { examWindowOpen } from "@/lib/class-clock";
 import { studentProgress } from "@/lib/student-progress";
 import { CHAPTERS } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
@@ -8,20 +10,24 @@ import { getLocale } from "@/lib/locale";
 
 export default async function ExamsIndexPage() {
   const locale = await getLocale();
-  const { completed, unlocks, homework } = await studentProgress();
+  const [{ completed, unlocks, homework }, examWindow] = await Promise.all([
+    studentProgress(),
+    getExamWindow(),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-4xl">
       <h1 className="font-serif text-3xl">{t(locale, "navExams")}</h1>
-      <p className="mt-2 text-sm text-foreground/65">{t(locale, "examRules")}</p>
+      <p className="mt-2 text-sm text-foreground/65">{t(locale, "examWindowHint")}</p>
       <ul className="mt-6 space-y-3">
         {CHAPTERS.map((chapter) => {
-          const unlocked =
+          const ready =
             isChapterUnlocked(completed, chapter.id, unlocks) &&
             chapterHomeworkDone(chapter.id, homework);
+          const open = ready && examWindowOpen(examWindow, chapter.id);
           return (
             <li key={chapter.id}>
-              {unlocked ? (
+              {open ? (
                 <Link
                   href={`/dashboard/exam/${chapter.id}`}
                   className="flex items-center justify-between rounded-2xl bg-white p-4 ring-1 ring-primary/10"
@@ -43,7 +49,7 @@ export default async function ExamsIndexPage() {
                       {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
                     </span>
                     <span className="text-xs text-foreground/55">
-                      {t(locale, "chapterLockedHint")}
+                      {ready ? t(locale, "examWindowClosed") : t(locale, "chapterLockedHint")}
                     </span>
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary/60">

@@ -2,11 +2,15 @@ import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import type {
   AccessCode,
+  AttendanceRow,
   ChatMessage,
   ChapterUnlock,
+  ClassAnnouncement,
   EssayGrade,
   ExamSubmission,
+  ExamWindow,
   HomeworkResult,
+  MissedQuestion,
 } from "@/lib/access-store";
 
 export type StoreFile = {
@@ -16,6 +20,10 @@ export type StoreFile = {
   homework: HomeworkResult[];
   unlocks: ChapterUnlock[];
   essayGrades: EssayGrade[];
+  attendance: AttendanceRow[];
+  announcement: ClassAnnouncement | null;
+  examWindow: ExamWindow | null;
+  misses: MissedQuestion[];
 };
 
 const BLOB_KEY = "mindsoft-access-store.json";
@@ -35,6 +43,18 @@ export function emptyStore(): StoreFile {
     homework: [],
     unlocks: [],
     essayGrades: [],
+    attendance: [],
+    announcement: null,
+    examWindow: null,
+    misses: [],
+  };
+}
+
+function asCode(row: AccessCode): AccessCode {
+  return {
+    ...row,
+    suspendedAt: row.suspendedAt ?? null,
+    suspendReason: row.suspendReason ?? "",
   };
 }
 
@@ -44,12 +64,16 @@ export function parseStore(value: unknown): StoreFile {
   }
   const parsed = value as StoreFile;
   return {
-    codes: Array.isArray(parsed.codes) ? parsed.codes : [],
+    codes: Array.isArray(parsed.codes) ? parsed.codes.map(asCode) : [],
     exams: Array.isArray(parsed.exams) ? parsed.exams : [],
     messages: Array.isArray(parsed.messages) ? parsed.messages : [],
     homework: Array.isArray(parsed.homework) ? parsed.homework : [],
     unlocks: Array.isArray(parsed.unlocks) ? parsed.unlocks : [],
     essayGrades: Array.isArray(parsed.essayGrades) ? parsed.essayGrades : [],
+    attendance: Array.isArray(parsed.attendance) ? parsed.attendance : [],
+    announcement: parsed.announcement ?? null,
+    examWindow: parsed.examWindow ?? null,
+    misses: Array.isArray(parsed.misses) ? parsed.misses : [],
   };
 }
 

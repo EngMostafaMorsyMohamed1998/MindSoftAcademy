@@ -7,6 +7,8 @@ import {
 } from "@/lib/chapter-progress";
 import { studentProgress } from "@/lib/student-progress";
 import { getChapter, isChapterId } from "@/lib/curriculum";
+import { getExamWindow } from "@/lib/access-store";
+import { examWindowOpen } from "@/lib/class-clock";
 import { examForChapter } from "@/lib/exams";
 import { t } from "@/lib/i18n";
 import { notesForChapter } from "@/lib/lessons";
@@ -31,6 +33,7 @@ export default async function ChapterExamPage({
   const nextId = nextChapterId(id);
   const note = notesForChapter(id)[0];
   const lessonHint = note ? (locale === "ar" ? note.takeawayAr : note.takeawayEn) : "";
+  const windowOpen = examWindowOpen(await getExamWindow(), id);
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -41,13 +44,19 @@ export default async function ChapterExamPage({
       <p className="mt-1 text-sm text-foreground/65">
         {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
       </p>
-      <ChapterExamPlayer
-        locale={locale}
-        exam={exam}
-        nextHref={nextId ? `/dashboard/chapters/${nextId}` : "/dashboard/chapters"}
-        nextLabel={nextId ? t(locale, "nextChapter") : t(locale, "navChapters")}
-        lessonHint={lessonHint}
-      />
+      {windowOpen ? (
+        <ChapterExamPlayer
+          locale={locale}
+          exam={exam}
+          nextHref={nextId ? `/dashboard/chapters/${nextId}` : "/dashboard/chapters"}
+          nextLabel={nextId ? t(locale, "nextChapter") : t(locale, "navChapters")}
+          lessonHint={lessonHint}
+        />
+      ) : (
+        <p className="mt-6 rounded-3xl bg-white p-5 text-sm text-foreground/70 ring-1 ring-primary/10">
+          {t(locale, "examWindowClosed")}
+        </p>
+      )}
     </div>
   );
 }

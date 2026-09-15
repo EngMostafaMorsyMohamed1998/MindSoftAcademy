@@ -7,10 +7,15 @@ import {
   listExamChapterIds,
   listPassedHomework,
   listUnlocks,
+  markAttendance,
   normalizePhone,
   redeemCode,
+  setAnnouncement,
+  setSuspended,
+  startExamWindow,
 } from "@/lib/access-store";
-import { isChapterId } from "@/lib/curriculum";
+import { parseBulkStudents } from "@/lib/class-clock";
+import { EXAM_DURATION_SECONDS, isChapterId } from "@/lib/curriculum";
 import { setStudentCookie } from "@/lib/student-session";
 import { rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
@@ -97,5 +102,73 @@ export async function unlockStudentChapter(
     chapterId,
     reason,
   });
+  return { error: null, ok: true };
+}
+
+export async function createManyStudentCodes(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const rows = parseBulkStudents(read(formData, "bulk"));
+  if (rows.length === 0) return { error: "MISSING" };
+  try {
+    for (const row of rows) {
+      const record = await issueCode(row);
+      await rememberIssuedCode(record);
+    }
+    return { error: null, ok: true, code: String(rows.length) };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "FAILED";
+    return { error: message };
+  }
+}
+
+export async function markStudentAttendance(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const studentId = read(formData, "studentId");
+  const date = read(formData, "date");
+  const present = read(formData, "present") === "1";
+  if (!studentId || !date) return { error: "MISSING" };
+  await markAttendance({ studentId, date, present });
+  return { error: null, ok: true };
+}
+
+export async function toggleStudentSuspend(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const studentId = read(formData, "studentId");
+  const suspended = read(formData, "suspended") === "1";
+  if (!studentId) return { error: "MISSING" };
+  await setSuspended({
+    studentId,
+    suspended,
+    reason: read(formData, "reason") || "اشتراك",
+  });
+  return { error: null, ok: true };
+}
+
+export async function saveAnnouncement(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  await setAnnouncement(read(formData, "body"));
+  return { error: null, ok: true };
+}
+
+export async function openClassExam(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const chapterId = read(formData, "chapterId");
+  if (!isChapterId(chapterId)) return { error: "MISSING" };
+  await startExamWindow(chapterId, EXAM_DURATION_SECONDS);
   return { error: null, ok: true };
 }

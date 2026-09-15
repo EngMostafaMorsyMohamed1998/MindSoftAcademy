@@ -120,14 +120,22 @@ export default async function ChapterPage({
                 <strong>{t(locale, "takeaway")}: </strong>
                 {locale === "ar" ? note.takeawayAr : note.takeawayEn}
               </p>
-              <Link
-                href={`/dashboard/homework/${note.id}`}
-                className="mt-4 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
-              >
-                {homework.includes(note.id)
-                  ? t(locale, "homeworkPassed")
-                  : t(locale, "startHomework")}
-              </Link>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  href={`/dashboard/cards/${note.id}`}
+                  className="inline-flex rounded-full bg-accent px-4 py-2 text-xs font-semibold text-primary-dark"
+                >
+                  {t(locale, "flashcards")}
+                </Link>
+                <Link
+                  href={`/dashboard/homework/${note.id}`}
+                  className="inline-flex rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
+                >
+                  {homework.includes(note.id)
+                    ? t(locale, "homeworkPassed")
+                    : t(locale, "startHomework")}
+                </Link>
+              </div>
             </article>
           );
         })}

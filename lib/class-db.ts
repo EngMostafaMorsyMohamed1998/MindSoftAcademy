@@ -2,11 +2,15 @@ import { prisma } from "@/lib/prisma";
 import type { StoreFile } from "@/lib/access-store-io";
 import type {
   AccessCode,
+  AttendanceRow,
   ChatMessage,
   ChapterUnlock,
+  ClassAnnouncement,
   EssayGrade,
   ExamSubmission,
+  ExamWindow,
   HomeworkResult,
+  MissedQuestion,
 } from "@/lib/access-store";
 
 function hasLiveDatabase(): boolean {
@@ -23,17 +27,28 @@ function asDate(value: string): Date {
   return Number.isNaN(date.getTime()) ? new Date() : date;
 }
 
+function asStrings(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
 export async function readClassDb(): Promise<StoreFile | null> {
   if (!hasLiveDatabase()) return null;
   try {
-    const [codes, messages, exams, homework, unlocks, essayGrades] = await Promise.all([
-      prisma.classCode.findMany(),
-      prisma.classMessage.findMany(),
-      prisma.classExam.findMany(),
-      prisma.classHomework.findMany(),
-      prisma.classUnlock.findMany(),
-      prisma.classEssayGrade.findMany(),
-    ]);
+    const [codes, messages, exams, homework, unlocks, essayGrades, attendance, announcements, windows, misses] =
+      await Promise.all([
+        prisma.classCode.findMany(),
+        prisma.classMessage.findMany(),
+        prisma.classExam.findMany(),
+        prisma.classHomework.findMany(),
+        prisma.classUnlock.findMany(),
+        prisma.classEssayGrade.findMany(),
+        prisma.classAttendance.findMany(),
+        prisma.classAnnouncement.findMany(),
+        prisma.classExamWindow.findMany(),
+        prisma.classMiss.findMany(),
+      ]);
+    const announcement = announcements.find((row) => row.active) ?? announcements[0] ?? null;
+    const window = windows[0] ?? null;
     return {
       codes: codes.map((row): AccessCode => ({
         id: row.id,
@@ -44,6 +59,8 @@ export async function readClassDb(): Promise<StoreFile | null> {
         usedAt: row.usedAt?.toISOString() ?? null,
         usedById: row.usedById,
         points: row.points,
+        suspendedAt: row.suspendedAt?.toISOString() ?? null,
+        suspendReason: row.suspendReason,
       })),
       messages: messages.map((row): ChatMessage => ({
         id: row.id,
@@ -64,9 +81,7 @@ export async function readClassDb(): Promise<StoreFile | null> {
         locale: row.locale === "en" ? "en" : "ar",
         objectiveScore: row.objectiveScore,
         objectiveTotal: row.objectiveTotal,
-        essays: Array.isArray(row.essays)
-          ? (row.essays as ExamSubmission["essays"])
-          : [],
+        essays: Array.isArray(row.essays) ? (row.essays as ExamSubmission["essays"]) : [],
         submittedAt: row.submittedAt.toISOString(),
       })),
       homework: homework.map((row): HomeworkResult => ({
@@ -91,6 +106,41 @@ export async function readClassDb(): Promise<StoreFile | null> {
         note: row.note,
         gradedAt: row.gradedAt.toISOString(),
       })),
+      attendance: attendance.map((row): AttendanceRow => ({
+        studentId: row.studentId,
+        date: row.sessionDate,
+        present: row.present,
+        createdAt: row.createdAt.toISOString(),
+      })),
+      announcement: announcement
+        ? ({
+            id: announcement.id,
+            body: announcement.body,
+            createdAt: announcement.createdAt.toISOString(),
+            active: announcement.active,
+          } satisfies ClassAnnouncement)
+        : null,
+      examWindow: window
+        ? ({
+            id: window.id,
+            chapterId: window.chapterId,
+            opensAt: window.opensAt.toISOString(),
+            closesAt: window.closesAt.toISOString(),
+          } satisfies ExamWindow)
+        : null,
+      misses: misses.map((row): MissedQuestion => ({
+        studentId: row.studentId,
+        questionKey: row.questionKey,
+        lessonId: row.lessonId,
+        chapterId: row.chapterId,
+        promptAr: row.promptAr,
+        promptEn: row.promptEn,
+        optionsAr: asStrings(row.optionsAr),
+        optionsEn: asStrings(row.optionsEn),
+        correctIndex: row.correctIndex,
+        missedAt: row.missedAt.toISOString(),
+        clearedAt: row.clearedAt?.toISOString() ?? null,
+      })),
     };
   } catch {
     return null;
@@ -107,6 +157,10 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
       prisma.classHomework.deleteMany(),
       prisma.classUnlock.deleteMany(),
       prisma.classEssayGrade.deleteMany(),
+      prisma.classAttendance.deleteMany(),
+      prisma.classAnnouncement.deleteMany(),
+      prisma.classExamWindow.deleteMany(),
+      prisma.classMiss.deleteMany(),
       ...(store.codes.length
         ? [
             prisma.classCode.createMany({
@@ -119,6 +173,8 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
                 usedAt: row.usedAt ? asDate(row.usedAt) : null,
                 usedById: row.usedById,
                 points: row.points,
+                suspendedAt: row.suspendedAt ? asDate(row.suspendedAt) : null,
+                suspendReason: row.suspendReason ?? "",
               })),
             }),
           ]
@@ -193,6 +249,65 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
                 score: row.score,
                 note: row.note,
                 gradedAt: asDate(row.gradedAt),
+              })),
+            }),
+          ]
+        : []),
+      ...(store.attendance.length
+        ? [
+            prisma.classAttendance.createMany({
+              data: store.attendance.map((row) => ({
+                studentId: row.studentId,
+                sessionDate: row.date,
+                present: row.present,
+                createdAt: asDate(row.createdAt),
+              })),
+            }),
+          ]
+        : []),
+      ...(store.announcement
+        ? [
+            prisma.classAnnouncement.createMany({
+              data: [
+                {
+                  id: store.announcement.id,
+                  body: store.announcement.body,
+                  createdAt: asDate(store.announcement.createdAt),
+                  active: store.announcement.active,
+                },
+              ],
+            }),
+          ]
+        : []),
+      ...(store.examWindow
+        ? [
+            prisma.classExamWindow.createMany({
+              data: [
+                {
+                  id: store.examWindow.id,
+                  chapterId: store.examWindow.chapterId,
+                  opensAt: asDate(store.examWindow.opensAt),
+                  closesAt: asDate(store.examWindow.closesAt),
+                },
+              ],
+            }),
+          ]
+        : []),
+      ...(store.misses.length
+        ? [
+            prisma.classMiss.createMany({
+              data: store.misses.map((row) => ({
+                studentId: row.studentId,
+                questionKey: row.questionKey,
+                lessonId: row.lessonId,
+                chapterId: row.chapterId,
+                promptAr: row.promptAr,
+                promptEn: row.promptEn,
+                optionsAr: row.optionsAr,
+                optionsEn: row.optionsEn,
+                correctIndex: row.correctIndex,
+                missedAt: asDate(row.missedAt),
+                clearedAt: row.clearedAt ? asDate(row.clearedAt) : null,
               })),
             }),
           ]

@@ -10,7 +10,7 @@ import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 import type { AccessCode, ExamSubmission } from "@/lib/access-store";
 import { BRAND } from "@/lib/brand";
-import { codeWhatsappText, whatsappHref, type ClassRow } from "@/lib/class-roster";
+import { codeWhatsappText, whatsappHref } from "@/lib/class-roster";
 
 const initial: FormState = { error: null };
 
@@ -18,12 +18,10 @@ export function AdminDesk({
   locale,
   codes,
   exams,
-  roster,
 }: {
   locale: Locale;
   codes: AccessCode[];
   exams: ExamSubmission[];
-  roster: ClassRow[];
 }) {
   const [state, action, pending] = useActionState(createStudentCode, initial);
   const [unlockState, unlockAction, unlockPending] = useActionState(unlockStudentChapter, initial);
@@ -145,49 +143,6 @@ export function AdminDesk({
                         </a>
                       </div>
                     </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold">{t(locale, "classRoster")}</h2>
-        {roster.length === 0 ? (
-          <p className="mt-3 text-sm text-foreground/55">{t(locale, "noCodes")}</p>
-        ) : (
-          <div className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-primary/10">
-            <table className="w-full min-w-[48rem] text-sm">
-              <thead className="bg-primary/5 text-start">
-                <tr>
-                  <th className="px-3 py-2 font-semibold">{t(locale, "student")}</th>
-                  <th className="px-3 py-2 font-semibold">{t(locale, "used")}</th>
-                  <th className="px-3 py-2 font-semibold">{t(locale, "standing")}</th>
-                  <th className="px-3 py-2 font-semibold">{t(locale, "homeworkShort")}</th>
-                  <th className="px-3 py-2 font-semibold">{t(locale, "objectiveScore")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {roster.map((row) => (
-                  <tr key={row.id} className="border-t border-primary/8">
-                    <td className="px-3 py-2">
-                      <p className="font-medium">{row.name}</p>
-                      <p className="font-mono text-xs text-foreground/55">{row.phone}</p>
-                    </td>
-                    <td className="px-3 py-2">
-                      {row.activated ? t(locale, "used") : t(locale, "notActivated")}
-                    </td>
-                    <td className="px-3 py-2">
-                      {row.standing === "done"
-                        ? t(locale, "finishedAll")
-                        : `${t(locale, "chapterExam")} ${row.standing}`}
-                    </td>
-                    <td className="px-3 py-2">
-                      {row.homeworkDone}/{row.homeworkNeed}
-                    </td>
-                    <td className="px-3 py-2">{row.lastScore}</td>
                   </tr>
                 ))}
               </tbody>

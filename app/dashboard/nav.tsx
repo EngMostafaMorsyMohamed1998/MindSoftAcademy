@@ -10,6 +10,7 @@ import {
   Library,
   MessageCircle,
   Printer,
+  RotateCcw,
   Trophy,
   type LucideIcon,
 } from "lucide-react";
@@ -36,6 +37,7 @@ function items(locale: Locale): {
     { href: "/dashboard/games", label: t(locale, "navGames"), icon: Gamepad2 },
     { href: "/dashboard/booklet", label: t(locale, "navBooklet"), icon: Printer },
     { href: "/dashboard/chat-to-teacher", label: t(locale, "navChat"), icon: MessageCircle },
+    { href: "/dashboard/review", label: t(locale, "reviewMistakes"), icon: RotateCcw },
   ];
 }
 

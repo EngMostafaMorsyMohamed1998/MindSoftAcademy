@@ -128,14 +128,16 @@ model QuizResult {
 }
 
 model ClassCode {
-  id        String    @id
-  code      String    @unique
-  name      String
-  phone     String
-  createdAt DateTime
-  usedAt    DateTime?
-  usedById  String?
-  points    Int       @default(0)
+  id           String    @id
+  code         String    @unique
+  name         String
+  phone        String
+  createdAt    DateTime
+  usedAt       DateTime?
+  usedById     String?
+  points       Int       @default(0)
+  suspendedAt  DateTime?
+  suspendReason String   @default("")
 
   @@index([phone])
 }
@@ -197,4 +199,43 @@ model ClassEssayGrade {
   gradedAt   DateTime
 
   @@id([examId, questionId])
+}
+
+model ClassAttendance {
+  studentId   String
+  sessionDate String
+  present     Boolean
+  createdAt   DateTime
+
+  @@id([studentId, sessionDate])
+}
+
+model ClassAnnouncement {
+  id        String   @id
+  body      String
+  createdAt DateTime
+  active    Boolean  @default(true)
+}
+
+model ClassExamWindow {
+  id        String   @id
+  chapterId String
+  opensAt   DateTime
+  closesAt  DateTime
+}
+
+model ClassMiss {
+  studentId    String
+  questionKey  String
+  lessonId     String
+  chapterId    String
+  promptAr     String
+  promptEn     String
+  optionsAr    Json
+  optionsEn    Json
+  correctIndex Int
+  missedAt     DateTime
+  clearedAt    DateTime?
+
+  @@id([studentId, questionKey])
 }

@@ -10,6 +10,8 @@ export type AccessCode = {
   usedAt: string | null;
   usedById: string | null;
   points: number;
+  suspendedAt: string | null;
+  suspendReason: string;
 };
 
 export type ChatMessage = {
@@ -69,6 +71,41 @@ export type EssayGrade = {
   score: number;
   note: string;
   gradedAt: string;
+};
+
+export type AttendanceRow = {
+  studentId: string;
+  date: string;
+  present: boolean;
+  createdAt: string;
+};
+
+export type ClassAnnouncement = {
+  id: string;
+  body: string;
+  createdAt: string;
+  active: boolean;
+};
+
+export type ExamWindow = {
+  id: string;
+  chapterId: string;
+  opensAt: string;
+  closesAt: string;
+};
+
+export type MissedQuestion = {
+  studentId: string;
+  questionKey: string;
+  lessonId: string;
+  chapterId: string;
+  promptAr: string;
+  promptEn: string;
+  optionsAr: string[];
+  optionsEn: string[];
+  correctIndex: number;
+  missedAt: string;
+  clearedAt: string | null;
 };
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -139,6 +176,8 @@ function recordFor(
     usedAt: extra?.usedAt ?? null,
     usedById: extra?.usedById ?? null,
     points: extra?.points ?? 0,
+    suspendedAt: extra?.suspendedAt ?? null,
+    suspendReason: extra?.suspendReason ?? "",
   };
 }
 
@@ -194,6 +233,9 @@ export async function redeemCode(input: {
 
   if (!record) {
     throw new Error("NOT_FOUND");
+  }
+  if (record.suspendedAt) {
+    throw new Error("SUSPENDED");
   }
   if (!phonesMatch(record.phone, phone)) {
     throw new Error("PHONE_MISMATCH");
@@ -419,4 +461,113 @@ export async function markChatRead(
     }
   }
   if (changed) await writeStore(store);
+}
+
+export async function listAttendance(): Promise<AttendanceRow[]> {
+  return (await readStore()).attendance;
+}
+
+export async function markAttendance(input: {
+  studentId: string;
+  date: string;
+  present: boolean;
+}): Promise<void> {
+  const store = await readStore();
+  store.attendance = store.attendance.filter(
+    (row) => !(row.studentId === input.studentId && row.date === input.date),
+  );
+  store.attendance.unshift({
+    studentId: input.studentId,
+    date: input.date,
+    present: input.present,
+    createdAt: new Date().toISOString(),
+  });
+  await writeStore(store);
+}
+
+export async function setSuspended(input: {
+  studentId: string;
+  suspended: boolean;
+  reason?: string;
+}): Promise<void> {
+  const store = await readStore();
+  const record = store.codes.find((item) => item.id === input.studentId);
+  if (!record) return;
+  record.suspendedAt = input.suspended ? new Date().toISOString() : null;
+  record.suspendReason = input.suspended ? (input.reason ?? "").trim() : "";
+  await writeStore(store);
+}
+
+export async function getAnnouncement(): Promise<ClassAnnouncement | null> {
+  return (await readStore()).announcement;
+}
+
+export async function setAnnouncement(body: string): Promise<void> {
+  const store = await readStore();
+  const text = body.replace(/\s+/g, " ").trim().slice(0, 240);
+  store.announcement = text
+    ? {
+        id: randomBytes(6).toString("hex"),
+        body: text,
+        createdAt: new Date().toISOString(),
+        active: true,
+      }
+    : null;
+  await writeStore(store);
+}
+
+export async function getExamWindow(): Promise<ExamWindow | null> {
+  return (await readStore()).examWindow;
+}
+
+export async function startExamWindow(chapterId: string, seconds: number): Promise<ExamWindow> {
+  const store = await readStore();
+  const opensAt = new Date();
+  const window: ExamWindow = {
+    id: "current",
+    chapterId,
+    opensAt: opensAt.toISOString(),
+    closesAt: new Date(opensAt.getTime() + seconds * 1000).toISOString(),
+  };
+  store.examWindow = window;
+  await writeStore(store);
+  return window;
+}
+
+export async function recordMisses(rows: MissedQuestion[]): Promise<void> {
+  if (rows.length === 0) return;
+  const store = await readStore();
+  for (const row of rows) {
+    store.misses = store.misses.filter(
+      (item) => !(item.studentId === row.studentId && item.questionKey === row.questionKey),
+    );
+    store.misses.unshift(row);
+  }
+  await writeStore(store);
+}
+
+export async function listDueMisses(studentId: string, afterMs: number): Promise<MissedQuestion[]> {
+  const store = await readStore();
+  const cutoff = Date.now() - afterMs;
+  return store.misses.filter(
+    (item) =>
+      item.studentId === studentId &&
+      !item.clearedAt &&
+      new Date(item.missedAt).getTime() <= cutoff,
+  );
+}
+
+export async function listWaitingMisses(studentId: string): Promise<MissedQuestion[]> {
+  const store = await readStore();
+  return store.misses.filter((item) => item.studentId === studentId && !item.clearedAt);
+}
+
+export async function clearMiss(studentId: string, questionKey: string): Promise<void> {
+  const store = await readStore();
+  const row = store.misses.find(
+    (item) => item.studentId === studentId && item.questionKey === questionKey,
+  );
+  if (!row) return;
+  row.clearedAt = new Date().toISOString();
+  await writeStore(store);
 }

@@ -12,6 +12,7 @@ const ERRORS: Record<string, { ar: string; en: string }> = {
   PHONE_MISMATCH: { ar: "الرقم لا يطابق الكود. استخدم نفس رقم التليفون المسجّل.", en: "The phone does not match this code." },
   NAME_MISMATCH: { ar: "الاسم لا يطابق الكود. اكتبه كما سجّله المدرس.", en: "The name does not match this code." },
   FAILED: { ar: "تعذر التفعيل. حاول مرة أخرى.", en: "Could not activate. Try again." },
+  SUSPENDED: { ar: "الاشتراك متوقف. راجع المدرس بعد الدفع.", en: "This subscription is paused. See the teacher after payment." },
 };
 
 export function ActivateForm({ locale }: { locale: Locale }) {
