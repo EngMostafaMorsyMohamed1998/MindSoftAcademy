@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
-import { isChapterUnlocked, studentCompletedChapters } from "@/lib/chapter-progress";
+import { chapterHomeworkDone, isChapterUnlocked, studentProgress } from "@/lib/chapter-progress";
 import { CHAPTERS } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 
 export default async function ExamsIndexPage() {
   const locale = await getLocale();
-  const completed = await studentCompletedChapters();
+  const { completed, unlocks, homework } = await studentProgress();
 
   return (
     <div className="mx-auto w-full max-w-4xl">
@@ -15,7 +15,9 @@ export default async function ExamsIndexPage() {
       <p className="mt-2 text-sm text-foreground/65">{t(locale, "examRules")}</p>
       <ul className="mt-6 space-y-3">
         {CHAPTERS.map((chapter) => {
-          const unlocked = isChapterUnlocked(completed, chapter.id);
+          const unlocked =
+            isChapterUnlocked(completed, chapter.id, unlocks) &&
+            chapterHomeworkDone(chapter.id, homework);
           return (
             <li key={chapter.id}>
               {unlocked ? (

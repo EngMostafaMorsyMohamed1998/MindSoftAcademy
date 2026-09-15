@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BookOpen, ClipboardCheck, Gamepad2 } from "lucide-react";
-import { isChapterUnlocked, studentCompletedChapters } from "@/lib/chapter-progress";
+import { chapterHomeworkDone, isChapterUnlocked, studentProgress } from "@/lib/chapter-progress";
 import { bookSlugFor, getChapter, isChapterId } from "@/lib/curriculum";
 import { notesForChapter } from "@/lib/lessons";
 import { t } from "@/lib/i18n";
@@ -17,10 +17,11 @@ export default async function ChapterPage({
   if (!isChapterId(id)) notFound();
   const chapter = getChapter(id);
   if (!chapter) notFound();
-  const completed = await studentCompletedChapters();
-  if (!isChapterUnlocked(completed, id)) {
+  const { completed, unlocks, homework } = await studentProgress();
+  if (!isChapterUnlocked(completed, id, unlocks)) {
     redirect("/dashboard/chapters");
   }
+  const examReady = chapterHomeworkDone(id, homework);
   const locale = await getLocale();
   const notes = notesForChapter(id);
   const book = BOOKS.find((item) => item.slug === bookSlugFor(chapter.part, locale));
@@ -41,14 +42,22 @@ export default async function ChapterPage({
       </p>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <Link
-          href={`/dashboard/exam/${chapter.id}`}
-          className="rounded-2xl bg-primary p-4 text-sm font-semibold text-white"
-        >
-          <ClipboardCheck className="size-5" />
-          <span className="mt-2 block">{t(locale, "chapterExam")}</span>
-          <span className="text-xs font-normal text-white/70">{t(locale, "minutes30")}</span>
-        </Link>
+        {examReady ? (
+          <Link
+            href={`/dashboard/exam/${chapter.id}`}
+            className="rounded-2xl bg-primary p-4 text-sm font-semibold text-white"
+          >
+            <ClipboardCheck className="size-5" />
+            <span className="mt-2 block">{t(locale, "chapterExam")}</span>
+            <span className="text-xs font-normal text-white/70">{t(locale, "minutes30")}</span>
+          </Link>
+        ) : (
+          <div className="rounded-2xl bg-primary/40 p-4 text-sm font-semibold text-white">
+            <ClipboardCheck className="size-5" />
+            <span className="mt-2 block">{t(locale, "chapterExam")}</span>
+            <span className="text-xs font-normal text-white/80">{t(locale, "homeworkLockedExam")}</span>
+          </div>
+        )}
         <Link
           href={`/dashboard/games/${chapter.id}`}
           className="rounded-2xl bg-white p-4 text-sm font-semibold ring-1 ring-primary/10"
@@ -110,6 +119,14 @@ export default async function ChapterPage({
                 <strong>{t(locale, "takeaway")}: </strong>
                 {locale === "ar" ? note.takeawayAr : note.takeawayEn}
               </p>
+              <Link
+                href={`/dashboard/homework/${note.id}`}
+                className="mt-4 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
+              >
+                {homework.includes(note.id)
+                  ? t(locale, "homeworkPassed")
+                  : t(locale, "startHomework")}
+              </Link>
             </article>
           );
         })}

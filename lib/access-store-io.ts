@@ -1,11 +1,21 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
-import type { AccessCode, ChatMessage, ExamSubmission } from "@/lib/access-store";
+import type {
+  AccessCode,
+  ChatMessage,
+  ChapterUnlock,
+  EssayGrade,
+  ExamSubmission,
+  HomeworkResult,
+} from "@/lib/access-store";
 
 export type StoreFile = {
   codes: AccessCode[];
   exams: ExamSubmission[];
   messages: ChatMessage[];
+  homework: HomeworkResult[];
+  unlocks: ChapterUnlock[];
+  essayGrades: EssayGrade[];
 };
 
 const BLOB_KEY = "mindsoft-access-store.json";
@@ -18,7 +28,14 @@ function localPath(): string {
 }
 
 export function emptyStore(): StoreFile {
-  return { codes: [], exams: [], messages: [] };
+  return {
+    codes: [],
+    exams: [],
+    messages: [],
+    homework: [],
+    unlocks: [],
+    essayGrades: [],
+  };
 }
 
 export function parseStore(value: unknown): StoreFile {
@@ -30,6 +47,9 @@ export function parseStore(value: unknown): StoreFile {
     codes: Array.isArray(parsed.codes) ? parsed.codes : [],
     exams: Array.isArray(parsed.exams) ? parsed.exams : [],
     messages: Array.isArray(parsed.messages) ? parsed.messages : [],
+    homework: Array.isArray(parsed.homework) ? parsed.homework : [],
+    unlocks: Array.isArray(parsed.unlocks) ? parsed.unlocks : [],
+    essayGrades: Array.isArray(parsed.essayGrades) ? parsed.essayGrades : [],
   };
 }
 

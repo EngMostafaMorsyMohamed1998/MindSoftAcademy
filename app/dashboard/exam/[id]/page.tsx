@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { nextChapterId, isChapterUnlocked, studentCompletedChapters } from "@/lib/chapter-progress";
+import {
+  chapterHomeworkDone,
+  isChapterUnlocked,
+  nextChapterId,
+  studentProgress,
+} from "@/lib/chapter-progress";
 import { getChapter, isChapterId } from "@/lib/curriculum";
 import { examForChapter } from "@/lib/exams";
 import { t } from "@/lib/i18n";
@@ -17,8 +22,8 @@ export default async function ChapterExamPage({
   const chapter = getChapter(id);
   const exam = examForChapter(id);
   if (!chapter || !exam) notFound();
-  const completed = await studentCompletedChapters();
-  if (!isChapterUnlocked(completed, id)) {
+  const { completed, unlocks, homework } = await studentProgress();
+  if (!isChapterUnlocked(completed, id, unlocks) || !chapterHomeworkDone(id, homework)) {
     redirect("/dashboard/exams");
   }
   const locale = await getLocale();

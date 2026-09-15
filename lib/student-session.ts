@@ -10,11 +10,13 @@ import {
 export { STUDENT_COOKIE, encodeStudentSession, readStudentToken };
 export type { StudentSession };
 
-export async function getStudentSession(): Promise<(StudentSession & { points: number; exams: string[] }) | null> {
+export async function getStudentSession(): Promise<(StudentSession & { points: number; exams: string[]; homework: string[]; unlocks: string[] }) | null> {
   const store = await cookies();
   const session = readStudentToken(store.get(STUDENT_COOKIE)?.value);
   if (!session) return null;
   const exams = session.exams ?? [];
+  const homework = session.homework ?? [];
+  const unlocks = session.unlocks ?? [];
   const record = await getCodeById(session.id);
   if (record) {
     return {
@@ -23,9 +25,11 @@ export async function getStudentSession(): Promise<(StudentSession & { points: n
       phone: record.phone,
       points: record.points,
       exams,
+      homework,
+      unlocks,
     };
   }
-  return { ...session, points: 0, exams };
+  return { ...session, points: 0, exams, homework, unlocks };
 }
 
 export async function setStudentCookie(record: {
@@ -33,6 +37,8 @@ export async function setStudentCookie(record: {
   name: string;
   phone: string;
   exams?: string[];
+  homework?: string[];
+  unlocks?: string[];
 }) {
   const store = await cookies();
   store.set(STUDENT_COOKIE, encodeStudentSession({
@@ -40,6 +46,8 @@ export async function setStudentCookie(record: {
     name: record.name,
     phone: record.phone,
     exams: record.exams ?? [],
+    homework: record.homework ?? [],
+    unlocks: record.unlocks ?? [],
   }), {
     httpOnly: true,
     sameSite: "lax",

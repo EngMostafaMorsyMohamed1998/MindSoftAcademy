@@ -1,6 +1,16 @@
 "use server";
 
-import { issueCode, listExamChapterIds, redeemCode } from "@/lib/access-store";
+import {
+  grantChapterUnlock,
+  idForStudent,
+  issueCode,
+  listExamChapterIds,
+  listPassedHomework,
+  listUnlocks,
+  normalizePhone,
+  redeemCode,
+} from "@/lib/access-store";
+import { isChapterId } from "@/lib/curriculum";
 import { setStudentCookie } from "@/lib/student-session";
 import { rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
@@ -27,6 +37,8 @@ export async function activateAccess(
     await setStudentCookie({
       ...record,
       exams: await listExamChapterIds(record.id),
+      homework: await listPassedHomework(record.id),
+      unlocks: await listUnlocks(record.id),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "FAILED";
@@ -64,4 +76,26 @@ export async function createStudentCode(
     const message = error instanceof Error ? error.message : "FAILED";
     return { error: message };
   }
+}
+
+export async function unlockStudentChapter(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) {
+    return { error: "FORBIDDEN" };
+  }
+  const name = read(formData, "name");
+  const phone = normalizePhone(read(formData, "phone"));
+  const chapterId = read(formData, "chapterId");
+  const reason = read(formData, "reason") || "مرض / غياب";
+  if (!name || phone.length < 10 || !isChapterId(chapterId)) {
+    return { error: "MISSING" };
+  }
+  await grantChapterUnlock({
+    studentId: idForStudent(name, phone),
+    chapterId,
+    reason,
+  });
+  return { error: null, ok: true };
 }

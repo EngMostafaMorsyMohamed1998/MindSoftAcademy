@@ -9,15 +9,17 @@ export function QuestMap({
   locale,
   chapters,
   completed,
+  unlocks = [],
 }: {
   locale: Locale;
   chapters: Chapter[];
   completed: ChapterId[];
+  unlocks?: string[];
 }) {
   return (
     <ol className="mt-6 grid gap-3 sm:grid-cols-2">
       {chapters.map((chapter, index) => {
-        const unlocked = isChapterUnlocked(completed, chapter.id);
+        const unlocked = isChapterUnlocked(completed, chapter.id, unlocks);
         const inner = (
           <>
             <span

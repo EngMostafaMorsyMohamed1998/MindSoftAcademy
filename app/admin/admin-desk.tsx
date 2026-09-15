@@ -3,7 +3,9 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Copy, LoaderCircle, Printer } from "lucide-react";
-import { createStudentCode, type FormState } from "@/app/actions/access";
+import { createStudentCode, unlockStudentChapter, type FormState } from "@/app/actions/access";
+import { gradeEssayForm } from "@/app/actions/study";
+import { CHAPTERS } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 import type { AccessCode, ExamSubmission } from "@/lib/access-store";
@@ -21,6 +23,7 @@ export function AdminDesk({
   exams: ExamSubmission[];
 }) {
   const [state, action, pending] = useActionState(createStudentCode, initial);
+  const [unlockState, unlockAction, unlockPending] = useActionState(unlockStudentChapter, initial);
   const [copied, setCopied] = useState<string | null>(null);
   const router = useRouter();
 
@@ -140,6 +143,51 @@ export function AdminDesk({
       </section>
 
       <section>
+        <h2 className="text-lg font-semibold">{t(locale, "unlockChapter")}</h2>
+        <form action={unlockAction} className="mt-3 grid gap-3 rounded-3xl bg-white p-5 ring-1 ring-primary/10 sm:grid-cols-2">
+          <input
+            name="name"
+            required
+            placeholder={t(locale, "fullName")}
+            className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+          />
+          <input
+            name="phone"
+            required
+            inputMode="tel"
+            placeholder={t(locale, "phone")}
+            className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+          />
+          <select
+            name="chapterId"
+            className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+            defaultValue="1"
+          >
+            {CHAPTERS.map((chapter) => (
+              <option key={chapter.id} value={chapter.id}>
+                {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
+              </option>
+            ))}
+          </select>
+          <input
+            name="reason"
+            placeholder={t(locale, "unlockReason")}
+            className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+          />
+          <button
+            type="submit"
+            disabled={unlockPending}
+            className="sm:col-span-2 inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-white"
+          >
+            {t(locale, "unlockBtn")}
+          </button>
+          {unlockState.ok ? (
+            <p className="sm:col-span-2 text-sm text-emerald-700">{t(locale, "unlockBtn")} ✓</p>
+          ) : null}
+        </form>
+      </section>
+
+      <section>
         <h2 className="text-lg font-semibold">{t(locale, "results")}</h2>
         {exams.length === 0 ? (
           <p className="mt-3 text-sm text-foreground/55">{t(locale, "noResults")}</p>
@@ -163,6 +211,31 @@ export function AdminDesk({
                       <p className="mt-1 whitespace-pre-wrap text-foreground/75">
                         {item.answer || "—"}
                       </p>
+                      <form action={gradeEssayForm} className="mt-3 grid gap-2 sm:grid-cols-[6rem_1fr_auto]">
+                        <input type="hidden" name="examId" value={exam.id} />
+                        <input type="hidden" name="studentId" value={exam.studentId} />
+                        <input type="hidden" name="questionId" value={item.id} />
+                        <input
+                          name="score"
+                          type="number"
+                          min={0}
+                          max={16}
+                          step={1}
+                          placeholder={t(locale, "essayScore")}
+                          className="h-10 rounded-xl border border-primary/15 px-2 text-sm"
+                        />
+                        <input
+                          name="note"
+                          placeholder={t(locale, "essayNote")}
+                          className="h-10 rounded-xl border border-primary/15 px-2 text-sm"
+                        />
+                        <button
+                          type="submit"
+                          className="h-10 rounded-full bg-primary px-3 text-xs font-semibold text-white"
+                        >
+                          {t(locale, "gradeEssay")}
+                        </button>
+                      </form>
                     </li>
                   ))}
                 </ol>

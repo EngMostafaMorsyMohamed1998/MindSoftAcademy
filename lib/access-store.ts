@@ -46,6 +46,31 @@ export type ExamSubmission = {
   submittedAt: string;
 };
 
+export type HomeworkResult = {
+  studentId: string;
+  lessonId: string;
+  score: number;
+  total: number;
+  passed: boolean;
+  submittedAt: string;
+};
+
+export type ChapterUnlock = {
+  studentId: string;
+  chapterId: string;
+  reason: string;
+  createdAt: string;
+};
+
+export type EssayGrade = {
+  examId: string;
+  studentId: string;
+  questionId: string;
+  score: number;
+  note: string;
+  gradedAt: string;
+};
+
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 export function normalizeName(name: string): string {
@@ -236,6 +261,64 @@ export async function listExamChapterIds(studentId: string): Promise<string[]> {
         .map((item) => item.chapterId),
     ),
   ];
+}
+
+export async function saveHomework(result: HomeworkResult): Promise<void> {
+  const store = await readStore();
+  store.homework = store.homework.filter(
+    (item) => !(item.studentId === result.studentId && item.lessonId === result.lessonId),
+  );
+  store.homework.unshift(result);
+  await writeStore(store);
+}
+
+export async function listPassedHomework(studentId: string): Promise<string[]> {
+  const store = await readStore();
+  return store.homework
+    .filter((item) => item.studentId === studentId && item.passed)
+    .map((item) => item.lessonId);
+}
+
+export async function grantChapterUnlock(input: {
+  studentId: string;
+  chapterId: string;
+  reason: string;
+}): Promise<void> {
+  const store = await readStore();
+  store.unlocks = store.unlocks.filter(
+    (item) => !(item.studentId === input.studentId && item.chapterId === input.chapterId),
+  );
+  store.unlocks.unshift({
+    studentId: input.studentId,
+    chapterId: input.chapterId,
+    reason: input.reason.trim() || "exception",
+    createdAt: new Date().toISOString(),
+  });
+  await writeStore(store);
+}
+
+export async function listUnlocks(studentId: string): Promise<string[]> {
+  const store = await readStore();
+  return store.unlocks
+    .filter((item) => item.studentId === studentId)
+    .map((item) => item.chapterId);
+}
+
+export async function saveEssayGrade(grade: EssayGrade): Promise<void> {
+  const store = await readStore();
+  store.essayGrades = store.essayGrades.filter(
+    (item) => !(item.examId === grade.examId && item.questionId === grade.questionId),
+  );
+  store.essayGrades.unshift(grade);
+  await writeStore(store);
+}
+
+export async function listEssayGrades(studentId: string, examId?: string): Promise<EssayGrade[]> {
+  const store = await readStore();
+  return store.essayGrades.filter(
+    (item) =>
+      item.studentId === studentId && (examId ? item.examId === examId : true),
+  );
 }
 
 function sanitizeMessage(body: string): string {

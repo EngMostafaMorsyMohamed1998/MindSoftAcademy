@@ -5,6 +5,8 @@ export type StudentSession = {
   name: string;
   phone: string;
   exams?: string[];
+  homework?: string[];
+  unlocks?: string[];
 };
 
 export function encodeStudentSession(payload: StudentSession): string {

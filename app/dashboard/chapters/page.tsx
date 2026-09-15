@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
-import { isChapterUnlocked, studentCompletedChapters } from "@/lib/chapter-progress";
+import { isChapterUnlocked, studentProgress } from "@/lib/chapter-progress";
 import { CHAPTERS } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 
 export default async function ChaptersPage() {
   const locale = await getLocale();
-  const completed = await studentCompletedChapters();
+  const { completed, unlocks } = await studentProgress();
 
   return (
     <div className="mx-auto w-full max-w-5xl">
@@ -15,7 +15,7 @@ export default async function ChaptersPage() {
       <p className="mt-2 text-sm text-foreground/65">{t(locale, "dashboardHint")}</p>
       <div className="mt-6 grid gap-4">
         {CHAPTERS.map((chapter) => {
-          const unlocked = isChapterUnlocked(completed, chapter.id);
+          const unlocked = isChapterUnlocked(completed, chapter.id, unlocks);
           return (
             <article
               key={chapter.id}

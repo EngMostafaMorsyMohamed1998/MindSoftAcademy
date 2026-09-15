@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BookOpen, ClipboardCheck, Gamepad2, MessageCircle, Printer } from "lucide-react";
 import { HeroRobot } from "@/components/hero-robot";
-import { studentCompletedChapters } from "@/lib/chapter-progress";
+import { allChaptersPassed, studentProgress } from "@/lib/chapter-progress";
 import { CHAPTERS } from "@/lib/curriculum";
 import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
@@ -13,7 +13,7 @@ export default async function DashboardHomePage() {
   const user = await getCurrentUser();
   if (!user) return null;
   const locale = await getLocale();
-  const completed = await studentCompletedChapters();
+  const { completed, unlocks } = await studentProgress();
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
   const { level } = levelFromPoints(user.points);
 
@@ -59,7 +59,15 @@ export default async function DashboardHomePage() {
 
       <section className="rounded-3xl border border-primary/8 bg-white p-5 sm:p-6">
         <h2 className="font-serif text-2xl">{t(locale, "samplePath")}</h2>
-        <QuestMap locale={locale} chapters={CHAPTERS} completed={completed} />
+        <QuestMap locale={locale} chapters={CHAPTERS} completed={completed} unlocks={unlocks} />
+        {allChaptersPassed(completed) ? (
+          <Link
+            href="/dashboard/certificate"
+            className="mt-4 inline-flex rounded-full bg-accent px-4 py-2 text-sm font-semibold text-primary-dark"
+          >
+            {t(locale, "certificate")}
+          </Link>
+        ) : null}
       </section>
     </div>
   );

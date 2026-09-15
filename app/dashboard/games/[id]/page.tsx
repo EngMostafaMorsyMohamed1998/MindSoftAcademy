@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { isChapterUnlocked, studentCompletedChapters } from "@/lib/chapter-progress";
+import { isChapterUnlocked, studentProgress } from "@/lib/chapter-progress";
 import { getChapter, isChapterId } from "@/lib/curriculum";
 import { gameForChapter } from "@/lib/games";
 import { t } from "@/lib/i18n";
@@ -17,8 +17,8 @@ export default async function ChapterGamePage({
   const chapter = getChapter(id);
   const game = gameForChapter(id);
   if (!chapter || !game) notFound();
-  const completed = await studentCompletedChapters();
-  if (!isChapterUnlocked(completed, id)) {
+  const { completed, unlocks } = await studentProgress();
+  if (!isChapterUnlocked(completed, id, unlocks)) {
     redirect("/dashboard/games");
   }
   const locale = await getLocale();

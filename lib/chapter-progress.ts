@@ -1,5 +1,9 @@
 import { CHAPTERS, type ChapterId, isChapterId } from "@/lib/curriculum";
-import { listExamChapterIds } from "@/lib/access-store";
+import {
+  listExamChapterIds,
+  listPassedHomework,
+  listUnlocks,
+} from "@/lib/access-store";
 import { getStudentSession } from "@/lib/student-session";
 
 export const EXAM_PASS_RATIO = 0.7;
@@ -21,6 +25,15 @@ export function nextChapterId(id: ChapterId): ChapterId | null {
   return CHAPTERS[index + 1]!.id;
 }
 
+export function mergeIds(...lists: Array<Iterable<string> | undefined>): string[] {
+  const found = new Set<string>();
+  for (const list of lists) {
+    if (!list) continue;
+    for (const id of list) found.add(id);
+  }
+  return [...found];
+}
+
 export function mergeCompleted(
   ...lists: Array<Iterable<string> | undefined>
 ): ChapterId[] {
@@ -37,15 +50,48 @@ export function mergeCompleted(
 export function isChapterUnlocked(
   completed: Iterable<string>,
   id: ChapterId,
+  unlocks: Iterable<string> = [],
 ): boolean {
+  if (new Set(unlocks).has(id)) return true;
   const previous = previousChapterId(id);
   if (!previous) return true;
   return new Set(completed).has(previous);
 }
 
-export async function studentCompletedChapters(): Promise<ChapterId[]> {
+export function chapterHomeworkDone(
+  chapterId: ChapterId,
+  homeworkLessons: Iterable<string>,
+): boolean {
+  const chapter = CHAPTERS.find((item) => item.id === chapterId);
+  if (!chapter) return false;
+  const done = new Set(homeworkLessons);
+  return chapter.lessons.every((lesson) => done.has(lesson.id));
+}
+
+export function allChaptersPassed(completed: Iterable<string>): boolean {
+  const set = new Set(completed);
+  return CHAPTERS.every((chapter) => set.has(chapter.id));
+}
+
+export async function studentProgress(): Promise<{
+  completed: ChapterId[];
+  unlocks: string[];
+  homework: string[];
+}> {
   const student = await getStudentSession();
-  if (!student) return [];
-  const stored = await listExamChapterIds(student.id);
-  return mergeCompleted(student.exams, stored);
+  if (!student) return { completed: [], unlocks: [], homework: [] };
+  const [storedExams, storedHomework, storedUnlocks] = await Promise.all([
+    listExamChapterIds(student.id),
+    listPassedHomework(student.id),
+    listUnlocks(student.id),
+  ]);
+  return {
+    completed: mergeCompleted(student.exams, storedExams),
+    unlocks: mergeIds(student.unlocks, storedUnlocks),
+    homework: mergeIds(student.homework, storedHomework),
+  };
+}
+
+export async function studentCompletedChapters(): Promise<ChapterId[]> {
+  return (await studentProgress()).completed;
 }
