@@ -10,6 +10,8 @@ import { getLocale } from "@/lib/locale";
 import { getTheme } from "@/lib/theme";
 import { LogoutButton } from "@/app/dashboard/logout-button";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPage() {
   const locale = await getLocale();
   const theme = await getTheme();
