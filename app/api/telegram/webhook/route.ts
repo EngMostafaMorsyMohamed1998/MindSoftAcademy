@@ -6,11 +6,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const polling = telegramShouldPoll() ? await ensureTelegramReceiver() : false;
+  const ready = await ensureTelegramReceiver();
   return NextResponse.json({
     ok: true,
     configured: telegramConfigured(),
-    polling,
+    polling: telegramShouldPoll(),
+    ready,
   });
 }
 
