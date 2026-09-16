@@ -369,6 +369,35 @@ export function AdminShell({
             ) : (
               <p className="mt-3 text-sm text-emerald-800">{t(locale, "telegramReady")}</p>
             )}
+            {codes.length === 0 ? (
+              <p className="mt-3 text-sm text-amber-800">{t(locale, "telegramNeedStudent")}</p>
+            ) : null}
+            <form action={telegramHookAction} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+              <label className="grid gap-1 text-sm">
+                <span className="font-medium">{t(locale, "telegramTokenLabel")}</span>
+                <input
+                  name="token"
+                  type="password"
+                  autoComplete="off"
+                  placeholder="123456:ABC..."
+                  className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+                />
+                <span className="text-xs text-foreground/55">{t(locale, "telegramTokenHint")}</span>
+              </label>
+              <button
+                type="submit"
+                disabled={telegramHookPending}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {t(locale, "telegramActivate")}
+              </button>
+            </form>
+            {telegramHookState.error === "TOKEN" ? (
+              <p className="mt-2 text-sm text-amber-800">{t(locale, "telegramBadToken")}</p>
+            ) : null}
+            {telegramHookState.error === "WEBHOOK" ? (
+              <p className="mt-2 text-sm text-amber-800">{t(locale, "telegramHookFail")}</p>
+            ) : null}
             <div className="mt-4 flex flex-wrap gap-2">
               {telegramHref ? (
                 <a
@@ -381,15 +410,6 @@ export function AdminShell({
                   {t(locale, "telegramOpen")}
                 </a>
               ) : null}
-              <form action={telegramHookAction}>
-                <button
-                  type="submit"
-                  disabled={telegramHookPending || !telegramConfigured}
-                  className="inline-flex h-11 items-center rounded-full bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {t(locale, "telegramActivate")}
-                </button>
-              </form>
               <form action={telegramAllAction}>
                 <button
                   type="submit"

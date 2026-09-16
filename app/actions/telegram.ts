@@ -1,19 +1,33 @@
 "use server";
 
 import { after } from "next/server";
+import { getStoredTelegramToken, setStoredTelegramToken } from "@/lib/access-store";
 import { getLocale } from "@/lib/locale";
 import { isTeacher } from "@/lib/teacher-session";
-import { telegramConfigured } from "@/lib/telegram";
+import { cacheTelegramBotToken, telegramIsReady } from "@/lib/telegram";
 import { ensureTelegramReceiver } from "@/lib/telegram-inbox";
 import { notifyAllWeeklyReports, notifyWeeklyReport } from "@/lib/telegram-notify";
 
 export type TelegramState = { error: string | null; ok?: boolean; sent?: number };
 
+function looksLikeBotToken(value: string): boolean {
+  return /^\d{6,}:[A-Za-z0-9_-]{20,}$/.test(value.trim());
+}
+
 export async function activateTelegramWebhook(
   _prev: TelegramState = { error: null },
+  formData?: FormData,
 ): Promise<TelegramState> {
   if (!(await isTeacher())) return { error: "AUTH" };
-  if (!telegramConfigured()) return { error: "TOKEN" };
+  const pasted = String(formData?.get("token") || "").trim();
+  if (pasted) {
+    if (!looksLikeBotToken(pasted)) return { error: "TOKEN" };
+    await setStoredTelegramToken(pasted);
+    cacheTelegramBotToken(pasted);
+  } else {
+    cacheTelegramBotToken(await getStoredTelegramToken());
+  }
+  if (!(await telegramIsReady())) return { error: "TOKEN" };
   const ok = await ensureTelegramReceiver();
   return ok ? { error: null, ok: true } : { error: "WEBHOOK" };
 }
@@ -23,7 +37,8 @@ export async function sendTelegramStudentReport(
   formData: FormData,
 ): Promise<TelegramState> {
   if (!(await isTeacher())) return { error: "AUTH" };
-  if (!telegramConfigured()) return { error: "TOKEN" };
+  cacheTelegramBotToken(await getStoredTelegramToken());
+  if (!(await telegramIsReady())) return { error: "TOKEN" };
   const studentId = String(formData.get("studentId") || "");
   if (!studentId) return { error: "STUDENT" };
   const locale = await getLocale();
@@ -35,7 +50,8 @@ export async function sendTelegramAllReports(
   _prev: TelegramState = { error: null },
 ): Promise<TelegramState> {
   if (!(await isTeacher())) return { error: "AUTH" };
-  if (!telegramConfigured()) return { error: "TOKEN" };
+  cacheTelegramBotToken(await getStoredTelegramToken());
+  if (!(await telegramIsReady())) return { error: "TOKEN" };
   const locale = await getLocale();
   after(async () => {
     await notifyAllWeeklyReports(locale);

@@ -322,3 +322,8 @@ model ClassDeviceLimit {
   id    String @id
   limit Int
 }
+
+model ClassTelegramBot {
+  id    String @id
+  token String
+}

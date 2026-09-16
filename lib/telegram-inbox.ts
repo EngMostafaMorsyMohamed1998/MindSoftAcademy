@@ -1,15 +1,12 @@
 import { findCodeByPhone, linkTelegramChat, listCodes, unlinkTelegramChat } from "@/lib/access-store";
 import { siteUrl } from "@/lib/class-roster";
 import {
-  deleteTelegramWebhook,
   extractPhoneText,
-  fetchTelegramUpdates,
   sendTelegramMessage,
   setTelegramWebhook,
-  telegramConfigured,
   telegramEmptyRosterText,
+  telegramIsReady,
   telegramLinkedText,
-  telegramShouldPoll,
   telegramStartText,
   telegramStoppedText,
   telegramUnknownPhoneText,
@@ -55,47 +52,7 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
   await sendTelegramMessage(id, telegramLinkedText(student.name, student.phone, locale));
 }
 
-type PollState = { running?: boolean; offset?: number };
-
-function pollState(): PollState {
-  const globalRef = globalThis as typeof globalThis & { __msaTelegramPoll?: PollState };
-  globalRef.__msaTelegramPoll ??= {};
-  return globalRef.__msaTelegramPoll;
-}
-
-async function pollLoop(): Promise<void> {
-  const state = pollState();
-  while (state.running) {
-    try {
-      const updates = await fetchTelegramUpdates(state.offset ?? 0);
-      for (const update of updates) {
-        state.offset = (update.update_id ?? 0) + 1;
-        try {
-          await handleTelegramUpdate(update);
-        } catch {
-          // Keep polling even if one parent message fails.
-        }
-      }
-    } catch {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-    }
-  }
-}
-
-export function startTelegramPolling(): void {
-  const state = pollState();
-  if (state.running) return;
-  state.running = true;
-  void pollLoop();
-}
-
-export async function ensureTelegramReceiver(publicUrl?: string): Promise<boolean> {
-  if (!telegramConfigured()) return false;
-  if (telegramShouldPoll()) {
-    await deleteTelegramWebhook();
-    startTelegramPolling();
-    return true;
-  }
-  const base = (publicUrl || siteUrl()).replace(/\/$/, "");
-  return setTelegramWebhook(`${base}/api/telegram/webhook`);
+export async function ensureTelegramReceiver(): Promise<boolean> {
+  if (!(await telegramIsReady())) return false;
+  return setTelegramWebhook(`${siteUrl()}/api/telegram/webhook`);
 }

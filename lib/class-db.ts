@@ -399,6 +399,7 @@ export async function readClassDb(): Promise<StoreFile | null> {
       deviceLimit: DEFAULT_DEVICE_LIMIT,
       certificates: [],
       telegramLinks: [],
+      telegramBotToken: "",
       surprise: null,
       surpriseAnswers: [],
       presence: [],
@@ -740,6 +741,31 @@ export async function upsertDeviceLimitRow(limit: DeviceLimit): Promise<boolean>
       where: { id: "current" },
       create: { id: "current", limit },
       update: { limit },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readTelegramBotTokenRow(): Promise<string | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const row = await prisma.classTelegramBot.findUnique({ where: { id: "current" } });
+    const token = row?.token?.trim() ?? "";
+    return token || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertTelegramBotTokenRow(token: string): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.classTelegramBot.upsert({
+      where: { id: "current" },
+      create: { id: "current", token },
+      update: { token },
     });
     return true;
   } catch {

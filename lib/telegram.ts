@@ -10,12 +10,38 @@ function readEnv(name: string): string {
   return String((process.env as Record<string, string | undefined>)[name] ?? "").trim();
 }
 
+let storedTokenCache = "";
+
 export function telegramBotToken(): string {
-  return readEnv("TELEGRAM_BOT_TOKEN");
+  return readEnv("TELEGRAM_BOT_TOKEN") || storedTokenCache;
+}
+
+export async function resolveTelegramBotToken(): Promise<string> {
+  const fromEnv = readEnv("TELEGRAM_BOT_TOKEN");
+  if (fromEnv) {
+    storedTokenCache = fromEnv;
+    return fromEnv;
+  }
+  if (storedTokenCache) return storedTokenCache;
+  try {
+    const { getStoredTelegramToken } = await import("@/lib/access-store");
+    storedTokenCache = await getStoredTelegramToken();
+  } catch {
+    storedTokenCache = "";
+  }
+  return storedTokenCache;
+}
+
+export function cacheTelegramBotToken(token: string): void {
+  storedTokenCache = token.trim();
 }
 
 export function telegramConfigured(): boolean {
   return Boolean(telegramBotToken());
+}
+
+export async function telegramIsReady(): Promise<boolean> {
+  return Boolean(await resolveTelegramBotToken());
 }
 
 export function telegramWebhookSecret(): string {
@@ -77,8 +103,8 @@ async function telegramApi<T = unknown>(
   method: string,
   body: Record<string, unknown> = {},
 ): Promise<TelegramApiResult<T>> {
-  const token = telegramBotToken();
-  if (!token) return { ok: false };
+  const token = await resolveTelegramBotToken();
+  if (!token) return { ok: false, description: "token" };
   try {
     const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
       method: "POST",
@@ -92,24 +118,6 @@ async function telegramApi<T = unknown>(
   }
 }
 
-export function telegramShouldPoll(): boolean {
-  return telegramConfigured() && !readEnv("VERCEL");
-}
-
-export async function deleteTelegramWebhook(): Promise<boolean> {
-  const { ok } = await telegramApi("deleteWebhook", { drop_pending_updates: false });
-  return ok;
-}
-
-export async function fetchTelegramUpdates(offset: number): Promise<TelegramUpdate[]> {
-  const { ok, result } = await telegramApi<TelegramUpdate[]>("getUpdates", {
-    offset,
-    timeout: 25,
-    allowed_updates: ["message"],
-  });
-  return ok && Array.isArray(result) ? result : [];
-}
-
 export async function sendTelegramMessage(chatId: string, text: string): Promise<boolean> {
   const { ok } = await telegramApi("sendMessage", { chat_id: chatId, text });
   return ok;
@@ -121,7 +129,7 @@ export async function sendTelegramDocument(
   bytes: Uint8Array,
   caption: string,
 ): Promise<boolean> {
-  const token = telegramBotToken();
+  const token = await resolveTelegramBotToken();
   if (!token) return false;
   try {
     const form = new FormData();
@@ -166,7 +174,7 @@ export async function fetchTelegramWebhookInfo(): Promise<{ url: string; error: 
 }
 
 export async function fetchTelegramBotUsername(): Promise<string | null> {
-  const token = telegramBotToken();
+  const token = await resolveTelegramBotToken();
   if (!token) return null;
   const named = telegramBotUsername();
   if (named) return named;

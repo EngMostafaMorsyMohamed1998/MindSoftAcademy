@@ -48,6 +48,7 @@ export type StoreFile = {
   deviceLimit: DeviceLimit;
   certificates: CourseCertificate[];
   telegramLinks: TelegramLink[];
+  telegramBotToken: string;
   surprise: SurpriseQuestion | null;
   surpriseAnswers: SurpriseAnswer[];
   presence: PresencePing[];
@@ -83,6 +84,7 @@ export function emptyStore(): StoreFile {
     deviceLimit: DEFAULT_DEVICE_LIMIT,
     certificates: [],
     telegramLinks: [],
+    telegramBotToken: "",
     surprise: null,
     surpriseAnswers: [],
     presence: [],
@@ -134,6 +136,7 @@ export function parseStore(value: unknown): StoreFile {
     deviceLimit: parseDeviceLimit(parsed.deviceLimit),
     certificates: parseCertificates(parsed.certificates),
     telegramLinks: parseTelegramLinks(parsed.telegramLinks),
+    telegramBotToken: typeof parsed.telegramBotToken === "string" ? parsed.telegramBotToken.trim() : "",
     surprise: parseSurprise(parsed.surprise),
     surpriseAnswers: parseSurpriseAnswers(parsed.surpriseAnswers),
     presence: parsePresence(parsed.presence),
@@ -202,9 +205,11 @@ export async function readStore(): Promise<StoreFile> {
         const { readCertificateRows } = await import("@/lib/class-db");
         const certs = await readCertificateRows();
         if (certs?.length) fromDb.certificates = certs;
-        const { readTelegramLinkRows } = await import("@/lib/class-db");
+        const { readTelegramLinkRows, readTelegramBotTokenRow } = await import("@/lib/class-db");
         const telegram = await readTelegramLinkRows();
         if (telegram?.length) fromDb.telegramLinks = telegram;
+        const botToken = await readTelegramBotTokenRow();
+        if (botToken) fromDb.telegramBotToken = botToken;
       } catch {
         // Dedicated device tables may not exist yet.
       }
@@ -216,6 +221,7 @@ export async function readStore(): Promise<StoreFile> {
         if (!fromDb.deviceLimit) fromDb.deviceLimit = parseDeviceLimit(local.deviceLimit);
         if (!fromDb.certificates.length) fromDb.certificates = parseCertificates(local.certificates);
         if (!fromDb.telegramLinks?.length) fromDb.telegramLinks = parseTelegramLinks(local.telegramLinks);
+        if (!fromDb.telegramBotToken && local.telegramBotToken) fromDb.telegramBotToken = local.telegramBotToken;
         fromDb.surprise = parseSurprise(local.surprise);
         fromDb.surpriseAnswers = parseSurpriseAnswers(local.surpriseAnswers);
         fromDb.presence = parsePresence(local.presence);
@@ -315,6 +321,17 @@ export async function writeStore(
     const local = parseTelegramLinks((await readLocalStore())?.telegramLinks);
     store.telegramLinks = dedicated?.length ? dedicated : local;
   }
+  if (!store.telegramBotToken) {
+    let dedicated: string | null = null;
+    try {
+      const { readTelegramBotTokenRow } = await import("@/lib/class-db");
+      dedicated = await readTelegramBotTokenRow();
+    } catch {
+      dedicated = null;
+    }
+    const local = (await readLocalStore())?.telegramBotToken ?? "";
+    store.telegramBotToken = dedicated || local;
+  }
   let wroteDb = false;
   try {
     const { writeClassDb } = await import("@/lib/class-db");
@@ -327,6 +344,14 @@ export async function writeStore(
     await upsertDeviceLimitRow(parseDeviceLimit(store.deviceLimit));
   } catch {
     // Dedicated device-limit table may not exist yet.
+  }
+  if (store.telegramBotToken) {
+    try {
+      const { upsertTelegramBotTokenRow } = await import("@/lib/class-db");
+      await upsertTelegramBotTokenRow(store.telegramBotToken);
+    } catch {
+      // Dedicated bot-token table may not exist yet.
+    }
   }
   await writeLocal(store);
   if (!wroteDb) {

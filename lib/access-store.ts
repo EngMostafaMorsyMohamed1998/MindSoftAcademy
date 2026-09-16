@@ -1107,6 +1107,16 @@ export async function unlinkTelegramChat(chatId: string): Promise<void> {
   }
 }
 
+export async function getStoredTelegramToken(): Promise<string> {
+  return String((await readStore()).telegramBotToken || "").trim();
+}
+
+export async function setStoredTelegramToken(token: string): Promise<void> {
+  const store = await readStore();
+  store.telegramBotToken = token.trim();
+  await writeStore(store);
+}
+
 export function findCodeByPhone(phone: string, codes: { id: string; name: string; phone: string }[]) {
   const exact = codes.filter((row) => normalizePhone(row.phone) === normalizePhone(phone));
   if (exact.length) return exact[0] ?? null;
