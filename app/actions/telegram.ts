@@ -1,10 +1,10 @@
 "use server";
 
 import { after } from "next/server";
-import { siteUrl } from "@/lib/class-roster";
 import { getLocale } from "@/lib/locale";
 import { isTeacher } from "@/lib/teacher-session";
-import { setTelegramWebhook, telegramConfigured } from "@/lib/telegram";
+import { telegramConfigured } from "@/lib/telegram";
+import { ensureTelegramReceiver } from "@/lib/telegram-inbox";
 import { notifyAllWeeklyReports, notifyWeeklyReport } from "@/lib/telegram-notify";
 
 export type TelegramState = { error: string | null; ok?: boolean; sent?: number };
@@ -14,7 +14,7 @@ export async function activateTelegramWebhook(
 ): Promise<TelegramState> {
   if (!(await isTeacher())) return { error: "AUTH" };
   if (!telegramConfigured()) return { error: "TOKEN" };
-  const ok = await setTelegramWebhook(`${siteUrl()}/api/telegram/webhook`);
+  const ok = await ensureTelegramReceiver();
   return ok ? { error: null, ok: true } : { error: "WEBHOOK" };
 }
 

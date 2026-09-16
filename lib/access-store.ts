@@ -180,11 +180,25 @@ export function normalizePhone(phone: string): string {
   return digits;
 }
 
+function phoneCore(digits: string): string {
+  const local = digits.startsWith("0") ? digits.slice(1) : digits;
+  return local.length > 10 ? local.slice(-10) : local;
+}
+
 export function phonesMatch(a: string, b: string): boolean {
   const left = normalizePhone(a);
   const right = normalizePhone(b);
   if (!left || !right) return false;
-  return left === right || left.endsWith(right) || right.endsWith(left);
+  if (left === right || left.endsWith(right) || right.endsWith(left)) return true;
+  const leftCore = phoneCore(left);
+  const rightCore = phoneCore(right);
+  if (leftCore.length >= 10 && leftCore === rightCore) return true;
+  if (left.length >= 10 && right.length >= 10) {
+    const shorter = left.length <= right.length ? left : right;
+    const longer = left.length <= right.length ? right : left;
+    if (longer.startsWith(shorter) && longer.length - shorter.length <= 2) return true;
+  }
+  return false;
 }
 
 function accessSecret(): string {
@@ -1094,7 +1108,10 @@ export async function unlinkTelegramChat(chatId: string): Promise<void> {
 }
 
 export function findCodeByPhone(phone: string, codes: { id: string; name: string; phone: string }[]) {
-  return codes.find((row) => phonesMatch(row.phone, phone)) ?? null;
+  const exact = codes.filter((row) => normalizePhone(row.phone) === normalizePhone(phone));
+  if (exact.length) return exact[0] ?? null;
+  const fuzzy = codes.filter((row) => phonesMatch(row.phone, phone));
+  return fuzzy.length === 1 ? fuzzy[0] ?? null : null;
 }
 
 export async function listDevices(studentId?: string): Promise<StudentDevice[]> {

@@ -3,8 +3,9 @@ import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
 import { AdminShell } from "./admin-shell";
 import { getAnnouncement, getDeviceLimit, getExamWindow, getMonthlyFee, getSurprise, getWeekPlan, listAllEssayGrades, listAttendance, listCertificates, listClassSessions, listDevices, listExams, listHomeworkResults, listPayments, listSurpriseAnswers, listTelegramLinks } from "@/lib/access-store";
-import { fetchTelegramBotUsername, setTelegramWebhook, telegramBotHref, telegramConfigured } from "@/lib/telegram";
-import { buildClassRoster, siteUrl } from "@/lib/class-roster";
+import { fetchTelegramBotUsername, telegramBotHref, telegramConfigured } from "@/lib/telegram";
+import { ensureTelegramReceiver } from "@/lib/telegram-inbox";
+import { buildClassRoster } from "@/lib/class-roster";
 import { cairoDate, cairoMonth, cairoWeekday } from "@/lib/class-clock";
 import { listVisibleCodes } from "@/lib/teacher-roster";
 import { t } from "@/lib/i18n";
@@ -50,7 +51,7 @@ export default async function AdminPage({
   const surpriseAnswers = surprise ? await listSurpriseAnswers(surprise.id) : [];
   const roster = buildClassRoster(codes, exams, homework, attendance, payments);
   if (telegramConfigured()) {
-    await setTelegramWebhook(`${siteUrl()}/api/telegram/webhook`);
+    await ensureTelegramReceiver();
   }
 
   return (

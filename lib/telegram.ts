@@ -62,9 +62,21 @@ export function extractPhoneText(text: string): string {
   return text.replace(/[^\d]/g, "");
 }
 
-type TelegramApiResult = { ok: boolean };
+type TelegramApiResult<T = unknown> = { ok: boolean; result?: T };
 
-async function telegramApi(method: string, body: Record<string, unknown>): Promise<TelegramApiResult> {
+export type TelegramUpdate = {
+  update_id?: number;
+  message?: {
+    chat?: { id?: number };
+    from?: { first_name?: string; language_code?: string };
+    text?: string;
+  };
+};
+
+async function telegramApi<T = unknown>(
+  method: string,
+  body: Record<string, unknown> = {},
+): Promise<TelegramApiResult<T>> {
   const token = telegramBotToken();
   if (!token) return { ok: false };
   try {
@@ -73,11 +85,29 @@ async function telegramApi(method: string, body: Record<string, unknown>): Promi
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const data = (await response.json()) as { ok?: boolean };
-    return { ok: Boolean(data.ok) };
+    const data = (await response.json()) as { ok?: boolean; result?: T };
+    return { ok: Boolean(data.ok), result: data.result };
   } catch {
     return { ok: false };
   }
+}
+
+export function telegramShouldPoll(): boolean {
+  return telegramConfigured() && !readEnv("VERCEL");
+}
+
+export async function deleteTelegramWebhook(): Promise<boolean> {
+  const { ok } = await telegramApi("deleteWebhook", { drop_pending_updates: false });
+  return ok;
+}
+
+export async function fetchTelegramUpdates(offset: number): Promise<TelegramUpdate[]> {
+  const { ok, result } = await telegramApi<TelegramUpdate[]>("getUpdates", {
+    offset,
+    timeout: 25,
+    allowed_updates: ["message"],
+  });
+  return ok && Array.isArray(result) ? result : [];
 }
 
 export async function sendTelegramMessage(chatId: string, text: string): Promise<boolean> {
@@ -151,6 +181,13 @@ export function telegramUnknownPhoneText(locale: "ar" | "en"): string {
     return "This number is not on the class register. Check it with the teacher.";
   }
   return "الرقم مش في كشف الفصل. راجع الاسم والرقم مع المدرس.";
+}
+
+export function telegramEmptyRosterText(locale: "ar" | "en"): string {
+  if (locale === "en") {
+    return "The class register is empty. The teacher adds the student first, then send the phone number again.";
+  }
+  return "كشف الفصل فاضي. المدرس يضيف الطالب من مكتبه وبعدين ابعت الرقم تاني.";
 }
 
 export function telegramStoppedText(locale: "ar" | "en"): string {

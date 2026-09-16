@@ -210,6 +210,7 @@ export async function readStore(): Promise<StoreFile> {
       }
       const local = await readLocalStore();
       if (local) {
+        if (!fromDb.codes.length && local.codes.length) fromDb.codes = local.codes;
         fromDb.monthlyFee = parseMonthlyFee(local.monthlyFee);
         if (!fromDb.devices.length) fromDb.devices = parseDevices(local.devices);
         if (!fromDb.deviceLimit) fromDb.deviceLimit = parseDeviceLimit(local.deviceLimit);
@@ -241,6 +242,10 @@ export async function writeStore(
     replaceTelegramLinks?: boolean;
   },
 ): Promise<void> {
+  if (!store.codes.length) {
+    const localCodes = (await readLocalStore())?.codes ?? [];
+    if (localCodes.length) store.codes = localCodes;
+  }
   if (!options?.replaceMakeups && !store.makeups.length) {
     let dedicated: MakeupTask[] | null = null;
     try {
