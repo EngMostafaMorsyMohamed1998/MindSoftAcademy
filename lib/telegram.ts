@@ -112,7 +112,6 @@ export async function sendTelegramDocument(
 export async function setTelegramWebhook(url: string): Promise<boolean> {
   const { ok } = await telegramApi("setWebhook", {
     url,
-    secret_token: telegramWebhookSecret(),
     allowed_updates: ["message"],
     drop_pending_updates: false,
   });

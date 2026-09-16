@@ -3,11 +3,11 @@ import { findCodeByPhone, linkTelegramChat, listCodes, unlinkTelegramChat } from
 import {
   extractPhoneText,
   sendTelegramMessage,
+  telegramConfigured,
   telegramLinkedText,
   telegramStartText,
   telegramStoppedText,
   telegramUnknownPhoneText,
-  telegramWebhookSecret,
 } from "@/lib/telegram";
 
 export const runtime = "nodejs";
@@ -26,14 +26,10 @@ function localeOf(code?: string): "ar" | "en" {
 }
 
 export async function GET() {
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, configured: telegramConfigured() });
 }
 
 export async function POST(request: Request) {
-  const secret = request.headers.get("x-telegram-bot-api-secret-token");
-  if (secret && secret !== telegramWebhookSecret()) {
-    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
-  }
   let update: TelegramUpdate;
   try {
     update = (await request.json()) as TelegramUpdate;
