@@ -1,69 +1,97 @@
-function pdfEscape(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+import { readFileSync } from "fs";
+import path from "path";
+import reshaper from "arabic-persian-reshaper";
+import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+
+const arabicRe = /[\u0600-\u06FF]/;
+const latinRe = /[A-Za-z]/;
+
+function rtlGlyphs(text: string): string {
+  return [...reshaper.ArabicShaper.convertArabic(text)].reverse().join("");
 }
 
-function latinLine(value: string): string {
-  return [...value]
-    .map((ch) => (ch.charCodeAt(0) < 128 ? ch : "?"))
-    .join("")
-    .slice(0, 96);
+function splitMixed(line: string): { rtl: string; ltr: string } {
+  if (!arabicRe.test(line)) return { rtl: "", ltr: line };
+  if (!latinRe.test(line)) return { rtl: line, ltr: "" };
+  const match = line.match(/^(.*?)([A-Za-z][A-Za-z0-9 ._-]*)$/);
+  if (match?.[1]?.trim() && match[2]?.trim()) {
+    return { rtl: match[1].replace(/[—–-]\s*$/, "").trim(), ltr: match[2].trim() };
+  }
+  return { rtl: line, ltr: "" };
 }
 
 function wrapLines(text: string): string[] {
   const lines: string[] = [];
   for (const raw of text.replace(/\r/g, "").split("\n")) {
-    const line = latinLine(raw || " ");
-    if (line.length <= 86) {
+    const line = raw || " ";
+    if (line.length <= 52) {
       lines.push(line);
       continue;
     }
-    let rest = line;
-    while (rest.length > 86) {
-      lines.push(rest.slice(0, 86));
-      rest = rest.slice(86);
+    const words = line.split(/\s+/);
+    let current = "";
+    for (const word of words) {
+      const next = current ? `${current} ${word}` : word;
+      if (next.length > 52 && current) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = next;
+      }
     }
-    if (rest) lines.push(rest);
+    if (current) lines.push(current);
   }
-  return lines.slice(0, 48);
+  return lines.slice(0, 60);
 }
 
-export function buildReportPdf(title: string, body: string): Uint8Array {
-  const lines = [latinLine(title), "", ...wrapLines(body)];
-  const commands = ["BT", "/F1 12 Tf", "50 800 Td", "16 TL"];
-  for (const line of lines) {
-    commands.push(`(${pdfEscape(line)}) Tj`, "T*");
+function drawLine(
+  page: PDFPage,
+  font: PDFFont,
+  y: number,
+  raw: string,
+  pageWidth: number,
+  margin: number,
+  size: number,
+) {
+  const ink = rgb(0.05, 0.08, 0.15);
+  const { rtl, ltr } = splitMixed(raw);
+  if (ltr) {
+    page.drawText(ltr, { x: margin, y, size, font, color: ink });
   }
-  commands.push("ET");
-  const stream = commands.join("\n");
-  const objects = [
-    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
-    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
-    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj",
-    `4 0 obj << /Length ${Buffer.byteLength(stream)} >> stream\n${stream}\nendstream endobj`,
-    "5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
-  ];
-  let offset = 0;
-  const header = "%PDF-1.4\n";
-  const chunks = [header];
-  offset = Buffer.byteLength(header);
-  const xref = [0];
-  for (const object of objects) {
-    xref.push(offset);
-    const chunk = `${object}\n`;
-    chunks.push(chunk);
-    offset += Buffer.byteLength(chunk);
+  if (rtl) {
+    const visual = rtlGlyphs(rtl);
+    const width = font.widthOfTextAtSize(visual, size);
+    page.drawText(visual, {
+      x: Math.max(margin, pageWidth - margin - width),
+      y,
+      size,
+      font,
+      color: ink,
+    });
   }
-  const startxref = offset;
-  const xrefTable = [
-    "xref",
-    `0 ${objects.length + 1}`,
-    "0000000000 65535 f ",
-    ...xref.slice(1).map((value) => `${String(value).padStart(10, "0")} 00000 n `),
-    "trailer << /Size " + (objects.length + 1) + " /Root 1 0 R >>",
-    "startxref",
-    String(startxref),
-    "%%EOF",
-  ].join("\n");
-  chunks.push(xrefTable);
-  return Buffer.concat(chunks.map((item) => Buffer.from(item)));
+}
+
+export async function buildReportPdf(title: string, body: string): Promise<Uint8Array> {
+  const pdf = await PDFDocument.create();
+  pdf.registerFontkit(fontkit);
+  const fontBytes = readFileSync(path.join(process.cwd(), "fonts/NotoNaskhArabic-Regular.ttf"));
+  const font = await pdf.embedFont(fontBytes, { subset: false });
+  const pageWidth = 595;
+  const pageHeight = 842;
+  const margin = 48;
+  const size = 15;
+  const lineHeight = 26;
+  let page = pdf.addPage([pageWidth, pageHeight]);
+  let y = pageHeight - margin;
+
+  for (const raw of [title, "", ...wrapLines(body)]) {
+    if (y < margin) {
+      page = pdf.addPage([pageWidth, pageHeight]);
+      y = pageHeight - margin;
+    }
+    if (raw) drawLine(page, font, y, raw, pageWidth, margin, raw === title ? 20 : size);
+    y -= lineHeight;
+  }
+  return pdf.save();
 }

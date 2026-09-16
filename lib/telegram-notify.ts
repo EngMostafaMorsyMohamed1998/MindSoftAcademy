@@ -25,7 +25,7 @@ async function rosterRow(studentId: string) {
 
 async function deliver(links: TelegramLink[], text: string, filename: string, pdfBody: string) {
   if (!links.length) return 0;
-  const pdf = buildReportPdf("MindSoft Academy", pdfBody);
+  const pdf = await buildReportPdf("MindSoft Academy", pdfBody);
   let sent = 0;
   for (const link of links) {
     const messageOk = await sendTelegramMessage(link.chatId, text);
