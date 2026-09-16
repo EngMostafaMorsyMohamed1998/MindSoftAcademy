@@ -31,7 +31,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const secret = request.headers.get("x-telegram-bot-api-secret-token");
-  if (secret !== telegramWebhookSecret()) {
+  if (secret && secret !== telegramWebhookSecret()) {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
   let update: TelegramUpdate;
@@ -49,16 +49,17 @@ export async function POST(request: Request) {
   const id = String(chatId);
 
   try {
-    if (text === "/start" || text.startsWith("/start ")) {
-      await sendTelegramMessage(id, telegramStartText(locale));
-      return NextResponse.json({ ok: true });
-    }
     if (text === "/stop") {
       await unlinkTelegramChat(id);
       await sendTelegramMessage(id, telegramStoppedText(locale));
       return NextResponse.json({ ok: true });
     }
-    const phone = extractPhoneText(text);
+    const payload = text.startsWith("/start") ? text.slice(6) : text;
+    const phone = extractPhoneText(payload);
+    if (text === "/start" || (text.startsWith("/start") && phone.length < 10)) {
+      await sendTelegramMessage(id, telegramStartText(locale));
+      return NextResponse.json({ ok: true });
+    }
     if (phone.length < 10) {
       await sendTelegramMessage(id, telegramStartText(locale));
       return NextResponse.json({ ok: true });

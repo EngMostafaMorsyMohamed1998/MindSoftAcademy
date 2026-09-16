@@ -22,19 +22,22 @@ export function CertificateCard({
   const verifyUrl = `${siteUrl()}/verify/${certificate.serial}`;
 
   return (
-    <article className="relative overflow-hidden rounded-[2rem] border-4 border-accent bg-white px-6 py-10 text-center shadow-sm print:border-accent sm:px-12">
+    <article
+      dir={locale === "ar" ? "rtl" : "ltr"}
+      className="relative overflow-hidden rounded-[2rem] border-4 border-accent bg-white px-6 py-10 text-center shadow-sm sm:px-12"
+    >
       {preview ? (
         <p className="absolute start-4 top-4 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-primary-dark print:hidden">
           {t(locale, "certificatePreviewBadge")}
         </p>
       ) : null}
-      <p className="text-xs font-semibold tracking-[0.35em] text-primary/60">
+      <p className="text-xs font-semibold text-primary/60">
         {locale === "ar" ? BRAND.nameAr : BRAND.nameEn}
       </p>
       <Award className="mx-auto mt-4 size-10 text-accent" aria-hidden="true" />
-      <h1 className="mt-3 font-serif text-4xl">{t(locale, "certificateHonor")}</h1>
-      <p className="mt-2 text-sm text-foreground/60">{t(locale, "certificateLead")}</p>
-      <p className="mt-8 font-serif text-3xl">{certificate.name}</p>
+      <h1 className="mt-3 font-sans text-4xl font-extrabold leading-snug">{t(locale, "certificateHonor")}</h1>
+      <p className="mt-2 text-sm leading-8 text-foreground/60">{t(locale, "certificateLead")}</p>
+      <p className="mt-8 font-sans text-3xl font-extrabold leading-snug">{certificate.name}</p>
       <p className="mt-3 text-sm text-foreground/65">
         {locale === "ar" ? BRAND.subjectAr : BRAND.subjectEn}
       </p>

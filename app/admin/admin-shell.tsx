@@ -39,7 +39,7 @@ import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 import type { AccessCode, CourseCertificate, EssayGrade, ExamSubmission, TelegramLink } from "@/lib/access-store";
 import { CertificateCard } from "@/components/certificate-card";
-import { PrintButton } from "@/app/dashboard/certificate/print-button";
+import { CertificatePrintButton } from "@/components/certificate-print-button";
 import { PresenceBoard } from "@/components/presence-board";
 import { SurpriseBoard } from "@/components/surprise-board";
 import { ESSAY_MARKS, markForGrade } from "@/lib/essay-marks";
@@ -169,6 +169,16 @@ export function AdminShell({
     currentMonth: month,
   });
   const thisMonth = profits[0];
+  const sampleCertificate = {
+    serial: `MSA-${cairoDate().slice(0, 4)}-0000`,
+    studentId: "preview",
+    name: locale === "ar" ? "اسم الطالب" : "Student name",
+    issuedAt: new Date().toISOString(),
+    average: 92,
+    verifyCode: "SAMPLE",
+    year: cairoDate().slice(0, 4),
+  };
+  const shownCertificates = certificates.length ? certificates : [sampleCertificate];
 
   function copy(value: string) {
     void navigator.clipboard.writeText(value);
@@ -1075,17 +1085,7 @@ export function AdminShell({
               {certificates.length === 0 ? t(locale, "certificatePreview") : t(locale, "certificateLead")}
             </p>
           </div>
-          {(certificates.length ? certificates : [
-            {
-              serial: `MSA-${cairoDate().slice(0, 4)}-0000`,
-              studentId: "preview",
-              name: locale === "ar" ? "اسم الطالب" : "Student name",
-              issuedAt: new Date().toISOString(),
-              average: 92,
-              verifyCode: "SAMPLE",
-              year: cairoDate().slice(0, 4),
-            },
-          ]).map((row) => (
+          {shownCertificates.map((row) => (
             <CertificateCard
               key={row.serial}
               locale={locale}
@@ -1096,7 +1096,12 @@ export function AdminShell({
           {certificates.length === 0 ? (
             <p className="text-sm text-foreground/55">{t(locale, "certificateNone")}</p>
           ) : null}
-          <PrintButton label={t(locale, "printCertificate")} />
+          <CertificatePrintButton
+            locale={locale}
+            certificates={shownCertificates}
+            preview={certificates.length === 0}
+            label={t(locale, "printCertificate")}
+          />
         </section>
       ) : null}
 

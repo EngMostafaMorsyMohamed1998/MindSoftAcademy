@@ -8,9 +8,15 @@ function asTrimmedString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
+if (!process.env.AUTH_SECRET) {
+  process.env.AUTH_SECRET =
+    process.env.TEACHER_PIN || "morsy-lab-local-dev-secret";
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
+  secret: process.env.AUTH_SECRET,
   trustHost: true,
   pages: {
     signIn: "/activate",

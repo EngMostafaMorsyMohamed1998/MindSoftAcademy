@@ -132,9 +132,9 @@ export async function fetchTelegramBotUsername(): Promise<string | null> {
 
 export function telegramStartText(locale: "ar" | "en"): string {
   if (locale === "en") {
-    return "Welcome to MindSoft Academy.\nSend the student's phone number exactly as registered with Eng. Mostafa Mohamed (example: 01012345678).\nAfter linking, exam results and a PDF report arrive here automatically.\nStop anytime with /stop";
+    return "Send the student phone number only (example: 01012345678).\nReports and the PDF arrive here after each exam.";
   }
-  return "أهلًا بولي الأمر في MindSoft Academy.\nابعت رقم تليفون الطالب زي ما هو عند م. مصطفى محمد (مثال: 01012345678).\nبعد الربط، نتيجة الامتحان وتقرير PDF هتوصلك هنا أوتوماتيك.\nوقف الإرسال: /stop";
+  return "ابعت رقم تليفون الطالب بس (مثال: 01012345678).\nالتقرير والـ PDF هيوصلك هنا بعد كل امتحان.";
 }
 
 export function telegramLinkedText(name: string, phone: string, locale: "ar" | "en"): string {

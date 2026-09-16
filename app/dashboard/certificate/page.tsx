@@ -7,7 +7,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { CertificateCard } from "@/components/certificate-card";
-import { PrintButton } from "./print-button";
+import { CertificatePrintButton } from "@/components/certificate-print-button";
 
 export default async function CertificatePage() {
   const user = await getCurrentUser();
@@ -51,7 +51,11 @@ export default async function CertificatePage() {
       <div className="mt-6">
         <CertificateCard locale={locale} certificate={certificate} />
       </div>
-      <PrintButton label={t(locale, "printCertificate")} />
+      <CertificatePrintButton
+        locale={locale}
+        certificates={[certificate]}
+        label={t(locale, "printCertificate")}
+      />
     </div>
   );
 }

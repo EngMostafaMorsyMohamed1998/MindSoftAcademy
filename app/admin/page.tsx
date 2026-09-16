@@ -3,8 +3,8 @@ import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
 import { AdminShell } from "./admin-shell";
 import { getAnnouncement, getExamWindow, getMonthlyFee, getSurprise, getWeekPlan, listAllEssayGrades, listAttendance, listCertificates, listClassSessions, listExams, listHomeworkResults, listPayments, listSurpriseAnswers, listTelegramLinks } from "@/lib/access-store";
-import { fetchTelegramBotUsername, telegramBotHref, telegramConfigured } from "@/lib/telegram";
-import { buildClassRoster } from "@/lib/class-roster";
+import { fetchTelegramBotUsername, setTelegramWebhook, telegramBotHref, telegramConfigured } from "@/lib/telegram";
+import { buildClassRoster, siteUrl } from "@/lib/class-roster";
 import { listVisibleCodes } from "@/lib/teacher-roster";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
@@ -44,6 +44,9 @@ export default async function AdminPage({
   ]);
   const surpriseAnswers = surprise ? await listSurpriseAnswers(surprise.id) : [];
   const roster = buildClassRoster(codes, exams, homework, attendance, payments);
+  if (telegramConfigured()) {
+    await setTelegramWebhook(`${siteUrl()}/api/telegram/webhook`);
+  }
 
   return (
     <div className="min-h-full bg-background text-foreground">
