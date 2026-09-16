@@ -378,6 +378,7 @@ export function AdminShell({
                 <input
                   name="token"
                   type="password"
+                  required={!telegramConfigured}
                   autoComplete="off"
                   placeholder="123456:ABC..."
                   className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"

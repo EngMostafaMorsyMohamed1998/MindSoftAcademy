@@ -20,14 +20,10 @@ export async function activateTelegramWebhook(
 ): Promise<TelegramState> {
   if (!(await isTeacher())) return { error: "AUTH" };
   const pasted = String(formData?.get("token") || "").trim();
-  if (pasted) {
-    if (!looksLikeBotToken(pasted)) return { error: "TOKEN" };
-    await setStoredTelegramToken(pasted);
-    cacheTelegramBotToken(pasted);
-  } else {
-    cacheTelegramBotToken(await getStoredTelegramToken());
-  }
-  if (!(await telegramIsReady())) return { error: "TOKEN" };
+  const token = pasted || (await getStoredTelegramToken());
+  if (!looksLikeBotToken(token)) return { error: "TOKEN" };
+  if (pasted) await setStoredTelegramToken(pasted);
+  cacheTelegramBotToken(token);
   const ok = await ensureTelegramReceiver();
   return ok ? { error: null, ok: true } : { error: "WEBHOOK" };
 }

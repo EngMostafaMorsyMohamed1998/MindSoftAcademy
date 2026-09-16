@@ -13,15 +13,10 @@ function readEnv(name: string): string {
 let storedTokenCache = "";
 
 export function telegramBotToken(): string {
-  return readEnv("TELEGRAM_BOT_TOKEN") || storedTokenCache;
+  return storedTokenCache || readEnv("TELEGRAM_BOT_TOKEN");
 }
 
 export async function resolveTelegramBotToken(): Promise<string> {
-  const fromEnv = readEnv("TELEGRAM_BOT_TOKEN");
-  if (fromEnv) {
-    storedTokenCache = fromEnv;
-    return fromEnv;
-  }
   if (storedTokenCache) return storedTokenCache;
   try {
     const { getStoredTelegramToken } = await import("@/lib/access-store");
@@ -29,6 +24,8 @@ export async function resolveTelegramBotToken(): Promise<string> {
   } catch {
     storedTokenCache = "";
   }
+  if (storedTokenCache) return storedTokenCache;
+  storedTokenCache = readEnv("TELEGRAM_BOT_TOKEN");
   return storedTokenCache;
 }
 
