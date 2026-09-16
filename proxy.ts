@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { STUDENT_COOKIE, TEACHER_COOKIE } from "@/lib/session-cookies";
+import { isDeviceId, newDeviceId } from "@/lib/devices";
+import { DEVICE_COOKIE, DEVICE_COOKIE_MAX_AGE, STUDENT_COOKIE, TEACHER_COOKIE } from "@/lib/session-cookies";
 import { readStudentToken } from "@/lib/student-token";
 import { isTeacherToken } from "@/lib/teacher-token";
 
@@ -29,6 +30,20 @@ function isTeacherPath(pathname: string): boolean {
 
 function isStudentPath(pathname: string): boolean {
   return pathname.startsWith("/dashboard") || pathname.startsWith("/exam");
+}
+
+function withDeviceCookie(request: { cookies: { get(name: string): { value: string } | undefined } }, response: NextResponse) {
+  const existing = request.cookies.get(DEVICE_COOKIE)?.value;
+  if (!isDeviceId(existing)) {
+    response.cookies.set(DEVICE_COOKIE, newDeviceId(), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: DEVICE_COOKIE_MAX_AGE,
+    });
+  }
+  return response;
 }
 
 function clearAuthCookies(response: NextResponse) {
@@ -85,7 +100,7 @@ export const proxy = auth(async (request) => {
   }
 
   if (isPublicPath(pathname) && pathname !== "/admin/login") {
-    return NextResponse.next();
+    return withDeviceCookie(request, NextResponse.next());
   }
 
   const validAccount =
@@ -93,12 +108,12 @@ export const proxy = auth(async (request) => {
   const hasAccess = Boolean(student) || validAccount;
 
   if (isTeacherPath(pathname)) {
-    if (teacher) return NextResponse.next();
+    if (teacher) return withDeviceCookie(request, NextResponse.next());
     return NextResponse.redirect(new URL("/admin/login", request.nextUrl.origin));
   }
 
   if (isStudentPath(pathname)) {
-    if (hasAccess) return NextResponse.next();
+    if (hasAccess) return withDeviceCookie(request, NextResponse.next());
     const activate = new URL("/activate", request.nextUrl.origin);
     activate.searchParams.set("next", pathname);
     const response = NextResponse.redirect(activate);
@@ -116,7 +131,7 @@ export const proxy = auth(async (request) => {
     return NextResponse.redirect(new URL("/admin", request.nextUrl.origin));
   }
 
-  return NextResponse.next();
+  return withDeviceCookie(request, NextResponse.next());
 });
 
 export const config = {

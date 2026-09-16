@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
 import { AdminShell } from "./admin-shell";
-import { getAnnouncement, getExamWindow, getMonthlyFee, getSurprise, getWeekPlan, listAllEssayGrades, listAttendance, listCertificates, listClassSessions, listExams, listHomeworkResults, listPayments, listSurpriseAnswers, listTelegramLinks } from "@/lib/access-store";
+import { getAnnouncement, getDeviceLimit, getExamWindow, getMonthlyFee, getSurprise, getWeekPlan, listAllEssayGrades, listAttendance, listCertificates, listClassSessions, listDevices, listExams, listHomeworkResults, listPayments, listSurpriseAnswers, listTelegramLinks } from "@/lib/access-store";
 import { fetchTelegramBotUsername, setTelegramWebhook, telegramBotHref, telegramConfigured } from "@/lib/telegram";
 import { buildClassRoster, siteUrl } from "@/lib/class-roster";
 import { listVisibleCodes } from "@/lib/teacher-roster";
@@ -27,7 +27,7 @@ export default async function AdminPage({
     tab === "certificates" || tab === "class" || tab === "codes" || tab === "roster" || tab === "grades" || tab === "profit"
       ? tab
       : "class";
-  const [codes, exams, homework, attendance, payments, announcement, examWindow, weekPlan, sessions, essayGrades, monthlyFee, surprise, certificates, telegramLinks, telegramUsername] = await Promise.all([
+  const [codes, exams, homework, attendance, payments, announcement, examWindow, weekPlan, sessions, essayGrades, monthlyFee, surprise, certificates, telegramLinks, devices, deviceLimit, telegramUsername] = await Promise.all([
     listVisibleCodes(),
     listExams(),
     listHomeworkResults(),
@@ -42,6 +42,8 @@ export default async function AdminPage({
     getSurprise(),
     listCertificates(),
     listTelegramLinks(),
+    listDevices(),
+    getDeviceLimit(),
     fetchTelegramBotUsername(),
   ]);
   const surpriseAnswers = surprise ? await listSurpriseAnswers(surprise.id) : [];
@@ -95,6 +97,8 @@ export default async function AdminPage({
           telegramLinks={telegramLinks}
           telegramConfigured={telegramConfigured()}
           telegramHref={telegramUsername ? `https://t.me/${telegramUsername}` : telegramBotHref()}
+          devices={devices}
+          deviceLimit={deviceLimit}
         />
       </main>
     </div>

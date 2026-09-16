@@ -305,3 +305,20 @@ model ClassTelegramLink {
   @@index([studentId])
   @@index([phone])
 }
+
+model ClassDevice {
+  id        String   @id
+  studentId String
+  deviceId  String
+  label     String
+  firstAt   DateTime
+  lastAt    DateTime
+
+  @@unique([studentId, deviceId])
+  @@index([studentId])
+}
+
+model ClassDeviceLimit {
+  id    String @id
+  limit Int
+}

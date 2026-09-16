@@ -1,6 +1,7 @@
-import { cookies } from "next/headers";
-import { getCodeById, type AccessCode } from "@/lib/access-store";
-import { STUDENT_COOKIE } from "@/lib/session-cookies";
+import { cookies, headers } from "next/headers";
+import { claimStudentDevice, getCodeById, getDeviceLimit, listDevices } from "@/lib/access-store";
+import { canRegisterDevice, deviceLabel, isDeviceId, newDeviceId } from "@/lib/devices";
+import { DEVICE_COOKIE, DEVICE_COOKIE_MAX_AGE, STUDENT_COOKIE } from "@/lib/session-cookies";
 import {
   encodeStudentSession,
   readStudentToken,
@@ -60,4 +61,44 @@ export async function setStudentCookie(record: {
 export async function clearStudentCookie() {
   const store = await cookies();
   store.delete(STUDENT_COOKIE);
+}
+
+async function deviceFromRequest(): Promise<string | null> {
+  const store = await cookies();
+  const existing = store.get(DEVICE_COOKIE)?.value;
+  return isDeviceId(existing) ? existing : null;
+}
+
+export async function ensureBoundDevice(studentId: string): Promise<void> {
+  const deviceId = await deviceFromRequest();
+  if (!deviceId) return;
+  const [rows, limit] = await Promise.all([listDevices(studentId), getDeviceLimit()]);
+  if (rows.some((row) => row.deviceId === deviceId)) return;
+  if (!canRegisterDevice(rows, studentId, deviceId, limit)) {
+    throw new Error("DEVICE_LIMIT");
+  }
+  const requestHeaders = await headers();
+  await claimStudentDevice({
+    studentId,
+    deviceId,
+    label: deviceLabel(requestHeaders.get("user-agent") || ""),
+  });
+}
+
+export async function bindStudentDevice(studentId: string): Promise<void> {
+  const store = await cookies();
+  const requestHeaders = await headers();
+  const deviceId = (await deviceFromRequest()) ?? newDeviceId();
+  await claimStudentDevice({
+    studentId,
+    deviceId,
+    label: deviceLabel(requestHeaders.get("user-agent") || ""),
+  });
+  store.set(DEVICE_COOKIE, deviceId, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: DEVICE_COOKIE_MAX_AGE,
+  });
 }

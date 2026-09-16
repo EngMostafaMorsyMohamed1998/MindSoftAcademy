@@ -317,6 +317,12 @@ export async function writeStore(
   } catch {
     wroteDb = false;
   }
+  try {
+    const { upsertDeviceLimitRow } = await import("@/lib/class-db");
+    await upsertDeviceLimitRow(parseDeviceLimit(store.deviceLimit));
+  } catch {
+    // Dedicated device-limit table may not exist yet.
+  }
   await writeLocal(store);
   if (!wroteDb) {
     await writeBlob(store);

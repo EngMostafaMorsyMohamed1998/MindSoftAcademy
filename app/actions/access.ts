@@ -20,11 +20,14 @@ import {
   archiveClassSession,
   closeExamWindow,
   removeWeekSlot,
+  setDeviceLimit,
   startExamWindow,
+  forgetStudentDevice,
 } from "@/lib/access-store";
 import { parseBulkStudents } from "@/lib/class-clock";
 import { isChapterId } from "@/lib/curriculum";
-import { setStudentCookie } from "@/lib/student-session";
+import { bindStudentDevice, setStudentCookie } from "@/lib/student-session";
+import { parseDeviceLimit } from "@/lib/devices";
 import { listVisibleCodes, rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
 
@@ -58,6 +61,7 @@ export async function activateAccess(
   }
   try {
     const record = await redeemCode({ name, phone, code });
+    await bindStudentDevice(record.id);
     await setStudentCookie({
       ...record,
       exams: await listExamChapterIds(record.id),
@@ -298,4 +302,24 @@ export async function stopClassExam(
   await archiveClassSession(await listVisibleCodes());
   await closeExamWindow();
   return { error: null, ok: true, examClosed: true, sessionSaved: true };
+}
+
+export async function saveDeviceLimit(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  await setDeviceLimit(parseDeviceLimit(read(formData, "limit")));
+  return { error: null, ok: true };
+}
+
+export async function removeStudentDevice(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const id = read(formData, "deviceId");
+  if (!id) return { error: "MISSING" };
+  await forgetStudentDevice(id);
+  return { error: null, ok: true };
 }

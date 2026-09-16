@@ -16,7 +16,13 @@ import { encodeExamChapter, parseExamChapter } from "@/lib/class-clock";
 import { parseClassSessions, type ClassSession } from "@/lib/class-session";
 import { parseCertificates, type CourseCertificate } from "@/lib/certificates";
 import { parseTelegramLinks, type TelegramLink } from "@/lib/telegram";
-import { DEFAULT_DEVICE_LIMIT, type DeviceLimit, type StudentDevice } from "@/lib/devices";
+import {
+  DEFAULT_DEVICE_LIMIT,
+  parseDeviceLimit,
+  parseDevices,
+  type DeviceLimit,
+  type StudentDevice,
+} from "@/lib/devices";
 import { DEFAULT_MONTHLY_FEE, parsePayments, type MonthPayment } from "@/lib/fees";
 import { parseMakeups, type MakeupTask } from "@/lib/makeup";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
@@ -665,11 +671,80 @@ export async function upsertTelegramLinkRow(row: TelegramLink): Promise<boolean>
 }
 
 export async function readDeviceRows(): Promise<StudentDevice[] | null> {
-  return null;
+  if (!hasLiveDatabase()) return null;
+  try {
+    const rows = await prisma.classDevice.findMany();
+    return parseDevices(
+      rows.map((row) => ({
+        id: row.id,
+        studentId: row.studentId,
+        deviceId: row.deviceId,
+        label: row.label,
+        firstAt: row.firstAt.toISOString(),
+        lastAt: row.lastAt.toISOString(),
+      })),
+    );
+  } catch {
+    return null;
+  }
 }
 
 export async function readDeviceLimitRow(): Promise<DeviceLimit | null> {
-  return null;
+  if (!hasLiveDatabase()) return null;
+  try {
+    const row = await prisma.classDeviceLimit.findUnique({ where: { id: "current" } });
+    return row ? parseDeviceLimit(row.limit) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertDeviceRow(row: StudentDevice): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.classDevice.upsert({
+      where: { studentId_deviceId: { studentId: row.studentId, deviceId: row.deviceId } },
+      create: {
+        id: row.id,
+        studentId: row.studentId,
+        deviceId: row.deviceId,
+        label: row.label,
+        firstAt: asDate(row.firstAt),
+        lastAt: asDate(row.lastAt),
+      },
+      update: {
+        label: row.label,
+        lastAt: asDate(row.lastAt),
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteDeviceRow(id: string): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.classDevice.delete({ where: { id } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function upsertDeviceLimitRow(limit: DeviceLimit): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.classDeviceLimit.upsert({
+      where: { id: "current" },
+      create: { id: "current", limit },
+      update: { limit },
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function deleteTelegramLinkRow(chatId: string): Promise<boolean> {

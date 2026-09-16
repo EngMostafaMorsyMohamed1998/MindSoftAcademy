@@ -13,6 +13,7 @@ const ERRORS: Record<string, { ar: string; en: string }> = {
   NAME_MISMATCH: { ar: "الاسم لا يطابق الكود. اكتبه كما سجّله المدرس.", en: "The name does not match this code." },
   FAILED: { ar: "تعذر التفعيل. حاول مرة أخرى.", en: "Could not activate. Try again." },
   SUSPENDED: { ar: "الاشتراك متوقف. راجع المدرس بعد الدفع.", en: "This subscription is paused. See the teacher after payment." },
+  DEVICE_LIMIT: { ar: "الحساب اشتغل على جهاز تاني. راجع المدرس يمسح الجهاز القديم.", en: "This account is already on another device. Ask the teacher to remove the old one." },
 };
 
 export function ActivateForm({ locale }: { locale: Locale }) {

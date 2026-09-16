@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAnnouncement, getCodeById } from "@/lib/access-store";
+import { ensureBoundDevice } from "@/lib/student-session";
 import { BRAND } from "@/lib/brand";
 import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
@@ -41,6 +42,26 @@ export default async function DashboardLayout({
         />
       </div>
     );
+  }
+
+  if (user.via === "code") {
+    try {
+      await ensureBoundDevice(user.id);
+    } catch (error) {
+      if (error instanceof Error && error.message === "DEVICE_LIMIT") {
+        return (
+          <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-background px-6 text-center">
+            <h1 className="font-serif text-3xl">{t(locale, "deviceBlockedTitle")}</h1>
+            <p className="mt-3 max-w-md text-sm text-foreground/65">{t(locale, "deviceBlockedLead")}</p>
+            <LogoutButton
+              label={t(locale, "logout")}
+              className="mt-6 inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white"
+            />
+          </div>
+        );
+      }
+      throw error;
+    }
   }
 
   return (

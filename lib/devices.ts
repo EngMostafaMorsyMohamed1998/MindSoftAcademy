@@ -58,3 +58,14 @@ export function deviceLabel(userAgent: string): string {
 export function devicesForStudent(rows: StudentDevice[], studentId: string): StudentDevice[] {
   return rows.filter((row) => row.studentId === studentId);
 }
+
+export function canRegisterDevice(
+  rows: StudentDevice[],
+  studentId: string,
+  deviceId: string,
+  limit: DeviceLimit,
+): boolean {
+  const mine = devicesForStudent(rows, studentId);
+  if (mine.some((row) => row.deviceId === deviceId)) return true;
+  return mine.length < limit;
+}

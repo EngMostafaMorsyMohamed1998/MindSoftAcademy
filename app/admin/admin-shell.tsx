@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Award, ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Send, Users, Wallet } from "lucide-react";
+import { Award, ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Send, Smartphone, Users, Wallet } from "lucide-react";
 import {
   createManyStudentCodes,
   createStudentCode,
@@ -17,6 +17,8 @@ import {
   saveWeekSlot,
   stopClassExam,
   stopSurprise,
+  removeStudentDevice,
+  saveDeviceLimit,
   toggleStudentSuspend,
   unlockStudentChapter,
   type FormState,
@@ -37,7 +39,7 @@ import { starLabel } from "@/lib/week-stars";
 import { CHAPTERS } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
-import type { AccessCode, CourseCertificate, EssayGrade, ExamSubmission, TelegramLink } from "@/lib/access-store";
+import type { AccessCode, CourseCertificate, DeviceLimit, EssayGrade, ExamSubmission, StudentDevice, TelegramLink } from "@/lib/access-store";
 import { CertificateCard } from "@/components/certificate-card";
 import { CertificatePrintButton } from "@/components/certificate-print-button";
 import { PresenceBoard } from "@/components/presence-board";
@@ -68,6 +70,8 @@ export function AdminShell({
   telegramLinks,
   telegramConfigured,
   telegramHref,
+  devices,
+  deviceLimit,
   initialTab = "class",
 }: {
   locale: Locale;
@@ -87,6 +91,8 @@ export function AdminShell({
   telegramLinks: TelegramLink[];
   telegramConfigured: boolean;
   telegramHref: string | null;
+  devices: StudentDevice[];
+  deviceLimit: DeviceLimit;
   initialTab?: Tab;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -115,16 +121,18 @@ export function AdminShell({
     sendTelegramAllReports,
     telegramInitial,
   );
+  const [deviceLimitState, deviceLimitAction, deviceLimitPending] = useActionState(saveDeviceLimit, initial);
+  const [deviceForgetState, deviceForgetAction, deviceForgetPending] = useActionState(removeStudentDevice, initial);
   const [slotDeleteState, slotDeleteAction, slotDeletePending] = useActionState(deleteWeekSlot, initial);
   const [windowOverride, setWindowOverride] = useState<"open" | "closed" | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const today = cairoDate();
 
   useEffect(() => {
-    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok || telegramHookState.ok || telegramOneState.ok || telegramAllState.ok) {
+    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok || telegramHookState.ok || telegramOneState.ok || telegramAllState.ok || deviceLimitState.ok || deviceForgetState.ok) {
       router.refresh();
     }
-  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, mixState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, feeState.ok, surpriseState.ok, surpriseCloseState.ok, telegramHookState.ok, telegramOneState.ok, telegramAllState.ok, router]);
+  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, mixState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, feeState.ok, surpriseState.ok, surpriseCloseState.ok, telegramHookState.ok, telegramOneState.ok, telegramAllState.ok, deviceLimitState.ok, deviceForgetState.ok, router]);
 
   useEffect(() => {
     if (examState.examChapterId || mixState.examChapterId) setWindowOverride("open");
@@ -406,6 +414,39 @@ export function AdminShell({
                 })}
               </ul>
             )}
+          </section>
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
+            <h2 className="text-lg font-semibold">{t(locale, "deviceTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "deviceLead")}</p>
+            <p className="mt-3 text-sm font-semibold">
+              {t(locale, "deviceLimit")}: {deviceLimit === 1 ? t(locale, "deviceLimit1") : t(locale, "deviceLimit2")}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <form action={deviceLimitAction}>
+                <input type="hidden" name="limit" value="1" />
+                <button
+                  type="submit"
+                  disabled={deviceLimitPending}
+                  className={`inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold ${
+                    deviceLimit === 1 ? "bg-primary text-white" : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  {t(locale, "deviceLimit1")}
+                </button>
+              </form>
+              <form action={deviceLimitAction}>
+                <input type="hidden" name="limit" value="2" />
+                <button
+                  type="submit"
+                  disabled={deviceLimitPending}
+                  className={`inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold ${
+                    deviceLimit === 2 ? "bg-primary text-white" : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  {t(locale, "deviceLimit2")}
+                </button>
+              </form>
+            </div>
           </section>
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
             <h2 className="text-lg font-semibold">{t(locale, "startClassExam")}</h2>
@@ -939,6 +980,30 @@ export function AdminShell({
                           ) : (
                             <p className="mt-1 text-xs text-foreground/45">{t(locale, "telegramNotLinked")}</p>
                           )}
+                          <div className="mt-2 space-y-1">
+                            {devices.filter((device) => device.studentId === row.id).length === 0 ? (
+                              <p className="text-xs text-foreground/45">{t(locale, "deviceNone")}</p>
+                            ) : (
+                              devices
+                                .filter((device) => device.studentId === row.id)
+                                .map((device) => (
+                                  <form key={device.id} action={deviceForgetAction} className="flex flex-wrap items-center gap-1">
+                                    <input type="hidden" name="deviceId" value={device.id} />
+                                    <span className="inline-flex items-center gap-1 text-xs text-foreground/70">
+                                      <Smartphone className="size-3" />
+                                      {device.label}
+                                    </span>
+                                    <button
+                                      type="submit"
+                                      disabled={deviceForgetPending}
+                                      className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary disabled:opacity-50"
+                                    >
+                                      {t(locale, "deviceForget")}
+                                    </button>
+                                  </form>
+                                ))
+                            )}
+                          </div>
                         </td>
                         <td className="px-3 py-2">
                           <p className="tracking-wide text-accent">{starLabel(row.week.stars)}</p>

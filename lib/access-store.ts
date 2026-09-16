@@ -27,6 +27,14 @@ import {
   type SurpriseQuestion,
 } from "@/lib/surprise";
 import { parseTelegramLinks, type TelegramLink } from "@/lib/telegram";
+import {
+  canRegisterDevice,
+  devicesForStudent,
+  parseDeviceLimit,
+  parseDevices,
+  type DeviceLimit,
+  type StudentDevice,
+} from "@/lib/devices";
 import { parseWeekSlots, sortWeekSlots, type WeekSlot } from "@/lib/week-plan";
 
 export type AccessCode = {
@@ -123,7 +131,7 @@ export type ExamWindow = {
   mode: ExamMode;
 };
 
-export type { WeekSlot, ClassSession, MakeupTask, MonthPayment, SurpriseAnswer, SurpriseQuestion, PresencePing, CourseCertificate, TelegramLink };
+export type { WeekSlot, ClassSession, MakeupTask, MonthPayment, SurpriseAnswer, SurpriseQuestion, PresencePing, CourseCertificate, TelegramLink, StudentDevice, DeviceLimit };
 
 export async function getMonthlyFee(): Promise<number> {
   return parseMonthlyFee((await readStore()).monthlyFee);
@@ -1086,4 +1094,74 @@ export async function unlinkTelegramChat(chatId: string): Promise<void> {
 
 export function findCodeByPhone(phone: string, codes: { id: string; name: string; phone: string }[]) {
   return codes.find((row) => phonesMatch(row.phone, phone)) ?? null;
+}
+
+export async function listDevices(studentId?: string): Promise<StudentDevice[]> {
+  const rows = parseDevices((await readStore()).devices);
+  return studentId ? devicesForStudent(rows, studentId) : rows;
+}
+
+export async function getDeviceLimit(): Promise<DeviceLimit> {
+  return parseDeviceLimit((await readStore()).deviceLimit);
+}
+
+export async function setDeviceLimit(limit: DeviceLimit): Promise<DeviceLimit> {
+  const store = await readStore();
+  store.deviceLimit = limit;
+  await writeStore(store);
+  try {
+    const { upsertDeviceLimitRow } = await import("@/lib/class-db");
+    await upsertDeviceLimitRow(limit);
+  } catch {
+    // Local store is enough if Prisma migrate has not run yet.
+  }
+  return limit;
+}
+
+export async function claimStudentDevice(input: {
+  studentId: string;
+  deviceId: string;
+  label: string;
+}): Promise<StudentDevice> {
+  const store = await readStore();
+  const limit = parseDeviceLimit(store.deviceLimit);
+  const rows = parseDevices(store.devices);
+  if (!canRegisterDevice(rows, input.studentId, input.deviceId, limit)) {
+    throw new Error("DEVICE_LIMIT");
+  }
+  const now = new Date().toISOString();
+  const existing = rows.find(
+    (row) => row.studentId === input.studentId && row.deviceId === input.deviceId,
+  );
+  const claimed: StudentDevice = existing
+    ? { ...existing, label: input.label || existing.label, lastAt: now }
+    : {
+        id: `${input.studentId}:${input.deviceId}`,
+        studentId: input.studentId,
+        deviceId: input.deviceId,
+        label: input.label,
+        firstAt: now,
+        lastAt: now,
+      };
+  store.devices = [claimed, ...rows.filter((row) => row.id !== claimed.id)];
+  await writeStore(store, { replaceDevices: true });
+  try {
+    const { upsertDeviceRow } = await import("@/lib/class-db");
+    await upsertDeviceRow(claimed);
+  } catch {
+    // Local store is enough if Prisma migrate has not run yet.
+  }
+  return claimed;
+}
+
+export async function forgetStudentDevice(id: string): Promise<void> {
+  const store = await readStore();
+  store.devices = parseDevices(store.devices).filter((row) => row.id !== id);
+  await writeStore(store, { replaceDevices: true });
+  try {
+    const { deleteDeviceRow } = await import("@/lib/class-db");
+    await deleteDeviceRow(id);
+  } catch {
+    // Local store is enough if Prisma migrate has not run yet.
+  }
 }
