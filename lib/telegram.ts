@@ -6,8 +6,12 @@ export type TelegramLink = {
   linkedAt: string;
 };
 
+function readEnv(name: string): string {
+  return String((process.env as Record<string, string | undefined>)[name] ?? "").trim();
+}
+
 export function telegramBotToken(): string {
-  return (process.env.TELEGRAM_BOT_TOKEN || "").trim();
+  return readEnv("TELEGRAM_BOT_TOKEN");
 }
 
 export function telegramConfigured(): boolean {
@@ -16,16 +20,15 @@ export function telegramConfigured(): boolean {
 
 export function telegramWebhookSecret(): string {
   return (
-    process.env.TELEGRAM_WEBHOOK_SECRET ||
-    process.env.AUTH_SECRET ||
-    process.env.TEACHER_PIN ||
+    readEnv("TELEGRAM_WEBHOOK_SECRET") ||
+    readEnv("AUTH_SECRET") ||
+    readEnv("TEACHER_PIN") ||
     "mindsoft-telegram-local"
   );
 }
 
 export function telegramBotUsername(): string {
-  return (process.env.TELEGRAM_BOT_USERNAME || process.env.NEXT_PUBLIC_TELEGRAM_BOT || "")
-    .trim()
+  return (readEnv("TELEGRAM_BOT_USERNAME") || readEnv("NEXT_PUBLIC_TELEGRAM_BOT") || "mindsoft_academy_bot")
     .replace(/^@/, "");
 }
 

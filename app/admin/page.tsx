@@ -10,6 +10,7 @@ import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { getTheme } from "@/lib/theme";
 import { LogoutButton } from "@/app/dashboard/logout-button";
+import { connection } from "next/server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function AdminPage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
+  await connection();
   const locale = await getLocale();
   const theme = await getTheme();
   const { tab } = await searchParams;
