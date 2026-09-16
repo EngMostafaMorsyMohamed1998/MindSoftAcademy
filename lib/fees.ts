@@ -78,10 +78,12 @@ export function paidThisMonth(
   return payments.some((row) => row.studentId === studentId && row.month === month && row.paid);
 }
 
+const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+const MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
 export function cairoMonthLabel(month = cairoMonth(), locale: "ar" | "en" = "ar"): string {
   const [year, mon] = month.split("-").map(Number);
-  return new Date(Date.UTC(year ?? 2026, (mon ?? 1) - 1, 5, 12)).toLocaleDateString(
-    locale === "ar" ? "ar-EG" : "en-GB",
-    { month: "long", year: "numeric", timeZone: "UTC" },
-  );
+  const index = Math.min(11, Math.max(0, (mon ?? 1) - 1));
+  const name = locale === "ar" ? MONTHS_AR[index] : MONTHS_EN[index];
+  return locale === "ar" ? `${name} ${year}` : `${name} ${year}`;
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Award } from "lucide-react";
 import { BRAND } from "@/lib/brand";
+import { cairoDate } from "@/lib/class-clock";
 import { siteUrl } from "@/lib/class-roster";
 import type { CourseCertificate } from "@/lib/certificates";
 import { t } from "@/lib/i18n";
@@ -15,10 +16,7 @@ export function CertificateCard({
   certificate: CourseCertificate;
   preview?: boolean;
 }) {
-  const issued = new Date(certificate.issuedAt).toLocaleDateString(
-    locale === "ar" ? "ar-EG" : "en-GB",
-    { day: "numeric", month: "long", year: "numeric" },
-  );
+  const issued = cairoDate(new Date(certificate.issuedAt));
   const verifyUrl = `${siteUrl()}/verify/${certificate.serial}`;
 
   return (

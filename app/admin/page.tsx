@@ -5,6 +5,7 @@ import { AdminShell } from "./admin-shell";
 import { getAnnouncement, getDeviceLimit, getExamWindow, getMonthlyFee, getSurprise, getWeekPlan, listAllEssayGrades, listAttendance, listCertificates, listClassSessions, listDevices, listExams, listHomeworkResults, listPayments, listSurpriseAnswers, listTelegramLinks } from "@/lib/access-store";
 import { fetchTelegramBotUsername, setTelegramWebhook, telegramBotHref, telegramConfigured } from "@/lib/telegram";
 import { buildClassRoster, siteUrl } from "@/lib/class-roster";
+import { cairoDate, cairoMonth, cairoWeekday } from "@/lib/class-clock";
 import { listVisibleCodes } from "@/lib/teacher-roster";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
@@ -99,6 +100,9 @@ export default async function AdminPage({
           telegramHref={telegramUsername ? `https://t.me/${telegramUsername}` : telegramBotHref()}
           devices={devices}
           deviceLimit={deviceLimit}
+          today={cairoDate()}
+          weekday={cairoWeekday()}
+          month={cairoMonth()}
         />
       </main>
     </div>

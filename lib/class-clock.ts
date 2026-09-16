@@ -12,6 +12,15 @@ export function cairoMonth(value = new Date()): string {
   return cairoDate(value).slice(0, 7);
 }
 
+export function cairoClock(value: string | Date): string {
+  return new Date(value).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Africa/Cairo",
+  });
+}
+
 export function cairoWeekday(value = new Date()): number {
   const day = value.toLocaleDateString("en-US", { timeZone: "Africa/Cairo", weekday: "short" });
   return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(day);

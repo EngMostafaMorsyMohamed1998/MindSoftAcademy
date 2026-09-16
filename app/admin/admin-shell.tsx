@@ -31,7 +31,7 @@ import {
   type TelegramState,
 } from "@/app/actions/telegram";
 import { BRAND } from "@/lib/brand";
-import { cairoDate, cairoMonth, cairoWeekday, type ExamMode } from "@/lib/class-clock";
+import { cairoClock, type ExamMode } from "@/lib/class-clock";
 import { buildMonthProfits, cairoMonthLabel, type MonthPayment } from "@/lib/fees";
 import { absenteeWhatsappText, sessionsInMonth, type ClassSession } from "@/lib/class-session";
 import { codeWhatsappText, feesWhatsappText, parentWeeklyWhatsappText, whatsappHref, type ClassRow } from "@/lib/class-roster";
@@ -72,6 +72,9 @@ export function AdminShell({
   telegramHref,
   devices,
   deviceLimit,
+  today,
+  weekday,
+  month,
   initialTab = "class",
 }: {
   locale: Locale;
@@ -93,6 +96,9 @@ export function AdminShell({
   telegramHref: string | null;
   devices: StudentDevice[];
   deviceLimit: DeviceLimit;
+  today: string;
+  weekday: number;
+  month: string;
   initialTab?: Tab;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -126,7 +132,6 @@ export function AdminShell({
   const [slotDeleteState, slotDeleteAction, slotDeletePending] = useActionState(deleteWeekSlot, initial);
   const [windowOverride, setWindowOverride] = useState<"open" | "closed" | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
-  const today = cairoDate();
 
   useEffect(() => {
     if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok || telegramHookState.ok || telegramOneState.ok || telegramAllState.ok || deviceLimitState.ok || deviceForgetState.ok) {
@@ -166,8 +171,6 @@ export function AdminShell({
   const rankedRoster = [...roster].sort(
     (a, b) => Number(a.monthPaid) - Number(b.monthPaid) || Number(b.declined) - Number(a.declined),
   );
-  const todayWeekday = cairoWeekday();
-  const month = cairoMonth();
   const monthSessions = sessionsInMonth(sessions, month);
   const latest = sessions[0] ?? null;
   const profits = buildMonthProfits({
@@ -177,14 +180,15 @@ export function AdminShell({
     currentMonth: month,
   });
   const thisMonth = profits[0];
+  const sampleYear = today.slice(0, 4);
   const sampleCertificate = {
-    serial: `MSA-${cairoDate().slice(0, 4)}-0000`,
+    serial: `MSA-${sampleYear}-0000`,
     studentId: "preview",
     name: locale === "ar" ? "اسم الطالب" : "Student name",
-    issuedAt: new Date().toISOString(),
+    issuedAt: `${today}T12:00:00.000Z`,
     average: 92,
     verifyCode: "SAMPLE",
-    year: cairoDate().slice(0, 4),
+    year: sampleYear,
   };
   const shownCertificates = certificates.length ? certificates : [sampleCertificate];
 
@@ -529,7 +533,7 @@ export function AdminShell({
                       : `${t(locale, "chapterExam")} ${liveWindow.chapterId}`
                   }${
                     liveWindow.closesAt
-                      ? ` · ${new Date(liveWindow.closesAt).toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                      ? ` · ${cairoClock(liveWindow.closesAt)}`
                       : ""
                   }`
                 : t(locale, "examClosedNow")}
@@ -609,7 +613,7 @@ export function AdminShell({
             <h2 className="text-lg font-semibold">{t(locale, "weekPlan")}</h2>
             <p className="mt-1 text-sm text-foreground/60">{t(locale, "weekPlanHint")}</p>
             <form action={slotAction} className="mt-4 grid gap-3 sm:grid-cols-[8rem_7rem_1fr_auto]">
-              <select name="weekday" defaultValue={String(todayWeekday)} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm">
+              <select name="weekday" defaultValue={String(weekday)} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm">
                 {[0, 1, 2, 3, 4, 5, 6].map((day) => (
                   <option key={day} value={day}>
                     {weekdayName(locale, day)}
@@ -785,7 +789,10 @@ export function AdminShell({
                 disabled={issuePending}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white"
               >
-                {issuePending ? <LoaderCircle className="size-4 animate-spin" /> : null}
+                <LoaderCircle
+                  className={`size-4 shrink-0 animate-spin ${issuePending ? "" : "invisible"}`}
+                  aria-hidden="true"
+                />
                 {t(locale, "generate")}
               </button>
               {issueState.code ? (
@@ -919,7 +926,7 @@ export function AdminShell({
               </button>
             </div>
             <p className="mt-2 text-xs text-foreground/55">
-              {t(locale, "monthFees")} · {cairoMonthLabel(cairoMonth(), locale)} · {t(locale, "monthFeesHint")}
+              {t(locale, "monthFees")} · {cairoMonthLabel(month, locale)} · {t(locale, "monthFeesHint")}
             </p>
             {unpaid.length > 0 ? (
               <p className="mt-3 rounded-2xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
@@ -1277,7 +1284,11 @@ export function AdminShell({
                 disabled={feePending}
                 className="inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white disabled:opacity-70"
               >
-                {feePending ? <LoaderCircle className="size-4 animate-spin" /> : t(locale, "saveFee")}
+                <LoaderCircle
+                  className={`size-4 shrink-0 animate-spin ${feePending ? "" : "invisible"}`}
+                  aria-hidden="true"
+                />
+                {t(locale, "saveFee")}
               </button>
             </form>
           </div>
