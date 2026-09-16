@@ -89,12 +89,13 @@ export function startTelegramPolling(): void {
   void pollLoop();
 }
 
-export async function ensureTelegramReceiver(): Promise<boolean> {
+export async function ensureTelegramReceiver(publicUrl?: string): Promise<boolean> {
   if (!telegramConfigured()) return false;
   if (telegramShouldPoll()) {
     await deleteTelegramWebhook();
     startTelegramPolling();
     return true;
   }
-  return setTelegramWebhook(`${siteUrl()}/api/telegram/webhook`);
+  const base = (publicUrl || siteUrl()).replace(/\/$/, "");
+  return setTelegramWebhook(`${base}/api/telegram/webhook`);
 }

@@ -1,17 +1,38 @@
 import { NextResponse } from "next/server";
 import { ensureTelegramReceiver, handleTelegramUpdate } from "@/lib/telegram-inbox";
-import { telegramConfigured, telegramShouldPoll, type TelegramUpdate } from "@/lib/telegram";
+import {
+  fetchTelegramWebhookInfo,
+  setTelegramWebhookDetailed,
+  telegramConfigured,
+  telegramShouldPoll,
+  type TelegramUpdate,
+} from "@/lib/telegram";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const ready = await ensureTelegramReceiver();
+export async function GET(request: Request) {
+  if (telegramShouldPoll()) {
+    const ready = await ensureTelegramReceiver();
+    return NextResponse.json({
+      ok: true,
+      configured: telegramConfigured(),
+      polling: true,
+      ready,
+      hook: "poll",
+      error: "",
+    });
+  }
+  const origin = new URL(request.url).origin;
+  const attach = await setTelegramWebhookDetailed(`${origin}/api/telegram/webhook`);
+  const info = await fetchTelegramWebhookInfo();
   return NextResponse.json({
     ok: true,
     configured: telegramConfigured(),
-    polling: telegramShouldPoll(),
-    ready,
+    polling: false,
+    ready: attach.ok,
+    hook: info.url ? "on" : "off",
+    error: attach.ok ? "" : attach.error || info.error,
   });
 }
 

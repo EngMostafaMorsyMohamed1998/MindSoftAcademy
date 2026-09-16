@@ -62,7 +62,7 @@ export function extractPhoneText(text: string): string {
   return text.replace(/[^\d]/g, "");
 }
 
-type TelegramApiResult<T = unknown> = { ok: boolean; result?: T };
+type TelegramApiResult<T = unknown> = { ok: boolean; result?: T; description?: string };
 
 export type TelegramUpdate = {
   update_id?: number;
@@ -85,10 +85,10 @@ async function telegramApi<T = unknown>(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const data = (await response.json()) as { ok?: boolean; result?: T };
-    return { ok: Boolean(data.ok), result: data.result };
+    const data = (await response.json()) as { ok?: boolean; result?: T; description?: string };
+    return { ok: Boolean(data.ok), result: data.result, description: data.description };
   } catch {
-    return { ok: false };
+    return { ok: false, description: "network" };
   }
 }
 
@@ -146,6 +146,23 @@ export async function setTelegramWebhook(url: string): Promise<boolean> {
     drop_pending_updates: false,
   });
   return ok;
+}
+
+export async function setTelegramWebhookDetailed(url: string): Promise<{ ok: boolean; error?: string }> {
+  const { ok, description } = await telegramApi("setWebhook", {
+    url,
+    allowed_updates: ["message"],
+    drop_pending_updates: false,
+  });
+  return ok ? { ok: true } : { ok: false, error: description || "webhook" };
+}
+
+export async function fetchTelegramWebhookInfo(): Promise<{ url: string; error: string }> {
+  const { ok, result, description } = await telegramApi<{ url?: string; last_error_message?: string }>(
+    "getWebhookInfo",
+  );
+  if (!ok || !result) return { url: "", error: description || "info" };
+  return { url: result.url || "", error: result.last_error_message || "" };
 }
 
 export async function fetchTelegramBotUsername(): Promise<string | null> {
