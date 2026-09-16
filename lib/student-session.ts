@@ -71,8 +71,11 @@ async function deviceFromRequest(): Promise<string | null> {
 
 export async function ensureBoundDevice(studentId: string): Promise<void> {
   const deviceId = await deviceFromRequest();
-  if (!deviceId) return;
   const [rows, limit] = await Promise.all([listDevices(studentId), getDeviceLimit()]);
+  if (!deviceId) {
+    if (rows.length >= limit) throw new Error("DEVICE_LIMIT");
+    return;
+  }
   if (rows.some((row) => row.deviceId === deviceId)) return;
   if (!canRegisterDevice(rows, studentId, deviceId, limit)) {
     throw new Error("DEVICE_LIMIT");

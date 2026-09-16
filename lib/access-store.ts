@@ -28,6 +28,7 @@ import {
 } from "@/lib/surprise";
 import { parseTelegramLinks, type TelegramLink } from "@/lib/telegram";
 import {
+  allowedDevicesForStudent,
   canRegisterDevice,
   devicesForStudent,
   parseDeviceLimit,
@@ -1107,11 +1108,23 @@ export async function getDeviceLimit(): Promise<DeviceLimit> {
 
 export async function setDeviceLimit(limit: DeviceLimit): Promise<DeviceLimit> {
   const store = await readStore();
+  const current = parseDevices(store.devices);
+  const keep = new Set<string>();
+  for (const studentId of new Set(current.map((row) => row.studentId))) {
+    for (const row of allowedDevicesForStudent(current, studentId, limit)) {
+      keep.add(row.id);
+    }
+  }
+  const removed = current.filter((row) => !keep.has(row.id));
   store.deviceLimit = limit;
-  await writeStore(store);
+  store.devices = current.filter((row) => keep.has(row.id));
+  await writeStore(store, { replaceDevices: true });
   try {
-    const { upsertDeviceLimitRow } = await import("@/lib/class-db");
+    const { upsertDeviceLimitRow, deleteDeviceRow } = await import("@/lib/class-db");
     await upsertDeviceLimitRow(limit);
+    for (const row of removed) {
+      await deleteDeviceRow(row.id);
+    }
   } catch {
     // Local store is enough if Prisma migrate has not run yet.
   }

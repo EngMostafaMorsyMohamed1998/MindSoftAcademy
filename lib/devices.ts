@@ -1,4 +1,4 @@
-export const DEFAULT_DEVICE_LIMIT = 2;
+export const DEFAULT_DEVICE_LIMIT = 1;
 
 export type DeviceLimit = 1 | 2;
 
@@ -12,7 +12,7 @@ export type StudentDevice = {
 };
 
 export function parseDeviceLimit(value: unknown): DeviceLimit {
-  return value === 1 || value === "1" ? 1 : 2;
+  return value === 2 || value === "2" ? 2 : 1;
 }
 
 export function isDeviceId(value: string | undefined | null): value is string {
@@ -59,13 +59,21 @@ export function devicesForStudent(rows: StudentDevice[], studentId: string): Stu
   return rows.filter((row) => row.studentId === studentId);
 }
 
+export function allowedDevicesForStudent(
+  rows: StudentDevice[],
+  studentId: string,
+  limit: DeviceLimit,
+): StudentDevice[] {
+  return [...devicesForStudent(rows, studentId)].sort((a, b) => b.lastAt.localeCompare(a.lastAt)).slice(0, limit);
+}
+
 export function canRegisterDevice(
   rows: StudentDevice[],
   studentId: string,
   deviceId: string,
   limit: DeviceLimit,
 ): boolean {
-  const mine = devicesForStudent(rows, studentId);
-  if (mine.some((row) => row.deviceId === deviceId)) return true;
-  return mine.length < limit;
+  const allowed = allowedDevicesForStudent(rows, studentId, limit);
+  if (allowed.some((row) => row.deviceId === deviceId)) return true;
+  return devicesForStudent(rows, studentId).length < limit;
 }
