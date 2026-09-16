@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     "@prisma/client",
     "@google/generative-ai",
     "bcryptjs",
+    "@napi-rs/canvas",
   ],
 };
 

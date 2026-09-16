@@ -1,97 +1,57 @@
 import { readFileSync } from "fs";
 import path from "path";
-import reshaper from "arabic-persian-reshaper";
-import fontkit from "@pdf-lib/fontkit";
-import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
+import { PDFDocument } from "pdf-lib";
 
+const FONT_NAME = "NotoNaskh";
 const arabicRe = /[\u0600-\u06FF]/;
-const latinRe = /[A-Za-z]/;
 
-function rtlGlyphs(text: string): string {
-  return [...reshaper.ArabicShaper.convertArabic(text)].reverse().join("");
-}
+let fontReady = false;
 
-function splitMixed(line: string): { rtl: string; ltr: string } {
-  if (!arabicRe.test(line)) return { rtl: "", ltr: line };
-  if (!latinRe.test(line)) return { rtl: line, ltr: "" };
-  const match = line.match(/^(.*?)([A-Za-z][A-Za-z0-9 ._-]*)$/);
-  if (match?.[1]?.trim() && match[2]?.trim()) {
-    return { rtl: match[1].replace(/[—–-]\s*$/, "").trim(), ltr: match[2].trim() };
-  }
-  return { rtl: line, ltr: "" };
-}
-
-function wrapLines(text: string): string[] {
-  const lines: string[] = [];
-  for (const raw of text.replace(/\r/g, "").split("\n")) {
-    const line = raw || " ";
-    if (line.length <= 52) {
-      lines.push(line);
-      continue;
-    }
-    const words = line.split(/\s+/);
-    let current = "";
-    for (const word of words) {
-      const next = current ? `${current} ${word}` : word;
-      if (next.length > 52 && current) {
-        lines.push(current);
-        current = word;
-      } else {
-        current = next;
-      }
-    }
-    if (current) lines.push(current);
-  }
-  return lines.slice(0, 60);
-}
-
-function drawLine(
-  page: PDFPage,
-  font: PDFFont,
-  y: number,
-  raw: string,
-  pageWidth: number,
-  margin: number,
-  size: number,
-) {
-  const ink = rgb(0.05, 0.08, 0.15);
-  const { rtl, ltr } = splitMixed(raw);
-  if (ltr) {
-    page.drawText(ltr, { x: margin, y, size, font, color: ink });
-  }
-  if (rtl) {
-    const visual = rtlGlyphs(rtl);
-    const width = font.widthOfTextAtSize(visual, size);
-    page.drawText(visual, {
-      x: Math.max(margin, pageWidth - margin - width),
-      y,
-      size,
-      font,
-      color: ink,
-    });
-  }
+function ensureFont() {
+  if (fontReady) return;
+  GlobalFonts.registerFromPath(path.join(process.cwd(), "fonts/NotoNaskhArabic-Regular.ttf"), FONT_NAME);
+  fontReady = true;
 }
 
 export async function buildReportPdf(title: string, body: string): Promise<Uint8Array> {
-  const pdf = await PDFDocument.create();
-  pdf.registerFontkit(fontkit);
-  const fontBytes = readFileSync(path.join(process.cwd(), "fonts/NotoNaskhArabic-Regular.ttf"));
-  const font = await pdf.embedFont(fontBytes, { subset: false });
-  const pageWidth = 595;
-  const pageHeight = 842;
-  const margin = 48;
-  const size = 15;
-  const lineHeight = 26;
-  let page = pdf.addPage([pageWidth, pageHeight]);
-  let y = pageHeight - margin;
+  ensureFont();
+  const scale = 2;
+  const width = 595 * scale;
+  const height = 842 * scale;
+  const margin = 48 * scale;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "#0b1220";
+  ctx.textBaseline = "top";
 
-  for (const raw of [title, "", ...wrapLines(body)]) {
-    if (y < margin) {
-      page = pdf.addPage([pageWidth, pageHeight]);
-      y = pageHeight - margin;
+  const lines = [title, "", ...body.replace(/\r/g, "").split("\n")].slice(0, 28);
+  let y = margin;
+  for (const [index, line] of lines.entries()) {
+    const arabic = arabicRe.test(line);
+    const size = index === 0 ? 36 : 28;
+    ctx.font = `${size}px ${FONT_NAME}`;
+    if (!line) {
+      y += 18;
+      continue;
     }
-    if (raw) drawLine(page, font, y, raw, pageWidth, margin, raw === title ? 20 : size);
-    y -= lineHeight;
+    if (arabic) {
+      ctx.direction = "rtl";
+      ctx.textAlign = "right";
+      ctx.fillText(line, width - margin, y, width - margin * 2);
+    } else {
+      ctx.direction = "ltr";
+      ctx.textAlign = "left";
+      ctx.fillText(line, margin, y, width - margin * 2);
+    }
+    y += size + 14;
   }
+
+  const pdf = await PDFDocument.create();
+  const page = pdf.addPage([595, 842]);
+  const image = await pdf.embedPng(canvas.toBuffer("image/png"));
+  page.drawImage(image, { x: 0, y: 0, width: 595, height: 842 });
   return pdf.save();
 }
