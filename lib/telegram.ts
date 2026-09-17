@@ -218,3 +218,24 @@ export function telegramStoppedText(locale: "ar" | "en"): string {
   }
   return "اتوقف الإرسال. تقدر تبعت رقم الطالب تاني في أي وقت.";
 }
+
+export function telegramTeacherLinkedText(locale: "ar" | "en"): string {
+  if (locale === "en") {
+    return "This chat is now the teacher desk. You will get a reminder here when a group has class today.";
+  }
+  return "الاتصال ده بقى مكتب المدرس. هيجيلك هنا تنبيه لما يبقى في حصة لمجموعة النهاردة.";
+}
+
+export function telegramTeacherPinText(locale: "ar" | "en"): string {
+  if (locale === "en") {
+    return "Send /teacher and your teacher PIN in one message.";
+  }
+  return "ابعت /teacher وبعديه رقم سر المدرس في نفس الرسالة.";
+}
+
+export function telegramTeacherWrongPinText(locale: "ar" | "en"): string {
+  if (locale === "en") {
+    return "That PIN is wrong. Send /teacher and the teacher PIN again.";
+  }
+  return "الرقم السري غلط. ابعت /teacher وبعديه رقم سر المدرس تاني.";
+}

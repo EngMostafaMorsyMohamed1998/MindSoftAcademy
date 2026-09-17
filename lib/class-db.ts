@@ -26,6 +26,7 @@ import {
 import { DEFAULT_MONTHLY_FEE, parsePayments, type MonthPayment } from "@/lib/fees";
 import { parseMakeups, type MakeupTask } from "@/lib/makeup";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
+import { parseClassGroups, type ClassGroup } from "@/lib/class-groups";
 
 function asExamWindow(row: { id: string; chapterId: string; opensAt: Date; closesAt: Date }): ExamWindow {
   const parsed = parseExamChapter(row.chapterId);
@@ -400,6 +401,8 @@ export async function readClassDb(): Promise<StoreFile | null> {
       certificates: [],
       telegramLinks: [],
       telegramBotToken: "",
+      teacherTelegramChatId: "",
+      classGroups: [],
       surprise: null,
       surpriseAnswers: [],
       presence: [],
@@ -425,6 +428,8 @@ export async function readClassDb(): Promise<StoreFile | null> {
 export async function writeClassDb(store: StoreFile): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
   try {
+    // Do not delete ClassCertificate / ClassTelegramLink / ClassDevice /
+    // ClassTelegramBot / ClassGroup here. Those live in dedicated tables.
     await prisma.$transaction([
       prisma.classCode.deleteMany(),
       prisma.classMessage.deleteMany(),
@@ -764,9 +769,83 @@ export async function upsertTelegramBotTokenRow(token: string): Promise<boolean>
   try {
     await prisma.classTelegramBot.upsert({
       where: { id: "current" },
-      create: { id: "current", token },
+      create: { id: "current", token, teacherChatId: "" },
       update: { token },
     });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readTeacherTelegramChatId(): Promise<string | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const row = await prisma.classTelegramBot.findUnique({ where: { id: "current" } });
+    const chatId = row?.teacherChatId?.trim() ?? "";
+    return chatId || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertTeacherTelegramChatId(chatId: string): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.classTelegramBot.upsert({
+      where: { id: "current" },
+      create: { id: "current", token: "", teacherChatId: chatId },
+      update: { teacherChatId: chatId },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readGroupRows(): Promise<ClassGroup[] | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const rows = await prisma.classGroup.findMany();
+    return parseClassGroups(
+      rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        weekday: row.weekday,
+        startTime: row.startTime,
+        place: row.place,
+        nextLesson: row.nextLesson,
+        studentIds: row.studentIds,
+        remindedOn: row.remindedOn,
+      })),
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function writeGroupRows(groups: ClassGroup[]): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.$transaction([
+      prisma.classGroup.deleteMany(),
+      ...(groups.length
+        ? [
+            prisma.classGroup.createMany({
+              data: groups.map((row) => ({
+                id: row.id,
+                name: row.name,
+                weekday: row.weekday,
+                startTime: row.startTime,
+                place: row.place,
+                nextLesson: row.nextLesson,
+                studentIds: JSON.stringify(row.studentIds),
+                remindedOn: row.remindedOn,
+              })),
+            }),
+          ]
+        : []),
+    ]);
     return true;
   } catch {
     return false;

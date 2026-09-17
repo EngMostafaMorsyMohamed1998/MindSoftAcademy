@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Award, ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Send, Smartphone, Users, Wallet } from "lucide-react";
+import { Award, CalendarDays, ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Send, Smartphone, Users, Wallet } from "lucide-react";
 import {
   createManyStudentCodes,
   createStudentCode,
@@ -14,8 +14,10 @@ import {
   openSurprise,
   saveAnnouncement,
   saveMonthlyFee,
+  saveClassGroup,
   saveWeekSlot,
   stopClassExam,
+  deleteClassGroup,
   stopSurprise,
   removeStudentDevice,
   saveDeviceLimit,
@@ -47,10 +49,12 @@ import { SurpriseBoard } from "@/components/surprise-board";
 import { ESSAY_MARKS, markForGrade } from "@/lib/essay-marks";
 import { surpriseOpen, surpriseRemaining, type SurpriseAnswer, type SurpriseQuestion } from "@/lib/surprise";
 import { weekdayName, type WeekSlot } from "@/lib/week-plan";
+import type { ClassGroup } from "@/lib/class-groups";
+import type { MissBoardRow } from "@/lib/miss-board";
 
 const initial: FormState = { error: null };
 
-type Tab = "class" | "codes" | "roster" | "grades" | "certificates" | "profit";
+type Tab = "class" | "groups" | "codes" | "roster" | "grades" | "certificates" | "profit";
 
 export function AdminShell({
   locale,
@@ -60,6 +64,9 @@ export function AdminShell({
   announcement,
   examWindow,
   weekPlan,
+  classGroups,
+  missBoard,
+  teacherTelegramLinked,
   sessions,
   essayGrades,
   payments,
@@ -84,6 +91,9 @@ export function AdminShell({
   announcement: string;
   examWindow: { chapterId: string; closesAt: string; mode?: ExamMode } | null;
   weekPlan: WeekSlot[];
+  classGroups: ClassGroup[];
+  missBoard: MissBoardRow[];
+  teacherTelegramLinked: boolean;
   sessions: ClassSession[];
   essayGrades: EssayGrade[];
   payments: MonthPayment[];
@@ -111,6 +121,8 @@ export function AdminShell({
   const [mixState, mixAction, mixPending] = useActionState(openMixedMock, initial);
   const [closeState, closeAction, closePending] = useActionState(stopClassExam, initial);
   const [slotState, slotAction, slotPending] = useActionState(saveWeekSlot, initial);
+  const [groupState, groupAction, groupPending] = useActionState(saveClassGroup, initial);
+  const [groupDeleteState, groupDeleteAction, groupDeletePending] = useActionState(deleteClassGroup, initial);
   const [feeState, feeAction, feePending] = useActionState(saveMonthlyFee, initial);
   const [surpriseState, surpriseAction, surprisePending] = useActionState(openSurprise, initial);
   const [surpriseCloseState, surpriseCloseAction, surpriseClosePending] = useActionState(stopSurprise, initial);
@@ -264,6 +276,7 @@ export function AdminShell({
 
   const tabs: { id: Tab; label: string; icon: typeof KeyRound; count?: number }[] = [
     { id: "class", label: t(locale, "tabClass"), icon: ClipboardCheck },
+    { id: "groups", label: t(locale, "tabGroups"), icon: CalendarDays, count: classGroups.length },
     { id: "codes", label: t(locale, "tabCodes"), icon: KeyRound, count: codes.length },
     { id: "roster", label: t(locale, "tabRoster"), icon: Users, count: roster.length },
     { id: "grades", label: t(locale, "tabGrades"), icon: Printer, count: pendingEssays || undefined },
@@ -372,6 +385,10 @@ export function AdminShell({
             {codes.length === 0 ? (
               <p className="mt-3 text-sm text-amber-800">{t(locale, "telegramNeedStudent")}</p>
             ) : null}
+            <p className="mt-3 text-sm text-foreground/70">{t(locale, "teacherTelegramHint")}</p>
+            <p className={`mt-1 text-sm font-semibold ${teacherTelegramLinked ? "text-emerald-800" : "text-amber-800"}`}>
+              {teacherTelegramLinked ? t(locale, "teacherTelegramLinked") : t(locale, "teacherTelegramMissing")}
+            </p>
             <form action={telegramHookAction} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
               <label className="grid gap-1 text-sm">
                 <span className="font-medium">{t(locale, "telegramTokenLabel")}</span>
@@ -630,6 +647,24 @@ export function AdminShell({
             ) : null}
           </section>
 
+          {classGroups.filter((row) => row.weekday === weekday).length ? (
+            <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
+              <h2 className="text-lg font-semibold">{t(locale, "todaySlot")}</h2>
+              <ul className="mt-3 space-y-2">
+                {classGroups
+                  .filter((row) => row.weekday === weekday)
+                  .map((group) => (
+                    <li key={group.id} className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                      <strong>{group.name}</strong>
+                      <span className="mx-2 text-foreground/55">{group.startTime}</span>
+                      {group.place}
+                      {group.nextLesson ? ` · ${group.nextLesson}` : ""}
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          ) : null}
+
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
             <h2 className="text-lg font-semibold">{t(locale, "weekPlan")}</h2>
             <p className="mt-1 text-sm text-foreground/60">{t(locale, "weekPlanHint")}</p>
@@ -668,6 +703,28 @@ export function AdminShell({
                   </li>
                 ))}
               </ul>
+            )}
+          </section>
+
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
+            <h2 className="text-lg font-semibold">{t(locale, "missBoardTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "missBoardHint")}</p>
+            {missBoard.length === 0 ? (
+              <p className="mt-3 text-sm text-foreground/55">{t(locale, "missBoardEmpty")}</p>
+            ) : (
+              <ol className="mt-4 space-y-2">
+                {missBoard.map((row) => (
+                  <li key={row.questionKey} className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                    <span className="font-semibold text-primary">
+                      {t(locale, "missBoardCount")} {row.count}
+                    </span>
+                    <span className="mx-2 text-foreground/55">
+                      {row.chapterId} · {row.lessonId}
+                    </span>
+                    <p className="mt-1">{row.prompt}</p>
+                  </li>
+                ))}
+              </ol>
             )}
           </section>
 
@@ -783,6 +840,147 @@ export function AdminShell({
               </ul>
             )}
           </section>
+        </div>
+      ) : null}
+
+      {tab === "groups" ? (
+        <div className="mt-6 space-y-6">
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "groupsTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "groupsHint")}</p>
+            <p className="mt-2 text-sm text-foreground/70">{t(locale, "teacherTelegramHint")}</p>
+            <p className={`mt-1 text-sm font-semibold ${teacherTelegramLinked ? "text-emerald-800" : "text-amber-800"}`}>
+              {teacherTelegramLinked ? t(locale, "teacherTelegramLinked") : t(locale, "teacherTelegramMissing")}
+            </p>
+            <form action={groupAction} className="mt-4 grid gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  name="name"
+                  required
+                  minLength={2}
+                  placeholder={t(locale, "groupName")}
+                  className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+                />
+                <input
+                  name="place"
+                  placeholder={t(locale, "groupPlace")}
+                  className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+                />
+                <select name="weekday" defaultValue={String(weekday)} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm">
+                  {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                    <option key={day} value={day}>
+                      {weekdayName(locale, day)}
+                    </option>
+                  ))}
+                </select>
+                <input name="startTime" type="time" required defaultValue="17:00" className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
+              </div>
+              <input
+                name="nextLesson"
+                placeholder={t(locale, "groupNextLesson")}
+                className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+              />
+              <fieldset>
+                <legend className="text-sm font-medium">{t(locale, "groupStudents")}</legend>
+                {codes.length === 0 ? (
+                  <p className="mt-2 text-sm text-amber-800">{t(locale, "noCodes")}</p>
+                ) : (
+                  <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {codes.map((code) => (
+                      <li key={code.id}>
+                        <label className="flex items-center gap-2 rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                          <input type="checkbox" name="studentId" value={code.id} className="size-4" />
+                          <span>{code.name}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </fieldset>
+              <button
+                type="submit"
+                disabled={groupPending}
+                className="h-11 w-fit rounded-full bg-primary px-5 text-sm font-semibold text-white"
+              >
+                {t(locale, "addGroup")}
+              </button>
+            </form>
+            {groupState.error || groupDeleteState.error ? (
+              <p className="mt-2 text-sm text-red-700">{groupState.error || groupDeleteState.error}</p>
+            ) : null}
+          </section>
+          {classGroups.length === 0 ? (
+            <p className="text-sm text-foreground/55">{t(locale, "noGroups")}</p>
+          ) : (
+            classGroups.map((group) => (
+              <section key={group.id} className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold">{group.name}</h3>
+                    <p className="mt-1 text-sm text-foreground/65">
+                      {weekdayName(locale, group.weekday)} · {group.startTime}
+                      {group.place ? ` · ${group.place}` : ""}
+                    </p>
+                    {group.nextLesson ? (
+                      <p className="mt-1 text-sm">
+                        <strong>{t(locale, "groupNextLesson")}:</strong> {group.nextLesson}
+                      </p>
+                    ) : null}
+                  </div>
+                  <form action={groupDeleteAction}>
+                    <input type="hidden" name="groupId" value={group.id} />
+                    <button
+                      type="submit"
+                      disabled={groupDeletePending}
+                      className="rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white"
+                    >
+                      {t(locale, "deleteGroup")}
+                    </button>
+                  </form>
+                </div>
+                <form action={groupAction} className="mt-4 grid gap-3">
+                  <input type="hidden" name="groupId" value={group.id} />
+                  <input type="hidden" name="name" value={group.name} />
+                  <input type="hidden" name="weekday" value={String(group.weekday)} />
+                  <input type="hidden" name="startTime" value={group.startTime} />
+                  <input type="hidden" name="place" value={group.place} />
+                  {group.studentIds.map((id) => (
+                    <input key={id} type="hidden" name="studentId" value={id} />
+                  ))}
+                  <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                    <input
+                      name="nextLesson"
+                      defaultValue={group.nextLesson}
+                      placeholder={t(locale, "groupNextLesson")}
+                      className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+                    />
+                    <button
+                      type="submit"
+                      disabled={groupPending}
+                      className="h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white"
+                    >
+                      {t(locale, "saveGroup")}
+                    </button>
+                  </div>
+                </form>
+                <p className="mt-3 text-xs font-medium text-foreground/55">{t(locale, "groupStudents")}</p>
+                <ul className="mt-2 flex flex-wrap gap-2">
+                  {group.studentIds.length === 0 ? (
+                    <li className="text-sm text-foreground/55">{t(locale, "noCodes")}</li>
+                  ) : (
+                    group.studentIds.map((id) => {
+                      const student = codes.find((row) => row.id === id);
+                      return (
+                        <li key={id} className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold">
+                          {student?.name || id}
+                        </li>
+                      );
+                    })
+                  )}
+                </ul>
+              </section>
+            ))
+          )}
         </div>
       ) : null}
 

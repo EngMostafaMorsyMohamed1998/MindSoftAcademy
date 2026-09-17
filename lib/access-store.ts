@@ -37,6 +37,7 @@ import {
   type StudentDevice,
 } from "@/lib/devices";
 import { parseWeekSlots, sortWeekSlots, type WeekSlot } from "@/lib/week-plan";
+import { parseClassGroups, sortClassGroups, type ClassGroup } from "@/lib/class-groups";
 
 export type AccessCode = {
   id: string;
@@ -995,6 +996,66 @@ export async function listDueMisses(studentId: string, afterMs: number): Promise
 export async function listWaitingMisses(studentId: string): Promise<MissedQuestion[]> {
   const store = await readStore();
   return store.misses.filter((item) => item.studentId === studentId && !item.clearedAt);
+}
+
+export async function listAllMisses(): Promise<MissedQuestion[]> {
+  return (await readStore()).misses.filter((item) => !item.clearedAt);
+}
+
+export async function listClassGroups(): Promise<ClassGroup[]> {
+  return sortClassGroups(parseClassGroups((await readStore()).classGroups));
+}
+
+export async function persistClassGroups(groups: ClassGroup[]): Promise<void> {
+  const store = await readStore();
+  store.classGroups = sortClassGroups(parseClassGroups(groups));
+  await writeStore(store, { replaceClassGroups: true });
+}
+
+export async function upsertClassGroup(input: {
+  id?: string;
+  name: string;
+  weekday: number;
+  startTime: string;
+  place: string;
+  nextLesson: string;
+  studentIds: string[];
+}): Promise<ClassGroup> {
+  const groups = await listClassGroups();
+  const id = input.id?.trim() || `group-${randomBytes(4).toString("hex")}`;
+  const existing = groups.find((row) => row.id === id);
+  const next: ClassGroup = {
+    id,
+    name: input.name.trim().slice(0, 80),
+    weekday: input.weekday,
+    startTime: input.startTime,
+    place: input.place.trim().slice(0, 80),
+    nextLesson: input.nextLesson.trim().slice(0, 160),
+    studentIds: [...new Set(input.studentIds.map((id) => id.trim()).filter(Boolean))],
+    remindedOn: existing?.remindedOn || "",
+  };
+  await persistClassGroups([...groups.filter((row) => row.id !== id), next]);
+  return next;
+}
+
+export async function removeClassGroup(id: string): Promise<void> {
+  await persistClassGroups((await listClassGroups()).filter((row) => row.id !== id));
+}
+
+export async function getTeacherTelegramChatId(): Promise<string> {
+  return String((await readStore()).teacherTelegramChatId || "").trim();
+}
+
+export async function setTeacherTelegramChatId(chatId: string): Promise<void> {
+  const store = await readStore();
+  store.teacherTelegramChatId = chatId.trim();
+  await writeStore(store);
+  try {
+    const { upsertTeacherTelegramChatId } = await import("@/lib/class-db");
+    await upsertTeacherTelegramChatId(store.teacherTelegramChatId);
+  } catch {
+    // Dedicated teacher-chat column may not exist yet.
+  }
 }
 
 export async function clearMiss(studentId: string, questionKey: string): Promise<void> {

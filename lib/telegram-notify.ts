@@ -1,11 +1,18 @@
 import {
+  getTeacherTelegramChatId,
   listAttendance,
+  listClassGroups,
   listCodes,
   listExams,
   listHomeworkResults,
   listPayments,
   listTelegramLinks,
+  persistClassGroups,
 } from "@/lib/access-store";
+import { cairoDate, cairoWeekday } from "@/lib/class-clock";
+import { groupsOnWeekday } from "@/lib/class-groups";
+import type { ClassSession } from "@/lib/class-session";
+import { weekdayName } from "@/lib/week-plan";
 import { BRAND } from "@/lib/brand";
 import { CHAPTERS } from "@/lib/curriculum";
 import { buildClassRoster, parentWeeklyWhatsappText, siteUrl } from "@/lib/class-roster";
@@ -114,6 +121,72 @@ export async function notifyAllWeeklyReports(locale: "ar" | "en"): Promise<numbe
     const row = byStudent.get(link.studentId);
     if (!row) continue;
     sent += await deliver([link], parentWeeklyWhatsappText(row, locale), `MSA-report-${row.phone}.pdf`, parentWeeklyWhatsappText(row, locale));
+  }
+  return sent;
+}
+
+export async function notifySessionParents(session: ClassSession): Promise<number> {
+  const links = await listTelegramLinks();
+  if (!links.length) return 0;
+  const byStudent = new Map<string, TelegramLink[]>();
+  for (const link of links) {
+    const rows = byStudent.get(link.studentId) ?? [];
+    rows.push(link);
+    byStudent.set(link.studentId, rows);
+  }
+  let sent = 0;
+  for (const student of session.students) {
+    const studentLinks = byStudent.get(student.studentId);
+    if (!studentLinks?.length) continue;
+    if (student.present !== true && student.present !== false) continue;
+    const score = student.examScore
+      ? `الدرجة: ${student.examScore}${student.examPercent != null ? ` (${student.examPercent}%)` : ""}`
+      : "مفيش امتحان متسجل";
+    const text =
+      student.present === false
+        ? `ولي أمر ${student.name}\nغاب النهاردة عن الحصة — ${BRAND.nameAr}\nالتاريخ: ${session.date}\n${BRAND.teacherAr}`
+        : `ولي أمر ${student.name}\nحضر الحصة — ${BRAND.nameAr}\nالتاريخ: ${session.date}\n${score}\n${BRAND.teacherAr}`;
+    for (const link of studentLinks) {
+      if (await sendTelegramMessage(link.chatId, text)) sent += 1;
+    }
+  }
+  return sent;
+}
+
+export async function notifyUpcomingGroups(): Promise<number> {
+  const [groups, codes, teacherChatId] = await Promise.all([
+    listClassGroups(),
+    listCodes(),
+    getTeacherTelegramChatId(),
+  ]);
+  if (!teacherChatId) return 0;
+  const today = cairoDate();
+  const due = groupsOnWeekday(groups, cairoWeekday()).filter((row) => row.remindedOn !== today);
+  if (!due.length) return 0;
+  const names = new Map(codes.map((row) => [row.id, row.name]));
+  let sent = 0;
+  const reminded = new Set<string>();
+  for (const group of due) {
+    const students = group.studentIds.map((id) => names.get(id) || id).filter(Boolean);
+    const text = [
+      `تنبيه: في حصة النهاردة — ${BRAND.nameAr}`,
+      group.name,
+      `${weekdayName("ar", group.weekday)} الساعة ${group.startTime}`,
+      group.place ? `المكان: ${group.place}` : "",
+      group.nextLesson ? `الدرس الجاي: ${group.nextLesson}` : "",
+      students.length ? `الطلاب: ${students.join("، ")}` : "لسه مفيش أسماء على المجموعة.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    if (await sendTelegramMessage(teacherChatId, text)) {
+      sent += 1;
+      reminded.add(group.id);
+    }
+  }
+  if (reminded.size) {
+    await persistClassGroups(
+      groups.map((row) => (reminded.has(row.id) ? { ...row, remindedOn: today } : row)),
+    );
   }
   return sent;
 }

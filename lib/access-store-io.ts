@@ -27,6 +27,7 @@ import { parseTelegramLinks, type TelegramLink } from "@/lib/telegram";
 import { DEFAULT_DEVICE_LIMIT, parseDeviceLimit, parseDevices, type DeviceLimit, type StudentDevice } from "@/lib/devices";
 import { parsePresence, type PresencePing } from "@/lib/presence";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
+import { parseClassGroups, type ClassGroup } from "@/lib/class-groups";
 
 export type StoreFile = {
   codes: AccessCode[];
@@ -49,6 +50,8 @@ export type StoreFile = {
   certificates: CourseCertificate[];
   telegramLinks: TelegramLink[];
   telegramBotToken: string;
+  teacherTelegramChatId: string;
+  classGroups: ClassGroup[];
   surprise: SurpriseQuestion | null;
   surpriseAnswers: SurpriseAnswer[];
   presence: PresencePing[];
@@ -85,6 +88,8 @@ export function emptyStore(): StoreFile {
     certificates: [],
     telegramLinks: [],
     telegramBotToken: "",
+    teacherTelegramChatId: "",
+    classGroups: [],
     surprise: null,
     surpriseAnswers: [],
     presence: [],
@@ -137,6 +142,8 @@ export function parseStore(value: unknown): StoreFile {
     certificates: parseCertificates(parsed.certificates),
     telegramLinks: parseTelegramLinks(parsed.telegramLinks),
     telegramBotToken: typeof parsed.telegramBotToken === "string" ? parsed.telegramBotToken.trim() : "",
+    teacherTelegramChatId: typeof parsed.teacherTelegramChatId === "string" ? parsed.teacherTelegramChatId.trim() : "",
+    classGroups: parseClassGroups(parsed.classGroups),
     surprise: parseSurprise(parsed.surprise),
     surpriseAnswers: parseSurpriseAnswers(parsed.surpriseAnswers),
     presence: parsePresence(parsed.presence),
@@ -210,6 +217,11 @@ export async function readStore(): Promise<StoreFile> {
         if (telegram?.length) fromDb.telegramLinks = telegram;
         const botToken = await readTelegramBotTokenRow();
         if (botToken) fromDb.telegramBotToken = botToken;
+        const { readTeacherTelegramChatId, readGroupRows } = await import("@/lib/class-db");
+        const teacherChat = await readTeacherTelegramChatId();
+        if (teacherChat) fromDb.teacherTelegramChatId = teacherChat;
+        const groups = await readGroupRows();
+        if (groups?.length) fromDb.classGroups = groups;
       } catch {
         // Dedicated device tables may not exist yet.
       }
@@ -222,6 +234,10 @@ export async function readStore(): Promise<StoreFile> {
         if (!fromDb.certificates.length) fromDb.certificates = parseCertificates(local.certificates);
         if (!fromDb.telegramLinks?.length) fromDb.telegramLinks = parseTelegramLinks(local.telegramLinks);
         if (!fromDb.telegramBotToken && local.telegramBotToken) fromDb.telegramBotToken = local.telegramBotToken;
+        if (!fromDb.teacherTelegramChatId && local.teacherTelegramChatId) {
+          fromDb.teacherTelegramChatId = local.teacherTelegramChatId;
+        }
+        if (!fromDb.classGroups?.length && local.classGroups.length) fromDb.classGroups = local.classGroups;
         fromDb.surprise = parseSurprise(local.surprise);
         fromDb.surpriseAnswers = parseSurpriseAnswers(local.surpriseAnswers);
         fromDb.presence = parsePresence(local.presence);
@@ -246,6 +262,7 @@ export async function writeStore(
     replaceDevices?: boolean;
     replaceCertificates?: boolean;
     replaceTelegramLinks?: boolean;
+    replaceClassGroups?: boolean;
   },
 ): Promise<void> {
   if (!store.codes.length) {
@@ -332,6 +349,27 @@ export async function writeStore(
     const local = (await readLocalStore())?.telegramBotToken ?? "";
     store.telegramBotToken = dedicated || local;
   }
+  if (!store.teacherTelegramChatId) {
+    let dedicated: string | null = null;
+    try {
+      const { readTeacherTelegramChatId } = await import("@/lib/class-db");
+      dedicated = await readTeacherTelegramChatId();
+    } catch {
+      dedicated = null;
+    }
+    store.teacherTelegramChatId = dedicated || (await readLocalStore())?.teacherTelegramChatId || "";
+  }
+  if (!options?.replaceClassGroups && !store.classGroups?.length) {
+    let dedicated: ClassGroup[] | null = null;
+    try {
+      const { readGroupRows } = await import("@/lib/class-db");
+      dedicated = await readGroupRows();
+    } catch {
+      dedicated = null;
+    }
+    const local = parseClassGroups((await readLocalStore())?.classGroups);
+    store.classGroups = dedicated?.length ? dedicated : local;
+  }
   let wroteDb = false;
   try {
     const { writeClassDb } = await import("@/lib/class-db");
@@ -351,6 +389,22 @@ export async function writeStore(
       await upsertTelegramBotTokenRow(store.telegramBotToken);
     } catch {
       // Dedicated bot-token table may not exist yet.
+    }
+  }
+  if (store.teacherTelegramChatId) {
+    try {
+      const { upsertTeacherTelegramChatId } = await import("@/lib/class-db");
+      await upsertTeacherTelegramChatId(store.teacherTelegramChatId);
+    } catch {
+      // Dedicated teacher-chat column may not exist yet.
+    }
+  }
+  if (options?.replaceClassGroups || store.classGroups?.length) {
+    try {
+      const { writeGroupRows } = await import("@/lib/class-db");
+      await writeGroupRows(parseClassGroups(store.classGroups));
+    } catch {
+      // Dedicated group table may not exist yet.
     }
   }
   await writeLocal(store);

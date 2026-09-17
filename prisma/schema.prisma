@@ -324,6 +324,18 @@ model ClassDeviceLimit {
 }
 
 model ClassTelegramBot {
-  id    String @id
-  token String
+  id            String @id
+  token         String
+  teacherChatId String @default("")
+}
+
+model ClassGroup {
+  id          String @id
+  name        String
+  weekday     Int
+  startTime   String
+  place       String
+  nextLesson  String
+  studentIds  String
+  remindedOn  String @default("")
 }

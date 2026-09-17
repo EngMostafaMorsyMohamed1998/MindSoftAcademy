@@ -19,7 +19,9 @@ import {
   addWeekSlot,
   archiveClassSession,
   closeExamWindow,
+  removeClassGroup,
   removeWeekSlot,
+  upsertClassGroup,
   setDeviceLimit,
   startExamWindow,
   forgetStudentDevice,
@@ -30,6 +32,8 @@ import { bindStudentDevice, setStudentCookie } from "@/lib/student-session";
 import { parseDeviceLimit } from "@/lib/devices";
 import { listVisibleCodes, rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
+import { after } from "next/server";
+import { notifySessionParents } from "@/lib/telegram-notify";
 
 export type FormState = {
   error: string | null;
@@ -299,9 +303,49 @@ export async function stopClassExam(
   _formData: FormData,
 ): Promise<FormState> {
   if (!(await isTeacher())) return { error: "FORBIDDEN" };
-  await archiveClassSession(await listVisibleCodes());
+  const session = await archiveClassSession(await listVisibleCodes());
   await closeExamWindow();
+  after(async () => {
+    await notifySessionParents(session);
+  });
   return { error: null, ok: true, examClosed: true, sessionSaved: true };
+}
+
+export async function saveClassGroup(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const name = read(formData, "name");
+  const weekday = Number(read(formData, "weekday"));
+  const startTime = read(formData, "startTime");
+  if (!name || !startTime || !Number.isInteger(weekday) || weekday < 0 || weekday > 6) {
+    return { error: "MISSING" };
+  }
+  const studentIds = formData
+    .getAll("studentId")
+    .flatMap((value) => (typeof value === "string" ? [value.trim()] : []));
+  await upsertClassGroup({
+    id: read(formData, "groupId") || undefined,
+    name,
+    weekday,
+    startTime,
+    place: read(formData, "place"),
+    nextLesson: read(formData, "nextLesson"),
+    studentIds,
+  });
+  return { error: null, ok: true };
+}
+
+export async function deleteClassGroup(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const id = read(formData, "groupId");
+  if (!id) return { error: "MISSING" };
+  await removeClassGroup(id);
+  return { error: null, ok: true };
 }
 
 export async function saveDeviceLimit(

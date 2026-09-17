@@ -1,5 +1,12 @@
-import { findCodeByPhone, linkTelegramChat, listCodes, unlinkTelegramChat } from "@/lib/access-store";
+import {
+  findCodeByPhone,
+  linkTelegramChat,
+  listCodes,
+  setTeacherTelegramChatId,
+  unlinkTelegramChat,
+} from "@/lib/access-store";
 import { siteUrl } from "@/lib/class-roster";
+import { teacherPin } from "@/lib/teacher-session";
 import {
   extractPhoneText,
   sendTelegramMessage,
@@ -9,11 +16,19 @@ import {
   telegramLinkedText,
   telegramStartText,
   telegramStoppedText,
+  telegramTeacherLinkedText,
+  telegramTeacherPinText,
+  telegramTeacherWrongPinText,
   telegramUnknownPhoneText,
   type TelegramUpdate,
 } from "@/lib/telegram";
 
 const locale = "ar" as const;
+
+function teacherCommand(text: string): string | null {
+  const match = text.match(/^\/teacher(?:@\w+)?(?:\s+(.+))?$/i);
+  return match ? (match[1] || "").trim() : null;
+}
 
 export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void> {
   const message = update.message;
@@ -25,6 +40,20 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
   if (text === "/stop") {
     await unlinkTelegramChat(id);
     await sendTelegramMessage(id, telegramStoppedText(locale));
+    return;
+  }
+  const teacherPayload = teacherCommand(text);
+  if (teacherPayload !== null) {
+    if (!teacherPayload) {
+      await sendTelegramMessage(id, telegramTeacherPinText(locale));
+      return;
+    }
+    if (teacherPayload === teacherPin()) {
+      await setTeacherTelegramChatId(id);
+      await sendTelegramMessage(id, telegramTeacherLinkedText(locale));
+      return;
+    }
+    await sendTelegramMessage(id, telegramTeacherWrongPinText(locale));
     return;
   }
   const payload = text.startsWith("/start") ? text.slice(6) : text;
