@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { BookletFigure, CHAPTER_FIGURES, SceneCard } from "@/components/booklet-figures";
 import { BookletMindMap } from "@/components/booklet-mind-map";
+import { TextbookLesson } from "@/components/textbook-page";
 import {
   bookletLetters,
   bookletOptions,
@@ -13,6 +14,7 @@ import {
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { Locale } from "@/lib/locale";
 import { mindMapForChapter, mindMapForFaiz } from "@/lib/mind-maps";
+import { textbookPageFor } from "@/lib/textbook-pages";
 
 function PrintSection({ n, title, children }: { n: string; title: string; children: ReactNode }) {
   return (
@@ -153,31 +155,9 @@ function ChapterBlock({ locale, pack }: { locale: Locale; pack: BookletChapterPa
 
       <PrintSection n="4" title={ar ? "شرح الدروس" : "Lesson notes"}>
         {notes.map((note) => {
-          const lesson = chapter.lessons.find((item) => item.id === note.id);
-          const body = ar ? note.bodyAr : note.bodyEn;
-          const terms = ar ? note.termsAr : note.termsEn;
-          return (
-            <article key={note.id} className="mb-5 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-              <h4 className="font-semibold">
-                {note.id} — {ar ? lesson?.titleAr : lesson?.titleEn}
-              </h4>
-              <ul className="booklet-notes mt-3 list-disc space-y-2.5 ps-5 text-sm leading-7">
-                {body.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                {terms.map((term) => (
-                  <p key={term.term} className="rounded-xl bg-primary/5 px-3 py-2 text-sm leading-6">
-                    <strong>{term.term}:</strong> {term.meaning}
-                  </p>
-                ))}
-              </div>
-              <p className="mt-3 rounded-xl bg-[#fff8e8] px-3 py-2 text-sm leading-6">
-                <strong>{ar ? "الخلاصة:" : "Takeaway:"}</strong> {ar ? note.takeawayAr : note.takeawayEn}
-              </p>
-            </article>
-          );
+          const page = textbookPageFor(note.id);
+          if (!page) return null;
+          return <TextbookLesson key={note.id} locale={locale} page={page} />;
         })}
       </PrintSection>
 

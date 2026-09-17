@@ -1,5 +1,5 @@
 import path from "path";
-import { createCanvas, GlobalFonts, type SKRSContext2D } from "@napi-rs/canvas";
+import { createCanvas, GlobalFonts, loadImage, type Image, type SKRSContext2D } from "@napi-rs/canvas";
 import { PDFDocument } from "pdf-lib";
 import { BRAND } from "@/lib/brand";
 import { CHAPTER_FIGURES } from "@/components/booklet-figures";
@@ -7,6 +7,7 @@ import { bookletLetters, bookletOptions, buildBookletDocument, type BookletChapt
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { Locale } from "@/lib/locale";
 import { mindMapForChapter, mindMapForFaiz, type MindNode } from "@/lib/mind-maps";
+import { textbookPageFor } from "@/lib/textbook-pages";
 
 const FONT_NAME = "NotoNaskh";
 const PAGE_W = 595;
@@ -39,6 +40,9 @@ type EssayBlock = { kind: "essay"; n: number; prompt: string };
 type FigureBlock = { kind: "figure"; id: string; color: string; title: string };
 type MapBlock = { kind: "map"; root: MindNode; color: string; accent: string };
 type SceneBlock = { kind: "scene"; color: string; term: string; scene: string; art: string };
+type AskBlock = { kind: "ask"; text: string };
+type PhotoBlock = { kind: "photo"; src?: string; title: string; intro: string };
+type TableBlock = { kind: "table"; headers: string[]; rows: { cells: string[]; example?: string }[] };
 type Block =
   | TextBlock
   | BannerBlock
@@ -47,7 +51,10 @@ type Block =
   | EssayBlock
   | FigureBlock
   | MapBlock
-  | SceneBlock;
+  | SceneBlock
+  | AskBlock
+  | PhotoBlock
+  | TableBlock;
 
 function wrap(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
   const words = text.replace(/\s+/g, " ").trim().split(" ");
@@ -365,6 +372,120 @@ function drawEssayCard(ctx: SKRSContext2D, block: EssayBlock, x: number, y: numb
   return h + 14;
 }
 
+function drawAsk(ctx: SKRSContext2D, text: string, x: number, y: number, w: number, ar: boolean): number {
+  ctx.font = `14px ${FONT_NAME}`;
+  const lines = wrap(ctx, `؟؟  ${text}`, w);
+  ctx.fillStyle = "#ca8a04";
+  paintText(ctx, "؟؟", ar ? x + w : x, y, ar ? "right" : "left");
+  ctx.fillStyle = "#0b1220";
+  lines.forEach((line, index) => {
+    paintText(ctx, line.replace(/^؟؟\s+/, ""), ar ? x + w - 28 : x + 28, y + index * 22, ar ? "right" : "left");
+  });
+  return lines.length * 22 + 16;
+}
+
+async function drawPhoto(
+  ctx: SKRSContext2D,
+  block: PhotoBlock,
+  x: number,
+  y: number,
+  w: number,
+  ar: boolean,
+  images: Map<string, Image>,
+): Promise<number> {
+  const imgW = 168;
+  const imgH = 126;
+  const imgX = ar ? x + w - imgW : x;
+  const textX = ar ? x : x + imgW + 14;
+  const textW = w - imgW - 14;
+  if (block.src && images.has(block.src)) {
+    ctx.drawImage(images.get(block.src)!, imgX, y, imgW, imgH);
+  } else {
+    ctx.fillStyle = "#dbe4f0";
+    ctx.fillRect(imgX, y, imgW, imgH);
+    ctx.fillStyle = "#1e293b";
+    [18, 48, 80, 112, 140].forEach((px, index) => {
+      ctx.fillRect(imgX + px, y + 16 + (index % 2) * 6, 22, 86);
+    });
+  }
+  ctx.fillStyle = "#0b1220";
+  ctx.font = `14px ${FONT_NAME}`;
+  paintText(ctx, `1  ${block.title}`, ar ? textX + textW : textX, y, ar ? "right" : "left");
+  ctx.font = `12px ${FONT_NAME}`;
+  wrap(ctx, block.intro, textW).forEach((line, index) => {
+    paintText(ctx, line, ar ? textX + textW : textX, y + 28 + index * 18, ar ? "right" : "left");
+  });
+  return imgH + 16;
+}
+
+function tableRowHeight(ctx: SKRSContext2D, cells: string[], colW: number): number {
+  ctx.font = `11px ${FONT_NAME}`;
+  const lines = cells.map((cell) => wrap(ctx, cell, colW - 12).length);
+  return Math.max(28, Math.max(...lines) * 16 + 12);
+}
+
+function drawTable(
+  ctx: SKRSContext2D,
+  block: TableBlock,
+  x: number,
+  y: number,
+  w: number,
+  ar: boolean,
+  drawHeader: boolean,
+  from: number,
+  limit: number,
+): { h: number; next: number } {
+  const cols = 3;
+  const colW = w / cols;
+  let used = 0;
+  if (drawHeader) {
+    ctx.fillStyle = "#f4f4f5";
+    ctx.fillRect(x, y, w, 28);
+    ctx.strokeStyle = "#d4d4d8";
+    ctx.strokeRect(x, y, w, 28);
+    ctx.fillStyle = "#111827";
+    ctx.font = `11px ${FONT_NAME}`;
+    block.headers.forEach((header, index) => {
+      const cx = ar ? x + w - (index + 1) * colW : x + index * colW;
+      paintText(ctx, header, ar ? cx + colW - 6 : cx + 6, y + 7, ar ? "right" : "left");
+    });
+    used += 28;
+  }
+  let index = from;
+  while (index < block.rows.length && index < from + limit) {
+    const row = block.rows[index]!;
+    const rh = tableRowHeight(ctx, row.cells, colW);
+    const rowY = y + used;
+    row.cells.forEach((cell, col) => {
+      const cx = ar ? x + w - (col + 1) * colW : x + col * colW;
+      ctx.strokeStyle = "#d4d4d8";
+      ctx.strokeRect(cx, rowY, colW, rh);
+      ctx.fillStyle = "#111827";
+      ctx.font = `11px ${FONT_NAME}`;
+      wrap(ctx, cell, colW - 12).forEach((line, lineIndex) => {
+        paintText(ctx, line, ar ? cx + colW - 6 : cx + 6, rowY + 6 + lineIndex * 16, ar ? "right" : "left");
+      });
+    });
+    used += rh;
+    if (row.example) {
+      ctx.font = `11px ${FONT_NAME}`;
+      const exampleLines = wrap(ctx, row.example, w - 16);
+      const eh = exampleLines.length * 16 + 12;
+      ctx.fillStyle = "#fafafa";
+      ctx.fillRect(x, y + used, w, eh);
+      ctx.strokeStyle = "#d4d4d8";
+      ctx.strokeRect(x, y + used, w, eh);
+      ctx.fillStyle = "#3f3f46";
+      exampleLines.forEach((line, lineIndex) => {
+        paintText(ctx, line, ar ? x + w - 8 : x + 8, y + used + 6 + lineIndex * 16, ar ? "right" : "left");
+      });
+      used += eh;
+    }
+    index += 1;
+  }
+  return { h: used + 10, next: index };
+}
+
 function drawScene(ctx: SKRSContext2D, block: SceneBlock, x: number, y: number, w: number): number {
   const h = 88;
   roundRect(ctx, x, y, w, h, 14, fade(block.color, 0.08));
@@ -478,24 +599,31 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
   }
   blocks.push({ kind: "section", text: ar ? "4 — شرح الدروس" : "4 — Lesson notes" });
   for (const note of LESSON_NOTES.filter((row) => row.chapterId === chapter.id)) {
-    const lesson = chapter.lessons.find((item) => item.id === note.id);
+    const page = textbookPageFor(note.id);
+    if (!page) continue;
     blocks.push({
       kind: "text",
-      text: `${note.id} — ${ar ? lesson?.titleAr ?? "" : lesson?.titleEn ?? ""}`,
-      size: 14,
+      text: `${ar ? "الدرس" : "Lesson"} ${page.id}  ${ar ? page.titleAr : page.titleEn}`,
+      size: 12,
       gap: 10,
     });
-    for (const body of ar ? note.bodyAr : note.bodyEn) {
-      blocks.push({ kind: "text", text: `• ${body}`, size: 12, gap: 8 });
-    }
-    for (const term of ar ? note.termsAr : note.termsEn) {
-      blocks.push({ kind: "text", text: `${term.term}: ${term.meaning}`, size: 12, gap: 7 });
-    }
     blocks.push({
-      kind: "text",
-      text: `${ar ? "الخلاصة" : "Takeaway"}: ${ar ? note.takeawayAr : note.takeawayEn}`,
-      size: 12,
-      gap: 16,
+      kind: "ask",
+      text: `${ar ? "السؤال الرئيسي:" : "Main question:"} ${ar ? page.questionAr : page.questionEn}`,
+    });
+    blocks.push({
+      kind: "photo",
+      src: page.photo,
+      title: ar ? page.sectionAr : page.sectionEn,
+      intro: ar ? page.introAr : page.introEn,
+    });
+    blocks.push({
+      kind: "table",
+      headers: ar ? page.headersAr : page.headersEn,
+      rows: page.rows.map((row) => ({
+        cells: ar ? [...row.cellsAr] : [...row.cellsEn],
+        example: ar ? row.exampleAr : row.exampleEn,
+      })),
     });
   }
   blocks.push({ kind: "section", text: ar ? "5 — تدريبات الفصل" : "5 — Chapter practice" });
@@ -610,6 +738,12 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
 
   const textX = ar ? width - margin : margin;
   const textAlign = ar ? "right" : "left";
+  const images = new Map<string, Image>();
+  for (const block of blocks) {
+    if (block.kind === "photo" && block.src && !images.has(block.src)) {
+      images.set(block.src, await loadImage(path.join(process.cwd(), "public", block.src.replace(/^\//, ""))));
+    }
+  }
 
   reset();
   let y = margin;
@@ -688,8 +822,48 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
       y += drawMap(ctx, block.root, block.color, block.accent, margin, y, maxWidth, ar);
       continue;
     }
-    const h = 96;
-    if (need(h, y)) {
+    if (block.kind === "ask") {
+      ctx.font = `14px ${FONT_NAME}`;
+      const h = wrap(ctx, block.text, maxWidth).length * 22 + 16;
+      if (need(h, y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      y += drawAsk(ctx, block.text, margin, y, maxWidth, ar);
+      continue;
+    }
+    if (block.kind === "photo") {
+      if (need(150, y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      y += await drawPhoto(ctx, block, margin, y, maxWidth, ar, images);
+      continue;
+    }
+    if (block.kind === "table") {
+      let from = 0;
+      let header = true;
+      while (from < block.rows.length) {
+        const row = block.rows[from]!;
+        ctx.font = `11px ${FONT_NAME}`;
+        const exampleH = row.example ? wrap(ctx, row.example, maxWidth - 16).length * 16 + 12 : 0;
+        const h = (header ? 28 : 0) + tableRowHeight(ctx, row.cells, maxWidth / 3) + exampleH + 10;
+        if (need(h, y)) {
+          await flush();
+          reset();
+          y = margin;
+          header = true;
+        }
+        const drawn = drawTable(ctx, block, margin, y, maxWidth, ar, header, from, 1);
+        y += drawn.h;
+        header = false;
+        from = drawn.next;
+      }
+      continue;
+    }
+    if (need(96, y)) {
       await flush();
       reset();
       y = margin;

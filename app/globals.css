@@ -90,6 +90,31 @@ body {
   }
 }
 
+.textbook-table th,
+.textbook-table td {
+  border: 1px solid #d4d4d8;
+  padding: 10px 12px;
+  vertical-align: top;
+  line-height: 1.75;
+  text-align: start;
+}
+
+.textbook-table th {
+  background: #f4f4f5;
+  font-weight: 700;
+}
+
+.textbook-example td {
+  background: #fafafa;
+  color: #3f3f46;
+}
+
+.textbook-ask-mark {
+  color: #ca8a04;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
 @media print {
   header,
   nav,
@@ -133,6 +158,14 @@ body {
 
   .booklet-section {
     margin-top: 1.4rem;
+  }
+
+  .textbook-sheet {
+    padding: 18px 8px !important;
+  }
+
+  .textbook-table {
+    font-size: 12px !important;
   }
 
   .booklet-pane {
