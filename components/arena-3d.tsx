@@ -4,11 +4,13 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { awardArenaXp } from "@/app/actions/study";
 import {
   ARENA_LIVES,
+  ARENA_ROUNDS,
   ARENA_XP,
   arenaScore,
   arenaSeconds,
   buildArenaRounds,
   type ArenaRound,
+  type ArenaTheme,
 } from "@/lib/arena";
 import { bookletLetters, bookletOptions } from "@/lib/booklet-pack";
 import { t } from "@/lib/i18n";
@@ -19,12 +21,13 @@ type Phase = "ready" | "run" | "won" | "lost";
 
 export function Arena3D({ locale }: { locale: Locale }) {
   const ar = locale === "ar";
-  const [seed, setSeed] = useState(2027);
-  const rounds = useMemo(() => buildArenaRounds(seed), [seed]);
-  useEffect(() => {
-    setSeed(newAttemptSeed());
-  }, []);
+  const [seed, setSeed] = useState(1);
+  const [theme, setTheme] = useState<ArenaTheme | null>(null);
   const [phase, setPhase] = useState<Phase>("ready");
+  const rounds = useMemo(
+    () => (phase === "ready" ? [] : buildArenaRounds(seed)),
+    [phase, seed],
+  );
   const [room, setRoom] = useState(0);
   const [lives, setLives] = useState(ARENA_LIVES);
   const [correct, setCorrect] = useState(0);
@@ -38,9 +41,25 @@ export function Arena3D({ locale }: { locale: Locale }) {
   const current = rounds[room];
   const limit = arenaSeconds(combo);
 
-  function restart() {
+  function start(next: ArenaTheme) {
     busyRef.current = false;
     setSeed(newAttemptSeed());
+    setTheme(next);
+    setRoom(0);
+    setLives(ARENA_LIVES);
+    setCorrect(0);
+    setCombo(0);
+    setScore(0);
+    setBusy(false);
+    setFlash(null);
+    setPicked(null);
+    setLeft(arenaSeconds(0));
+    setPhase("run");
+  }
+
+  function restart() {
+    busyRef.current = false;
+    setTheme(null);
     setPhase("ready");
     setRoom(0);
     setLives(ARENA_LIVES);
@@ -138,7 +157,7 @@ export function Arena3D({ locale }: { locale: Locale }) {
   return (
     <div className="arena-shell">
       <div
-        className={`arena-stage ${phase === "run" ? "is-run" : ""} ${flash === "ok" ? "is-ok" : ""} ${flash === "bad" ? "is-bad" : ""}`}
+        className={`arena-stage is-${theme ?? "cars"} ${phase === "run" ? "is-run" : ""} ${flash === "ok" ? "is-ok" : ""} ${flash === "bad" ? "is-bad" : ""}`}
         style={{ "--heat": `${heat}` } as CSSProperties}
       >
         <div className="arena-sky" />
@@ -153,15 +172,12 @@ export function Arena3D({ locale }: { locale: Locale }) {
             />
           ))}
         </div>
-        <div className="arena-car" aria-hidden="true">
-          <span className="arena-hood" />
-          <span className="arena-dash" />
-        </div>
+        <ThemeRig theme={theme ?? "cars"} />
 
         <div className="arena-hud">
           <p className="arena-hearts">{"♥".repeat(Math.max(0, lives))}{"♡".repeat(Math.max(0, ARENA_LIVES - lives))}</p>
           <p>
-            {room + (phase === "run" ? 1 : 0)}/{rounds.length}
+            {phase === "run" ? room + 1 : 0}/{phase === "ready" ? ARENA_ROUNDS : rounds.length}
           </p>
           <p>
             {t(locale, "arenaCombo")} ×{combo}
@@ -176,13 +192,35 @@ export function Arena3D({ locale }: { locale: Locale }) {
 
         {phase === "ready" ? (
           <div className="arena-panel">
-            <p className="arena-kicker">3D RUSH</p>
-            <h2>{t(locale, "arenaTitle")}</h2>
-            <p>{t(locale, "arenaLead")}</p>
+            <p className="arena-kicker">3D</p>
+            <h2>{t(locale, "arenaAsk")}</h2>
             <p>{t(locale, "arenaHint")}</p>
-            <button type="button" className="arena-cta" onClick={() => setPhase("run")}>
-              {t(locale, "arenaStart")}
-            </button>
+            <div className="arena-pick">
+              <button
+                type="button"
+                className="arena-pick-card is-boy"
+                onClick={() => start("cars")}
+              >
+                <span className="arena-pick-icon" aria-hidden="true">
+                  <span className="arena-mini-car" />
+                </span>
+                <strong>{t(locale, "arenaBoy")}</strong>
+                <em>{t(locale, "arenaBoyTheme")}</em>
+                <small>{t(locale, "arenaBoyLead")}</small>
+              </button>
+              <button
+                type="button"
+                className="arena-pick-card is-girl"
+                onClick={() => start("dolls")}
+              >
+                <span className="arena-pick-icon" aria-hidden="true">
+                  <span className="arena-mini-doll" />
+                </span>
+                <strong>{t(locale, "arenaGirl")}</strong>
+                <em>{t(locale, "arenaGirlTheme")}</em>
+                <small>{t(locale, "arenaGirlLead")}</small>
+              </button>
+            </div>
           </div>
         ) : null}
 
@@ -198,7 +236,7 @@ export function Arena3D({ locale }: { locale: Locale }) {
 
         {phase === "won" || phase === "lost" ? (
           <div className="arena-panel">
-            <p className="arena-kicker">{phase === "won" ? "XP" : "CRASH"}</p>
+            <p className="arena-kicker">{phase === "won" ? "XP" : theme === "dolls" ? "STOP" : "CRASH"}</p>
             <h2>{phase === "won" ? t(locale, "arenaWin") : t(locale, "arenaLose")}</h2>
             <p className="font-serif text-4xl">
               {phase === "won" ? `+${ARENA_XP}` : score} {t(locale, "points")}
@@ -212,6 +250,30 @@ export function Arena3D({ locale }: { locale: Locale }) {
           </div>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function ThemeRig({ theme }: { theme: ArenaTheme }) {
+  if (theme === "dolls") {
+    return (
+      <div className="arena-rig is-dolls" aria-hidden="true">
+        <span className="arena-house" />
+        <span className="arena-doll-body" />
+        <span className="arena-doll-head" />
+        <span className="arena-bow" />
+        <span className="arena-bag" />
+      </div>
+    );
+  }
+  return (
+    <div className="arena-rig is-cars" aria-hidden="true">
+      <span className="arena-hood" />
+      <span className="arena-dash" />
+      <span className="arena-wheel is-left" />
+      <span className="arena-wheel is-right" />
+      <span className="arena-light is-left" />
+      <span className="arena-light is-right" />
     </div>
   );
 }

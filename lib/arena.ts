@@ -9,6 +9,8 @@ export const ARENA_LIVES = 3;
 export const ARENA_ROUNDS = 12;
 export const ARENA_SECONDS = 14;
 
+export type ArenaTheme = "cars" | "dolls";
+
 export type ArenaRound = {
   id: string;
   color: string;

@@ -228,6 +228,18 @@ body {
     linear-gradient(180deg, #1a0b2e 0%, #070b18 42%, #020309 100%);
 }
 
+.arena-stage.is-cars {
+  background:
+    radial-gradient(circle at 50% 16%, rgba(255, 140, 0, calc(0.18 + var(--heat) * 0.25)), transparent 32%),
+    linear-gradient(180deg, #1a1408 0%, #0b0d12 46%, #05060a 100%);
+}
+
+.arena-stage.is-dolls {
+  background:
+    radial-gradient(circle at 50% 16%, rgba(244, 114, 182, calc(0.22 + var(--heat) * 0.22)), transparent 34%),
+    linear-gradient(180deg, #3b1540 0%, #1a0d24 46%, #120816 100%);
+}
+
 .arena-sky,
 .arena-streaks,
 .arena-grid,
@@ -311,39 +323,154 @@ body {
   filter: saturate(1.3);
 }
 
-.arena-car {
+.arena-rig {
   pointer-events: none;
   position: absolute;
   left: 50%;
   bottom: -10%;
   z-index: 2;
-  width: min(64%, 380px);
-  height: 18%;
+  width: min(68%, 420px);
+  height: 22%;
   transform: translateX(-50%);
 }
 
 .arena-hood {
   position: absolute;
-  inset: 18% 10% 0;
-  border-radius: 40% 40% 8% 8%;
-  background: linear-gradient(180deg, #d4a017, #6b4310 70%, #1a1206);
-  box-shadow: 0 -20px 40px rgba(212, 160, 23, 0.25);
+  inset: 22% 8% 8%;
+  border-radius: 42% 42% 10% 10%;
+  background: linear-gradient(180deg, #f59e0b, #b45309 62%, #1c1006);
+  box-shadow: 0 -18px 36px rgba(245, 158, 11, 0.35);
 }
 
 .arena-dash {
   position: absolute;
   left: 50%;
-  top: 28%;
-  width: 28%;
-  height: 18%;
+  top: 32%;
+  width: 26%;
+  height: 16%;
   border-radius: 999px;
-  background: #071225;
+  background: #0b1220;
   transform: translateX(-50%);
-  box-shadow: 0 0 16px #d4a017;
+  box-shadow: 0 0 16px #f59e0b;
 }
 
-.arena-stage.is-run .arena-car {
+.arena-wheel {
+  position: absolute;
+  bottom: 4%;
+  width: 16%;
+  height: 42%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, #111 28%, #d4a017 29% 36%, #222 37% 70%, #888 71%);
+  box-shadow: 0 6px 0 #000;
+}
+
+.arena-wheel.is-left {
+  left: 12%;
+}
+
+.arena-wheel.is-right {
+  right: 12%;
+}
+
+.arena-light {
+  position: absolute;
+  top: 38%;
+  width: 10%;
+  height: 12%;
+  border-radius: 999px;
+  background: #fff7cc;
+  box-shadow: 0 0 18px #fde68a;
+}
+
+.arena-light.is-left {
+  left: 18%;
+}
+
+.arena-light.is-right {
+  right: 18%;
+}
+
+.arena-house {
+  position: absolute;
+  inset: 8% 12% 0;
+  border-radius: 18px 18px 8px 8px;
+  background: linear-gradient(180deg, #fb7185, #9d174d 70%, #4a044e);
+  box-shadow: 0 -16px 30px rgba(251, 113, 133, 0.35);
+}
+
+.arena-house::before {
+  content: "";
+  position: absolute;
+  inset-inline: 18%;
+  top: -22%;
+  height: 38%;
+  background: #f472b6;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.arena-doll-head {
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  width: 16%;
+  height: 28%;
+  border-radius: 999px;
+  background: #ffe4e6;
+  transform: translateX(-50%);
+  box-shadow: 0 0 12px #fda4af;
+}
+
+.arena-doll-body {
+  position: absolute;
+  left: 50%;
+  top: 32%;
+  width: 22%;
+  height: 42%;
+  border-radius: 40% 40% 20% 20%;
+  background: linear-gradient(180deg, #f9a8d4, #db2777);
+  transform: translateX(-50%);
+}
+
+.arena-bow {
+  position: absolute;
+  left: 50%;
+  top: 2%;
+  width: 18%;
+  height: 14%;
+  border-radius: 999px;
+  background: #fb7185;
+  transform: translateX(-50%);
+  box-shadow: -12px 4px 0 #f472b6, 12px 4px 0 #f472b6;
+}
+
+.arena-bag {
+  position: absolute;
+  right: 16%;
+  bottom: 18%;
+  width: 14%;
+  height: 22%;
+  border-radius: 8px 8px 12px 12px;
+  background: #fde68a;
+  box-shadow: 0 0 10px #fbbf24;
+}
+
+.arena-stage.is-run .arena-rig {
   animation: arena-bob 0.28s ease-in-out infinite;
+}
+
+.arena-stage.is-dolls .arena-grid {
+  background:
+    linear-gradient(to top, #120816 8%, transparent 70%),
+    repeating-linear-gradient(to right, rgba(244, 114, 182, 0.32) 0 2px, transparent 2px 72px),
+    repeating-linear-gradient(to bottom, rgba(253, 224, 71, 0.2) 0 2px, transparent 2px 72px);
+}
+
+.arena-stage.is-cars .arena-grid {
+  background:
+    linear-gradient(to top, #05060a 8%, transparent 70%),
+    repeating-linear-gradient(to right, rgba(245, 158, 11, 0.34) 0 2px, transparent 2px 72px),
+    repeating-linear-gradient(to bottom, rgba(148, 163, 184, 0.2) 0 2px, transparent 2px 72px);
 }
 
 @keyframes arena-bob {
@@ -522,6 +649,81 @@ body {
   color: #071225;
 }
 
+.arena-pick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.arena-pick-card {
+  min-height: 11rem;
+  border-radius: 1.2rem;
+  padding: 0.85rem 0.8rem 1rem;
+  text-align: start;
+  transform: perspective(600px) rotateY(-6deg);
+}
+
+.arena-pick-card.is-boy {
+  background: linear-gradient(180deg, #1f2937, #111827);
+  box-shadow: 0 12px 0 #b45309, 0 0 0 2px #f59e0b;
+}
+
+.arena-pick-card.is-girl {
+  background: linear-gradient(180deg, #831843, #4a044e);
+  box-shadow: 0 12px 0 #be185d, 0 0 0 2px #f9a8d4;
+  transform: perspective(600px) rotateY(6deg);
+}
+
+.arena-pick-icon {
+  display: block;
+  height: 2.6rem;
+  margin-bottom: 0.45rem;
+}
+
+.arena-mini-car,
+.arena-mini-doll {
+  display: block;
+  width: 3.1rem;
+  height: 1.6rem;
+  border-radius: 0.6rem 0.9rem 0.4rem 0.4rem;
+  background: #f59e0b;
+  box-shadow: 0.35rem 0.7rem 0 #111, 1.8rem 0.7rem 0 #111;
+}
+
+.arena-mini-doll {
+  width: 1.4rem;
+  height: 2.2rem;
+  border-radius: 999px 999px 40% 40%;
+  background: linear-gradient(#ffe4e6 34%, #f472b6 35%);
+  box-shadow: none;
+}
+
+.arena-pick-card strong {
+  display: block;
+  font-size: 1.15rem;
+}
+
+.arena-pick-card em {
+  display: block;
+  margin-top: 0.15rem;
+  font-style: normal;
+  color: #fde68a;
+  font-weight: 700;
+}
+
+.arena-pick-card.is-girl em {
+  color: #fbcfe8;
+}
+
+.arena-pick-card small {
+  display: block;
+  margin-top: 0.35rem;
+  color: rgba(248, 250, 252, 0.75);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
 .arena-stage.is-ok {
   filter: saturate(1.25) brightness(1.08);
 }
@@ -562,12 +764,21 @@ body {
   .arena-panel h2 {
     font-size: 1.12rem;
   }
+
+  .arena-pick {
+    grid-template-columns: 1fr;
+  }
+
+  .arena-pick-card,
+  .arena-pick-card.is-girl {
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .arena-grid,
   .arena-streaks,
-  .arena-car,
+  .arena-rig,
   .arena-gate,
   .arena-stage.is-bad {
     animation: none;
