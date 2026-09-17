@@ -2,8 +2,8 @@ import { CHAPTERS } from "@/lib/curriculum";
 import { LESSON_NOTES, type LessonNote } from "@/lib/lessons";
 
 export type TextbookRow = {
-  cellsAr: [string, string, string];
-  cellsEn: [string, string, string];
+  cellsAr: string[];
+  cellsEn: string[];
   exampleAr?: string;
   exampleEn?: string;
 };
@@ -21,19 +21,13 @@ export type TextbookPage = {
   introEn: string;
   photo?: string;
   art: string;
-  headersAr: [string, string, string];
-  headersEn: [string, string, string];
+  headersAr: string[];
+  headersEn: string[];
   rows: TextbookRow[];
-};
-
-const HEADERS: Record<string, { ar: [string, string, string]; en: [string, string, string] }> = {
-  "1": { ar: ["الفكرة", "المعنى", "أثرها"], en: ["Idea", "Meaning", "Effect"] },
-  "2": { ar: ["التقنية", "ماذا تفعل", "تذكّر"], en: ["Technique", "What it does", "Remember"] },
-  "3": { ar: ["الجزء", "دوره", "خطأ شائع"], en: ["Part", "Role", "Common slip"] },
-  "4": { ar: ["العنصر", "وظيفته", "نصيحة"], en: ["Element", "Job", "Tip"] },
-  "5": { ar: ["الخطوة", "لماذا", "مثال"], en: ["Step", "Why", "Example"] },
-  "6": { ar: ["الأداة", "متى", "انتبه"], en: ["Tool", "When", "Watch out"] },
-  "7": { ar: ["النوع", "ماذا يفعل", "مثال"], en: ["Type", "What it does", "Example"] },
+  pointsAr: string[];
+  pointsEn: string[];
+  takeawayAr: string;
+  takeawayEn: string;
 };
 
 const ARTS: Record<string, string> = {
@@ -77,6 +71,10 @@ const PAGE_1_1: TextbookPage = {
   art: "lab",
   headersAr: ["الفترة الزمنية", "التقنيات والأحداث الرئيسية", "التأثير على المجتمع"],
   headersEn: ["Period", "Key technologies and events", "Effect on society"],
+  pointsAr: [],
+  pointsEn: [],
+  takeawayAr: "التقنية لا تقفز مرة واحدة؛ كل مرحلة تغيّر كيف نتواصل ونعمل وندفع.",
+  takeawayEn: "IT did not jump once; each stage changed how we communicate, work, and pay.",
   rows: [
     {
       cellsAr: [
@@ -147,9 +145,6 @@ const PAGE_1_1: TextbookPage = {
 
 function fromNote(note: LessonNote): TextbookPage {
   const lesson = CHAPTERS.flatMap((chapter) => chapter.lessons).find((item) => item.id === note.id);
-  const headers = HEADERS[note.chapterId] ?? HEADERS["1"]!;
-  const extra = (note.bodyAr[1] ?? note.takeawayAr).trim();
-  const extraEn = (note.bodyEn[1] ?? note.takeawayEn).trim();
   return {
     id: note.id,
     titleAr: lesson?.titleAr ?? note.id,
@@ -162,19 +157,19 @@ function fromNote(note: LessonNote): TextbookPage {
     introAr: note.bodyAr[0] ?? note.takeawayAr,
     introEn: note.bodyEn[0] ?? note.takeawayEn,
     art: ARTS[note.id] ?? "lab",
-    headersAr: headers.ar,
-    headersEn: headers.en,
+    headersAr: ["المصطلح", "المعنى"],
+    headersEn: ["Term", "Meaning"],
     rows: note.termsAr.map((term, index) => {
       const en = note.termsEn[index] ?? term;
-      const tip = note.bodyAr[Math.min(index + 1, note.bodyAr.length - 1)] ?? note.takeawayAr;
-      const tipEn = note.bodyEn[Math.min(index + 1, note.bodyEn.length - 1)] ?? note.takeawayEn;
       return {
-        cellsAr: [term.term, term.meaning, tip] as [string, string, string],
-        cellsEn: [en.term, en.meaning, tipEn] as [string, string, string],
-        exampleAr: index === 0 ? `مثال: ${extra}` : undefined,
-        exampleEn: index === 0 ? `Example: ${extraEn}` : undefined,
+        cellsAr: [term.term, term.meaning],
+        cellsEn: [en.term, en.meaning],
       };
     }),
+    pointsAr: note.bodyAr.slice(1),
+    pointsEn: note.bodyEn.slice(1),
+    takeawayAr: note.takeawayAr,
+    takeawayEn: note.takeawayEn,
   };
 }
 

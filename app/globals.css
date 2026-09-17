@@ -92,30 +92,40 @@ body {
 
 .textbook-table th,
 .textbook-table td {
-  border: 1px solid #d4d4d8;
-  padding: 10px 12px;
+  border: 1px solid #c5d0de;
+  padding: 9px 11px;
   vertical-align: top;
-  line-height: 1.75;
+  line-height: 1.7;
   text-align: start;
 }
 
 .textbook-table th {
-  background: #f4f4f5;
+  background: #0c2d6b;
+  color: #fff;
   font-weight: 700;
 }
 
+.textbook-zebra td {
+  background: #f4f7fb;
+}
+
 .textbook-example td {
-  background: #fafafa;
+  background: #fff8e8;
   color: #3f3f46;
 }
 
 .textbook-ask-mark {
   color: #ca8a04;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 800;
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 10mm 9mm 12mm;
+  }
+
   header,
   nav,
   aside,
@@ -161,7 +171,15 @@ body {
   }
 
   .textbook-sheet {
-    padding: 18px 8px !important;
+    break-after: page;
+    box-shadow: none !important;
+  }
+
+  .textbook-ask,
+  .textbook-figure,
+  .textbook-takeaway,
+  .textbook-table tr {
+    break-inside: avoid;
   }
 
   .textbook-table {

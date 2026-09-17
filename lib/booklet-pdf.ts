@@ -41,8 +41,11 @@ type FigureBlock = { kind: "figure"; id: string; color: string; title: string };
 type MapBlock = { kind: "map"; root: MindNode; color: string; accent: string };
 type SceneBlock = { kind: "scene"; color: string; term: string; scene: string; art: string };
 type AskBlock = { kind: "ask"; text: string };
-type PhotoBlock = { kind: "photo"; src?: string; title: string; intro: string };
+type PhotoBlock = { kind: "photo"; src?: string; art: string; title: string; intro: string };
 type TableBlock = { kind: "table"; headers: string[]; rows: { cells: string[]; example?: string }[] };
+type PointsBlock = { kind: "points"; items: string[] };
+type TakeawayBlock = { kind: "takeaway"; text: string };
+type BreakBlock = { kind: "break" };
 type Block =
   | TextBlock
   | BannerBlock
@@ -54,7 +57,10 @@ type Block =
   | SceneBlock
   | AskBlock
   | PhotoBlock
-  | TableBlock;
+  | TableBlock
+  | PointsBlock
+  | TakeawayBlock
+  | BreakBlock;
 
 function wrap(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
   const words = text.replace(/\s+/g, " ").trim().split(" ");
@@ -373,15 +379,129 @@ function drawEssayCard(ctx: SKRSContext2D, block: EssayBlock, x: number, y: numb
 }
 
 function drawAsk(ctx: SKRSContext2D, text: string, x: number, y: number, w: number, ar: boolean): number {
-  ctx.font = `14px ${FONT_NAME}`;
-  const lines = wrap(ctx, `؟؟  ${text}`, w);
+  ctx.font = `13px ${FONT_NAME}`;
+  const lines = wrap(ctx, text, w - 36);
+  const h = lines.length * 20 + 16;
+  roundRect(ctx, x, y, w, h, 6, "#fff8e8");
+  ctx.strokeStyle = "#f3d48a";
+  ctx.stroke();
   ctx.fillStyle = "#ca8a04";
-  paintText(ctx, "؟؟", ar ? x + w : x, y, ar ? "right" : "left");
+  paintText(ctx, "؟؟", ar ? x + w - 10 : x + 10, y + 8, ar ? "right" : "left");
   ctx.fillStyle = "#0b1220";
   lines.forEach((line, index) => {
-    paintText(ctx, line.replace(/^؟؟\s+/, ""), ar ? x + w - 28 : x + 28, y + index * 22, ar ? "right" : "left");
+    paintText(ctx, line, ar ? x + w - 32 : x + 32, y + 8 + index * 20, ar ? "right" : "left");
   });
-  return lines.length * 22 + 16;
+  return h + 12;
+}
+
+function drawLessonArt(ctx: SKRSContext2D, art: string, x: number, y: number, w: number, h: number) {
+  ctx.fillStyle = "#e8eef6";
+  ctx.fillRect(x, y, w, h);
+  if (art === "lock") {
+    ctx.fillStyle = "#7f1d1d";
+    ctx.fillRect(x + w * 0.32, y + h * 0.46, w * 0.36, h * 0.36);
+    ctx.strokeStyle = "#111827";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y + h * 0.46, w * 0.12, Math.PI, 0);
+    ctx.stroke();
+    return;
+  }
+  if (art === "firewall") {
+    ctx.fillStyle = "#7f1d1d";
+    ctx.fillRect(x + 10, y + 16, 46, 28);
+    ctx.fillStyle = "#16a34a";
+    ctx.fillRect(x + w - 56, y + 16, 46, 28);
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x + 20, y + h * 0.55, w - 40, 28);
+    return;
+  }
+  if (art === "nest") {
+    ctx.beginPath();
+    ctx.fillStyle = "#0c2d6b";
+    ctx.arc(x + w / 2, y + h / 2, 36, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = "#1d4ed8";
+    ctx.arc(x + w / 2, y + h / 2, 24, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = "#c4a35a";
+    ctx.arc(x + w / 2, y + h / 2, 12, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  if (art === "web" || art === "http" || art === "html") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + 8, y + 12, w - 16, h - 24);
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x + 8, y + 12, w - 16, 18);
+    ctx.fillStyle = "#cbd5e1";
+    ctx.fillRect(x + 16, y + 40, w * 0.55, 8);
+    ctx.fillRect(x + 16, y + 54, w * 0.7, 6);
+    return;
+  }
+  if (art === "chart" || art === "regress" || art === "data" || art === "clean") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + 8, y + 10, w - 16, h - 20);
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x + 22, y + h - 38, 14, 18);
+    ctx.fillStyle = "#1d4ed8";
+    ctx.fillRect(x + 42, y + h - 52, 14, 32);
+    ctx.fillStyle = "#c4a35a";
+    ctx.fillRect(x + 62, y + h - 66, 14, 46);
+    return;
+  }
+  if (art === "neural" || art === "ml" || art === "llm") {
+    ctx.fillStyle = "#0c2d6b";
+    ctx.beginPath();
+    ctx.arc(x + 24, y + 28, 7, 0, Math.PI * 2);
+    ctx.arc(x + 24, y + h - 28, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#1d4ed8";
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y + 28, 7, 0, Math.PI * 2);
+    ctx.arc(x + w / 2, y + h / 2, 7, 0, Math.PI * 2);
+    ctx.arc(x + w / 2, y + h - 28, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#c4a35a";
+    ctx.beginPath();
+    ctx.arc(x + w - 24, y + h / 2, 7, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  if (art === "ethics") {
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x + w / 2 - 4, y + 16, 8, h - 32);
+    ctx.fillStyle = "#111827";
+    ctx.fillRect(x + 16, y + h / 2 - 4, w - 32, 8);
+    ctx.fillStyle = "#c4a35a";
+    ctx.fillRect(x + 16, y + 28, 28, 20);
+    ctx.fillStyle = "#7f1d1d";
+    ctx.fillRect(x + w - 44, y + 28, 28, 20);
+    return;
+  }
+  if (art === "incident") {
+    ctx.fillStyle = "#f59e0b";
+    ctx.beginPath();
+    ctx.moveTo(x + w / 2, y + 14);
+    ctx.lineTo(x + w - 16, y + h - 16);
+    ctx.lineTo(x + 16, y + h - 16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#111827";
+    ctx.fillRect(x + w / 2 - 4, y + 36, 8, 28);
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y + h - 30, 5, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  [10, 34, 58, 82, 106].forEach((px, index) => {
+    ctx.fillStyle = index % 2 ? "#1e293b" : "#334155";
+    ctx.fillRect(x + px, y + 14 + (index % 2) * 4, 18, h - 36);
+  });
+  ctx.fillStyle = "#94a3b8";
+  ctx.fillRect(x, y + h - 16, w, 16);
 }
 
 async function drawPhoto(
@@ -401,27 +521,28 @@ async function drawPhoto(
   if (block.src && images.has(block.src)) {
     ctx.drawImage(images.get(block.src)!, imgX, y, imgW, imgH);
   } else {
-    ctx.fillStyle = "#dbe4f0";
-    ctx.fillRect(imgX, y, imgW, imgH);
-    ctx.fillStyle = "#1e293b";
-    [18, 48, 80, 112, 140].forEach((px, index) => {
-      ctx.fillRect(imgX + px, y + 16 + (index % 2) * 6, 22, 86);
-    });
+    drawLessonArt(ctx, block.art, imgX, y, imgW, imgH);
   }
-  ctx.fillStyle = "#0b1220";
+  ctx.fillStyle = "#0c2d6b";
   ctx.font = `14px ${FONT_NAME}`;
   paintText(ctx, `1  ${block.title}`, ar ? textX + textW : textX, y, ar ? "right" : "left");
+  ctx.fillStyle = "#334155";
   ctx.font = `12px ${FONT_NAME}`;
-  wrap(ctx, block.intro, textW).forEach((line, index) => {
+  wrap(ctx, block.intro, textW).slice(0, 5).forEach((line, index) => {
     paintText(ctx, line, ar ? textX + textW : textX, y + 28 + index * 18, ar ? "right" : "left");
   });
   return imgH + 16;
 }
 
-function tableRowHeight(ctx: SKRSContext2D, cells: string[], colW: number): number {
-  ctx.font = `11px ${FONT_NAME}`;
-  const lines = cells.map((cell) => wrap(ctx, cell, colW - 12).length);
-  return Math.max(28, Math.max(...lines) * 16 + 12);
+function colWidths(count: number, w: number): number[] {
+  if (count <= 2) return [w * 0.3, w * 0.7];
+  return [w * 0.22, w * 0.4, w * 0.38];
+}
+
+function tableRowHeight(ctx: SKRSContext2D, cells: string[], widths: number[]): number {
+  ctx.font = `12px ${FONT_NAME}`;
+  const lines = cells.map((cell, index) => wrap(ctx, cell, (widths[index] ?? widths[0]!) - 14).length);
+  return Math.max(32, Math.max(...lines) * 17 + 12);
 }
 
 function drawTable(
@@ -435,55 +556,92 @@ function drawTable(
   from: number,
   limit: number,
 ): { h: number; next: number } {
-  const cols = 3;
-  const colW = w / cols;
+  const widths = colWidths(block.headers.length, w);
   let used = 0;
   if (drawHeader) {
-    ctx.fillStyle = "#f4f4f5";
-    ctx.fillRect(x, y, w, 28);
-    ctx.strokeStyle = "#d4d4d8";
-    ctx.strokeRect(x, y, w, 28);
-    ctx.fillStyle = "#111827";
-    ctx.font = `11px ${FONT_NAME}`;
-    block.headers.forEach((header, index) => {
-      const cx = ar ? x + w - (index + 1) * colW : x + index * colW;
-      paintText(ctx, header, ar ? cx + colW - 6 : cx + 6, y + 7, ar ? "right" : "left");
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x, y, w, 30);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `12px ${FONT_NAME}`;
+    let ox = 0;
+    const order = ar ? block.headers.map((_, i) => i).reverse() : block.headers.map((_, i) => i);
+    const wOrder = ar ? [...widths].reverse() : widths;
+    order.forEach((headerIndex, visual) => {
+      const cx = x + ox;
+      const cw = wOrder[visual]!;
+      paintText(ctx, block.headers[headerIndex]!, ar ? cx + cw - 7 : cx + 7, y + 8, ar ? "right" : "left");
+      ox += cw;
     });
-    used += 28;
+    used += 30;
   }
   let index = from;
   while (index < block.rows.length && index < from + limit) {
     const row = block.rows[index]!;
-    const rh = tableRowHeight(ctx, row.cells, colW);
+    const rh = tableRowHeight(ctx, row.cells, widths);
     const rowY = y + used;
-    row.cells.forEach((cell, col) => {
-      const cx = ar ? x + w - (col + 1) * colW : x + col * colW;
-      ctx.strokeStyle = "#d4d4d8";
-      ctx.strokeRect(cx, rowY, colW, rh);
+    ctx.fillStyle = index % 2 ? "#f4f7fb" : "#ffffff";
+    ctx.fillRect(x, rowY, w, rh);
+    let ox = 0;
+    const cells = ar ? [...row.cells].reverse() : row.cells;
+    const wOrder = ar ? [...widths].reverse() : widths;
+    cells.forEach((cell, visual) => {
+      const cx = x + ox;
+      const cw = wOrder[visual]!;
+      ctx.strokeStyle = "#c5d0de";
+      ctx.strokeRect(cx, rowY, cw, rh);
       ctx.fillStyle = "#111827";
-      ctx.font = `11px ${FONT_NAME}`;
-      wrap(ctx, cell, colW - 12).forEach((line, lineIndex) => {
-        paintText(ctx, line, ar ? cx + colW - 6 : cx + 6, rowY + 6 + lineIndex * 16, ar ? "right" : "left");
+      ctx.font = `12px ${FONT_NAME}`;
+      wrap(ctx, cell, cw - 14).forEach((line, lineIndex) => {
+        paintText(ctx, line, ar ? cx + cw - 7 : cx + 7, rowY + 7 + lineIndex * 17, ar ? "right" : "left");
       });
+      ox += cw;
     });
     used += rh;
     if (row.example) {
-      ctx.font = `11px ${FONT_NAME}`;
+      ctx.font = `12px ${FONT_NAME}`;
       const exampleLines = wrap(ctx, row.example, w - 16);
-      const eh = exampleLines.length * 16 + 12;
-      ctx.fillStyle = "#fafafa";
+      const eh = exampleLines.length * 17 + 12;
+      ctx.fillStyle = "#fff8e8";
       ctx.fillRect(x, y + used, w, eh);
-      ctx.strokeStyle = "#d4d4d8";
+      ctx.strokeStyle = "#f3d48a";
       ctx.strokeRect(x, y + used, w, eh);
       ctx.fillStyle = "#3f3f46";
       exampleLines.forEach((line, lineIndex) => {
-        paintText(ctx, line, ar ? x + w - 8 : x + 8, y + used + 6 + lineIndex * 16, ar ? "right" : "left");
+        paintText(ctx, line, ar ? x + w - 8 : x + 8, y + used + 6 + lineIndex * 17, ar ? "right" : "left");
       });
       used += eh;
     }
     index += 1;
   }
-  return { h: used + 10, next: index };
+  return { h: used + 8, next: index };
+}
+
+function drawPoints(ctx: SKRSContext2D, items: string[], x: number, y: number, w: number, ar: boolean): number {
+  ctx.font = `12px ${FONT_NAME}`;
+  let used = 0;
+  items.forEach((item, index) => {
+    const lines = wrap(ctx, `${index + 1}. ${item}`, w - 8);
+    ctx.fillStyle = "#0b1220";
+    lines.forEach((line, lineIndex) => {
+      paintText(ctx, line, ar ? x + w : x, y + used + lineIndex * 18, ar ? "right" : "left");
+    });
+    used += lines.length * 18 + 6;
+  });
+  return used + 8;
+}
+
+function drawTakeaway(ctx: SKRSContext2D, text: string, x: number, y: number, w: number, ar: boolean): number {
+  ctx.font = `12px ${FONT_NAME}`;
+  const lines = wrap(ctx, text, w - 20);
+  const h = lines.length * 18 + 16;
+  roundRect(ctx, x, y, w, h, 6, "#fff8e8");
+  ctx.strokeStyle = "#f3d48a";
+  ctx.stroke();
+  ctx.fillStyle = "#0b1220";
+  lines.forEach((line, index) => {
+    paintText(ctx, line, ar ? x + w - 10 : x + 10, y + 8 + index * 18, ar ? "right" : "left");
+  });
+  return h + 12;
 }
 
 function drawScene(ctx: SKRSContext2D, block: SceneBlock, x: number, y: number, w: number): number {
@@ -601,11 +759,11 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
   for (const note of LESSON_NOTES.filter((row) => row.chapterId === chapter.id)) {
     const page = textbookPageFor(note.id);
     if (!page) continue;
+    blocks.push({ kind: "break" });
     blocks.push({
-      kind: "text",
+      kind: "banner",
       text: `${ar ? "الدرس" : "Lesson"} ${page.id}  ${ar ? page.titleAr : page.titleEn}`,
-      size: 12,
-      gap: 10,
+      color: chapter.color,
     });
     blocks.push({
       kind: "ask",
@@ -614,9 +772,12 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
     blocks.push({
       kind: "photo",
       src: page.photo,
+      art: page.art,
       title: ar ? page.sectionAr : page.sectionEn,
       intro: ar ? page.introAr : page.introEn,
     });
+    const points = ar ? page.pointsAr : page.pointsEn;
+    if (points.length) blocks.push({ kind: "points", items: points });
     blocks.push({
       kind: "table",
       headers: ar ? page.headersAr : page.headersEn,
@@ -624,6 +785,10 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
         cells: ar ? [...row.cellsAr] : [...row.cellsEn],
         example: ar ? row.exampleAr : row.exampleEn,
       })),
+    });
+    blocks.push({
+      kind: "takeaway",
+      text: `${ar ? "الخلاصة:" : "Takeaway:"} ${ar ? page.takeawayAr : page.takeawayEn}`,
     });
   }
   blocks.push({ kind: "section", text: ar ? "5 — تدريبات الفصل" : "5 — Chapter practice" });
@@ -822,15 +987,45 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
       y += drawMap(ctx, block.root, block.color, block.accent, margin, y, maxWidth, ar);
       continue;
     }
+    if (block.kind === "break") {
+      if (y > margin + 8) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      continue;
+    }
     if (block.kind === "ask") {
-      ctx.font = `14px ${FONT_NAME}`;
-      const h = wrap(ctx, block.text, maxWidth).length * 22 + 16;
+      ctx.font = `13px ${FONT_NAME}`;
+      const h = wrap(ctx, block.text, maxWidth - 36).length * 20 + 28;
       if (need(h, y)) {
         await flush();
         reset();
         y = margin;
       }
       y += drawAsk(ctx, block.text, margin, y, maxWidth, ar);
+      continue;
+    }
+    if (block.kind === "points") {
+      ctx.font = `12px ${FONT_NAME}`;
+      const h = block.items.reduce((sum, item) => sum + wrap(ctx, item, maxWidth).length * 18 + 6, 16);
+      if (need(Math.min(h, 80), y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      y += drawPoints(ctx, block.items, margin, y, maxWidth, ar);
+      continue;
+    }
+    if (block.kind === "takeaway") {
+      ctx.font = `12px ${FONT_NAME}`;
+      const h = wrap(ctx, block.text, maxWidth - 20).length * 18 + 28;
+      if (need(h, y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      y += drawTakeaway(ctx, block.text, margin, y, maxWidth, ar);
       continue;
     }
     if (block.kind === "photo") {
@@ -847,9 +1042,10 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
       let header = true;
       while (from < block.rows.length) {
         const row = block.rows[from]!;
-        ctx.font = `11px ${FONT_NAME}`;
-        const exampleH = row.example ? wrap(ctx, row.example, maxWidth - 16).length * 16 + 12 : 0;
-        const h = (header ? 28 : 0) + tableRowHeight(ctx, row.cells, maxWidth / 3) + exampleH + 10;
+        ctx.font = `12px ${FONT_NAME}`;
+        const widths = colWidths(block.headers.length, maxWidth);
+        const exampleH = row.example ? wrap(ctx, row.example, maxWidth - 16).length * 17 + 12 : 0;
+        const h = (header ? 30 : 0) + tableRowHeight(ctx, row.cells, widths) + exampleH + 10;
         if (need(h, y)) {
           await flush();
           reset();

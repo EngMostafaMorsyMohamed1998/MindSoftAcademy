@@ -3,56 +3,80 @@ import type { Locale } from "@/lib/locale";
 
 function PhotoArt({ art }: { art: string }) {
   return (
-    <svg viewBox="0 0 320 220" className="h-full w-full" aria-hidden>
-      <rect width="320" height="220" fill="#dbe4f0" />
+    <svg viewBox="0 0 320 200" className="h-full w-full" aria-hidden>
+      <rect width="320" height="200" fill="#e8eef6" />
       {art === "nest" ? (
         <>
-          <circle cx="160" cy="110" r="78" fill="#0c2d6b" />
-          <circle cx="160" cy="110" r="54" fill="#1d4ed8" />
-          <circle cx="160" cy="110" r="28" fill="#c4a35a" />
+          <circle cx="160" cy="100" r="74" fill="#0c2d6b" />
+          <circle cx="160" cy="100" r="50" fill="#1d4ed8" />
+          <circle cx="160" cy="100" r="26" fill="#c4a35a" />
         </>
       ) : art === "lock" ? (
         <>
-          <rect x="110" y="90" width="100" height="80" rx="10" fill="#7f1d1d" />
-          <path d="M130 90v-18a30 30 0 0 1 60 0v18" fill="none" stroke="#111827" strokeWidth="10" />
+          <rect x="118" y="88" width="84" height="70" rx="10" fill="#7f1d1d" />
+          <path d="M136 88v-16a24 24 0 0 1 48 0v16" fill="none" stroke="#111827" strokeWidth="10" />
+          <circle cx="160" cy="122" r="7" fill="#fde68a" />
+        </>
+      ) : art === "firewall" ? (
+        <>
+          <rect x="40" y="40" width="70" height="44" rx="8" fill="#7f1d1d" />
+          <rect x="210" y="40" width="70" height="44" rx="8" fill="#16a34a" />
+          <rect x="70" y="110" width="180" height="56" rx="8" fill="#0c2d6b" />
+          <path d="M110 84 L110 110 M210 84 L210 110" stroke="#334155" strokeWidth="4" />
         </>
       ) : art === "web" || art === "http" || art === "html" ? (
         <>
-          <rect x="40" y="36" width="240" height="148" rx="10" fill="#fff" />
-          <rect x="40" y="36" width="240" height="28" fill="#0c2d6b" />
-          <rect x="56" y="80" width="120" height="10" rx="4" fill="#94a3b8" />
-          <rect x="56" y="102" width="200" height="8" rx="4" fill="#cbd5e1" />
-          <rect x="56" y="120" width="180" height="8" rx="4" fill="#cbd5e1" />
+          <rect x="36" y="28" width="248" height="144" rx="12" fill="#fff" stroke="#cbd5e1" />
+          <rect x="36" y="28" width="248" height="30" fill="#0c2d6b" />
+          <circle cx="54" cy="43" r="4" fill="#f87171" />
+          <circle cx="68" cy="43" r="4" fill="#fbbf24" />
+          <rect x="54" y="78" width="130" height="10" rx="4" fill="#94a3b8" />
+          <rect x="54" y="100" width="210" height="8" rx="4" fill="#cbd5e1" />
+          <rect x="54" y="118" width="180" height="8" rx="4" fill="#cbd5e1" />
         </>
       ) : art === "chart" || art === "regress" || art === "data" || art === "clean" ? (
         <>
-          <rect x="50" y="40" width="220" height="140" rx="8" fill="#fff" />
-          <rect x="70" y="120" width="28" height="40" fill="#0c2d6b" />
-          <rect x="112" y="96" width="28" height="64" fill="#1d4ed8" />
-          <rect x="154" y="70" width="28" height="90" fill="#c4a35a" />
-          <rect x="196" y="88" width="28" height="72" fill="#0c2d6b" />
+          <rect x="44" y="28" width="232" height="144" rx="10" fill="#fff" />
+          <rect x="68" y="118" width="28" height="36" fill="#0c2d6b" />
+          <rect x="110" y="94" width="28" height="60" fill="#1d4ed8" />
+          <rect x="152" y="64" width="28" height="90" fill="#c4a35a" />
+          <rect x="194" y="84" width="28" height="70" fill="#0c2d6b" />
+          <line x1="60" y1="154" x2="248" y2="154" stroke="#94a3b8" strokeWidth="3" />
         </>
       ) : art === "neural" || art === "ml" || art === "llm" ? (
         <>
-          <circle cx="80" cy="70" r="12" fill="#0c2d6b" />
-          <circle cx="80" cy="150" r="12" fill="#0c2d6b" />
-          <circle cx="160" cy="70" r="12" fill="#1d4ed8" />
-          <circle cx="160" cy="110" r="12" fill="#1d4ed8" />
-          <circle cx="160" cy="150" r="12" fill="#1d4ed8" />
-          <circle cx="240" cy="110" r="12" fill="#c4a35a" />
-          <line x1="80" y1="70" x2="160" y2="70" stroke="#64748b" />
-          <line x1="80" y1="150" x2="160" y2="150" stroke="#64748b" />
-          <line x1="160" y1="110" x2="240" y2="110" stroke="#64748b" />
+          <circle cx="78" cy="64" r="11" fill="#0c2d6b" />
+          <circle cx="78" cy="136" r="11" fill="#0c2d6b" />
+          <circle cx="160" cy="64" r="11" fill="#1d4ed8" />
+          <circle cx="160" cy="100" r="11" fill="#1d4ed8" />
+          <circle cx="160" cy="136" r="11" fill="#1d4ed8" />
+          <circle cx="242" cy="100" r="11" fill="#c4a35a" />
+          <line x1="78" y1="64" x2="160" y2="64" stroke="#64748b" strokeWidth="3" />
+          <line x1="78" y1="136" x2="160" y2="136" stroke="#64748b" strokeWidth="3" />
+          <line x1="160" y1="100" x2="242" y2="100" stroke="#64748b" strokeWidth="3" />
+        </>
+      ) : art === "ethics" ? (
+        <>
+          <rect x="150" y="36" width="20" height="128" fill="#0c2d6b" />
+          <rect x="70" y="70" width="180" height="14" fill="#111827" />
+          <rect x="64" y="50" width="54" height="36" fill="#c4a35a" />
+          <rect x="202" y="50" width="54" height="36" fill="#7f1d1d" />
+        </>
+      ) : art === "incident" ? (
+        <>
+          <polygon points="160,36 250,164 70,164" fill="#f59e0b" />
+          <rect x="152" y="78" width="16" height="48" fill="#111827" />
+          <circle cx="160" cy="142" r="8" fill="#111827" />
         </>
       ) : (
         <>
-          <rect x="28" y="50" width="36" height="130" fill="#334155" />
-          <rect x="72" y="40" width="40" height="140" fill="#1e293b" />
-          <rect x="120" y="56" width="36" height="124" fill="#334155" />
-          <rect x="168" y="36" width="44" height="144" fill="#0f172a" />
-          <rect x="220" y="60" width="36" height="120" fill="#334155" />
-          <rect x="264" y="48" width="32" height="132" fill="#1e293b" />
-          <rect x="0" y="180" width="320" height="40" fill="#94a3b8" />
+          <rect x="24" y="40" width="34" height="118" fill="#334155" />
+          <rect x="66" y="30" width="38" height="128" fill="#1e293b" />
+          <rect x="112" y="46" width="34" height="112" fill="#334155" />
+          <rect x="154" y="26" width="42" height="132" fill="#0f172a" />
+          <rect x="204" y="50" width="34" height="108" fill="#334155" />
+          <rect x="246" y="38" width="30" height="120" fill="#1e293b" />
+          <rect x="0" y="164" width="320" height="36" fill="#94a3b8" />
         </>
       )}
     </svg>
@@ -62,44 +86,69 @@ function PhotoArt({ art }: { art: string }) {
 export function TextbookLesson({ locale, page }: { locale: Locale; page: TextbookPage }) {
   const ar = locale === "ar";
   const headers = ar ? page.headersAr : page.headersEn;
+  const points = ar ? page.pointsAr : page.pointsEn;
+  const colCount = headers.length;
+
   return (
-    <article className="textbook-sheet mb-10 bg-white px-4 py-6 sm:px-8">
-      <p className="text-center text-[13px] text-zinc-500">
-        {ar ? "الدرس" : "Lesson"} {page.id} {ar ? page.titleAr : page.titleEn}
-      </p>
+    <article className="textbook-sheet mb-8 overflow-hidden rounded-sm bg-white ring-1 ring-zinc-200">
+      <header className="textbook-head flex items-center justify-between bg-[#0c2d6b] px-4 py-2.5 text-white">
+        <span className="text-sm font-bold">
+          {ar ? "الدرس" : "Lesson"} {page.id}
+        </span>
+        <span className="text-sm font-semibold">{ar ? page.titleAr : page.titleEn}</span>
+      </header>
 
-      <p className="textbook-ask mt-8 text-[15px] font-semibold leading-8">
-        <span className="textbook-ask-mark ms-1" aria-hidden>
-          ؟؟
-        </span>{" "}
-        <span className="text-zinc-500">{ar ? "السؤال الرئيسي:" : "Main question:"}</span>{" "}
-        {ar ? page.questionAr : page.questionEn}
-      </p>
+      <div className="px-4 py-5 sm:px-6">
+        <p className="textbook-ask rounded-sm border border-amber-200 bg-[#fff8e8] px-3 py-3 text-[15px] font-semibold leading-8">
+          <span className="textbook-ask-mark">؟؟</span>{" "}
+          <span className="text-zinc-500">{ar ? "السؤال الرئيسي:" : "Main question:"}</span>{" "}
+          {ar ? page.questionAr : page.questionEn}
+        </p>
 
-      <div className="mt-8 grid items-start gap-6 sm:grid-cols-[220px_minmax(0,1fr)]">
-        <figure className="overflow-hidden rounded-md bg-zinc-100 shadow-sm ring-1 ring-zinc-200">
-          {page.photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
-          ) : (
-            <div className="aspect-[4/3] w-full">
-              <PhotoArt art={page.art} />
-            </div>
-          )}
-        </figure>
-        <div>
-          <h4 className="text-[17px] font-bold text-zinc-900">
-            <span className="me-2 inline-flex size-6 items-center justify-center rounded-full bg-zinc-900 text-[12px] text-white">
-              1
-            </span>
-            {ar ? page.sectionAr : page.sectionEn}
-          </h4>
-          <p className="mt-3 text-sm leading-8 text-zinc-700">{ar ? page.introAr : page.introEn}</p>
+        <div className="textbook-figure mt-5 grid items-start gap-4 sm:grid-cols-[200px_minmax(0,1fr)]">
+          <figure className="overflow-hidden rounded-sm bg-zinc-100 ring-1 ring-zinc-200">
+            {page.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
+            ) : (
+              <div className="aspect-[4/3] w-full">
+                <PhotoArt art={page.art} />
+              </div>
+            )}
+          </figure>
+          <div>
+            <h4 className="text-[16px] font-bold text-zinc-900">
+              <span className="me-2 inline-flex size-6 items-center justify-center rounded-full bg-[#0c2d6b] text-[11px] text-white">
+                1
+              </span>
+              {ar ? page.sectionAr : page.sectionEn}
+            </h4>
+            <p className="mt-2 text-sm leading-7 text-zinc-700">{ar ? page.introAr : page.introEn}</p>
+            {points.length ? (
+              <ol className="mt-3 list-decimal space-y-1.5 ps-5 text-sm leading-7 text-zinc-700">
+                {points.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ol>
+            ) : null}
+          </div>
         </div>
-      </div>
 
-      <div className="mt-6 overflow-x-auto">
-        <table className="textbook-table w-full border-collapse text-sm">
+        <table className="textbook-table mt-5 w-full border-collapse text-sm">
+          <colgroup>
+            {colCount === 2 ? (
+              <>
+                <col className="w-[28%]" />
+                <col className="w-[72%]" />
+              </>
+            ) : (
+              <>
+                <col className="w-[22%]" />
+                <col className="w-[40%]" />
+                <col className="w-[38%]" />
+              </>
+            )}
+          </colgroup>
           <thead>
             <tr>
               {headers.map((header) => (
@@ -113,33 +162,49 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
                 key={`${page.id}-${index}`}
                 cells={ar ? row.cellsAr : row.cellsEn}
                 example={ar ? row.exampleAr : row.exampleEn}
+                cols={colCount}
+                zebra={index % 2 === 1}
               />
             ))}
           </tbody>
         </table>
+
+        <p className="textbook-takeaway mt-5 rounded-sm bg-[#fff8e8] px-3 py-3 text-sm leading-7 ring-1 ring-amber-200">
+          <strong>{ar ? "الخلاصة:" : "Takeaway:"}</strong> {ar ? page.takeawayAr : page.takeawayEn}
+        </p>
       </div>
 
-      <footer className="textbook-foot mt-8 flex items-center justify-between">
-        <span className="rounded-sm bg-emerald-600 px-4 py-1 text-xs font-semibold text-white">
+      <footer className="textbook-foot flex items-center justify-between border-t border-zinc-200 px-4 py-2">
+        <span className="rounded-sm bg-emerald-600 px-3 py-1 text-[11px] font-semibold text-white">
           {ar ? "البكالوريا" : "Baccalaureate"}
         </span>
-        <span className="text-sm text-zinc-500">{page.pageNo}</span>
+        <span className="text-xs text-zinc-500">{page.pageNo}</span>
       </footer>
     </article>
   );
 }
 
-function TextbookRows({ cells, example }: { cells: string[]; example?: string }) {
+function TextbookRows({
+  cells,
+  example,
+  cols,
+  zebra,
+}: {
+  cells: string[];
+  example?: string;
+  cols: number;
+  zebra: boolean;
+}) {
   return (
     <>
-      <tr>
-        {cells.map((cell) => (
-          <td key={cell}>{cell}</td>
+      <tr className={zebra ? "textbook-zebra" : undefined}>
+        {cells.map((cell, index) => (
+          <td key={`${index}-${cell.slice(0, 12)}`}>{cell}</td>
         ))}
       </tr>
       {example ? (
         <tr className="textbook-example">
-          <td colSpan={3}>{example}</td>
+          <td colSpan={cols}>{example}</td>
         </tr>
       ) : null}
     </>
