@@ -115,8 +115,24 @@ body {
 
   .print-keep,
   figure,
-  .booklet-q {
+  .booklet-q,
+  .booklet-section-title {
     break-inside: avoid;
+  }
+
+  .booklet-q {
+    padding: 16px !important;
+    margin-bottom: 16px !important;
+    border: 1px solid #d5deea !important;
+    background: #f7f9fc !important;
+  }
+
+  .booklet-notes li {
+    margin-bottom: 0.55rem;
+  }
+
+  .booklet-section {
+    margin-top: 1.4rem;
   }
 
   .booklet-pane {

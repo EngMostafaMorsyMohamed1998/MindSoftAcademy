@@ -5,6 +5,7 @@ import { FAIZ_NOTES, type FaizUnitNote } from "@/lib/faiz-notes";
 import { questionsForChapter, type HomeworkQuestion } from "@/lib/homework-bank";
 import { analysisForChapter, BANK_FACTS } from "@/lib/question-bank";
 import type { AnalysisPrompt, BankFact } from "@/lib/question-bank/types";
+import type { Locale } from "@/lib/locale";
 import { shuffled } from "@/lib/shuffle";
 import type { EssayQuestion, ObjectiveQuestion } from "@/lib/exams";
 
@@ -51,6 +52,31 @@ export type BookletFaizPack = {
   practice: BookletMcq[];
   answers: { id: string; letter: string }[];
 };
+
+const ARABIC = /[\u0600-\u06FF]/;
+
+export function bookletLetters(locale: Locale): string[] {
+  return locale === "ar" ? ["أ", "ب", "ج", "د"] : ["A", "B", "C", "D"];
+}
+
+export function bookletOptions(locale: Locale, optionsAr: string[], optionsEn: string[]): string[] {
+  const primary = locale === "ar" ? optionsAr : optionsEn;
+  const secondary = locale === "ar" ? optionsEn : optionsAr;
+  const count = Math.min(4, Math.max(primary.length, secondary.length));
+  const rows: string[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const wanted = primary[index]?.trim() ?? "";
+    const other = secondary[index]?.trim() ?? "";
+    if (locale === "en") {
+      if (wanted && !ARABIC.test(wanted)) rows.push(wanted);
+      else if (other && !ARABIC.test(other)) rows.push(other);
+      else rows.push(wanted || other);
+    } else if (wanted && ARABIC.test(wanted)) rows.push(wanted);
+    else if (other && ARABIC.test(other)) rows.push(other);
+    else rows.push(wanted || other);
+  }
+  return rows;
+}
 
 function asMcq(question: HomeworkQuestion): BookletMcq {
   return {

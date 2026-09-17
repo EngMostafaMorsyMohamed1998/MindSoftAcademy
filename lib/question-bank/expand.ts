@@ -160,13 +160,15 @@ export function expandNotesToHomework(): ExpandedMcq[] {
   for (const note of LESSON_NOTES) {
     note.termsAr.forEach((term, index) => {
       const en = note.termsEn[index] ?? { term: term.term, meaning: term.meaning };
-      const others = note.termsAr.filter((_, otherIndex) => otherIndex !== index);
+      const others = note.termsAr
+        .map((item, otherIndex) => ({
+          ar: item,
+          en: note.termsEn[otherIndex] ?? item,
+          otherIndex,
+        }))
+        .filter((row) => row.otherIndex !== index);
       if (others.length < 3) return;
       const pick = others.slice(0, 3);
-      const pickEn = pick.map((item) => {
-        const match = note.termsEn.find((row) => row.term === item.term);
-        return match ?? { term: item.term, meaning: item.meaning };
-      });
 
       bank.push({
         id: `${note.id}-n-best-${index}`,
@@ -175,8 +177,8 @@ export function expandNotesToHomework(): ExpandedMcq[] {
         kind: "mcq",
         promptAr: `أي اختيار يصف «${term.term}» بدقة؟`,
         promptEn: `Which choice describes “${en.term}” accurately?`,
-        optionsAr: [term.meaning, ...pick.map((item) => item.meaning)],
-        optionsEn: [en.meaning, ...pickEn.map((item) => item.meaning)],
+        optionsAr: [term.meaning, ...pick.map((row) => row.ar.meaning)],
+        optionsEn: [en.meaning, ...pick.map((row) => row.en.meaning)],
         correctIndex: 0,
       });
 
@@ -187,8 +189,8 @@ export function expandNotesToHomework(): ExpandedMcq[] {
         kind: "mcq",
         promptAr: `أي معنى لا يناسب «${term.term}»؟`,
         promptEn: `Which meaning does not fit “${en.term}”?`,
-        optionsAr: [pick[0]!.meaning, term.meaning, pick[1]!.meaning, pick[2]!.meaning],
-        optionsEn: [pickEn[0]!.meaning, en.meaning, pickEn[1]!.meaning, pickEn[2]!.meaning],
+        optionsAr: [pick[0]!.ar.meaning, term.meaning, pick[1]!.ar.meaning, pick[2]!.ar.meaning],
+        optionsEn: [pick[0]!.en.meaning, en.meaning, pick[1]!.en.meaning, pick[2]!.en.meaning],
         correctIndex: 0,
       });
     });

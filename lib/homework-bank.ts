@@ -59,16 +59,15 @@ function buildBank(): HomeworkQuestion[] {
           correctIndex: 1,
         });
       }
-      const wrong = termsAr.filter((_, otherIndex) => otherIndex !== index).slice(0, 3);
+      const wrong = termsAr
+        .map((item, otherIndex) => ({
+          ar: item,
+          en: termsEn[otherIndex] ?? item,
+          otherIndex,
+        }))
+        .filter((row) => row.otherIndex !== index)
+        .slice(0, 3);
       if (wrong.length === 3) {
-        const optionsAr = [term.meaning, ...wrong.map((item) => item.meaning)];
-        const optionsEn = [
-          en.meaning,
-          ...wrong.map((item) => {
-            const match = termsEn.find((row) => row.term === item.term);
-            return match?.meaning ?? item.meaning;
-          }),
-        ];
         pushQuestion(bank, {
           id: `${note.id}-mcq-${index}`,
           lessonId: note.id,
@@ -76,8 +75,8 @@ function buildBank(): HomeworkQuestion[] {
           kind: "mcq",
           promptAr: `ما معنى «${term.term}»؟`,
           promptEn: `What does “${en.term}” mean?`,
-          optionsAr,
-          optionsEn,
+          optionsAr: [term.meaning, ...wrong.map((row) => row.ar.meaning)],
+          optionsEn: [en.meaning, ...wrong.map((row) => row.en.meaning)],
           correctIndex: 0,
         });
         pushQuestion(bank, {
@@ -87,14 +86,8 @@ function buildBank(): HomeworkQuestion[] {
           kind: "mcq",
           promptAr: `أي مصطلح يطابق هذا المعنى: «${term.meaning}»؟`,
           promptEn: `Which term matches this meaning: “${en.meaning}”?`,
-          optionsAr: [term.term, ...wrong.map((item) => item.term)],
-          optionsEn: [
-            en.term,
-            ...wrong.map((item) => {
-              const match = termsEn.find((row) => row.term === item.term);
-              return match?.term ?? item.term;
-            }),
-          ],
+          optionsAr: [term.term, ...wrong.map((row) => row.ar.term)],
+          optionsEn: [en.term, ...wrong.map((row) => row.en.term)],
           correctIndex: 0,
         });
       }

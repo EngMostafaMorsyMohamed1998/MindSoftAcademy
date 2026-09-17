@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnswerReview } from "@/components/answer-review";
 import { TrueFalsePick } from "@/components/true-false-pick";
 import { submitChapterExam } from "@/app/actions/study";
+import { bookletOptions } from "@/lib/booklet-pack";
 import type { ChapterExam, ObjectiveQuestion } from "@/lib/exams";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
@@ -188,9 +189,7 @@ export function ChapterExamPlayer({
     const rawOptions =
       question.kind === "tf"
         ? [t(locale, "trueLabel"), t(locale, "falseLabel")]
-        : locale === "ar"
-          ? question.optionsAr ?? []
-          : question.optionsEn ?? [];
+        : bookletOptions(locale, question.optionsAr ?? [], question.optionsEn ?? []);
     const visible = (optionOrder.length ? optionOrder : rawOptions.map((_, optionIndex) => optionIndex))
       .map((original) => ({
         original,

@@ -3,7 +3,7 @@ import { createCanvas, GlobalFonts, type SKRSContext2D } from "@napi-rs/canvas";
 import { PDFDocument } from "pdf-lib";
 import { BRAND } from "@/lib/brand";
 import { CHAPTER_FIGURES } from "@/components/booklet-figures";
-import { buildBookletDocument, type BookletChapterPack } from "@/lib/booklet-pack";
+import { bookletLetters, bookletOptions, buildBookletDocument, type BookletChapterPack } from "@/lib/booklet-pack";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { Locale } from "@/lib/locale";
 import { mindMapForChapter, mindMapForFaiz, type MindNode } from "@/lib/mind-maps";
@@ -32,10 +32,22 @@ function fade(color: string, alpha = 0.1): string {
 }
 
 type TextBlock = { kind: "text"; text: string; size: number; gap?: number };
+type BannerBlock = { kind: "banner"; text: string; color: string };
+type SectionBlock = { kind: "section"; text: string };
+type QuestionBlock = { kind: "question"; n: number; prompt: string; options: string[]; letters: string[] };
+type EssayBlock = { kind: "essay"; n: number; prompt: string };
 type FigureBlock = { kind: "figure"; id: string; color: string; title: string };
 type MapBlock = { kind: "map"; root: MindNode; color: string; accent: string };
 type SceneBlock = { kind: "scene"; color: string; term: string; scene: string; art: string };
-type Block = TextBlock | FigureBlock | MapBlock | SceneBlock;
+type Block =
+  | TextBlock
+  | BannerBlock
+  | SectionBlock
+  | QuestionBlock
+  | EssayBlock
+  | FigureBlock
+  | MapBlock
+  | SceneBlock;
 
 function wrap(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
   const words = text.replace(/\s+/g, " ").trim().split(" ");
@@ -252,6 +264,107 @@ function drawMap(ctx: SKRSContext2D, root: MindNode, color: string, accent: stri
   return maxH + 8;
 }
 
+function drawBanner(ctx: SKRSContext2D, text: string, color: string, x: number, y: number, w: number, ar: boolean): number {
+  roundRect(ctx, x, y, w, 40, 10, color);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `18px ${FONT_NAME}`;
+  paintText(ctx, text, ar ? x + w - 16 : x + 16, y + 10, ar ? "right" : "left");
+  return 54;
+}
+
+function drawSection(ctx: SKRSContext2D, text: string, x: number, y: number, w: number, ar: boolean): number {
+  roundRect(ctx, x, y, w, 28, 8, "#0c2d6b");
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `13px ${FONT_NAME}`;
+  paintText(ctx, text, ar ? x + w - 14 : x + 14, y + 7, ar ? "right" : "left");
+  return 40;
+}
+
+function questionLines(ctx: SKRSContext2D, block: QuestionBlock, w: number) {
+  const pad = 12;
+  const inner = w - pad * 2;
+  ctx.font = `13px ${FONT_NAME}`;
+  const promptLines = wrap(ctx, `${block.n}. ${block.prompt}`, inner);
+  ctx.font = `12px ${FONT_NAME}`;
+  const optionLines = block.options.slice(0, 4).map((option, optionIndex) =>
+    wrap(ctx, `${block.letters[optionIndex] ?? LETTERS[optionIndex]}  ${option}`, inner - 22),
+  );
+  const optionsH = optionLines.reduce((sum, lines) => sum + lines.length * 18 + 8, 0);
+  return { pad, promptLines, optionLines, h: pad + promptLines.length * 20 + 10 + optionsH + pad };
+}
+
+function drawQuestionCard(
+  ctx: SKRSContext2D,
+  block: QuestionBlock,
+  x: number,
+  y: number,
+  w: number,
+  ar: boolean,
+): number {
+  const { pad, promptLines, optionLines, h } = questionLines(ctx, block, w);
+  roundRect(ctx, x, y, w, h, 12, "#f4f7fb");
+  ctx.strokeStyle = "#d5deea";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = "#0b1220";
+  ctx.font = `13px ${FONT_NAME}`;
+  promptLines.forEach((line, index) => {
+    paintText(ctx, line, ar ? x + w - pad : x + pad, y + pad + index * 20, ar ? "right" : "left");
+  });
+  let oy = y + pad + promptLines.length * 20 + 8;
+  optionLines.forEach((lines) => {
+    ctx.beginPath();
+    ctx.strokeStyle = "#0c2d6b";
+    ctx.lineWidth = 1.4;
+    ctx.arc(ar ? x + w - pad - 7 : x + pad + 7, oy + 8, 7, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = "#0c2d6b";
+    ctx.font = `12px ${FONT_NAME}`;
+    lines.forEach((line, lineIndex) => {
+      paintText(
+        ctx,
+        line,
+        ar ? x + w - pad - 22 : x + pad + 22,
+        oy + lineIndex * 18,
+        ar ? "right" : "left",
+      );
+    });
+    oy += lines.length * 18 + 8;
+  });
+  return h + 14;
+}
+
+function essayHeight(ctx: SKRSContext2D, block: EssayBlock, w: number): number {
+  const pad = 12;
+  ctx.font = `13px ${FONT_NAME}`;
+  return pad + wrap(ctx, `${block.n}) ${block.prompt}`, w - pad * 2).length * 20 + 72;
+}
+
+function drawEssayCard(ctx: SKRSContext2D, block: EssayBlock, x: number, y: number, w: number, ar: boolean): number {
+  const pad = 12;
+  ctx.font = `13px ${FONT_NAME}`;
+  const lines = wrap(ctx, `${block.n}) ${block.prompt}`, w - pad * 2);
+  const h = essayHeight(ctx, block, w);
+  ctx.strokeStyle = "#d4a017";
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([5, 4]);
+  ctx.strokeRect(x, y, w, h);
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#0b1220";
+  lines.forEach((line, index) => {
+    paintText(ctx, line, ar ? x + w - pad : x + pad, y + pad + index * 20, ar ? "right" : "left");
+  });
+  for (let i = 0; i < 3; i += 1) {
+    const ly = y + pad + lines.length * 20 + 18 + i * 16;
+    ctx.strokeStyle = "#d5deea";
+    ctx.beginPath();
+    ctx.moveTo(x + pad, ly);
+    ctx.lineTo(x + w - pad, ly);
+    ctx.stroke();
+  }
+  return h + 14;
+}
+
 function drawScene(ctx: SKRSContext2D, block: SceneBlock, x: number, y: number, w: number): number {
   const h = 88;
   roundRect(ctx, x, y, w, h, 14, fade(block.color, 0.08));
@@ -294,81 +407,105 @@ function sceneArt(term: string, scene: string): string {
   return "lab";
 }
 
-function figureTitle(id: string): string {
-  const titles: Record<string, string> = {
-    "it-timeline": "شكل — خط زمن التقنية",
-    "ai-nest": "شكل — درجات الذكاء",
-    "ai-life": "شكل — أين يظهر الذكاء",
-    encrypt: "شكل — التشفير",
-    auth: "شكل — المصادقة",
-    firewall: "شكل — جدار الحماية",
-    "web-stack": "شكل — طبقات التطبيق",
-    http: "شكل — المتصفح والخادم",
-    "html-css-js": "شكل — HTML و CSS و JavaScript",
-    media: "شكل — اختيار الوسيط",
-    ux: "شكل — دورة التجربة",
-    collect: "شكل — جمع البيانات",
-    clean: "شكل — تنظيف الجدول",
-    api: "شكل — API",
-    charts: "شكل — اختر الرسم",
-    regress: "شكل — خط الانحدار",
-    "ml-types": "شكل — أنواع التعلم",
-    neural: "شكل — شبكة عصبونية",
-    llm: "شكل — راجع المساعد",
+function figureTitle(id: string, ar: boolean): string {
+  const titles: Record<string, [string, string]> = {
+    "it-timeline": ["شكل — خط زمن التقنية", "Figure — IT timeline"],
+    "ai-nest": ["شكل — درجات الذكاء", "Figure — levels of AI"],
+    "ai-life": ["شكل — أين يظهر الذكاء", "Figure — where AI appears"],
+    encrypt: ["شكل — التشفير", "Figure — encryption"],
+    auth: ["شكل — المصادقة", "Figure — authentication"],
+    firewall: ["شكل — جدار الحماية", "Figure — firewall"],
+    "web-stack": ["شكل — طبقات التطبيق", "Figure — app layers"],
+    http: ["شكل — المتصفح والخادم", "Figure — browser and server"],
+    "html-css-js": ["شكل — HTML و CSS و JavaScript", "Figure — HTML, CSS, JavaScript"],
+    media: ["شكل — اختيار الوسيط", "Figure — choose a medium"],
+    ux: ["شكل — دورة التجربة", "Figure — UX cycle"],
+    collect: ["شكل — جمع البيانات", "Figure — collect data"],
+    clean: ["شكل — تنظيف الجدول", "Figure — clean a table"],
+    api: ["شكل — API", "Figure — API"],
+    charts: ["شكل — اختر الرسم", "Figure — choose a chart"],
+    regress: ["شكل — خط الانحدار", "Figure — regression line"],
+    "ml-types": ["شكل — أنواع التعلم", "Figure — types of learning"],
+    neural: ["شكل — شبكة عصبونية", "Figure — neural net"],
+    llm: ["شكل — راجع المساعد", "Figure — check the assistant"],
   };
-  return titles[id] ?? "شكل";
+  const pair = titles[id];
+  if (!pair) return ar ? "شكل" : "Figure";
+  return ar ? pair[0] : pair[1];
 }
 
-function pushChapter(blocks: Block[], pack: BookletChapterPack, ar: boolean) {
+function pushQuestions(blocks: Block[], locale: Locale, rows: BookletChapterPack["practice"]) {
+  const letters = bookletLetters(locale);
+  rows.forEach((question, index) => {
+    blocks.push({
+      kind: "question",
+      n: index + 1,
+      prompt: locale === "ar" ? question.promptAr : question.promptEn,
+      options: bookletOptions(locale, question.optionsAr, question.optionsEn),
+      letters,
+    });
+  });
+}
+
+function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) {
+  const ar = locale === "ar";
   const chapter = pack.chapter;
-  blocks.push({ kind: "text", text: `${chapter.id}. ${ar ? chapter.titleAr : chapter.titleEn}`, size: 16, gap: 8 });
-  blocks.push({ kind: "text", text: ar ? chapter.blurbAr : chapter.blurbEn, size: 11, gap: 8 });
+  blocks.push({
+    kind: "banner",
+    text: `${chapter.id}. ${ar ? chapter.titleAr : chapter.titleEn}`,
+    color: chapter.color,
+  });
+  blocks.push({ kind: "text", text: ar ? chapter.blurbAr : chapter.blurbEn, size: 12, gap: 14 });
   const map = mindMapForChapter(chapter.id);
-  if (map) blocks.push({ kind: "map", root: map, color: chapter.color, accent: chapter.accent });
-  for (const id of CHAPTER_FIGURES[chapter.id] ?? []) {
-    blocks.push({ kind: "figure", id, color: chapter.color, title: figureTitle(id) });
+  if (map) {
+    blocks.push({ kind: "section", text: ar ? "1 — الخريطة الذهنية" : "1 — Mind map" });
+    blocks.push({ kind: "map", root: map, color: chapter.color, accent: chapter.accent });
   }
-  for (const scene of pack.scenes) {
-    const term = ar ? scene.termAr : scene.termEn;
-    const text = ar ? scene.sceneAr : scene.sceneEn;
-    blocks.push({ kind: "scene", color: chapter.color, term, scene: text, art: sceneArt(term, text) });
+  const figures = CHAPTER_FIGURES[chapter.id] ?? [];
+  if (figures.length) {
+    blocks.push({ kind: "section", text: ar ? "2 — الرسوم والأشكال" : "2 — Figures" });
+    for (const id of figures) {
+      blocks.push({ kind: "figure", id, color: chapter.color, title: figureTitle(id, ar) });
+    }
   }
+  if (pack.scenes.length) {
+    blocks.push({ kind: "section", text: ar ? "3 — مواقف من الحياة" : "3 — Real-life scenes" });
+    for (const scene of pack.scenes) {
+      const term = ar ? scene.termAr : scene.termEn;
+      const text = ar ? scene.sceneAr : scene.sceneEn;
+      blocks.push({ kind: "scene", color: chapter.color, term, scene: text, art: sceneArt(term, text) });
+    }
+  }
+  blocks.push({ kind: "section", text: ar ? "4 — شرح الدروس" : "4 — Lesson notes" });
   for (const note of LESSON_NOTES.filter((row) => row.chapterId === chapter.id)) {
     const lesson = chapter.lessons.find((item) => item.id === note.id);
     blocks.push({
       kind: "text",
       text: `${note.id} — ${ar ? lesson?.titleAr ?? "" : lesson?.titleEn ?? ""}`,
-      size: 13,
-      gap: 6,
+      size: 14,
+      gap: 10,
     });
     for (const body of ar ? note.bodyAr : note.bodyEn) {
-      blocks.push({ kind: "text", text: `• ${body}`, size: 11, gap: 5 });
+      blocks.push({ kind: "text", text: `• ${body}`, size: 12, gap: 8 });
     }
     for (const term of ar ? note.termsAr : note.termsEn) {
-      blocks.push({ kind: "text", text: `${term.term}: ${term.meaning}`, size: 11, gap: 4 });
+      blocks.push({ kind: "text", text: `${term.term}: ${term.meaning}`, size: 12, gap: 7 });
     }
     blocks.push({
       kind: "text",
       text: `${ar ? "الخلاصة" : "Takeaway"}: ${ar ? note.takeawayAr : note.takeawayEn}`,
-      size: 11,
-      gap: 10,
+      size: 12,
+      gap: 16,
     });
   }
-  blocks.push({ kind: "text", text: ar ? "تدريبات الفصل" : "Chapter practice", size: 13, gap: 8 });
-  pack.practice.forEach((question, index) => {
-    blocks.push({ kind: "text", text: `${index + 1}. ${ar ? question.promptAr : question.promptEn}`, size: 11, gap: 4 });
-    (ar ? question.optionsAr : question.optionsEn).slice(0, 4).forEach((option, optionIndex) => {
-      blocks.push({ kind: "text", text: `${LETTERS[optionIndex]}) ${option}`, size: 11, gap: 3 });
-    });
-    blocks.push({ kind: "text", text: "", size: 6, gap: 4 });
-  });
-  blocks.push({ kind: "text", text: ar ? "حلّل واكتب" : "Analyse and write", size: 13, gap: 8 });
+  blocks.push({ kind: "section", text: ar ? "5 — تدريبات الفصل" : "5 — Chapter practice" });
+  pushQuestions(blocks, locale, pack.practice);
+  blocks.push({ kind: "section", text: ar ? "6 — حلّل واكتب" : "6 — Analyse and write" });
   pack.essays.forEach((essay, index) => {
     blocks.push({
-      kind: "text",
-      text: `${ar ? "مقالي" : "Essay"} ${index + 1}. ${ar ? essay.promptAr : essay.promptEn}`,
-      size: 11,
-      gap: 16,
+      kind: "essay",
+      n: index + 1,
+      prompt: ar ? essay.promptAr : essay.promptEn,
     });
   });
 }
@@ -377,63 +514,51 @@ function buildBlocks(locale: Locale): Block[] {
   const ar = locale === "ar";
   const doc = buildBookletDocument();
   const blocks: Block[] = [
-    { kind: "text", text: ar ? BRAND.nameAr : BRAND.nameEn, size: 12, gap: 6 },
-    { kind: "text", text: ar ? "ملزمة الطالب — البرمجة والذكاء الاصطناعي" : "Student booklet — Programming & AI", size: 20, gap: 8 },
-    { kind: "text", text: `${ar ? BRAND.teacherAr : BRAND.teacherEn} · 2026–2027`, size: 12, gap: 16 },
+    { kind: "banner", text: ar ? BRAND.nameAr : BRAND.nameEn, color: "#0c2d6b" },
+    { kind: "text", text: ar ? "ملزمة الطالب — البرمجة والذكاء الاصطناعي" : "Student booklet — Programming & AI", size: 20, gap: 10 },
+    { kind: "text", text: `${ar ? BRAND.teacherAr : BRAND.teacherEn} · 2026–2027`, size: 13, gap: 18 },
   ];
 
   for (const part of doc.parts) {
     blocks.push({
-      kind: "text",
+      kind: "banner",
       text: part.part === 1 ? (ar ? "الجزء الأول" : "Part 1") : ar ? "الجزء الثاني" : "Part 2",
-      size: 16,
-      gap: 10,
+      color: "#0c2d6b",
     });
-    for (const pack of part.chapters) pushChapter(blocks, pack, ar);
-    blocks.push({ kind: "text", text: ar ? part.homework.titleAr : part.homework.titleEn, size: 14, gap: 8 });
-    part.homework.mcq.forEach((question, index) => {
-      blocks.push({ kind: "text", text: `${index + 1}. ${ar ? question.promptAr : question.promptEn}`, size: 11, gap: 4 });
-      (ar ? question.optionsAr : question.optionsEn).slice(0, 4).forEach((option, optionIndex) => {
-        blocks.push({ kind: "text", text: `${LETTERS[optionIndex]}) ${option}`, size: 11, gap: 3 });
-      });
-    });
+    for (const pack of part.chapters) pushChapter(blocks, pack, locale);
+    blocks.push({ kind: "banner", text: ar ? part.homework.titleAr : part.homework.titleEn, color: "#92400e" });
+    pushQuestions(blocks, locale, part.homework.mcq);
     part.homework.essays.forEach((essay, index) => {
       blocks.push({
-        kind: "text",
-        text: `${ar ? "مقالي" : "Essay"} ${index + 1}. ${ar ? essay.promptAr : essay.promptEn}`,
-        size: 11,
-        gap: 16,
+        kind: "essay",
+        n: index + 1,
+        prompt: ar ? essay.promptAr : essay.promptEn,
       });
     });
   }
 
-  blocks.push({ kind: "text", text: ar ? "كتاب الفائز" : "Al-Faiz", size: 16, gap: 10 });
+  blocks.push({ kind: "banner", text: ar ? "كتاب الفائز" : "Al-Faiz", color: "#0c2d6b" });
   for (const pack of doc.faiz) {
     const color =
       pack.note.id === "f2" ? "#7f1d1d" : pack.note.id === "f3" ? "#134e4a" : pack.note.id === "f4" ? "#4a1942" : "#0c2d6b";
     const accent =
       pack.note.id === "f2" ? "#f59e0b" : pack.note.id === "f3" ? "#2dd4bf" : pack.note.id === "f4" ? "#e879f9" : "#c4a35a";
-    blocks.push({ kind: "text", text: ar ? pack.note.titleAr : pack.note.titleEn, size: 14, gap: 6 });
+    blocks.push({ kind: "banner", text: ar ? pack.note.titleAr : pack.note.titleEn, color });
     const map = mindMapForFaiz(pack.note.id);
     if (map) blocks.push({ kind: "map", root: map, color, accent });
     for (const id of CHAPTER_FIGURES[pack.note.id] ?? []) {
-      blocks.push({ kind: "figure", id, color, title: figureTitle(id) });
+      blocks.push({ kind: "figure", id, color, title: figureTitle(id, ar) });
     }
     for (const section of pack.note.sections) {
-      blocks.push({ kind: "text", text: ar ? section.headingAr : section.headingEn, size: 12, gap: 5 });
+      blocks.push({ kind: "section", text: ar ? section.headingAr : section.headingEn });
       for (const body of ar ? section.bodyAr : section.bodyEn) {
-        blocks.push({ kind: "text", text: body, size: 11, gap: 4 });
+        blocks.push({ kind: "text", text: `• ${body}`, size: 12, gap: 8 });
       }
     }
-    pack.practice.forEach((question, index) => {
-      blocks.push({ kind: "text", text: `${index + 1}. ${ar ? question.promptAr : question.promptEn}`, size: 11, gap: 4 });
-      (ar ? question.optionsAr : question.optionsEn).slice(0, 4).forEach((option, optionIndex) => {
-        blocks.push({ kind: "text", text: `${LETTERS[optionIndex]}) ${option}`, size: 11, gap: 3 });
-      });
-    });
+    pushQuestions(blocks, locale, pack.practice);
   }
 
-  blocks.push({ kind: "text", text: ar ? "مفتاح الإجابة" : "Answer key", size: 16, gap: 8 });
+  blocks.push({ kind: "banner", text: ar ? "مفتاح الإجابة" : "Answer key", color: "#0c2d6b" });
   const keys = [
     ...doc.parts.flatMap(({ chapters }) =>
       chapters.map((pack) => ({
@@ -448,8 +573,8 @@ function buildBlocks(locale: Locale): Block[] {
     blocks.push({
       kind: "text",
       text: `${block.title}: ${block.answers.map((row, index) => `${index + 1}${row.letter}`).join("  ")}`,
-      size: 11,
-      gap: 6,
+      size: 12,
+      gap: 10,
     });
   }
   return blocks;
@@ -483,6 +608,9 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
     return y + h > height - margin;
   };
 
+  const textX = ar ? width - margin : margin;
+  const textAlign = ar ? "right" : "left";
+
   reset();
   let y = margin;
   for (const block of blocks) {
@@ -492,14 +620,52 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
       ctx.fillStyle = "#0b1220";
       const chunks = block.text ? wrap(ctx, block.text, maxWidth) : [""];
       for (const chunk of chunks) {
-        if (need(size + 8, y)) {
+        if (need(size + 10, y)) {
           await flush();
           reset();
           y = margin;
         }
-        if (chunk) paintText(ctx, chunk, width - margin, y, "right");
-        y += size + (block.gap ?? 6);
+        if (chunk) paintText(ctx, chunk, textX, y, textAlign);
+        y += size + (block.gap ?? 8);
       }
+      continue;
+    }
+    if (block.kind === "banner") {
+      if (need(54, y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      y += drawBanner(ctx, block.text, block.color, margin, y, maxWidth, ar);
+      continue;
+    }
+    if (block.kind === "section") {
+      if (need(40, y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      y += drawSection(ctx, block.text, margin, y, maxWidth, ar);
+      continue;
+    }
+    if (block.kind === "question") {
+      const h = questionLines(ctx, block, maxWidth).h + 14;
+      if (need(h, y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      y += drawQuestionCard(ctx, block, margin, y, maxWidth, ar);
+      continue;
+    }
+    if (block.kind === "essay") {
+      const h = essayHeight(ctx, block, maxWidth) + 14;
+      if (need(h, y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      y += drawEssayCard(ctx, block, margin, y, maxWidth, ar);
       continue;
     }
     if (block.kind === "figure") {
