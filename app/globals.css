@@ -14,6 +14,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #070b14;
   --foreground: #eef3fb;
   --surface: #121a2c;
@@ -62,6 +63,82 @@ body {
 
 .dark .bg-emerald-50 {
   background-color: color-mix(in srgb, #10b981 18%, var(--surface));
+}
+
+.dark .bg-zinc-100,
+.dark .bg-\[\#eef3fb\] {
+  background-color: #1a2438;
+}
+
+.dark .bg-\[\#fff4cc\],
+.dark .bg-\[\#fff6d6\] {
+  background-color: #3d2e0a;
+}
+
+.dark .text-\[\#111827\] {
+  color: #eef3fb;
+}
+
+.dark .text-\[\#0c2d6b\] {
+  color: #c5d8ff;
+}
+
+.dark .text-\[\#92400e\] {
+  color: #fcd34d;
+}
+
+.dark .border-slate-300,
+.dark .ring-slate-300 {
+  border-color: #334155;
+  --tw-ring-color: #334155;
+}
+
+.dark .bg-primary {
+  background-color: #2563eb;
+}
+
+.dark .booklet-paper {
+  color: #eef3fb;
+}
+
+.dark .booklet-paper h2,
+.dark .booklet-paper h3,
+.dark .booklet-paper h4,
+.dark .booklet-paper h5 {
+  color: #c5d8ff;
+}
+
+.dark .textbook-table th,
+.dark .textbook-table td {
+  border-color: #475569;
+  color: #eef3fb;
+}
+
+.dark .textbook-table th {
+  background: #1e3a6e;
+  color: #fff;
+}
+
+.dark .textbook-zebra td {
+  background: #18233a;
+}
+
+.dark .textbook-example td {
+  background: #3d2e0a;
+  color: #fde68a;
+}
+
+.dark .textbook-ask-mark {
+  color: #fbbf24;
+}
+
+.dark .booklet-q {
+  border-color: #334155;
+  background: #18233a;
+}
+
+.dark .ink-brand {
+  color: #c5d8ff !important;
 }
 
 .keep-white,
@@ -179,6 +256,37 @@ body {
   body {
     background: white;
     color: #111;
+  }
+
+  .dark .booklet-paper,
+  .dark .booklet-paper h2,
+  .dark .booklet-paper h3,
+  .dark .booklet-paper h4,
+  .dark .booklet-paper h5,
+  .dark .text-\[\#111827\],
+  .dark .text-\[\#0c2d6b\],
+  .dark .textbook-table th,
+  .dark .textbook-table td,
+  .dark .textbook-example td {
+    color: #111827;
+  }
+
+  .dark .textbook-table th {
+    background: #0c2d6b;
+    color: #fff;
+  }
+
+  .dark .textbook-example td,
+  .dark .bg-\[\#fff4cc\],
+  .dark .bg-\[\#fff6d6\] {
+    background: #fff4cc;
+    color: #111827;
+  }
+
+  .dark .bg-white,
+  .dark .bg-zinc-100,
+  .dark .bg-\[\#eef3fb\] {
+    background: #fff;
   }
 
   .print-sheet {

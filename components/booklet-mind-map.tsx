@@ -23,14 +23,14 @@ export function BookletMindMap({
       <div className="grid gap-3 sm:grid-cols-2">
         {root.children.map((branch) => (
           <div key={branch.id} className="rounded-2xl p-3" style={{ background: `${color}10` }}>
-            <p className="text-base font-extrabold" style={{ color }}>
+            <p className="ink-brand text-base font-extrabold" style={{ color }}>
               {bookletSafe(locale, ar ? branch.labelAr : branch.labelEn)}
             </p>
             <ul className="mt-2 space-y-1.5">
               {branch.children.map((leaf) => (
                 <li
                   key={leaf.id}
-                  className="rounded-lg px-3 py-2 text-sm font-bold leading-7 text-primary-dark"
+                  className="rounded-lg px-3 py-2 text-sm font-bold leading-7 text-primary-dark dark:text-[#071225]"
                   style={{ background: accent }}
                 >
                   {bookletSafe(locale, ar ? leaf.labelAr : leaf.labelEn)}

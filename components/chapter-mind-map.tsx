@@ -31,7 +31,7 @@ export function ChapterMindMap({
             key={branch.id}
             className="rounded-3xl bg-white p-4 ring-1 ring-primary/10"
           >
-            <h3 className="text-sm font-semibold" style={{ color }}>
+            <h3 className="ink-brand text-sm font-semibold" style={{ color }}>
               {locale === "ar" ? branch.labelAr : branch.labelEn}
             </h3>
             <div className="mt-3 flex flex-wrap gap-1.5">

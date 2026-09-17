@@ -21,7 +21,7 @@ function Frame({
   const ar = locale === "ar";
   return (
     <figure className="overflow-hidden rounded-xl bg-white ring-1 ring-slate-300">
-      <p className="px-4 pt-4 text-base font-extrabold" style={{ color }}>
+      <p className="ink-brand px-4 pt-4 text-base font-extrabold" style={{ color }}>
         {ar ? titleAr : titleEn}
       </p>
       <div className="p-4" dir={ar ? "rtl" : "ltr"} style={{ unicodeBidi: "isolate" }}>
@@ -227,14 +227,14 @@ export function BookletFigure({
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2">
             <Pill label={ar ? "المتصفح" : "Browser"} color={color} />
-            <span className="text-xs font-bold" style={{ color }}>
+            <span className="ink-brand text-xs font-bold" style={{ color }}>
               {ar ? "← قراءة" : "Read →"}
             </span>
             <Pill label={ar ? "الخادم" : "Server"} color={color} dark />
           </div>
           <div className="flex items-center justify-center gap-2">
             <Pill label={ar ? "المتصفح" : "Browser"} color={color} />
-            <span className="text-xs font-bold" style={{ color }}>
+            <span className="ink-brand text-xs font-bold" style={{ color }}>
               {ar ? "← إرسال" : "Send →"}
             </span>
             <Pill label={ar ? "الخادم" : "Server"} color={color} dark />
@@ -291,7 +291,7 @@ export function BookletFigure({
         <div className="grid grid-cols-3 gap-2">
           {items.map((item) => (
             <div key={item.label} className="rounded-2xl bg-primary/5 px-2 py-3 text-center">
-              <p className="text-sm font-bold" style={{ color }}>
+              <p className="ink-brand text-sm font-bold" style={{ color }}>
                 {item.label}
               </p>
               <p className="mt-1 text-[11px] text-foreground/65" dir={rtl}>
@@ -602,7 +602,7 @@ export function SceneCard({
     <article className="overflow-hidden rounded-3xl bg-white ring-1 ring-primary/10">
       <SceneArt kind={kind} color={color} />
       <div className="px-3 pb-3">
-        <p className="text-[11px] font-semibold" style={{ color }}>
+        <p className="ink-brand text-[11px] font-semibold" style={{ color }}>
           {term}
         </p>
         <p className="mt-1 text-[11px] leading-relaxed text-foreground/70">{scene}</p>
