@@ -28,6 +28,7 @@ import { MAKEUP_HOMEWORK_SIZE, pickLessonHomework, withShuffledOptions } from "@
 import { examForChapter, examPaperSeed, objectiveTotal, type ExamPaperId } from "@/lib/exams";
 import { getLocale } from "@/lib/locale";
 import { getStudentSession, setStudentCookie } from "@/lib/student-session";
+import { ARENA_XP } from "@/lib/arena";
 import { getGame } from "@/lib/games";
 import { after } from "next/server";
 
@@ -37,6 +38,12 @@ export async function awardGameXp(gameId: string): Promise<number> {
   const game = getGame(gameId);
   if (!game) return student.points;
   return addPoints(student.id, game.xp);
+}
+
+export async function awardArenaXp(): Promise<number> {
+  const student = await getStudentSession();
+  if (!student) return 0;
+  return addPoints(student.id, ARENA_XP);
 }
 
 export async function submitChapterExam(input: {

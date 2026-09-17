@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
+  Box,
   ClipboardCheck,
   Gamepad2,
   Home,
@@ -39,6 +40,7 @@ function items(locale: Locale): {
     { href: "/dashboard/faiz", label: t(locale, "navFaiz"), icon: BookOpen },
     { href: "/dashboard/exams", label: t(locale, "navExams"), icon: ClipboardCheck },
     { href: "/dashboard/games", label: t(locale, "navGames"), icon: Gamepad2 },
+    { href: "/dashboard/arena", label: t(locale, "navArena"), icon: Box },
     { href: "/dashboard/booklet", label: t(locale, "navBooklet"), icon: Printer },
     { href: "/dashboard/chat-to-teacher", label: t(locale, "navChat"), icon: MessageCircle },
     { href: "/dashboard/review", label: t(locale, "reviewMistakes"), icon: RotateCcw },

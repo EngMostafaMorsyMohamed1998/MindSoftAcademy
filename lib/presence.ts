@@ -12,7 +12,7 @@ export type PresencePing = {
 
 export function screenFromPath(path: string): PresenceScreen {
   if (/\/dashboard\/exam(\/|$)/.test(path) || path.includes("exam-simulator")) return "exam";
-  if (path.includes("/dashboard/games")) return "game";
+  if (path.includes("/dashboard/games") || path.includes("/dashboard/arena")) return "game";
   return "elsewhere";
 }
 

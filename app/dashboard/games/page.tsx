@@ -15,6 +15,15 @@ export default async function GamesPage() {
     <div className="mx-auto w-full max-w-4xl">
       <h1 className="font-serif text-3xl">{t(locale, "navGames")}</h1>
       <p className="mt-2 text-sm text-foreground/65">{t(locale, "featGameD")}</p>
+      <Link
+        href="/dashboard/arena"
+        className="mt-6 block overflow-hidden rounded-3xl bg-primary-dark p-6 text-white"
+      >
+        <p className="text-xs font-semibold tracking-wide text-accent">3D</p>
+        <h2 className="mt-1 font-serif text-2xl">{t(locale, "arenaTitle")}</h2>
+        <p className="mt-2 text-sm text-white/70">{t(locale, "arenaLead")}</p>
+        <p className="mt-4 text-sm font-semibold text-accent">{t(locale, "arenaStart")}</p>
+      </Link>
       <ul className="mt-6 grid gap-3 sm:grid-cols-2">
         {[...CHAPTER_GAMES]
           .sort((a, b) => a.chapterId.localeCompare(b.chapterId) || a.id.localeCompare(b.id))

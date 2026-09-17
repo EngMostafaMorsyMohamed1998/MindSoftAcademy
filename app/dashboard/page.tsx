@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Award, BookOpen, ClipboardCheck, Gamepad2, MessageCircle, Printer, RotateCcw, Share2, Trophy } from "lucide-react";
+import { Award, BookOpen, Box, ClipboardCheck, Gamepad2, MessageCircle, Printer, RotateCcw, Share2, Trophy } from "lucide-react";
 import { HeroRobot } from "@/components/hero-robot";
 import { StudyProgress } from "@/components/study-progress";
 import { allChaptersPassed } from "@/lib/chapter-progress";
@@ -61,6 +61,7 @@ export default async function DashboardHomePage() {
     { href: "/dashboard/faiz", label: t(locale, "navFaiz"), icon: BookOpen },
     { href: "/dashboard/exams", label: t(locale, "navExams"), icon: ClipboardCheck },
     { href: "/dashboard/games", label: t(locale, "navGames"), icon: Gamepad2 },
+    { href: "/dashboard/arena", label: t(locale, "navArena"), icon: Box },
     { href: "/dashboard/booklet", label: t(locale, "navBooklet"), icon: Printer },
     { href: "/dashboard/chat-to-teacher", label: t(locale, "navChat"), icon: MessageCircle },
     { href: "/dashboard/review", label: t(locale, "reviewMistakes"), icon: RotateCcw },
