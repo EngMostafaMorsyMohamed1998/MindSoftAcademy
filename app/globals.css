@@ -123,7 +123,22 @@ body {
 @media print {
   @page {
     size: A4;
-    margin: 10mm 9mm 12mm;
+    margin: 10mm 9mm 16mm;
+    @bottom-left {
+      content: "01153464345";
+      font-size: 9pt;
+      color: #52525b;
+    }
+    @bottom-center {
+      content: counter(page);
+      font-size: 10pt;
+      color: #52525b;
+    }
+    @bottom-right {
+      content: "البكالوريا";
+      font-size: 9pt;
+      color: #059669;
+    }
   }
 
   header,

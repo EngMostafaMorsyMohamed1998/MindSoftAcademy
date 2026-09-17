@@ -12,4 +12,5 @@ export const BRAND = {
   year: "2026–2027",
   trackAr: "مسار الهندسة وعلوم الحاسب",
   trackEn: "Engineering and Computer Science",
+  phone: "01153464345",
 } as const;

@@ -1,4 +1,5 @@
 import { bookletSafe, termArt } from "@/lib/booklet-lang";
+import { BRAND } from "@/lib/brand";
 import type { TextbookPage } from "@/lib/textbook-pages";
 import type { Locale } from "@/lib/locale";
 
@@ -199,9 +200,12 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
         </p>
       </div>
 
-      <footer className="textbook-foot flex items-center justify-between border-t border-zinc-200 px-4 py-2">
+      <footer className="textbook-foot flex items-center justify-between gap-3 border-t border-zinc-200 px-4 py-2">
         <span className="rounded-sm bg-emerald-600 px-3 py-1 text-[11px] font-semibold text-white">
           {ar ? "البكالوريا" : "Baccalaureate"}
+        </span>
+        <span className="text-xs font-semibold tracking-wide text-zinc-600" dir="ltr">
+          {BRAND.phone}
         </span>
         <span className="text-xs text-zinc-500">{page.pageNo}</span>
       </footer>

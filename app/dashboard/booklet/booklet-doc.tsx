@@ -3,6 +3,7 @@ import { BookletFigure, CHAPTER_FIGURES, SceneCard } from "@/components/booklet-
 import { BookletMindMap } from "@/components/booklet-mind-map";
 import { TextbookLesson } from "@/components/textbook-page";
 import { bookletSafe } from "@/lib/booklet-lang";
+import { BRAND } from "@/lib/brand";
 import {
   bookletAnswerMark,
   bookletChapterPack,
@@ -219,7 +220,9 @@ export function BookletCover({
     <header className="print-keep mb-6 rounded-3xl bg-white p-6 ring-1 ring-primary/10 sm:p-8">
       <p className="text-xs font-semibold tracking-wide text-primary/60">{brand}</p>
       <h2 className="mt-1 font-serif text-3xl">{ar ? "ملزمة الطالب" : "Student booklet"}</h2>
-      <p className="mt-1 text-sm text-foreground/65">{teacher} · 2026–2027 · 2Bac</p>
+      <p className="mt-1 text-sm text-foreground/65">
+        {teacher} · <span dir="ltr">{BRAND.phone}</span> · 2026–2027 · 2Bac
+      </p>
       <div className="mt-5 grid gap-4 sm:grid-cols-3">
         <Field label={ar ? "الاسم" : "Name"} />
         <Field label={ar ? "رقم التليفون" : "Phone"} />

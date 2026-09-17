@@ -965,7 +965,7 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
   const blocks: Block[] = [
     { kind: "banner", text: ar ? BRAND.nameAr : BRAND.nameEn, color: "#0c2d6b" },
     { kind: "text", text: ar ? "ملزمة الطالب — البرمجة والذكاء الاصطناعي" : "Student booklet — Programming and Artificial Intelligence", size: 20, gap: 10 },
-    { kind: "text", text: `${ar ? BRAND.teacherAr : BRAND.teacherEn} · 2026–2027`, size: 13, gap: 12 },
+    { kind: "text", text: `${ar ? BRAND.teacherAr : BRAND.teacherEn} · ${BRAND.phone} · 2026–2027`, size: 13, gap: 12 },
   ];
 
   if (scope === "faiz") {
@@ -1035,6 +1035,7 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
   ensureFont();
   const ar = locale === "ar";
   const margin = 40;
+  const foot = 32;
   const maxWidth = PAGE_W - margin * 2;
   const canvas = createCanvas(PAGE_W * SCALE, PAGE_H * SCALE);
   const ctx = canvas.getContext("2d");
@@ -1050,14 +1051,39 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
     ctx.fillStyle = "#0b1220";
   };
 
+  let pageNo = 1;
+
+  const drawFooter = (n: number) => {
+    ctx.strokeStyle = "#e4e4e7";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin, PAGE_H - foot);
+    ctx.lineTo(PAGE_W - margin, PAGE_H - foot);
+    ctx.stroke();
+    const badge = ar ? "البكالوريا" : "Baccalaureate";
+    ctx.font = `10px ${FONT_NAME}`;
+    const badgeW = Math.max(72, ctx.measureText(badge).width + 16);
+    const badgeX = ar ? PAGE_W - margin - badgeW : margin;
+    roundRect(ctx, badgeX, PAGE_H - 24, badgeW, 16, 3, "#059669");
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `10px ${FONT_NAME}`;
+    paintText(ctx, badge, badgeX + badgeW / 2, PAGE_H - 22, "center");
+    ctx.fillStyle = "#52525b";
+    ctx.font = `11px ${FONT_NAME}`;
+    paintText(ctx, String(n), ar ? margin : PAGE_W - margin, PAGE_H - 22, ar ? "left" : "right");
+    paintText(ctx, BRAND.phone, PAGE_W / 2, PAGE_H - 22, "center");
+  };
+
   const flush = async () => {
+    drawFooter(pageNo);
+    pageNo += 1;
     const page = pdf.addPage([PAGE_W, PAGE_H]);
     const image = await pdf.embedJpg(canvas.toBuffer("image/jpeg", 92));
     page.drawImage(image, { x: 0, y: 0, width: PAGE_W, height: PAGE_H });
   };
 
   const need = (h: number, y: number) => {
-    return y + h > PAGE_H - margin;
+    return y + h > PAGE_H - margin - foot;
   };
 
   const textX = ar ? PAGE_W - margin : margin;
