@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Award, BookOpen, ClipboardCheck, Gamepad2, MessageCircle, Printer, RotateCcw, Trophy } from "lucide-react";
+import { Award, BookOpen, ClipboardCheck, Gamepad2, MessageCircle, Printer, RotateCcw, Share2, Trophy } from "lucide-react";
 import { HeroRobot } from "@/components/hero-robot";
 import { StudyProgress } from "@/components/study-progress";
 import { allChaptersPassed } from "@/lib/chapter-progress";
@@ -55,6 +55,7 @@ export default async function DashboardHomePage() {
   });
 
   const shortcuts = [
+    { href: "/dashboard/community", label: t(locale, "navCommunity"), icon: Share2 },
     { href: "/dashboard/leaderboard", label: t(locale, "navLeaderboard"), icon: Trophy },
     { href: "/dashboard/chapters", label: t(locale, "navChapters"), icon: BookOpen },
     { href: "/dashboard/faiz", label: t(locale, "navFaiz"), icon: BookOpen },

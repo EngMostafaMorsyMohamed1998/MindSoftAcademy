@@ -22,6 +22,8 @@ import {
   stopSurprise,
   removeStudentDevice,
   saveDeviceLimit,
+  saveLessonExample,
+  deleteLessonExample,
   toggleStudentSuspend,
   unlockStudentChapter,
   type FormState,
@@ -39,11 +41,13 @@ import { buildMonthProfits, cairoMonthLabel, type MonthPayment } from "@/lib/fee
 import { absenteeWhatsappText, sessionsInMonth, type ClassSession } from "@/lib/class-session";
 import { codeWhatsappText, feesWhatsappText, parentWeeklyWhatsappText, whatsappHref, type ClassRow } from "@/lib/class-roster";
 import { starLabel } from "@/lib/week-stars";
-import { CHAPTERS } from "@/lib/curriculum";
+import { CHAPTERS, getLesson } from "@/lib/curriculum";
 import { examPaperTitle } from "@/lib/faiz";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
-import type { AccessCode, CourseCertificate, DeviceLimit, EssayGrade, ExamSubmission, StudentDevice, TelegramLink } from "@/lib/access-store";
+import type { AccessCode, CourseCertificate, DeviceLimit, EssayGrade, ExamSubmission, HomeworkResult, StudentDevice, TelegramLink } from "@/lib/access-store";
+import type { ClassLessonExample } from "@/lib/class-examples";
+import { HomeworkSlipButton } from "@/components/homework-slip-button";
 import { CertificateCard } from "@/components/certificate-card";
 import { CertificatePrintButton } from "@/components/certificate-print-button";
 import { PresenceBoard } from "@/components/presence-board";
@@ -84,6 +88,8 @@ export function AdminShell({
   today,
   weekday,
   month,
+  homework,
+  examples,
   initialTab = "class",
 }: {
   locale: Locale;
@@ -111,6 +117,8 @@ export function AdminShell({
   today: string;
   weekday: number;
   month: string;
+  homework: HomeworkResult[];
+  examples: ClassLessonExample[];
   initialTab?: Tab;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -143,16 +151,18 @@ export function AdminShell({
     telegramInitial,
   );
   const [deviceLimitState, deviceLimitAction, deviceLimitPending] = useActionState(saveDeviceLimit, initial);
+  const [exampleState, exampleAction, examplePending] = useActionState(saveLessonExample, initial);
+  const [exampleDeleteState, exampleDeleteAction, exampleDeletePending] = useActionState(deleteLessonExample, initial);
   const [deviceForgetState, deviceForgetAction, deviceForgetPending] = useActionState(removeStudentDevice, initial);
   const [slotDeleteState, slotDeleteAction, slotDeletePending] = useActionState(deleteWeekSlot, initial);
   const [windowOverride, setWindowOverride] = useState<"open" | "closed" | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
-    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok || telegramHookState.ok || telegramOneState.ok || telegramAllState.ok || deviceLimitState.ok || deviceForgetState.ok) {
+    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok || telegramHookState.ok || telegramOneState.ok || telegramAllState.ok || deviceLimitState.ok || deviceForgetState.ok || exampleState.ok || exampleDeleteState.ok) {
       router.refresh();
     }
-  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, mixState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, feeState.ok, surpriseState.ok, surpriseCloseState.ok, telegramHookState.ok, telegramOneState.ok, telegramAllState.ok, deviceLimitState.ok, deviceForgetState.ok, router]);
+  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, mixState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, feeState.ok, surpriseState.ok, surpriseCloseState.ok, telegramHookState.ok, telegramOneState.ok, telegramAllState.ok, deviceLimitState.ok, deviceForgetState.ok, exampleState.ok, exampleDeleteState.ok, router]);
 
   useEffect(() => {
     if (examState.examChapterId || mixState.examChapterId) setWindowOverride("open");
@@ -677,6 +687,93 @@ export function AdminShell({
                   : surpriseState.error || surpriseCloseState.error}
               </p>
             ) : null}
+          </section>
+
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "classExampleTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "classExampleHint")}</p>
+            <form action={exampleAction} className="mt-4 grid gap-3">
+              <label className="grid gap-1 text-sm font-medium">
+                {t(locale, "lessons")}
+                <select name="lessonId" className="h-11 rounded-2xl border border-primary/15 px-3 text-sm">
+                  {CHAPTERS.flatMap((chapter) =>
+                    chapter.lessons.map((lesson) => (
+                      <option key={lesson.id} value={lesson.id}>
+                        {lesson.id} · {locale === "ar" ? lesson.titleAr : lesson.titleEn}
+                      </option>
+                    )),
+                  )}
+                </select>
+              </label>
+              <label className="grid gap-1 text-sm font-medium">
+                {t(locale, "classExampleBody")}
+                <textarea
+                  name="bodyAr"
+                  rows={2}
+                  maxLength={220}
+                  required
+                  className="rounded-2xl border border-primary/15 px-3 py-2 text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={examplePending}
+                className="h-12 rounded-full bg-primary text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {t(locale, "classExampleSave")}
+              </button>
+            </form>
+            {exampleState.error ? <p className="mt-2 text-sm text-red-700">{exampleState.error}</p> : null}
+            {examples.length === 0 ? (
+              <p className="mt-3 text-sm text-foreground/55">{t(locale, "classExampleEmpty")}</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {examples.slice(0, 8).map((row) => {
+                  const lesson = getLesson(row.lessonId);
+                  return (
+                    <li key={row.id} className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                      <p className="text-xs text-foreground/55">
+                        {row.lessonId}
+                        {lesson ? ` · ${locale === "ar" ? lesson.titleAr : lesson.titleEn}` : ""}
+                      </p>
+                      <p className="mt-1">{row.bodyAr}</p>
+                      <form action={exampleDeleteAction} className="mt-2">
+                        <input type="hidden" name="exampleId" value={row.id} />
+                        <button
+                          type="submit"
+                          disabled={exampleDeletePending}
+                          className="text-xs font-semibold text-red-700 disabled:opacity-50"
+                        >
+                          {t(locale, "classExampleDelete")}
+                        </button>
+                      </form>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <div className="mt-4">
+              <HomeworkSlipButton
+                locale={locale}
+                label={t(locale, "printHomeworkSlips")}
+                slips={homework
+                  .filter((row) => row.passed)
+                  .slice(0, 40)
+                  .map((row) => {
+                    const lesson = getLesson(row.lessonId);
+                    const student = codes.find((item) => item.id === row.studentId);
+                    return {
+                      name: student?.name ?? row.studentId,
+                      lessonId: row.lessonId,
+                      lessonTitle: lesson ? (locale === "ar" ? lesson.titleAr : lesson.titleEn) : row.lessonId,
+                      percent: Math.round((row.score / Math.max(row.total, 1)) * 100),
+                      score: row.score,
+                      total: row.total,
+                      date: new Date(row.submittedAt).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-GB"),
+                    };
+                  })}
+              />
+            </div>
           </section>
 
           {classGroups.filter((row) => row.weekday === weekday).length ? (

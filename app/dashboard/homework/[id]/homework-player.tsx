@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnswerReview } from "@/components/answer-review";
+import { HomeworkSlipButton } from "@/components/homework-slip-button";
 import { TrueFalsePick } from "@/components/true-false-pick";
 import { submitLessonHomework } from "@/app/actions/study";
 import {
@@ -21,6 +22,9 @@ export function HomeworkPlayer({
   lessonId,
   chapterId,
   lessonHint,
+  lessonTitle,
+  studentName,
+  extras = [],
   size = LESSON_HOMEWORK_SIZE,
   makeupDate,
   dueDate,
@@ -29,6 +33,9 @@ export function HomeworkPlayer({
   lessonId: string;
   chapterId: string;
   lessonHint: string;
+  lessonTitle: string;
+  studentName: string;
+  extras?: HomeworkQuestion[];
   size?: number;
   makeupDate?: string;
   dueDate?: string;
@@ -43,11 +50,11 @@ export function HomeworkPlayer({
   const paper = useMemo(
     () =>
       seed
-        ? pickLessonHomework(lessonId, seed, size).map((question, index) =>
+        ? pickLessonHomework(lessonId, seed, size, extras).map((question, index) =>
             withShuffledOptions(question, seed + index * 17),
           )
         : [],
-    [lessonId, seed, size],
+    [lessonId, seed, size, extras],
   );
 
   async function finish() {
@@ -76,12 +83,29 @@ export function HomeworkPlayer({
           takeaway={lessonHint}
         />
         {result.passed ? (
-          <Link
-            href={makeupDate ? "/dashboard" : `/dashboard/chapters/${chapterId}`}
-            className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white"
-          >
-            {makeupDate ? t(locale, "makeupDone") : t(locale, "back")}
-          </Link>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <HomeworkSlipButton
+              locale={locale}
+              label={t(locale, "printHomeworkSlip")}
+              slips={[
+                {
+                  name: studentName,
+                  lessonId,
+                  lessonTitle,
+                  percent: Math.round((result.score / result.total) * 100),
+                  score: result.score,
+                  total: result.total,
+                  date: new Date().toLocaleDateString(locale === "ar" ? "ar-EG" : "en-GB"),
+                },
+              ]}
+            />
+            <Link
+              href={makeupDate ? "/dashboard" : `/dashboard/chapters/${chapterId}`}
+              className="inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white"
+            >
+              {makeupDate ? t(locale, "makeupDone") : t(locale, "back")}
+            </Link>
+          </div>
         ) : (
           <button
             type="button"

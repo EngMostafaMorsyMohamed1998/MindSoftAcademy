@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Printer,
   RotateCcw,
+  Share2,
   Trophy,
   type LucideIcon,
 } from "lucide-react";
@@ -31,6 +32,7 @@ function items(locale: Locale): {
 }[] {
   return [
     { href: "/dashboard", label: t(locale, "navHome"), icon: Home },
+    { href: "/dashboard/community", label: t(locale, "navCommunity"), icon: Share2 },
     { href: "/dashboard/leaderboard", label: t(locale, "navLeaderboard"), icon: Trophy },
     { href: "/dashboard/chapters", label: t(locale, "navChapters"), icon: BookOpen },
     { href: "/dashboard/courses", label: t(locale, "navBook"), icon: Library },

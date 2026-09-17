@@ -19,6 +19,7 @@ import {
   saveEssayGrade,
   saveExam,
   saveHomework,
+  classHomeworkQuestions,
   type MissedQuestion,
 } from "@/lib/access-store";
 import { examWindowOpen, REVIEW_AFTER_MS } from "@/lib/class-clock";
@@ -173,7 +174,8 @@ export async function submitLessonHomework(input: {
     if (!task) return { error: "MAKEUP" };
   }
   const size = input.makeupDate ? (input.size ?? MAKEUP_HOMEWORK_SIZE) : input.size;
-  const paper = pickLessonHomework(input.lessonId, input.seed, size).map((question, index) =>
+  const extras = await classHomeworkQuestions(input.lessonId);
+  const paper = pickLessonHomework(input.lessonId, input.seed, size, extras).map((question, index) =>
     withShuffledOptions(question, input.seed + index * 17),
   );
   if (paper.length === 0) return { error: "NO_HOMEWORK" };

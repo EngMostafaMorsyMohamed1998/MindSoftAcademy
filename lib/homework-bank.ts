@@ -187,7 +187,10 @@ export function pickLessonHomework(
   lessonId: string,
   seed: number,
   size = LESSON_HOMEWORK_SIZE,
+  extras: HomeworkQuestion[] = [],
 ): HomeworkQuestion[] {
+  const classQs = extras.filter((question) => question.lessonId === lessonId).slice(0, 2);
+  const want = Math.max(0, size - classQs.length);
   const pool = questionsForLesson(lessonId);
   const mcq = shuffled(
     pool.filter((question) => question.kind === "mcq"),
@@ -197,14 +200,14 @@ export function pickLessonHomework(
     pool.filter((question) => question.kind === "tf"),
     seed + 41,
   );
-  const mcqWanted = Math.min(mcq.length, Math.max(size - 3, Math.ceil(size * 0.8)));
+  const mcqWanted = Math.min(mcq.length, Math.max(want - 3, Math.ceil(want * 0.8)));
   const picked = [...mcq.slice(0, mcqWanted)];
-  const remaining = size - picked.length;
+  const remaining = want - picked.length;
   picked.push(...tf.slice(0, remaining));
-  if (picked.length < size) {
-    picked.push(...mcq.slice(mcqWanted, mcqWanted + (size - picked.length)));
+  if (picked.length < want) {
+    picked.push(...mcq.slice(mcqWanted, mcqWanted + (want - picked.length)));
   }
-  return shuffled(picked, seed + 7).slice(0, Math.min(size, picked.length));
+  return shuffled([...classQs, ...picked], seed + 7).slice(0, Math.min(size, classQs.length + picked.length));
 }
 
 export function withShuffledOptions(

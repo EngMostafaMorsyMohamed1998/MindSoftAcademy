@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { classHomeworkQuestions } from "@/lib/access-store";
 import { isChapterUnlocked } from "@/lib/chapter-progress";
 import { studentProgress } from "@/lib/student-progress";
+import { getCurrentUser } from "@/lib/current-user";
 import { getLesson, isChapterId } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
 import { notesForLesson } from "@/lib/lessons";
@@ -21,8 +23,10 @@ export default async function HomeworkPage({
     redirect("/dashboard/chapters");
   }
   const locale = await getLocale();
+  const user = await getCurrentUser();
   const note = notesForLesson(lesson.id);
   const lessonHint = note ? (locale === "ar" ? note.takeawayAr : note.takeawayEn) : "";
+  const extras = await classHomeworkQuestions(lesson.id);
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -38,6 +42,9 @@ export default async function HomeworkPage({
         lessonId={lesson.id}
         chapterId={lesson.chapterId}
         lessonHint={lessonHint}
+        lessonTitle={locale === "ar" ? lesson.titleAr : lesson.titleEn}
+        studentName={user?.name ?? ""}
+        extras={extras}
       />
     </div>
   );

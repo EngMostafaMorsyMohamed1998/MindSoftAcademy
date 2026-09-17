@@ -356,3 +356,44 @@ model ClassSurpriseAnswer {
   @@unique([surpriseId, studentId])
   @@index([surpriseId])
 }
+
+model ClassLessonExample {
+  id        String   @id
+  lessonId  String
+  bodyAr    String
+  bodyEn    String   @default("")
+  createdAt DateTime
+
+  @@index([lessonId])
+}
+
+model ClassCommunityPost {
+  id         String   @id
+  authorId   String
+  authorName String
+  groupId    String   @default("")
+  body       String
+  createdAt  DateTime
+
+  @@index([createdAt])
+}
+
+model ClassCommunityComment {
+  id         String   @id
+  postId     String
+  authorId   String
+  authorName String
+  body       String
+  createdAt  DateTime
+
+  @@index([postId])
+}
+
+model ClassCommunityLike {
+  id        String @id
+  postId    String
+  studentId String
+
+  @@unique([postId, studentId])
+  @@index([postId])
+}

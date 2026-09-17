@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { listStudentMakeups } from "@/lib/access-store";
+import { classHomeworkQuestions, listStudentMakeups } from "@/lib/access-store";
 import { getCurrentUser } from "@/lib/current-user";
 import { getLesson } from "@/lib/curriculum";
 import { t } from "@/lib/i18n";
@@ -50,6 +50,9 @@ export default async function MakeupPage({
         lessonId={task.lessonId}
         chapterId={task.chapterId}
         lessonHint={lessonHint}
+        lessonTitle={lesson ? (locale === "ar" ? lesson.titleAr : lesson.titleEn) : task.lessonId}
+        studentName={user.name}
+        extras={await classHomeworkQuestions(task.lessonId)}
         size={MAKEUP_SIZE}
         makeupDate={task.date}
         dueDate={dueLabel}

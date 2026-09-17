@@ -38,6 +38,17 @@ import {
 } from "@/lib/devices";
 import { parseWeekSlots, sortWeekSlots, type WeekSlot } from "@/lib/week-plan";
 import { parseClassGroups, sortClassGroups, type ClassGroup } from "@/lib/class-groups";
+import { parseClassExamples, questionsFromExamples, type ClassLessonExample } from "@/lib/class-examples";
+import type { HomeworkQuestion } from "@/lib/homework-bank";
+import {
+  buildCommunityFeed,
+  cleanCommunityText,
+  COMMUNITY_COMMENT_MAX,
+  COMMUNITY_POST_MAX,
+  type CommunityComment,
+  type CommunityFeedPost,
+  type CommunityPost,
+} from "@/lib/community";
 
 export type AccessCode = {
   id: string;
@@ -1314,5 +1325,160 @@ export async function forgetStudentDevice(id: string): Promise<void> {
     await deleteDeviceRow(id);
   } catch {
     // Local store is enough if Prisma migrate has not run yet.
+  }
+}
+
+export async function listLessonExamples(): Promise<ClassLessonExample[]> {
+  try {
+    const { readExampleRows } = await import("@/lib/class-db");
+    return parseClassExamples(await readExampleRows());
+  } catch {
+    return [];
+  }
+}
+
+export async function addLessonExample(input: {
+  lessonId: string;
+  bodyAr: string;
+  bodyEn?: string;
+}): Promise<ClassLessonExample | null> {
+  const rows = parseClassExamples([
+    {
+      id: `ex-${randomBytes(4).toString("hex")}`,
+      lessonId: input.lessonId,
+      bodyAr: input.bodyAr,
+      bodyEn: input.bodyEn || input.bodyAr,
+      createdAt: new Date().toISOString(),
+    },
+    ...(await listLessonExamples()),
+  ]);
+  const saved = rows[0];
+  if (!saved) return null;
+  try {
+    const { writeExampleRows } = await import("@/lib/class-db");
+    await writeExampleRows(rows);
+  } catch {
+    return saved;
+  }
+  return saved;
+}
+
+export async function removeLessonExample(id: string): Promise<void> {
+  const rows = (await listLessonExamples()).filter((row) => row.id !== id);
+  try {
+    const { writeExampleRows } = await import("@/lib/class-db");
+    await writeExampleRows(rows);
+  } catch {
+    // Dedicated table may not exist yet.
+  }
+}
+
+export async function classHomeworkQuestions(lessonId: string): Promise<HomeworkQuestion[]> {
+  return questionsFromExamples(await listLessonExamples(), lessonId);
+}
+
+export async function listCommunityFeed(input: {
+  viewerId: string;
+  groupIds: string[];
+  seeAll?: boolean;
+}): Promise<CommunityFeedPost[]> {
+  try {
+    const { readCommunityState } = await import("@/lib/class-db");
+    const state = await readCommunityState();
+    return buildCommunityFeed(
+      state.posts,
+      state.comments,
+      state.likes,
+      input.viewerId,
+      input.groupIds,
+      input.seeAll,
+    );
+  } catch {
+    return [];
+  }
+}
+
+export async function createCommunityPost(input: {
+  authorId: string;
+  authorName: string;
+  groupId?: string;
+  body: string;
+}): Promise<CommunityPost | null> {
+  const body = cleanCommunityText(input.body, COMMUNITY_POST_MAX);
+  if (body.length < 2) return null;
+  const post: CommunityPost = {
+    id: `p-${randomBytes(5).toString("hex")}`,
+    authorId: input.authorId,
+    authorName: input.authorName.replace(/\s+/g, " ").trim().slice(0, 80) || input.authorId,
+    groupId: String(input.groupId || "").trim(),
+    body,
+    createdAt: new Date().toISOString(),
+  };
+  try {
+    const { insertCommunityPostRow } = await import("@/lib/class-db");
+    const saved = await insertCommunityPostRow(post);
+    return saved ? post : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function removeCommunityPost(id: string, actorId: string, teacher: boolean): Promise<boolean> {
+  try {
+    const { readCommunityState, deleteCommunityPostRow } = await import("@/lib/class-db");
+    const state = await readCommunityState();
+    const post = state.posts.find((row) => row.id === id);
+    if (!post) return false;
+    if (!teacher && post.authorId !== actorId) return false;
+    return await deleteCommunityPostRow(id);
+  } catch {
+    return false;
+  }
+}
+
+export async function createCommunityComment(input: {
+  postId: string;
+  authorId: string;
+  authorName: string;
+  body: string;
+}): Promise<CommunityComment | null> {
+  const body = cleanCommunityText(input.body, COMMUNITY_COMMENT_MAX);
+  if (body.length < 1) return null;
+  const comment: CommunityComment = {
+    id: `c-${randomBytes(5).toString("hex")}`,
+    postId: input.postId,
+    authorId: input.authorId,
+    authorName: input.authorName.replace(/\s+/g, " ").trim().slice(0, 80) || input.authorId,
+    body,
+    createdAt: new Date().toISOString(),
+  };
+  try {
+    const { insertCommunityCommentRow } = await import("@/lib/class-db");
+    const saved = await insertCommunityCommentRow(comment);
+    return saved ? comment : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function removeCommunityComment(id: string, actorId: string, teacher: boolean): Promise<boolean> {
+  try {
+    const { readCommunityState, deleteCommunityCommentRow } = await import("@/lib/class-db");
+    const state = await readCommunityState();
+    const comment = state.comments.find((row) => row.id === id);
+    if (!comment) return false;
+    if (!teacher && comment.authorId !== actorId) return false;
+    return await deleteCommunityCommentRow(id);
+  } catch {
+    return false;
+  }
+}
+
+export async function toggleCommunityLike(postId: string, studentId: string): Promise<boolean> {
+  try {
+    const { toggleCommunityLikeRow } = await import("@/lib/class-db");
+    return await toggleCommunityLikeRow(postId, studentId);
+  } catch {
+    return false;
   }
 }

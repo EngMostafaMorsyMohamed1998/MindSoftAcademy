@@ -25,9 +25,11 @@ import {
   setDeviceLimit,
   startExamWindow,
   forgetStudentDevice,
+  addLessonExample,
+  removeLessonExample,
 } from "@/lib/access-store";
 import { parseBulkStudents } from "@/lib/class-clock";
-import { isChapterId } from "@/lib/curriculum";
+import { getLesson, isChapterId } from "@/lib/curriculum";
 import { FAIZ_PAPER_ID } from "@/lib/faiz";
 import { bindStudentDevice, setStudentCookie } from "@/lib/student-session";
 import { parseDeviceLimit } from "@/lib/devices";
@@ -372,6 +374,30 @@ export async function saveDeviceLimit(
 ): Promise<FormState> {
   if (!(await isTeacher())) return { error: "FORBIDDEN" };
   await setDeviceLimit(parseDeviceLimit(read(formData, "limit")));
+  return { error: null, ok: true };
+}
+
+export async function saveLessonExample(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const lessonId = read(formData, "lessonId");
+  const bodyAr = read(formData, "bodyAr");
+  const bodyEn = read(formData, "bodyEn");
+  if (!getLesson(lessonId) || !bodyAr) return { error: "MISSING" };
+  const saved = await addLessonExample({ lessonId, bodyAr, bodyEn });
+  return saved ? { error: null, ok: true } : { error: "SAVE" };
+}
+
+export async function deleteLessonExample(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const id = read(formData, "exampleId");
+  if (!id) return { error: "MISSING" };
+  await removeLessonExample(id);
   return { error: null, ok: true };
 }
 

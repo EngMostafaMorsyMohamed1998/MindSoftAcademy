@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
 import { AdminShell } from "./admin-shell";
-import { getAnnouncement, getDeviceLimit, getExamWindow, getMonthlyFee, getSurprise, getTeacherTelegramChatId, getWeekPlan, listAllEssayGrades, listAllMisses, listAttendance, listCertificates, listClassGroups, listClassSessions, listDevices, listExams, listHomeworkResults, listPayments, listSurpriseAnswers, listTelegramLinks } from "@/lib/access-store";
+import { getAnnouncement, getDeviceLimit, getExamWindow, getMonthlyFee, getSurprise, getTeacherTelegramChatId, getWeekPlan, listAllEssayGrades, listAllMisses, listAttendance, listCertificates, listClassGroups, listClassSessions, listDevices, listExams, listHomeworkResults, listLessonExamples, listPayments, listSurpriseAnswers, listTelegramLinks } from "@/lib/access-store";
 import { getStoredTelegramToken } from "@/lib/access-store";
 import { cacheTelegramBotToken, fetchTelegramBotUsername, telegramBotHref } from "@/lib/telegram";
 import { ensureTelegramReceiver } from "@/lib/telegram-inbox";
@@ -32,7 +32,7 @@ export default async function AdminPage({
     tab === "certificates" || tab === "class" || tab === "groups" || tab === "codes" || tab === "roster" || tab === "grades" || tab === "profit"
       ? tab
       : "class";
-  const [codes, exams, homework, attendance, payments, announcement, examWindow, weekPlan, classGroups, misses, sessions, essayGrades, monthlyFee, surprise, certificates, telegramLinks, devices, deviceLimit, telegramUsername, teacherChatId] = await Promise.all([
+  const [codes, exams, homework, attendance, payments, announcement, examWindow, weekPlan, classGroups, misses, sessions, essayGrades, monthlyFee, surprise, certificates, telegramLinks, devices, deviceLimit, telegramUsername, teacherChatId, examples] = await Promise.all([
     listVisibleCodes(),
     listExams(),
     listHomeworkResults(),
@@ -53,6 +53,7 @@ export default async function AdminPage({
     getDeviceLimit(),
     fetchTelegramBotUsername(),
     getTeacherTelegramChatId(),
+    listLessonExamples(),
   ]);
   const surpriseAnswers = surprise ? await listSurpriseAnswers(surprise.id) : [];
   const roster = buildClassRoster(codes, exams, homework, attendance, payments);
@@ -72,6 +73,9 @@ export default async function AdminPage({
             <HeaderTools locale={locale} theme={theme} />
             <Link href="/admin?tab=certificates" className="text-xs font-semibold text-primary">
               {t(locale, "tabCertificates")}
+            </Link>
+            <Link href="/admin/community" className="text-xs font-semibold text-primary">
+              {t(locale, "tabCommunity")}
             </Link>
             <Link href="/admin/chat" className="text-xs font-semibold text-primary">
               {t(locale, "chatTeacherInbox")}
@@ -116,6 +120,8 @@ export default async function AdminPage({
           today={cairoDate()}
           weekday={cairoWeekday()}
           month={cairoMonth()}
+          homework={homework}
+          examples={examples}
         />
       </main>
     </div>

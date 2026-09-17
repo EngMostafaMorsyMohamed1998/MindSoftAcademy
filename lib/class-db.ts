@@ -1,3 +1,4 @@
+import { readFile, writeFile } from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
 import type { StoreFile } from "@/lib/access-store-io";
 import type {
@@ -28,6 +29,15 @@ import { parseMakeups, type MakeupTask } from "@/lib/makeup";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
 import { parseClassGroups, type ClassGroup } from "@/lib/class-groups";
 import { parseSurprise, parseSurpriseAnswers, type SurpriseAnswer, type SurpriseQuestion } from "@/lib/surprise";
+import { parseClassExamples, type ClassLessonExample } from "@/lib/class-examples";
+import {
+  parseCommunityComments,
+  parseCommunityLikes,
+  parseCommunityPosts,
+  type CommunityComment,
+  type CommunityLike,
+  type CommunityPost,
+} from "@/lib/community";
 
 function asExamWindow(row: { id: string; chapterId: string; opensAt: Date; closesAt: Date }): ExamWindow {
   const parsed = parseExamChapter(row.chapterId);
@@ -430,7 +440,8 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
   try {
     // Do not delete ClassCertificate / ClassTelegramLink / ClassDevice /
-    // ClassTelegramBot / ClassGroup / ClassSurprise here. Those live in dedicated tables.
+    // ClassTelegramBot / ClassGroup / ClassSurprise / ClassLessonExample /
+    // ClassCommunityPost here. Those live in dedicated tables.
     await prisma.$transaction([
       prisma.classCode.deleteMany(),
       prisma.classMessage.deleteMany(),
@@ -946,6 +957,313 @@ export async function writeSurpriseState(
           ]
         : []),
     ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function ensureExampleTables(): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "ClassLessonExample" (
+        "id" TEXT NOT NULL,
+        "lessonId" TEXT NOT NULL,
+        "bodyAr" TEXT NOT NULL,
+        "bodyEn" TEXT NOT NULL DEFAULT '',
+        "createdAt" TIMESTAMP(3) NOT NULL,
+        CONSTRAINT "ClassLessonExample_pkey" PRIMARY KEY ("id")
+      )
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "ClassLessonExample_lessonId_idx" ON "ClassLessonExample"("lessonId")
+    `);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const EXAMPLE_FILE = "/tmp/mindsoft-lesson-examples.json";
+
+async function readLocalExamples(): Promise<ClassLessonExample[]> {
+  try {
+    return parseClassExamples(JSON.parse(await readFile(EXAMPLE_FILE, "utf8")));
+  } catch {
+    return [];
+  }
+}
+
+async function writeLocalExamples(examples: ClassLessonExample[]): Promise<boolean> {
+  try {
+    await writeFile(EXAMPLE_FILE, JSON.stringify(parseClassExamples(examples)), "utf8");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readExampleRows(): Promise<ClassLessonExample[] | null> {
+  if (!hasLiveDatabase()) return readLocalExamples();
+  await ensureExampleTables();
+  try {
+    const rows = await prisma.classLessonExample.findMany({ orderBy: { createdAt: "desc" } });
+    return parseClassExamples(
+      rows.map((row) => ({
+        id: row.id,
+        lessonId: row.lessonId,
+        bodyAr: row.bodyAr,
+        bodyEn: row.bodyEn,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function writeExampleRows(examples: ClassLessonExample[]): Promise<boolean> {
+  if (!hasLiveDatabase()) return writeLocalExamples(examples);
+  await ensureExampleTables();
+  try {
+    const rows = parseClassExamples(examples);
+    await prisma.$transaction([
+      prisma.classLessonExample.deleteMany(),
+      ...(rows.length
+        ? [
+            prisma.classLessonExample.createMany({
+              data: rows.map((row) => ({
+                id: row.id,
+                lessonId: row.lessonId,
+                bodyAr: row.bodyAr,
+                bodyEn: row.bodyEn,
+                createdAt: asDate(row.createdAt),
+              })),
+            }),
+          ]
+        : []),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const COMMUNITY_FILE = "/tmp/mindsoft-community.json";
+
+type CommunityStore = {
+  posts: CommunityPost[];
+  comments: CommunityComment[];
+  likes: CommunityLike[];
+};
+
+async function readLocalCommunity(): Promise<CommunityStore> {
+  try {
+    const parsed = JSON.parse(await readFile(COMMUNITY_FILE, "utf8")) as Partial<CommunityStore>;
+    return {
+      posts: parseCommunityPosts(parsed.posts),
+      comments: parseCommunityComments(parsed.comments),
+      likes: parseCommunityLikes(parsed.likes),
+    };
+  } catch {
+    return { posts: [], comments: [], likes: [] };
+  }
+}
+
+async function writeLocalCommunity(store: CommunityStore): Promise<boolean> {
+  try {
+    await writeFile(COMMUNITY_FILE, JSON.stringify(store), "utf8");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function ensureCommunityTables(): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "ClassCommunityPost" (
+        "id" TEXT NOT NULL,
+        "authorId" TEXT NOT NULL,
+        "authorName" TEXT NOT NULL,
+        "groupId" TEXT NOT NULL DEFAULT '',
+        "body" TEXT NOT NULL,
+        "createdAt" TIMESTAMP(3) NOT NULL,
+        CONSTRAINT "ClassCommunityPost_pkey" PRIMARY KEY ("id")
+      )
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "ClassCommunityComment" (
+        "id" TEXT NOT NULL,
+        "postId" TEXT NOT NULL,
+        "authorId" TEXT NOT NULL,
+        "authorName" TEXT NOT NULL,
+        "body" TEXT NOT NULL,
+        "createdAt" TIMESTAMP(3) NOT NULL,
+        CONSTRAINT "ClassCommunityComment_pkey" PRIMARY KEY ("id")
+      )
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "ClassCommunityLike" (
+        "id" TEXT NOT NULL,
+        "postId" TEXT NOT NULL,
+        "studentId" TEXT NOT NULL,
+        CONSTRAINT "ClassCommunityLike_pkey" PRIMARY KEY ("id")
+      )
+    `);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readCommunityState(): Promise<CommunityStore> {
+  if (!hasLiveDatabase()) return readLocalCommunity();
+  await ensureCommunityTables();
+  try {
+    const [posts, comments, likes] = await Promise.all([
+      prisma.classCommunityPost.findMany(),
+      prisma.classCommunityComment.findMany(),
+      prisma.classCommunityLike.findMany(),
+    ]);
+    return {
+      posts: parseCommunityPosts(
+        posts.map((row) => ({
+          id: row.id,
+          authorId: row.authorId,
+          authorName: row.authorName,
+          groupId: row.groupId,
+          body: row.body,
+          createdAt: row.createdAt.toISOString(),
+        })),
+      ),
+      comments: parseCommunityComments(
+        comments.map((row) => ({
+          id: row.id,
+          postId: row.postId,
+          authorId: row.authorId,
+          authorName: row.authorName,
+          body: row.body,
+          createdAt: row.createdAt.toISOString(),
+        })),
+      ),
+      likes: parseCommunityLikes(likes.map((row) => ({ postId: row.postId, studentId: row.studentId }))),
+    };
+  } catch {
+    return readLocalCommunity();
+  }
+}
+
+export async function insertCommunityPostRow(post: CommunityPost): Promise<boolean> {
+  if (!hasLiveDatabase()) {
+    const store = await readLocalCommunity();
+    return writeLocalCommunity({ ...store, posts: [post, ...store.posts] });
+  }
+  await ensureCommunityTables();
+  try {
+    await prisma.classCommunityPost.create({
+      data: {
+        id: post.id,
+        authorId: post.authorId,
+        authorName: post.authorName,
+        groupId: post.groupId,
+        body: post.body,
+        createdAt: asDate(post.createdAt),
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteCommunityPostRow(id: string): Promise<boolean> {
+  if (!hasLiveDatabase()) {
+    const store = await readLocalCommunity();
+    return writeLocalCommunity({
+      posts: store.posts.filter((row) => row.id !== id),
+      comments: store.comments.filter((row) => row.postId !== id),
+      likes: store.likes.filter((row) => row.postId !== id),
+    });
+  }
+  await ensureCommunityTables();
+  try {
+    await prisma.$transaction([
+      prisma.classCommunityLike.deleteMany({ where: { postId: id } }),
+      prisma.classCommunityComment.deleteMany({ where: { postId: id } }),
+      prisma.classCommunityPost.delete({ where: { id } }),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function insertCommunityCommentRow(comment: CommunityComment): Promise<boolean> {
+  if (!hasLiveDatabase()) {
+    const store = await readLocalCommunity();
+    return writeLocalCommunity({ ...store, comments: [...store.comments, comment] });
+  }
+  await ensureCommunityTables();
+  try {
+    await prisma.classCommunityComment.create({
+      data: {
+        id: comment.id,
+        postId: comment.postId,
+        authorId: comment.authorId,
+        authorName: comment.authorName,
+        body: comment.body,
+        createdAt: asDate(comment.createdAt),
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteCommunityCommentRow(id: string): Promise<boolean> {
+  if (!hasLiveDatabase()) {
+    const store = await readLocalCommunity();
+    return writeLocalCommunity({
+      ...store,
+      comments: store.comments.filter((row) => row.id !== id),
+    });
+  }
+  await ensureCommunityTables();
+  try {
+    await prisma.classCommunityComment.delete({ where: { id } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function toggleCommunityLikeRow(postId: string, studentId: string): Promise<boolean> {
+  if (!hasLiveDatabase()) {
+    const store = await readLocalCommunity();
+    const liked = store.likes.some((row) => row.postId === postId && row.studentId === studentId);
+    return writeLocalCommunity({
+      ...store,
+      likes: liked
+        ? store.likes.filter((row) => !(row.postId === postId && row.studentId === studentId))
+        : [...store.likes, { postId, studentId }],
+    });
+  }
+  await ensureCommunityTables();
+  try {
+    const existing = await prisma.classCommunityLike.findUnique({
+      where: { postId_studentId: { postId, studentId } },
+    });
+    if (existing) {
+      await prisma.classCommunityLike.delete({ where: { id: existing.id } });
+    } else {
+      await prisma.classCommunityLike.create({
+        data: { id: `${postId}:${studentId}`, postId, studentId },
+      });
+    }
     return true;
   } catch {
     return false;
