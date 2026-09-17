@@ -264,7 +264,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Build the table and button in HTML so the page has meaning and structure.",
     whyAr: "HTML في الواجهة هو هيكل ما يراه المستخدم ومعناه.",
     whyEn: "Frontend HTML is the structure and meaning of what the user sees.",
-    termAr: "HTML",
+    termAr: "هيكل الصفحة",
     termEn: "HTML",
     wrongAr: [
       "ارسم الأسماء بظلال CSS فقط",
@@ -287,7 +287,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Use CSS for colour and layout, not to decide who attended.",
     whyAr: "CSS يغيّر المظهر؛ حقيقة الحضور قرار طبقة التطبيق والبيانات.",
     whyEn: "CSS changes look; attendance truth belongs to the application and data layers.",
-    termAr: "CSS",
+    termAr: "تنسيق الصفحة",
     termEn: "CSS",
     wrongAr: [
       "عدّ اللون الأخضر دليل حضور رسمي",
@@ -471,7 +471,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Refuse to type the password until the page uses HTTPS.",
     whyAr: "HTTP يرسل الطلب واضحًا؛ HTTPS يغلفه بقناة TLS مشفّرة.",
     whyEn: "HTTP sends the request in the clear; HTTPS wraps it in an encrypted TLS channel.",
-    termAr: "HTTPS",
+    termAr: "بروتوكول ويب آمن",
     termEn: "HTTPS",
     wrongAr: [
       "اكتب كلمة المرور لأن المقهى مزدحم",
@@ -494,7 +494,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Send a GET request that reads and does not change the list.",
     whyAr: "GET هي الطريقة الشائعة للقراءة الآمنة لمورد.",
     whyEn: "GET is the common method for a safe read of a resource.",
-    termAr: "GET",
+    termAr: "طلب قراءة",
     termEn: "GET",
     wrongAr: [
       "احذف القائمة حتى تراها",
@@ -517,7 +517,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Send POST to create the booking resource.",
     whyAr: "POST هي الطريقة المعتادة لإنشاء سجل جديد.",
     whyEn: "POST is the usual method for creating a new record.",
-    termAr: "POST",
+    termAr: "طلب إرسال",
     termEn: "POST",
     wrongAr: [
       "استخدم GET يحجز في الخفاء",
@@ -540,7 +540,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Use PUT when the whole resource is replaced.",
     whyAr: "PUT يحدّث بإرسال بديل كامل للمورد.",
     whyEn: "PUT updates by sending a full replacement of the resource.",
-    termAr: "PUT",
+    termAr: "طلب استبدال",
     termEn: "PUT",
     wrongAr: [
       "اقرأ الملف القديم بـ GET وعدّ ذلك تحديثًا",
@@ -563,7 +563,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Use PATCH to update that one field.",
     whyAr: "PATCH تحديث جزئي، لا إعادة كتابة للملف كله.",
     whyEn: "PATCH is a partial update, not a full rewrite.",
-    termAr: "PATCH",
+    termAr: "طلب تعديل جزئي",
     termEn: "PATCH",
     wrongAr: [
       "احذف الطالب وأعد إنشاءه من أجل رقم",
@@ -586,7 +586,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Send DELETE to remove that booking if the server allows it.",
     whyAr: "DELETE هي الطريقة التي تطلب حذف مورد.",
     whyEn: "DELETE is the method that asks to remove a resource.",
-    termAr: "DELETE",
+    termAr: "طلب حذف",
     termEn: "DELETE",
     wrongAr: [
       "كرّر GET حتى يختفي الموعد",
@@ -724,7 +724,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Treat that URL as a REST resource that the methods act on.",
     whyAr: "REST ينظّم البيانات موارد لها عناوين.",
     whyEn: "REST organizes data as resources with addresses.",
-    termAr: "REST",
+    termAr: "موارد بعنوان",
     termEn: "REST",
     wrongAr: [
       "اخفِ الدرجات في اسم إجراء عشوائي بلا مورد",
@@ -747,7 +747,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Send and read JSON as the agreed payload shape.",
     whyAr: "JSON جسم شائع لواجهات REST.",
     whyEn: "JSON is the common body for REST APIs.",
-    termAr: "JSON",
+    termAr: "نص بيانات منظم",
     termEn: "JSON",
     wrongAr: [
       "أرسل لقطة شاشة بدل الجسم",
@@ -770,7 +770,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Stop; the TLS channel is not protecting the HTTP request.",
     whyAr: "HTTPS هو HTTP فوق قناة TLS مشفّرة بشهادة الموقع.",
     whyEn: "HTTPS is HTTP over a TLS-encrypted channel with the site certificate.",
-    termAr: "TLS",
+    termAr: "قناة مشفرة",
     termEn: "TLS",
     wrongAr: [
       "تجاوز التحذير لأن الشعار يبدو رسميًا",
@@ -816,7 +816,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Do not use GET to change attendance; use POST.",
     whyAr: "GET للقراءة؛ الإنشاء يحتاج طريقة تعني إنشاء سجل.",
     whyEn: "GET is for reading; a create needs a method that means a new record.",
-    termAr: "GET",
+    termAr: "طلب قراءة",
     termEn: "GET",
     wrongAr: [
       "استمر في الحفظ بـ GET لأنه أقصر",
@@ -839,7 +839,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Require HTTPS so the cookie is not stolen on the wire.",
     whyAr: "قناة HTTP الواضحة يمكن أن تسرّب الكوكيز.",
     whyEn: "A clear HTTP channel can leak cookies.",
-    termAr: "HTTPS",
+    termAr: "بروتوكول ويب آمن",
     termEn: "HTTPS",
     wrongAr: [
       "ألصق ملصقات أكثر على موجّه المكتبة",
@@ -885,7 +885,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "The server must still decide the right before deleting.",
     whyAr: "الطريقة وحدها لا تكفي؛ طبقة التطبيق تفحص من يجوز له الفعل.",
     whyEn: "A method is not enough; the application layer checks who may act.",
-    termAr: "DELETE",
+    termAr: "طلب حذف",
     termEn: "DELETE",
     wrongAr: [
       "ثق بأي DELETE قادم من الشبكة",
@@ -954,7 +954,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Use real HTML headings so the structure has meaning.",
     whyAr: "HTML يعطي المعنى؛ التكبير البصري وحده لا يصنع عنوانًا.",
     whyEn: "HTML gives meaning; visual size alone does not make a heading.",
-    termAr: "HTML",
+    termAr: "هيكل الصفحة",
     termEn: "HTML",
     wrongAr: [
       "زيّف العناوين بحجم CSS فقط",
@@ -1069,7 +1069,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Disable the real control; do not only restyle it.",
     whyAr: "المظهر عمل CSS؛ الحالة الحقيقية تحتاج تعطيل عنصر حقيقي.",
     whyEn: "Look is CSS; real state needs a genuinely disabled control.",
-    termAr: "CSS",
+    termAr: "تنسيق الصفحة",
     termEn: "CSS",
     wrongAr: [
       "اللون الرمادي حماية كافية",
@@ -1092,7 +1092,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Put real links or buttons in HTML, then enhance them with JavaScript.",
     whyAr: "HTML يجب أن يحمل الهيكل حتى قبل تشغيل السلوك.",
     whyEn: "HTML should carry the structure even before behaviour runs.",
-    termAr: "HTML",
+    termAr: "هيكل الصفحة",
     termEn: "HTML",
     wrongAr: [
       "أغلق الموقع إن توقفت الجافاسكربت بلا هيكل",
@@ -1230,7 +1230,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Keep a lasting label outside the field.",
     whyAr: "النص المؤقت ليس اسمًا ثابتًا للمعنى.",
     whyEn: "A placeholder is not a durable name for meaning.",
-    termAr: "HTML",
+    termAr: "هيكل الصفحة",
     termEn: "HTML",
     wrongAr: [
       "حرّك النص المؤقت وتوقف",
@@ -1276,7 +1276,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Put the heading structure in the HTML first.",
     whyAr: "المعنى يجب ألا ينتظر السلوك بعد التحميل.",
     whyEn: "Meaning should not wait for behaviour after load.",
-    termAr: "HTML",
+    termAr: "هيكل الصفحة",
     termEn: "HTML",
     wrongAr: [
       "أخّر كل النص حتى تنتهي دائرة الانتظار",
@@ -1299,7 +1299,7 @@ export const CHAPTER_3_FACTS: BankFact[] = [
     claimEn: "Raise the contrast so the word can be read.",
     whyAr: "المظهر يشمل لونًا مقروءًا، لا زينة فقط.",
     whyEn: "Look includes readable colour, not decoration alone.",
-    termAr: "CSS",
+    termAr: "تنسيق الصفحة",
     termEn: "CSS",
     wrongAr: [
       "أضف حركة خفيفة بدل التباين",

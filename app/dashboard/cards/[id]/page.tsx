@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { isChapterUnlocked } from "@/lib/chapter-progress";
 import { getLesson, isChapterId } from "@/lib/curriculum";
+import { bookletSafe } from "@/lib/booklet-lang";
 import { t } from "@/lib/i18n";
 import { notesForLesson } from "@/lib/lessons";
 import { getLocale } from "@/lib/locale";
@@ -22,7 +23,12 @@ export default async function CardsPage({
   }
   const locale = await getLocale();
   const note = notesForLesson(lesson.id);
-  const cards = note ? (locale === "ar" ? note.termsAr : note.termsEn) : [];
+  const cards = note
+    ? (locale === "ar" ? note.termsAr : note.termsEn).map((term) => ({
+        term: bookletSafe(locale, term.term),
+        meaning: bookletSafe(locale, term.meaning),
+      }))
+    : [];
 
   return (
     <div className="mx-auto w-full max-w-3xl">

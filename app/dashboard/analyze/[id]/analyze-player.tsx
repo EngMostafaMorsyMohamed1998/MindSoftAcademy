@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AnswerGuide } from "@/components/answer-guide";
+import { bookletSafe } from "@/lib/booklet-lang";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 import type { AnalysisPrompt } from "@/lib/question-bank/types";
@@ -34,7 +35,7 @@ export function AnalyzePlayer({
         {index + 1} / {questions.length}
       </p>
       <p className="mt-3 text-lg font-semibold leading-9 text-[#111827]">
-        {locale === "ar" ? question.promptAr : question.promptEn}
+        {bookletSafe(locale, locale === "ar" ? question.promptAr : question.promptEn)}
       </p>
       <p className="mt-2 text-base font-semibold text-[#374151]">{t(locale, "essayHint")}</p>
       <textarea
@@ -62,7 +63,7 @@ export function AnalyzePlayer({
           </button>
         ) : null}
       </div>
-      {showGuide ? <AnswerGuide locale={locale} text={locale === "ar" ? question.guideAr : question.guideEn} /> : null}
+      {showGuide ? <AnswerGuide locale={locale} text={bookletSafe(locale, locale === "ar" ? question.guideAr : question.guideEn)} /> : null}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnswerReview } from "@/components/answer-review";
 import { TrueFalsePick } from "@/components/true-false-pick";
 import { submitChapterExam } from "@/app/actions/study";
+import { bookletSafe } from "@/lib/booklet-lang";
 import { bookletOptions } from "@/lib/booklet-pack";
 import type { ChapterExam, ObjectiveQuestion } from "@/lib/exams";
 import { t } from "@/lib/i18n";
@@ -184,7 +185,7 @@ export function ChapterExamPlayer({
   }
 
   function renderObjective(question: PaperQuestion, index: number, locked: boolean) {
-    const prompt = locale === "ar" ? question.promptAr : question.promptEn;
+    const prompt = bookletSafe(locale, locale === "ar" ? question.promptAr : question.promptEn);
     const optionOrder = question.optionOrder;
     const rawOptions =
       question.kind === "tf"
@@ -271,7 +272,7 @@ export function ChapterExamPlayer({
             <div>
               <h2 className="font-semibold">{t(locale, "essay")}</h2>
               <p className="mt-3 text-sm font-medium">
-                {locale === "ar" ? essay.promptAr : essay.promptEn}
+                {bookletSafe(locale, locale === "ar" ? essay.promptAr : essay.promptEn)}
               </p>
               <p className="mt-1 text-sm font-semibold text-[#374151]">{t(locale, "essayHint")}</p>
               <textarea
@@ -333,7 +334,7 @@ export function ChapterExamPlayer({
               <div className="flex items-start gap-2 text-sm font-medium">
                 <span className="tabular-nums leading-6">{index + 1}.</span>
                 <span className="min-w-0 flex-1 leading-6" lang={locale}>
-                  {locale === "ar" ? question.promptAr : question.promptEn}
+                  {bookletSafe(locale, locale === "ar" ? question.promptAr : question.promptEn)}
                 </span>
               </div>
               <p className="mt-1 text-sm font-semibold text-[#374151]" lang={locale}>

@@ -1,3 +1,4 @@
+import { bookletSafe } from "@/lib/booklet-lang";
 import type { ObjectiveQuestion } from "@/lib/exams";
 import type { HomeworkQuestion } from "@/lib/homework-bank";
 import type { Locale } from "@/lib/locale";
@@ -40,13 +41,15 @@ export function reviewObjectives(
   hint: string,
 ): ReviewItem[] {
   return questions.map((question) => {
-    const options = locale === "ar" ? question.optionsAr : question.optionsEn;
+    const options = (locale === "ar" ? question.optionsAr : question.optionsEn)?.map((option) =>
+      bookletSafe(locale, option),
+    );
     const chosenIndex = answers[question.id];
     const answered = chosenIndex !== undefined;
     const ok = answered && chosenIndex === question.correctIndex;
     return {
       id: question.id,
-      prompt: locale === "ar" ? question.promptAr : question.promptEn,
+      prompt: bookletSafe(locale, locale === "ar" ? question.promptAr : question.promptEn),
       chosen: optionLabel(options, chosenIndex, question.kind, locale),
       correct: optionLabel(options, question.correctIndex, question.kind, locale),
       hint,
@@ -63,13 +66,15 @@ export function reviewHomework(
   hint: string,
 ): ReviewItem[] {
   return questions.map((question) => {
-    const options = locale === "ar" ? question.optionsAr : question.optionsEn;
+    const options = (locale === "ar" ? question.optionsAr : question.optionsEn)?.map((option) =>
+      bookletSafe(locale, option),
+    );
     const chosenIndex = answers[question.id];
     const answered = chosenIndex !== undefined;
     const ok = answered && chosenIndex === question.correctIndex;
     return {
       id: question.id,
-      prompt: locale === "ar" ? question.promptAr : question.promptEn,
+      prompt: bookletSafe(locale, locale === "ar" ? question.promptAr : question.promptEn),
       chosen: optionLabel(options, chosenIndex, question.kind, locale),
       correct: optionLabel(options, question.correctIndex, question.kind, locale),
       hint,

@@ -12,6 +12,7 @@ import {
   withShuffledOptions,
   type HomeworkQuestion,
 } from "@/lib/homework-bank";
+import { bookletSafe } from "@/lib/booklet-lang";
 import { bookletOptions } from "@/lib/booklet-pack";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
@@ -150,7 +151,7 @@ export function HomeworkPlayer({
   return (
     <div className="mt-6 space-y-4">
       {paper.map((question: HomeworkQuestion, index) => {
-        const prompt = locale === "ar" ? question.promptAr : question.promptEn;
+        const prompt = bookletSafe(locale, locale === "ar" ? question.promptAr : question.promptEn);
         const options = bookletOptions(locale, question.optionsAr, question.optionsEn);
         return (
           <article key={question.id} className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">

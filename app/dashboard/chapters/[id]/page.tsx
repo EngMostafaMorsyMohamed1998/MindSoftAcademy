@@ -8,6 +8,7 @@ import { bookSlugFor, getChapter, isChapterId } from "@/lib/curriculum";
 import { gamesForChapter } from "@/lib/games";
 import { notesForChapter } from "@/lib/lessons";
 import { mindMapForChapter } from "@/lib/mind-maps";
+import { bookletSafe } from "@/lib/booklet-lang";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { BOOKS } from "@/lib/library";
@@ -138,7 +139,7 @@ export default async function ChapterPage({
               </div>
               <ul className="mt-3 list-disc space-y-2 ps-5 text-sm leading-relaxed">
                 {body.map((paragraph) => (
-                  <li key={paragraph}>{paragraph}</li>
+                  <li key={paragraph}>{bookletSafe(locale, paragraph)}</li>
                 ))}
               </ul>
               <h3 className="mt-4 text-xs font-semibold tracking-wide text-primary/60 uppercase">
@@ -147,14 +148,14 @@ export default async function ChapterPage({
               <dl className="mt-2 grid gap-2 sm:grid-cols-2">
                 {terms.map((term) => (
                   <div key={term.term} className="rounded-xl bg-primary/5 px-3 py-2">
-                    <dt className="text-sm font-semibold">{term.term}</dt>
-                    <dd className="text-xs text-foreground/65">{term.meaning}</dd>
+                    <dt className="text-sm font-semibold">{bookletSafe(locale, term.term)}</dt>
+                    <dd className="text-xs text-foreground/65">{bookletSafe(locale, term.meaning)}</dd>
                   </div>
                 ))}
               </dl>
               <p className="mt-4 rounded-xl bg-accent/15 px-3 py-2 text-sm">
                 <strong>{t(locale, "takeaway")}: </strong>
-                {locale === "ar" ? note.takeawayAr : note.takeawayEn}
+                {bookletSafe(locale, locale === "ar" ? note.takeawayAr : note.takeawayEn)}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
