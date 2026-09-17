@@ -31,12 +31,16 @@ export default async function BookletPage() {
             labelEn: `Ch. ${chapter.id}`,
             body: <BookletChapterPane locale={locale} chapterId={chapter.id} />,
           })),
-          {
-            id: "faiz",
-            labelAr: "الفائز",
-            labelEn: "Al-Faiz",
-            body: <BookletFaizPane locale={locale} />,
-          },
+          ...(locale === "ar"
+            ? [
+                {
+                  id: "faiz" as const,
+                  labelAr: "الفائز",
+                  labelEn: "Al-Faiz",
+                  body: <BookletFaizPane locale={locale} />,
+                },
+              ]
+            : []),
         ]}
       />
     </div>

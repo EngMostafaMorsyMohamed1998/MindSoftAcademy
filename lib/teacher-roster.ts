@@ -32,6 +32,7 @@ function toRecord(row: RosterRow): AccessCode {
     points: 0,
     suspendedAt: null,
     suspendReason: "",
+    track: "ar",
   };
 }
 
@@ -96,6 +97,7 @@ export async function listVisibleCodes(): Promise<AccessCode[]> {
             usedAt: record.usedAt ?? current.usedAt,
             suspendedAt: record.suspendedAt ?? current.suspendedAt,
             suspendReason: record.suspendReason || current.suspendReason,
+            track: record.track ?? current.track,
           }
         : record,
     );

@@ -2,7 +2,7 @@ import { listClassGroups, listCodes } from "@/lib/access-store";
 import { groupsForStudent } from "@/lib/class-groups";
 import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
-import { buildGroupRanks, type ClassRank } from "@/lib/leaderboard";
+import { buildGroupRanks, codesOnSameTrack, type ClassRank } from "@/lib/leaderboard";
 import { getLocale } from "@/lib/locale";
 import { initials } from "@/lib/student-profile";
 
@@ -86,7 +86,7 @@ export default async function ClassBoardPage() {
             key={group.id}
             locale={locale}
             studentId={user.id}
-            ranks={buildGroupRanks(codes, group.studentIds)}
+            ranks={buildGroupRanks(codesOnSameTrack(codes, user.id), group.studentIds)}
           />
         ))
       )}

@@ -6,6 +6,7 @@ import { Award, CalendarDays, ClipboardCheck, Copy, KeyRound, LoaderCircle, Prin
 import {
   createManyStudentCodes,
   createStudentCode,
+  saveStudentTrack,
   deleteWeekSlot,
   markStudentAttendance,
   markStudentFee,
@@ -232,6 +233,7 @@ export function AdminShell({
       <h1>${locale === "ar" ? "كود اشتراك الحصة" : "Class access code"}</h1>
       <p>${locale === "ar" ? "الاسم" : "Name"}: <strong>${code.name}</strong></p>
       <p>${locale === "ar" ? "الرقم" : "Phone"}: <strong>${code.phone}</strong></p>
+      <p>${t(locale, "trackLabel")}: <strong>${t(locale, code.track === "en" ? "trackEn" : "trackAr")}</strong></p>
       <code>${code.code}</code>
       <p>${locale === "ar" ? "يُستخدم مرة واحدة بالاسم والرقم معًا. لا تشارك الكود." : "One-time use with this name and phone. Do not share."}</p>
       </body></html>`);
@@ -1117,7 +1119,8 @@ export function AdminShell({
         <div className="mt-6 space-y-6">
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
             <h2 className="text-lg font-semibold">{t(locale, "generate")}</h2>
-            <form action={issueAction} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            <p className="mt-1 text-xs text-foreground/55">{t(locale, "trackHint")}</p>
+            <form action={issueAction} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_8rem_auto]">
               <input
                 name="name"
                 required
@@ -1132,6 +1135,14 @@ export function AdminShell({
                 placeholder={t(locale, "phone")}
                 className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
               />
+              <select
+                name="track"
+                defaultValue="ar"
+                className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+              >
+                <option value="ar">{t(locale, "trackAr")}</option>
+                <option value="en">{t(locale, "trackEn")}</option>
+              </select>
               <button
                 type="submit"
                 disabled={issuePending}
@@ -1144,15 +1155,23 @@ export function AdminShell({
                 {t(locale, "generate")}
               </button>
               {issueState.code ? (
-                <p className="sm:col-span-3 rounded-2xl bg-accent/15 px-3 py-2 font-mono text-sm">{issueState.code}</p>
+                <p className="sm:col-span-4 rounded-2xl bg-accent/15 px-3 py-2 font-mono text-sm">{issueState.code}</p>
               ) : null}
-              {issueState.error ? <p className="sm:col-span-3 text-sm text-red-700">{issueState.error}</p> : null}
+              {issueState.error ? <p className="sm:col-span-4 text-sm text-red-700">{issueState.error}</p> : null}
             </form>
           </section>
 
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
             <h2 className="text-lg font-semibold">{t(locale, "bulkIssue")}</h2>
             <form action={bulkAction} className="mt-4 grid gap-3">
+              <select
+                name="track"
+                defaultValue="ar"
+                className="h-11 max-w-xs rounded-2xl border border-primary/15 px-3 text-sm"
+              >
+                <option value="ar">{t(locale, "trackAr")}</option>
+                <option value="en">{t(locale, "trackEn")}</option>
+              </select>
               <textarea
                 name="bulk"
                 required
@@ -1186,6 +1205,7 @@ export function AdminShell({
                     <tr>
                       <th className="px-3 py-2 font-semibold">{t(locale, "student")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "phone")}</th>
+                      <th className="px-3 py-2 font-semibold">{t(locale, "trackLabel")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "accessCode")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "used")}</th>
                       <th className="px-3 py-2" />
@@ -1196,6 +1216,20 @@ export function AdminShell({
                       <tr key={code.id} className="border-t border-primary/8">
                         <td className="px-3 py-2">{code.name}</td>
                         <td className="px-3 py-2 font-mono text-xs">{code.phone}</td>
+                        <td className="px-3 py-2">
+                          <form action={saveStudentTrack}>
+                            <input type="hidden" name="studentId" value={code.id} />
+                            <select
+                              name="track"
+                              defaultValue={code.track === "en" ? "en" : "ar"}
+                              onChange={(event) => event.currentTarget.form?.requestSubmit()}
+                              className="h-8 rounded-full border border-primary/15 bg-white px-2 text-xs"
+                            >
+                              <option value="ar">{t(locale, "trackAr")}</option>
+                              <option value="en">{t(locale, "trackEn")}</option>
+                            </select>
+                          </form>
+                        </td>
                         <td className="px-3 py-2 font-mono">{code.code}</td>
                         <td className="px-3 py-2">{code.usedAt ? t(locale, "used") : t(locale, "unused")}</td>
                         <td className="px-3 py-2">

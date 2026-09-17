@@ -445,117 +445,204 @@ function drawAsk(ctx: SKRSContext2D, text: string, x: number, y: number, w: numb
   return h + 14;
 }
 
-function drawLessonArt(ctx: SKRSContext2D, art: string, x: number, y: number, w: number, h: number) {
+function fillCircle(ctx: SKRSContext2D, cx: number, cy: number, r: number, color: string) {
+  ctx.beginPath();
+  ctx.fillStyle = color;
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function strokeLine(
+  ctx: SKRSContext2D,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  color: string,
+  width: number,
+) {
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
+function artLabel(ctx: SKRSContext2D, text: string, x: number, y: number, align: "left" | "right" | "center") {
+  ctx.fillStyle = "#111827";
+  ctx.font = `11px ${FONT_NAME}`;
+  paintText(ctx, text, x, y, align);
+}
+
+function drawLessonArt(
+  ctx: SKRSContext2D,
+  art: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  ar = true,
+) {
   ctx.fillStyle = "#e8eef6";
   ctx.fillRect(x, y, w, h);
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+  const wide = w >= 90;
+
   if (art === "lock") {
     ctx.fillStyle = "#7f1d1d";
-    ctx.fillRect(x + w * 0.32, y + h * 0.46, w * 0.36, h * 0.36);
+    ctx.fillRect(x + w * 0.32, y + h * 0.48, w * 0.36, h * 0.32);
     ctx.strokeStyle = "#111827";
-    ctx.lineWidth = 6;
+    ctx.lineWidth = Math.max(3, w * 0.05);
     ctx.beginPath();
-    ctx.arc(x + w / 2, y + h * 0.46, w * 0.12, Math.PI, 0);
+    ctx.arc(cx, y + h * 0.46, w * 0.12, Math.PI, 0);
     ctx.stroke();
+    fillCircle(ctx, cx, y + h * 0.62, Math.max(3, w * 0.04), "#fde68a");
     return;
   }
   if (art === "firewall") {
     ctx.fillStyle = "#7f1d1d";
-    ctx.fillRect(x + 10, y + 16, 46, 28);
+    ctx.fillRect(x + 8, y + 12, w * 0.28, h * 0.22);
     ctx.fillStyle = "#16a34a";
-    ctx.fillRect(x + w - 56, y + 16, 46, 28);
+    ctx.fillRect(x + w * 0.72 - 8, y + 12, w * 0.28, h * 0.22);
     ctx.fillStyle = "#0c2d6b";
-    ctx.fillRect(x + 20, y + h * 0.55, w - 40, 28);
+    ctx.fillRect(x + 12, y + h * 0.48, w - 24, h * 0.28);
+    strokeLine(ctx, x + w * 0.22, y + h * 0.34, x + w * 0.22, y + h * 0.48, "#334155", 3);
+    strokeLine(ctx, x + w * 0.78, y + h * 0.34, x + w * 0.78, y + h * 0.48, "#334155", 3);
     return;
   }
-  if (art === "nest") {
-    ctx.beginPath();
-    ctx.fillStyle = "#0c2d6b";
-    ctx.arc(x + w / 2, y + h / 2, 36, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.fillStyle = "#1d4ed8";
-    ctx.arc(x + w / 2, y + h / 2, 24, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.fillStyle = "#c4a35a";
-    ctx.arc(x + w / 2, y + h / 2, 12, 0, Math.PI * 2);
-    ctx.fill();
+  if (art === "nest" || art === "ai") {
+    const rings = ar
+      ? ["ذكاء اصطناعي", "تعلم آلي", "عميق", "توليدي"]
+      : ["AI", "ML", "Deep", "Gen"];
+    const colors = ["#0c2d6b", "#1d4ed8", "#3b82f6", "#c4a35a"];
+    if (!wide) {
+      colors.forEach((color, index) => {
+        fillCircle(ctx, cx, cy, Math.max(6, Math.min(w, h) * (0.42 - index * 0.09)), color);
+      });
+      return;
+    }
+    rings.forEach((label, index) => {
+      const top = y + 8 + index * ((h - 16) / 4);
+      const inset = 8 + index * 10;
+      roundRect(ctx, x + inset, top, w - inset * 2, (h - 20) / 4 - 4, 8, colors[index]!);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `12px ${FONT_NAME}`;
+      paintText(ctx, label, cx, top + 6, "center");
+    });
     return;
   }
-  if (art === "web" || art === "http" || art === "html") {
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(x + 8, y + 12, w - 16, h - 24);
-    ctx.fillStyle = "#0c2d6b";
-    ctx.fillRect(x + 8, y + 12, w - 16, 18);
-    ctx.fillStyle = "#cbd5e1";
-    ctx.fillRect(x + 16, y + 40, w * 0.55, 8);
-    ctx.fillRect(x + 16, y + 54, w * 0.7, 6);
-    return;
-  }
-  if (art === "chart" || art === "regress" || art === "data" || art === "clean") {
+  if (art === "web" || art === "http" || art === "html" || art === "cloud" || art === "ux") {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(x + 8, y + 10, w - 16, h - 20);
     ctx.fillStyle = "#0c2d6b";
-    ctx.fillRect(x + 22, y + h - 38, 14, 18);
-    ctx.fillStyle = "#1d4ed8";
-    ctx.fillRect(x + 42, y + h - 52, 14, 32);
-    ctx.fillStyle = "#c4a35a";
-    ctx.fillRect(x + 62, y + h - 66, 14, 46);
+    ctx.fillRect(x + 8, y + 10, w - 16, 16);
+    fillCircle(ctx, x + 18, y + 18, 3, "#f87171");
+    fillCircle(ctx, x + 28, y + 18, 3, "#fbbf24");
+    ctx.fillStyle = "#cbd5e1";
+    ctx.fillRect(x + 16, y + 36, w * 0.5, 8);
+    ctx.fillRect(x + 16, y + 50, w * 0.68, 6);
+    ctx.fillRect(x + 16, y + 62, w * 0.4, 6);
+    return;
+  }
+  if (art === "chart" || art === "regress" || art === "data" || art === "clean" || art === "sample" || art === "api") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + 8, y + 8, w - 16, h - 16);
+    const base = y + h - 22;
+    const bars = [
+      [0.18, 0.28, "#0c2d6b"],
+      [0.38, 0.45, "#1d4ed8"],
+      [0.58, 0.62, "#c4a35a"],
+      [0.78, 0.38, "#0c2d6b"],
+    ] as const;
+    bars.forEach(([px, ph, color]) => {
+      ctx.fillStyle = color;
+      ctx.fillRect(x + w * px, base - h * ph, w * 0.1, h * ph);
+    });
+    strokeLine(ctx, x + 16, base, x + w - 16, base, "#94a3b8", 2);
     return;
   }
   if (art === "neural" || art === "ml" || art === "llm") {
-    ctx.fillStyle = "#0c2d6b";
-    ctx.beginPath();
-    ctx.arc(x + 24, y + 28, 7, 0, Math.PI * 2);
-    ctx.arc(x + 24, y + h - 28, 7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#1d4ed8";
-    ctx.beginPath();
-    ctx.arc(x + w / 2, y + 28, 7, 0, Math.PI * 2);
-    ctx.arc(x + w / 2, y + h / 2, 7, 0, Math.PI * 2);
-    ctx.arc(x + w / 2, y + h - 28, 7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#c4a35a";
-    ctx.beginPath();
-    ctx.arc(x + w - 24, y + h / 2, 7, 0, Math.PI * 2);
-    ctx.fill();
+    const left = [
+      [x + w * 0.18, y + h * 0.28],
+      [x + w * 0.18, y + h * 0.72],
+    ] as const;
+    const mid = [
+      [x + w * 0.5, y + h * 0.22],
+      [x + w * 0.5, y + h * 0.5],
+      [x + w * 0.5, y + h * 0.78],
+    ] as const;
+    const right = [[x + w * 0.82, y + h * 0.5]] as const;
+    left.forEach(([lx, ly]) => {
+      mid.forEach(([mx, my]) => strokeLine(ctx, lx, ly, mx, my, "#94a3b8", 2));
+    });
+    mid.forEach(([mx, my]) => strokeLine(ctx, mx, my, right[0][0], right[0][1], "#94a3b8", 2));
+    left.forEach(([lx, ly]) => fillCircle(ctx, lx, ly, Math.max(4, w * 0.045), "#0c2d6b"));
+    mid.forEach(([mx, my]) => fillCircle(ctx, mx, my, Math.max(4, w * 0.045), "#1d4ed8"));
+    fillCircle(ctx, right[0][0], right[0][1], Math.max(5, w * 0.05), "#c4a35a");
     return;
   }
   if (art === "ethics") {
     ctx.fillStyle = "#0c2d6b";
-    ctx.fillRect(x + w / 2 - 4, y + 16, 8, h - 32);
+    ctx.fillRect(cx - 4, y + 12, 8, h - 24);
     ctx.fillStyle = "#111827";
-    ctx.fillRect(x + 16, y + h / 2 - 4, w - 32, 8);
+    ctx.fillRect(x + 14, cy - 4, w - 28, 8);
     ctx.fillStyle = "#c4a35a";
-    ctx.fillRect(x + 16, y + 28, 28, 20);
+    ctx.fillRect(x + 14, y + 22, w * 0.22, h * 0.22);
     ctx.fillStyle = "#7f1d1d";
-    ctx.fillRect(x + w - 44, y + 28, 28, 20);
+    ctx.fillRect(x + w - 14 - w * 0.22, y + 22, w * 0.22, h * 0.22);
     return;
   }
-  if (art === "incident") {
+  if (art === "incident" || art === "phish" || art === "fake") {
     ctx.fillStyle = "#f59e0b";
     ctx.beginPath();
-    ctx.moveTo(x + w / 2, y + 14);
-    ctx.lineTo(x + w - 16, y + h - 16);
-    ctx.lineTo(x + 16, y + h - 16);
+    ctx.moveTo(cx, y + 10);
+    ctx.lineTo(x + w - 12, y + h - 12);
+    ctx.lineTo(x + 12, y + h - 12);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = "#111827";
-    ctx.fillRect(x + w / 2 - 4, y + 36, 8, 28);
-    ctx.beginPath();
-    ctx.arc(x + w / 2, y + h - 30, 5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(cx - 4, y + h * 0.38, 8, h * 0.28);
+    fillCircle(ctx, cx, y + h * 0.78, 5, "#111827");
     return;
   }
-  [10, 34, 58, 82, 106].forEach((px, index) => {
+  if (art === "life") {
+    roundRect(ctx, x + 10, y + 14, w * 0.28, h * 0.28, 6, "#0c2d6b");
+    roundRect(ctx, x + w * 0.36, y + 14, w * 0.28, h * 0.28, 6, "#1d4ed8");
+    roundRect(ctx, x + w * 0.62, y + 14, w * 0.28, h * 0.28, 6, "#c4a35a");
+    if (wide) {
+      artLabel(ctx, ar ? "فيديو" : "Video", x + 10 + w * 0.14, y + 22, "center");
+      artLabel(ctx, ar ? "مصنع" : "Factory", x + w * 0.5, y + 22, "center");
+      artLabel(ctx, ar ? "كتاب" : "Book", x + w * 0.76, y + 22, "center");
+    }
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x + 16, y + h * 0.56, w - 32, h * 0.28);
+    return;
+  }
+  if (art === "media") {
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x + 12, y + 16, w * 0.36, h * 0.36);
+    ctx.fillStyle = "#1d4ed8";
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.22, y + 28);
+    ctx.lineTo(x + w * 0.38, y + 34);
+    ctx.lineTo(x + w * 0.22, y + 40);
+    ctx.fill();
+    ctx.fillStyle = "#c4a35a";
+    ctx.fillRect(x + w * 0.56, y + 18, w * 0.32, 10);
+    ctx.fillRect(x + w * 0.56, y + 34, w * 0.24, 8);
+    return;
+  }
+  [0.08, 0.24, 0.4, 0.56, 0.72].forEach((px, index) => {
     ctx.fillStyle = index % 2 ? "#1e293b" : "#334155";
-    ctx.fillRect(x + px, y + 14 + (index % 2) * 4, 18, h - 36);
+    ctx.fillRect(x + w * px, y + 12 + (index % 2) * 6, w * 0.12, h - 36);
   });
   ctx.fillStyle = "#94a3b8";
-  ctx.fillRect(x, y + h - 16, w, 16);
+  ctx.fillRect(x, y + h - 14, w, 14);
 }
 
-function drawTermIcon(ctx: SKRSContext2D, art: string, x: number, y: number, size: number, color: string) {
+function drawTermIcon(ctx: SKRSContext2D, art: string, x: number, y: number, size: number, color: string, ar = true) {
   const mapped =
     art === "phish" || art === "fake"
       ? "incident"
@@ -569,7 +656,7 @@ function drawTermIcon(ctx: SKRSContext2D, art: string, x: number, y: number, siz
               ? "lab"
               : art;
   roundRect(ctx, x, y, size, size, 10, fade(color, 0.14));
-  drawLessonArt(ctx, mapped, x + 6, y + 6, size - 12, size - 12);
+  drawLessonArt(ctx, mapped, x + 6, y + 6, size - 12, size - 12, ar);
 }
 
 function drawTerms(
@@ -599,7 +686,7 @@ function drawTerms(
     roundRect(ctx, cx, cy, colW, h, 12, "#f4f7fb");
     ctx.strokeStyle = "#d5deea";
     ctx.strokeRect(cx, cy, colW, h);
-    drawTermIcon(ctx, item.art, ar ? cx + colW - 10 - icon : cx + 10, cy + 8, icon, block.color);
+    drawTermIcon(ctx, item.art, ar ? cx + colW - 10 - icon : cx + 10, cy + 8, icon, block.color, ar);
     const textX = ar ? cx + colW - icon - 18 : cx + icon + 18;
     ctx.fillStyle = block.color;
     ctx.font = `15px ${FONT_NAME}`;
@@ -638,7 +725,7 @@ async function drawPhoto(
   if (block.src && images.has(block.src)) {
     ctx.drawImage(images.get(block.src)!, imgX, y, imgW, imgH);
   } else {
-    drawLessonArt(ctx, block.art, imgX, y, imgW, imgH);
+    drawLessonArt(ctx, block.art, imgX, y, imgW, imgH, ar);
   }
   ctx.fillStyle = "#0c2d6b";
   ctx.font = `16px ${FONT_NAME}`;

@@ -113,6 +113,7 @@ function asCode(row: AccessCode): AccessCode {
     ...row,
     suspendedAt: row.suspendedAt ?? null,
     suspendReason: row.suspendReason ?? "",
+    track: row.track === "en" ? "en" : "ar",
   };
 }
 

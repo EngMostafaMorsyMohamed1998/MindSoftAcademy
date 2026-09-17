@@ -30,6 +30,7 @@ export default async function ChapterExamPage({
   const exam = examForChapter(id, examPaperSeed(id, examWindow?.opensAt));
   if (!exam || (!mixed && !faiz && !chapter)) notFound();
   const locale = await getLocale();
+  if (faiz && locale === "en") notFound();
   const nextId = mixed || faiz || !isChapterId(id) ? null : nextChapterId(id);
   const note = mixed || faiz || !isChapterId(id) ? undefined : notesForChapter(id)[0];
   const lessonHint = faiz

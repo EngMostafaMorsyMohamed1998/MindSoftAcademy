@@ -61,6 +61,8 @@ export type AccessCode = {
   points: number;
   suspendedAt: string | null;
   suspendReason: string;
+  /** Arabic-stream book + Arabic UI, or Languages-stream book + English UI. */
+  track: "ar" | "en";
 };
 
 export type ChatMessage = {
@@ -256,6 +258,7 @@ function recordFor(
     points: extra?.points ?? 0,
     suspendedAt: extra?.suspendedAt ?? null,
     suspendReason: extra?.suspendReason ?? "",
+    track: extra?.track === "en" ? "en" : "ar",
   };
 }
 
@@ -267,9 +270,11 @@ export async function listCodes(): Promise<AccessCode[]> {
 export async function issueCode(input: {
   name: string;
   phone: string;
+  track?: "ar" | "en";
 }): Promise<AccessCode> {
   const name = input.name.trim();
   const phone = normalizePhone(input.phone);
+  const track = input.track === "en" ? "en" : "ar";
   if (name.length < 3) {
     throw new Error("NAME");
   }
@@ -285,14 +290,23 @@ export async function issueCode(input: {
   if (existing) {
     existing.code = codeForStudent(name, phone);
     existing.id = existing.id || idForStudent(name, phone);
+    existing.track = track;
     await writeStore(store);
     return existing;
   }
 
-  const record = recordFor(name, phone);
+  const record = recordFor(name, phone, { track });
   store.codes.unshift(record);
   await writeStore(store);
   return record;
+}
+
+export async function setStudentTrack(studentId: string, track: "ar" | "en"): Promise<void> {
+  const store = await readStore();
+  const row = store.codes.find((item) => item.id === studentId);
+  if (!row) return;
+  row.track = track === "en" ? "en" : "ar";
+  await writeStore(store);
 }
 
 export async function redeemCode(input: {

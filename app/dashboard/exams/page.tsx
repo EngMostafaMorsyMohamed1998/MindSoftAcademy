@@ -21,7 +21,7 @@ export default async function ExamsIndexPage() {
       <h1 className="font-serif text-3xl">{t(locale, "navExams")}</h1>
       <p className="mt-2 text-sm text-foreground/65">{t(locale, "examWindowHint")}</p>
       <ul className="mt-6 space-y-3">
-        {examWindowOpen(examWindow, FAIZ_PAPER_ID) ? (
+        {locale === "ar" && examWindowOpen(examWindow, FAIZ_PAPER_ID) ? (
           <li>
             <Link
               href={`/dashboard/exam/${FAIZ_PAPER_ID}`}

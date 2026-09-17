@@ -31,6 +31,14 @@ export function rankForStudent(rows: ClassRank[], studentId: string): ClassRank 
   return rows.find((row) => row.id === studentId) ?? null;
 }
 
+export function codesOnSameTrack<T extends { id: string; track?: "ar" | "en" }>(
+  codes: T[],
+  studentId: string,
+): T[] {
+  const mine = codes.find((row) => row.id === studentId)?.track === "en" ? "en" : "ar";
+  return codes.filter((row) => (row.track === "en" ? "en" : "ar") === mine);
+}
+
 export function buildGroupRanks(
   codes: {
     id: string;

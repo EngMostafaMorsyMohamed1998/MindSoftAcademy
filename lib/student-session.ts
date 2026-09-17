@@ -11,7 +11,7 @@ import {
 export { STUDENT_COOKIE, encodeStudentSession, readStudentToken };
 export type { StudentSession };
 
-export async function getStudentSession(): Promise<(StudentSession & { points: number; exams: string[]; homework: string[]; unlocks: string[] }) | null> {
+export async function getStudentSession(): Promise<(StudentSession & { points: number; exams: string[]; homework: string[]; unlocks: string[]; track: "ar" | "en" }) | null> {
   const store = await cookies();
   const session = readStudentToken(store.get(STUDENT_COOKIE)?.value);
   if (!session) return null;
@@ -28,9 +28,10 @@ export async function getStudentSession(): Promise<(StudentSession & { points: n
       exams,
       homework,
       unlocks,
+      track: record.track === "en" ? "en" : "ar",
     };
   }
-  return { ...session, points: 0, exams, homework, unlocks };
+  return { ...session, points: 0, exams, homework, unlocks, track: "ar" };
 }
 
 export async function setStudentCookie(record: {

@@ -17,7 +17,7 @@ import { CHAPTERS, getLesson } from "@/lib/curriculum";
 import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
 import { groupsForStudent } from "@/lib/class-groups";
-import { buildGroupRanks, rankForStudent } from "@/lib/leaderboard";
+import { buildGroupRanks, codesOnSameTrack, rankForStudent } from "@/lib/leaderboard";
 import { getLocale } from "@/lib/locale";
 import { openMakeups } from "@/lib/makeup";
 import { levelFromPoints } from "@/lib/student-profile";
@@ -45,7 +45,7 @@ export default async function DashboardHomePage() {
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
   const { level } = levelFromPoints(user.points);
   const homeGroup = groupsForStudent(groups, user.id)[0] ?? null;
-  const ranks = homeGroup ? buildGroupRanks(codes, homeGroup.studentIds) : [];
+  const ranks = homeGroup ? buildGroupRanks(codesOnSameTrack(codes, user.id), homeGroup.studentIds) : [];
   const mine = rankForStudent(ranks, user.id);
   const open = openMakeups(makeups, user.id);
   const week = buildWeekStars({
@@ -58,7 +58,7 @@ export default async function DashboardHomePage() {
     { href: "/dashboard/community", label: t(locale, "navCommunity"), icon: Share2 },
     { href: "/dashboard/leaderboard", label: t(locale, "navLeaderboard"), icon: Trophy },
     { href: "/dashboard/chapters", label: t(locale, "navChapters"), icon: BookOpen },
-    { href: "/dashboard/faiz", label: t(locale, "navFaiz"), icon: BookOpen },
+    ...(locale === "ar" ? [{ href: "/dashboard/faiz", label: t(locale, "navFaiz"), icon: BookOpen }] : []),
     { href: "/dashboard/exams", label: t(locale, "navExams"), icon: ClipboardCheck },
     { href: "/dashboard/games", label: t(locale, "navGames"), icon: Gamepad2 },
     { href: "/dashboard/arena", label: t(locale, "navArena"), icon: Box },
@@ -75,6 +75,7 @@ export default async function DashboardHomePage() {
           <p className="text-sm text-white/60">{t(locale, "welcome")}</p>
           <h1 className="mt-1 font-serif text-3xl sm:text-4xl">{firstName}</h1>
           <p className="mt-2 text-sm text-white/70">{t(locale, "dashboardHint")}</p>
+          <p className="mt-2 text-xs text-accent">{t(locale, locale === "en" ? "trackEn" : "trackAr")} · {t(locale, "trackLocked")}</p>
           <p className="mt-4 text-sm">
             <span dir="ltr">
               {user.points} {t(locale, "points")} · L{level}

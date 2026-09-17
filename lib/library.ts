@@ -107,3 +107,12 @@ export function getBook(slug: string): Book | undefined {
 export function allBooks(): Book[] {
   return [...BOOKS, FAIZ_BOOK];
 }
+
+export function booksForTrack(track: BookLanguage): Book[] {
+  return BOOKS.filter((book) => book.language === track);
+}
+
+export function bookAllowedForTrack(book: Book, track: BookLanguage): boolean {
+  if (book.kind === "workbook") return track === "ar";
+  return book.language === track;
+}

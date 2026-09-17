@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
     "bcryptjs",
     "@napi-rs/canvas",
   ],
+  outputFileTracingIncludes: {
+    "/api/booklet": ["./fonts/**/*", "./public/booklet/**/*"],
+  },
 };
 
 export default nextConfig;

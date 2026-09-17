@@ -17,7 +17,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
-import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "./logout-button";
 import type { CurrentUser } from "@/lib/current-user";
@@ -31,7 +30,7 @@ function items(locale: Locale): {
   label: string;
   icon: LucideIcon;
 }[] {
-  return [
+  const all = [
     { href: "/dashboard", label: t(locale, "navHome"), icon: Home },
     { href: "/dashboard/community", label: t(locale, "navCommunity"), icon: Share2 },
     { href: "/dashboard/leaderboard", label: t(locale, "navLeaderboard"), icon: Trophy },
@@ -45,6 +44,7 @@ function items(locale: Locale): {
     { href: "/dashboard/chat-to-teacher", label: t(locale, "navChat"), icon: MessageCircle },
     { href: "/dashboard/review", label: t(locale, "reviewMistakes"), icon: RotateCcw },
   ];
+  return locale === "en" ? all.filter((item) => item.href !== "/dashboard/faiz") : all;
 }
 
 function mobileItems(locale: Locale) {
@@ -101,10 +101,9 @@ export function DashboardNav({
               theme={theme}
               className="inline-flex items-center justify-center rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
             />
-            <LanguageToggle
-              locale={locale}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
-            />
+            <p className="inline-flex items-center justify-center rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold">
+              {t(locale, locale === "en" ? "trackEn" : "trackAr")}
+            </p>
           </div>
           <Link
             href="/dashboard/leaderboard"
@@ -135,10 +134,9 @@ export function DashboardNav({
             theme={theme}
             className="inline-flex size-9 items-center justify-center rounded-full border-2 border-primary/20 bg-primary text-white dark:border-accent/40 dark:bg-accent dark:text-primary-dark"
           />
-          <LanguageToggle
-            locale={locale}
-            className="inline-flex items-center gap-1 rounded-full border-2 border-primary/20 bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-white dark:border-accent/40 dark:bg-accent dark:text-primary-dark"
-          />
+          <span className="inline-flex items-center rounded-full border-2 border-primary/20 bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-white dark:border-accent/40 dark:bg-accent dark:text-primary-dark">
+            {t(locale, locale === "en" ? "trackEn" : "trackAr")}
+          </span>
         </div>
       </header>
 

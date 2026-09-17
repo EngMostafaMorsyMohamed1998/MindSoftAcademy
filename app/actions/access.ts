@@ -4,6 +4,7 @@ import {
   grantChapterUnlock,
   idForStudent,
   issueCode,
+  setStudentTrack,
   listExamChapterIds,
   listPassedHomework,
   listUnlocks,
@@ -32,6 +33,8 @@ import { parseBulkStudents } from "@/lib/class-clock";
 import { getLesson, isChapterId } from "@/lib/curriculum";
 import { FAIZ_PAPER_ID } from "@/lib/faiz";
 import { bindStudentDevice, getStudentSession, setStudentCookie } from "@/lib/student-session";
+import { setLocale } from "@/app/actions/locale";
+import { parseTrack } from "@/lib/locale";
 import { parseDeviceLimit } from "@/lib/devices";
 import { listVisibleCodes, rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
@@ -70,6 +73,7 @@ export async function activateAccess(
   try {
     const record = await redeemCode({ name, phone, code });
     await bindStudentDevice(record.id);
+    await setLocale(parseTrack(record.track));
     await setStudentCookie({
       ...record,
       exams: await listExamChapterIds(record.id),
@@ -111,8 +115,9 @@ export async function createStudentCode(
   }
   const name = read(formData, "name");
   const phone = read(formData, "phone");
+  const track = parseTrack(read(formData, "track"));
   try {
-    const record = await issueCode({ name, phone });
+    const record = await issueCode({ name, phone, track });
     await rememberIssuedCode(record);
     return { error: null, code: record.code };
   } catch (error) {
@@ -149,10 +154,11 @@ export async function createManyStudentCodes(
 ): Promise<FormState> {
   if (!(await isTeacher())) return { error: "FORBIDDEN" };
   const rows = parseBulkStudents(read(formData, "bulk"));
+  const track = parseTrack(read(formData, "track"));
   if (rows.length === 0) return { error: "MISSING" };
   try {
     for (const row of rows) {
-      const record = await issueCode(row);
+      const record = await issueCode({ ...row, track });
       await rememberIssuedCode(record);
     }
     return { error: null, ok: true, code: String(rows.length) };
@@ -160,6 +166,13 @@ export async function createManyStudentCodes(
     const message = error instanceof Error ? error.message : "FAILED";
     return { error: message };
   }
+}
+
+export async function saveStudentTrack(formData: FormData): Promise<void> {
+  if (!(await isTeacher())) return;
+  const studentId = read(formData, "studentId");
+  if (!studentId) return;
+  await setStudentTrack(studentId, parseTrack(read(formData, "track")));
 }
 
 export async function markStudentAttendance(

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BookOpen, ClipboardCheck, Lock } from "lucide-react";
 import { getExamWindow } from "@/lib/access-store";
 import { examWindowOpen } from "@/lib/class-clock";
@@ -8,6 +9,7 @@ import { getLocale } from "@/lib/locale";
 
 export default async function FaizTrackPage() {
   const locale = await getLocale();
+  if (locale === "en") redirect("/dashboard/courses");
   const examWindow = await getExamWindow();
   const open = examWindowOpen(examWindow, FAIZ_PAPER_ID);
 

@@ -310,8 +310,21 @@ export async function writePaymentRows(rows: MonthPayment[]): Promise<boolean> {
   }
 }
 
+export async function ensureCodeTrackColumn(): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "ClassCode" ADD COLUMN IF NOT EXISTS "track" TEXT NOT NULL DEFAULT 'ar'
+    `);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function readClassDb(): Promise<StoreFile | null> {
   if (!hasLiveDatabase()) return null;
+  await ensureCodeTrackColumn();
   try {
     const [codes, messages, exams, homework, unlocks, essayGrades, attendance, announcements, windows, misses, weekPlans, sessionRows] =
       await Promise.all([
@@ -342,6 +355,7 @@ export async function readClassDb(): Promise<StoreFile | null> {
         points: row.points,
         suspendedAt: row.suspendedAt?.toISOString() ?? null,
         suspendReason: row.suspendReason,
+        track: "track" in row && row.track === "en" ? "en" : "ar",
       })),
       messages: messages.map((row): ChatMessage => ({
         id: row.id,
@@ -438,6 +452,7 @@ export async function readClassDb(): Promise<StoreFile | null> {
 
 export async function writeClassDb(store: StoreFile): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
+  await ensureCodeTrackColumn();
   try {
     // Do not delete ClassCertificate / ClassTelegramLink / ClassDevice /
     // ClassTelegramBot / ClassGroup / ClassSurprise / ClassLessonExample /
@@ -466,6 +481,7 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
                 points: row.points,
                 suspendedAt: row.suspendedAt ? asDate(row.suspendedAt) : null,
                 suspendReason: row.suspendReason ?? "",
+                track: row.track === "en" ? "en" : "ar",
               })),
             }),
           ]

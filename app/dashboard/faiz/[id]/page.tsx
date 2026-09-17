@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { FAIZ_NOTES, getFaizNote, isFaizUnitId } from "@/lib/faiz-notes";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
@@ -14,6 +14,7 @@ export default async function FaizUnitPage({
   const note = getFaizNote(id);
   if (!note) notFound();
   const locale = await getLocale();
+  if (locale === "en") redirect("/dashboard/courses");
   const ar = locale === "ar";
   const index = FAIZ_NOTES.findIndex((row) => row.id === note.id);
   const prev = index > 0 ? FAIZ_NOTES[index - 1] : undefined;

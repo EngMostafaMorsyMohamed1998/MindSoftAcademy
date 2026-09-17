@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { allBooks, getBook } from "@/lib/library";
+import { allBooks, bookAllowedForTrack, getBook } from "@/lib/library";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { BookViewer } from "../../library/book-viewer";
@@ -38,6 +38,9 @@ export default async function CourseBookPage({
     notFound();
   }
   const locale = await getLocale();
+  if (!bookAllowedForTrack(book, locale)) {
+    notFound();
+  }
   const workbook = book.kind === "workbook";
 
   return (

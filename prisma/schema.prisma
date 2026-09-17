@@ -138,6 +138,7 @@ model ClassCode {
   points       Int       @default(0)
   suspendedAt  DateTime?
   suspendReason String   @default("")
+  track        String    @default("ar")
 
   @@index([phone])
 }

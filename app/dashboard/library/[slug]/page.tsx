@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BOOKS, getBook } from "@/lib/library";
+import { BOOKS, bookAllowedForTrack, getBook } from "@/lib/library";
+import { getLocale } from "@/lib/locale";
 import { BookViewer } from "../book-viewer";
 
 export function generateStaticParams() {
@@ -30,6 +31,10 @@ export default async function LibraryBookPage({
   const book = getBook(slug);
 
   if (!book) {
+    notFound();
+  }
+  const locale = await getLocale();
+  if (!bookAllowedForTrack(book, locale)) {
     notFound();
   }
 

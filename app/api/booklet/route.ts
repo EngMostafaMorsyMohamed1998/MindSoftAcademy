@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { bookletFileName, buildBookletPdf } from "@/lib/booklet-pdf";
 import { isBookletScope } from "@/lib/booklet-pack";
 import { getCurrentUser } from "@/lib/current-user";
-import { getLocale, isLocale } from "@/lib/locale";
+import { getLocale } from "@/lib/locale";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -13,10 +13,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const url = new URL(request.url);
-  const asked = url.searchParams.get("lang");
-  const locale = isLocale(asked) ? asked : await getLocale();
+  const locale = await getLocale();
   const scope = url.searchParams.get("chapter");
-  if (!isBookletScope(scope)) {
+  if (!isBookletScope(scope) || (scope === "faiz" && locale === "en")) {
     return NextResponse.json({ error: "اختر فصل الملزمة" }, { status: 400 });
   }
   const pdf = await buildBookletPdf(locale, scope);
