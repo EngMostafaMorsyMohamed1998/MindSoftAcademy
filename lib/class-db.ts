@@ -27,6 +27,7 @@ import { DEFAULT_MONTHLY_FEE, parsePayments, type MonthPayment } from "@/lib/fee
 import { parseMakeups, type MakeupTask } from "@/lib/makeup";
 import { parseWeekSlots, type WeekSlot } from "@/lib/week-plan";
 import { parseClassGroups, type ClassGroup } from "@/lib/class-groups";
+import { parseSurprise, parseSurpriseAnswers, type SurpriseAnswer, type SurpriseQuestion } from "@/lib/surprise";
 
 function asExamWindow(row: { id: string; chapterId: string; opensAt: Date; closesAt: Date }): ExamWindow {
   const parsed = parseExamChapter(row.chapterId);
@@ -429,7 +430,7 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
   try {
     // Do not delete ClassCertificate / ClassTelegramLink / ClassDevice /
-    // ClassTelegramBot / ClassGroup here. Those live in dedicated tables.
+    // ClassTelegramBot / ClassGroup / ClassSurprise here. Those live in dedicated tables.
     await prisma.$transaction([
       prisma.classCode.deleteMany(),
       prisma.classMessage.deleteMany(),
@@ -841,6 +842,76 @@ export async function writeGroupRows(groups: ClassGroup[]): Promise<boolean> {
                 nextLesson: row.nextLesson,
                 studentIds: JSON.stringify(row.studentIds),
                 remindedOn: row.remindedOn,
+              })),
+            }),
+          ]
+        : []),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readSurpriseState(): Promise<{
+  question: SurpriseQuestion | null;
+  answers: SurpriseAnswer[];
+} | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const [row, answers] = await Promise.all([
+      prisma.classSurprise.findUnique({ where: { id: "current" } }),
+      prisma.classSurpriseAnswer.findMany(),
+    ]);
+    let payload: unknown = null;
+    if (row?.payload) {
+      try {
+        payload = JSON.parse(row.payload);
+      } catch {
+        payload = null;
+      }
+    }
+    return {
+      question: parseSurprise(payload),
+      answers: parseSurpriseAnswers(
+        answers.map((item) => ({
+          studentId: item.studentId,
+          surpriseId: item.surpriseId,
+          choice: item.choice,
+          correct: item.correct,
+          answeredAt: item.answeredAt.toISOString(),
+        })),
+      ),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function writeSurpriseState(
+  question: SurpriseQuestion | null,
+  answers: SurpriseAnswer[],
+): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    const rows = parseSurpriseAnswers(answers);
+    await prisma.$transaction([
+      prisma.classSurprise.upsert({
+        where: { id: "current" },
+        create: { id: "current", payload: JSON.stringify(question) },
+        update: { payload: JSON.stringify(question) },
+      }),
+      prisma.classSurpriseAnswer.deleteMany(),
+      ...(rows.length
+        ? [
+            prisma.classSurpriseAnswer.createMany({
+              data: rows.map((row) => ({
+                id: `${row.surpriseId}:${row.studentId}`,
+                surpriseId: row.surpriseId,
+                studentId: row.studentId,
+                choice: row.choice,
+                correct: row.correct,
+                answeredAt: asDate(row.answeredAt),
               })),
             }),
           ]

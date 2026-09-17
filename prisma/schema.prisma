@@ -339,3 +339,20 @@ model ClassGroup {
   studentIds  String
   remindedOn  String @default("")
 }
+
+model ClassSurprise {
+  id      String @id
+  payload String
+}
+
+model ClassSurpriseAnswer {
+  id         String   @id
+  surpriseId String
+  studentId  String
+  choice     Int
+  correct    Boolean
+  answeredAt DateTime
+
+  @@unique([surpriseId, studentId])
+  @@index([surpriseId])
+}

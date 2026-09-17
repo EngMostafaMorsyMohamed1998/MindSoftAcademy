@@ -222,6 +222,10 @@ export async function readStore(): Promise<StoreFile> {
         if (teacherChat) fromDb.teacherTelegramChatId = teacherChat;
         const groups = await readGroupRows();
         if (groups?.length) fromDb.classGroups = groups;
+        const { readSurpriseState } = await import("@/lib/class-db");
+        const surprise = await readSurpriseState();
+        if (surprise?.question) fromDb.surprise = surprise.question;
+        if (surprise?.answers.length) fromDb.surpriseAnswers = surprise.answers;
       } catch {
         // Dedicated device tables may not exist yet.
       }
@@ -238,8 +242,8 @@ export async function readStore(): Promise<StoreFile> {
           fromDb.teacherTelegramChatId = local.teacherTelegramChatId;
         }
         if (!fromDb.classGroups?.length && local.classGroups.length) fromDb.classGroups = local.classGroups;
-        fromDb.surprise = parseSurprise(local.surprise);
-        fromDb.surpriseAnswers = parseSurpriseAnswers(local.surpriseAnswers);
+        if (!fromDb.surprise) fromDb.surprise = parseSurprise(local.surprise);
+        if (!fromDb.surpriseAnswers.length) fromDb.surpriseAnswers = parseSurpriseAnswers(local.surpriseAnswers);
         fromDb.presence = parsePresence(local.presence);
       }
       return fromDb;
@@ -295,9 +299,21 @@ export async function writeStore(
     store.monthlyFee = parseMonthlyFee((await readLocalStore())?.monthlyFee);
   }
   if (!options?.replaceSurprise) {
+    let dedicated: { question: ReturnType<typeof parseSurprise>; answers: ReturnType<typeof parseSurpriseAnswers> } | null =
+      null;
+    try {
+      const { readSurpriseState } = await import("@/lib/class-db");
+      dedicated = await readSurpriseState();
+    } catch {
+      dedicated = null;
+    }
     const local = await readLocalStore();
-    if (!store.surprise) store.surprise = parseSurprise(local?.surprise);
-    if (!store.surpriseAnswers.length) store.surpriseAnswers = parseSurpriseAnswers(local?.surpriseAnswers);
+    if (!store.surprise) store.surprise = dedicated?.question ?? parseSurprise(local?.surprise);
+    if (!store.surpriseAnswers.length) {
+      store.surpriseAnswers = dedicated?.answers.length
+        ? dedicated.answers
+        : parseSurpriseAnswers(local?.surpriseAnswers);
+    }
   }
   if (!options?.replacePresence && !store.presence.length) {
     store.presence = parsePresence((await readLocalStore())?.presence);
@@ -405,6 +421,14 @@ export async function writeStore(
       await writeGroupRows(parseClassGroups(store.classGroups));
     } catch {
       // Dedicated group table may not exist yet.
+    }
+  }
+  if (options?.replaceSurprise || store.surprise) {
+    try {
+      const { writeSurpriseState } = await import("@/lib/class-db");
+      await writeSurpriseState(parseSurprise(store.surprise), parseSurpriseAnswers(store.surpriseAnswers));
+    } catch {
+      // Dedicated surprise table may not exist yet.
     }
   }
   await writeLocal(store);
