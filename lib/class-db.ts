@@ -1113,6 +1113,10 @@ export async function ensureCommunityTables(): Promise<boolean> {
         CONSTRAINT "ClassCommunityLike_pkey" PRIMARY KEY ("id")
       )
     `);
+    await prisma.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "ClassCommunityLike_postId_studentId_key"
+      ON "ClassCommunityLike"("postId", "studentId")
+    `);
     return true;
   } catch {
     return false;
@@ -1254,19 +1258,30 @@ export async function toggleCommunityLikeRow(postId: string, studentId: string):
   }
   await ensureCommunityTables();
   try {
-    const existing = await prisma.classCommunityLike.findUnique({
-      where: { postId_studentId: { postId, studentId } },
+    const existing = await prisma.classCommunityLike.findFirst({
+      where: { postId, studentId },
     });
     if (existing) {
       await prisma.classCommunityLike.delete({ where: { id: existing.id } });
-    } else {
-      await prisma.classCommunityLike.create({
-        data: { id: `${postId}:${studentId}`, postId, studentId },
-      });
+      return true;
     }
+    await prisma.classCommunityLike.upsert({
+      where: { id: `${postId}:${studentId}` },
+      create: { id: `${postId}:${studentId}`, postId, studentId },
+      update: { postId, studentId },
+    });
     return true;
   } catch {
-    return false;
+    try {
+      await prisma.$executeRaw`
+        INSERT INTO "ClassCommunityLike" ("id", "postId", "studentId")
+        VALUES (${`${postId}:${studentId}`}, ${postId}, ${studentId})
+        ON CONFLICT ("id") DO NOTHING
+      `;
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 

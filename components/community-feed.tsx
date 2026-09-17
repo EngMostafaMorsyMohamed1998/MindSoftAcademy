@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
 import {
   commentCommunityPost,
@@ -79,18 +80,7 @@ export function CommunityFeed({
               </div>
               <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{post.body}</p>
               <div className="mt-3 flex items-center gap-3 text-sm">
-                <form action={likeCommunityPost}>
-                  <input type="hidden" name="postId" value={post.id} />
-                  <button
-                    type="submit"
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 ${
-                      post.liked ? "bg-red-50 font-semibold text-red-700" : "bg-primary/5 text-foreground/70"
-                    }`}
-                  >
-                    <Heart className={`size-4 ${post.liked ? "fill-red-600" : ""}`} />
-                    {post.likes}
-                  </button>
-                </form>
+                <CommunityLikeButton postId={post.id} liked={post.liked} likes={post.likes} />
                 <span className="inline-flex items-center gap-1.5 text-foreground/55">
                   <MessageCircle className="size-4" />
                   {post.comments.length}
@@ -145,5 +135,40 @@ export function CommunityFeed({
         })
       )}
     </div>
+  );
+}
+
+function CommunityLikeButton({
+  postId,
+  liked,
+  likes,
+}: {
+  postId: string;
+  liked: boolean;
+  likes: number;
+}) {
+  const [state, setState] = useState({ liked, likes });
+
+  async function onLike() {
+    setState((current) => ({
+      liked: !current.liked,
+      likes: current.liked ? Math.max(0, current.likes - 1) : current.likes + 1,
+    }));
+    const form = new FormData();
+    form.set("postId", postId);
+    await likeCommunityPost(form);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void onLike()}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 ${
+        state.liked ? "bg-red-50 font-semibold text-red-700" : "bg-primary/5 text-foreground/70"
+      }`}
+    >
+      <Heart className={`size-4 ${state.liked ? "fill-red-600" : ""}`} />
+      {state.likes}
+    </button>
   );
 }

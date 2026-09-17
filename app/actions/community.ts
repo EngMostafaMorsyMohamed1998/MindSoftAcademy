@@ -47,12 +47,11 @@ export async function shareCommunityPost(formData: FormData): Promise<void> {
 export async function likeCommunityPost(formData: FormData): Promise<void> {
   const postId = String(formData.get("postId") || "");
   if (!postId) return;
-  const teacher = await isTeacher();
-  const user = teacher ? null : await getCurrentUser();
-  const actorId = teacher ? "teacher" : user?.id;
+  const user = await getCurrentUser();
+  const actorId = user?.id || ((await isTeacher()) ? "teacher" : "");
   if (!actorId) return;
-  const ok = await toggleCommunityLike(postId, actorId);
-  if (ok) refresh();
+  await toggleCommunityLike(postId, actorId);
+  refresh();
 }
 
 export async function commentCommunityPost(formData: FormData): Promise<void> {
