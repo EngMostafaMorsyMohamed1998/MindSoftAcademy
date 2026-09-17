@@ -20,14 +20,14 @@ function Frame({
 }) {
   const ar = locale === "ar";
   return (
-    <figure className="overflow-hidden rounded-3xl bg-white ring-1 ring-primary/10">
-      <p className="px-3 pt-3 text-xs font-semibold" style={{ color }}>
+    <figure className="overflow-hidden rounded-xl bg-white ring-1 ring-slate-300">
+      <p className="px-4 pt-4 text-base font-extrabold" style={{ color }}>
         {ar ? titleAr : titleEn}
       </p>
-      <div className="p-3" dir={ar ? "rtl" : "ltr"} style={{ unicodeBidi: "isolate" }}>
+      <div className="p-4" dir={ar ? "rtl" : "ltr"} style={{ unicodeBidi: "isolate" }}>
         {children}
       </div>
-      <figcaption className="px-3 pb-3 text-[11px] leading-relaxed text-foreground/65">
+      <figcaption className="px-4 pb-4 text-sm font-semibold leading-7 text-[#111827]">
         {ar ? captionAr : captionEn}
       </figcaption>
     </figure>
@@ -47,7 +47,7 @@ function Pill({
   return (
     <span
       dir={arabic ? "rtl" : "ltr"}
-      className="inline-flex min-h-10 items-center justify-center rounded-2xl px-3 py-2 text-center text-xs font-semibold leading-snug text-white"
+      className="inline-flex min-h-11 items-center justify-center rounded-lg px-3 py-2 text-center text-sm font-extrabold leading-6 text-white"
       style={{ background: dark ? "#111827" : color, unicodeBidi: "isolate" }}
     >
       {label}

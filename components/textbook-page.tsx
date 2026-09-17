@@ -92,23 +92,23 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
   const colCount = headers.length;
 
   return (
-    <article className="textbook-sheet mb-8 overflow-hidden rounded-sm bg-white ring-1 ring-zinc-200">
-      <header className="textbook-head flex items-center justify-between bg-[#0c2d6b] px-4 py-2.5 text-white">
-        <span className="text-sm font-bold">
+    <article className="textbook-sheet mb-8 overflow-hidden rounded-sm bg-white ring-1 ring-slate-300">
+      <header className="textbook-head flex items-center justify-between gap-3 bg-[#0c2d6b] px-5 py-3.5 text-white">
+        <span className="text-base font-extrabold">
           {ar ? "الدرس" : "Lesson"} {page.id}
         </span>
-        <span className="text-sm font-semibold">{bookletSafe(locale, ar ? page.titleAr : page.titleEn)}</span>
+        <span className="text-base font-bold leading-7">{bookletSafe(locale, ar ? page.titleAr : page.titleEn)}</span>
       </header>
 
-      <div className="px-4 py-5 sm:px-6">
-        <p className="textbook-ask rounded-sm border border-amber-200 bg-[#fff8e8] px-3 py-3 text-[15px] font-semibold leading-8">
+      <div className="px-5 py-6 sm:px-7">
+        <p className="textbook-ask rounded-sm border-2 border-amber-300 bg-[#fff6d6] px-4 py-4 text-lg font-bold leading-9 text-[#111827]">
           <span className="textbook-ask-mark">{ar ? "؟؟" : "??"}</span>{" "}
-          <span className="text-zinc-500">{ar ? "السؤال الرئيسي:" : "Main question:"}</span>{" "}
+          <span className="text-[#92400e]">{ar ? "السؤال الرئيسي:" : "Main question:"}</span>{" "}
           {bookletSafe(locale, ar ? page.questionAr : page.questionEn)}
         </p>
 
-        <div className="textbook-figure mt-5 grid items-start gap-4 sm:grid-cols-[200px_minmax(0,1fr)]">
-          <figure className="overflow-hidden rounded-sm bg-zinc-100 ring-1 ring-zinc-200">
+        <div className="textbook-figure mt-6 grid items-start gap-5 sm:grid-cols-[220px_minmax(0,1fr)]">
+          <figure className="overflow-hidden rounded-sm bg-zinc-100 ring-1 ring-slate-300">
             {page.photo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
@@ -119,15 +119,15 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
             )}
           </figure>
           <div>
-            <h4 className="text-[16px] font-bold text-zinc-900">
-              <span className="me-2 inline-flex size-6 items-center justify-center rounded-full bg-[#0c2d6b] text-[11px] text-white">
+            <h4 className="text-xl font-extrabold text-[#0c2d6b]">
+              <span className="me-2 inline-flex size-7 items-center justify-center rounded-full bg-[#0c2d6b] text-xs text-white">
                 1
               </span>
               {bookletSafe(locale, ar ? page.sectionAr : page.sectionEn)}
             </h4>
-            <p className="mt-2 text-sm leading-7 text-zinc-700">{bookletSafe(locale, ar ? page.introAr : page.introEn)}</p>
+            <p className="mt-3 text-base font-semibold leading-8 text-[#111827]">{bookletSafe(locale, ar ? page.introAr : page.introEn)}</p>
             {points.length ? (
-              <ol className="mt-3 list-decimal space-y-1.5 ps-5 text-sm leading-7 text-zinc-700">
+              <ol className="mt-4 list-decimal space-y-2 ps-6 text-base font-semibold leading-8 text-[#111827]">
                 {points.map((point) => (
                   <li key={point}>{bookletSafe(locale, point)}</li>
                 ))}
@@ -137,25 +137,25 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
         </div>
 
         {page.headersAr[0] === "المصطلح" || page.headersEn[0] === "Term" ? (
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {page.rows.map((row, index) => {
               const term = bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""));
               const meaning = bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""));
               return (
-                <div key={`${page.id}-term-${index}`} className="flex gap-3 rounded-2xl bg-[#f4f7fb] p-3 ring-1 ring-zinc-200">
-                  <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-white">
+                <div key={`${page.id}-term-${index}`} className="flex gap-3 rounded-xl bg-[#eef3fb] p-4 ring-1 ring-slate-300">
+                  <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-white">
                     <PhotoArt art={termArt(term, meaning)} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-[#0c2d6b]">{term}</p>
-                    <p className="mt-1 text-sm leading-6 text-zinc-700">{meaning}</p>
+                    <p className="text-base font-extrabold text-[#0c2d6b]">{term}</p>
+                    <p className="mt-1 text-base font-semibold leading-7 text-[#111827]">{meaning}</p>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <table className="textbook-table mt-5 w-full border-collapse text-sm">
+          <table className="textbook-table mt-6 w-full border-collapse">
             <colgroup>
               {colCount === 2 ? (
                 <>
@@ -195,19 +195,19 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
           </table>
         )}
 
-        <p className="textbook-takeaway mt-5 rounded-sm bg-[#fff8e8] px-3 py-3 text-sm leading-7 ring-1 ring-amber-200">
+        <p className="textbook-takeaway mt-6 rounded-sm bg-[#fff4cc] px-4 py-4 text-base font-bold leading-8 text-[#111827] ring-1 ring-amber-300">
           <strong>{ar ? "الخلاصة:" : "Takeaway:"}</strong> {bookletSafe(locale, ar ? page.takeawayAr : page.takeawayEn)}
         </p>
       </div>
 
-      <footer className="textbook-foot flex items-center justify-between gap-3 border-t border-zinc-200 px-4 py-2">
-        <span className="rounded-sm bg-emerald-600 px-3 py-1 text-[11px] font-semibold text-white">
+      <footer className="textbook-foot flex items-center justify-between gap-3 border-t-2 border-slate-300 px-5 py-3">
+        <span className="rounded-sm bg-emerald-700 px-3 py-1 text-sm font-extrabold text-white">
           {ar ? "البكالوريا" : "Baccalaureate"}
         </span>
-        <span className="text-xs font-semibold tracking-wide text-zinc-600" dir="ltr">
+        <span className="text-sm font-extrabold tracking-wide text-[#111827]" dir="ltr">
           {BRAND.phone}
         </span>
-        <span className="text-xs text-zinc-500">{page.pageNo}</span>
+        <span className="text-base font-extrabold text-[#111827]">{page.pageNo}</span>
       </footer>
     </article>
   );

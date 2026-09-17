@@ -90,34 +90,62 @@ body {
   }
 }
 
+.booklet-paper {
+  color: #111827;
+  font-size: 1.125rem;
+  line-height: 1.9;
+  font-weight: 600;
+}
+
+.booklet-paper h2,
+.booklet-paper h3,
+.booklet-paper h4,
+.booklet-paper h5 {
+  color: #0c2d6b;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.textbook-table {
+  font-size: 1.05rem;
+}
+
 .textbook-table th,
 .textbook-table td {
-  border: 1px solid #c5d0de;
-  padding: 9px 11px;
+  border: 1px solid #94a3b8;
+  padding: 12px 14px;
   vertical-align: top;
-  line-height: 1.7;
+  line-height: 1.85;
   text-align: start;
+  color: #111827;
+  font-weight: 600;
 }
 
 .textbook-table th {
   background: #0c2d6b;
   color: #fff;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .textbook-zebra td {
-  background: #f4f7fb;
+  background: #eef3fb;
 }
 
 .textbook-example td {
-  background: #fff8e8;
-  color: #3f3f46;
+  background: #fff4cc;
+  color: #111827;
+  font-weight: 700;
 }
 
 .textbook-ask-mark {
-  color: #ca8a04;
-  font-size: 1.25rem;
+  color: #a16207;
+  font-size: 1.5rem;
   font-weight: 800;
+}
+
+.booklet-q {
+  border: 1.5px solid #c5d0de;
+  background: #f8fafc;
 }
 
 @media print {
@@ -198,7 +226,12 @@ body {
   }
 
   .textbook-table {
-    font-size: 12px !important;
+    font-size: 14px !important;
+  }
+
+  .booklet-paper {
+    font-size: 15px;
+    line-height: 1.75;
   }
 
   .booklet-pane.hidden {

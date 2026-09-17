@@ -111,6 +111,9 @@ export default async function Page() {
                     <h2 className="text-xl font-semibold">
                       {locale === "ar" ? BRAND.teacherAr : BRAND.teacherEn}
                     </h2>
+                    <p className="mt-0.5 text-sm font-semibold tracking-wide text-accent" dir="ltr">
+                      {BRAND.phone}
+                    </p>
                     <p className="text-sm text-white/65">
                       {locale === "ar" ? BRAND.titleAr : BRAND.titleEn}
                     </p>

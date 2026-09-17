@@ -39,7 +39,12 @@ export function bookletLine(locale: Locale, arabic: string, english: string): st
 export function cleanArabic(text: string): string {
   let next = text;
   for (const [pattern, swap] of AR_SWAPS) next = next.replace(pattern, swap);
-  next = next.replace(LATIN_WORD, "").replace(/\s{2,}/g, " ").replace(/\s+([،.:])/g, "$1").trim();
+  next = next
+    .replace(LATIN_WORD, "")
+    .replace(/\(\s*\)/g, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([،.:])/g, "$1")
+    .trim();
   return next;
 }
 

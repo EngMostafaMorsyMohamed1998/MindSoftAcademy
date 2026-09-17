@@ -30,6 +30,9 @@ export function BrandMark({
         <span className={`block text-[11px] ${light ? "text-white/55" : "text-foreground/50"}`}>
           {locale === "ar" ? BRAND.teacherAr : BRAND.teacherEn}
         </span>
+        <span className={`block text-[11px] font-semibold tracking-wide ${light ? "text-white/70" : "text-foreground/60"}`} dir="ltr">
+          {BRAND.phone}
+        </span>
       </span>
     </Link>
   );

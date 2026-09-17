@@ -26,7 +26,7 @@ import { textbookPageFor } from "@/lib/textbook-pages";
 const FONT_NAME = "NotoNaskh";
 const PAGE_W = 595;
 const PAGE_H = 842;
-const SCALE = 2.2;
+const SCALE = 2.5;
 const LETTERS = ["أ", "ب", "ج", "د"];
 
 let fontReady = false;
@@ -293,7 +293,7 @@ function drawFigure(
 }
 
 function drawMap(ctx: SKRSContext2D, root: MindNode, color: string, accent: string, x: number, y: number, w: number, ar: boolean): number {
-  const title = ar ? root.labelAr : root.labelEn;
+  const title = bookletSafe(ar ? "ar" : "en", ar ? root.labelAr : root.labelEn);
   boxLabel(ctx, title, x, y, w, 32, color, 14);
   const colW = (w - 12) / 2;
   let maxH = 44;
@@ -302,13 +302,25 @@ function drawMap(ctx: SKRSContext2D, root: MindNode, color: string, accent: stri
     const by = y + 42 + Math.floor(index / 2) * 92;
     roundRect(ctx, bx, by, colW, 84, 12, fade(color, 0.08));
     ctx.fillStyle = color;
-    ctx.font = `12px ${FONT_NAME}`;
-    paintText(ctx, ar ? branch.labelAr : branch.labelEn, bx + colW - 10, by + 8, "right");
+    ctx.font = `13px ${FONT_NAME}`;
+    paintText(
+      ctx,
+      bookletSafe(ar ? "ar" : "en", ar ? branch.labelAr : branch.labelEn),
+      ar ? bx + colW - 10 : bx + 10,
+      by + 8,
+      ar ? "right" : "left",
+    );
     branch.children.slice(0, 3).forEach((leaf, leafIndex) => {
       roundRect(ctx, bx + 8, by + 28 + leafIndex * 17, colW - 16, 15, 7, accent);
       ctx.fillStyle = "#071c45";
-      ctx.font = `10px ${FONT_NAME}`;
-      paintText(ctx, ar ? leaf.labelAr : leaf.labelEn, bx + colW - 16, by + 29 + leafIndex * 17, "right");
+      ctx.font = `12px ${FONT_NAME}`;
+      paintText(
+        ctx,
+        bookletSafe(ar ? "ar" : "en", ar ? leaf.labelAr : leaf.labelEn),
+        ar ? bx + colW - 16 : bx + 12,
+        by + 29 + leafIndex * 17,
+        ar ? "right" : "left",
+      );
     });
     maxH = Math.max(maxH, by + 92 - y);
   });
@@ -316,32 +328,32 @@ function drawMap(ctx: SKRSContext2D, root: MindNode, color: string, accent: stri
 }
 
 function drawBanner(ctx: SKRSContext2D, text: string, color: string, x: number, y: number, w: number, ar: boolean): number {
-  roundRect(ctx, x, y, w, 40, 10, color);
+  roundRect(ctx, x, y, w, 46, 8, color);
   ctx.fillStyle = "#ffffff";
-  ctx.font = `18px ${FONT_NAME}`;
-  paintText(ctx, text, ar ? x + w - 16 : x + 16, y + 10, ar ? "right" : "left");
-  return 54;
+  ctx.font = `20px ${FONT_NAME}`;
+  paintText(ctx, text, ar ? x + w - 16 : x + 16, y + 12, ar ? "right" : "left");
+  return 60;
 }
 
 function drawSection(ctx: SKRSContext2D, text: string, x: number, y: number, w: number, ar: boolean): number {
-  roundRect(ctx, x, y, w, 28, 8, "#0c2d6b");
+  roundRect(ctx, x, y, w, 32, 6, "#0c2d6b");
   ctx.fillStyle = "#ffffff";
-  ctx.font = `13px ${FONT_NAME}`;
-  paintText(ctx, text, ar ? x + w - 14 : x + 14, y + 7, ar ? "right" : "left");
-  return 40;
+  ctx.font = `15px ${FONT_NAME}`;
+  paintText(ctx, text, ar ? x + w - 14 : x + 14, y + 8, ar ? "right" : "left");
+  return 44;
 }
 
 function questionLines(ctx: SKRSContext2D, block: QuestionBlock, w: number) {
-  const pad = 12;
+  const pad = 14;
   const inner = w - pad * 2;
-  ctx.font = `13px ${FONT_NAME}`;
+  ctx.font = `15px ${FONT_NAME}`;
   const promptLines = wrap(ctx, `${block.n}. ${block.prompt}`, inner);
-  ctx.font = `12px ${FONT_NAME}`;
+  ctx.font = `14px ${FONT_NAME}`;
   const optionLines = block.options.slice(0, 4).map((option, optionIndex) =>
-    wrap(ctx, `${block.letters[optionIndex] ?? LETTERS[optionIndex]}  ${option}`, inner - 22),
+    wrap(ctx, `${block.letters[optionIndex] ?? LETTERS[optionIndex]}  ${option}`, inner - 26),
   );
-  const optionsH = optionLines.reduce((sum, lines) => sum + lines.length * 18 + 8, 0);
-  return { pad, promptLines, optionLines, h: pad + promptLines.length * 20 + 10 + optionsH + pad };
+  const optionsH = optionLines.reduce((sum, lines) => sum + lines.length * 20 + 10, 0);
+  return { pad, promptLines, optionLines, h: pad + promptLines.length * 22 + 12 + optionsH + pad };
 }
 
 function drawQuestionCard(
@@ -357,43 +369,43 @@ function drawQuestionCard(
   ctx.strokeStyle = "#d5deea";
   ctx.lineWidth = 1;
   ctx.stroke();
-  ctx.fillStyle = "#0b1220";
-  ctx.font = `13px ${FONT_NAME}`;
+  ctx.fillStyle = "#111827";
+  ctx.font = `15px ${FONT_NAME}`;
   promptLines.forEach((line, index) => {
-    paintText(ctx, line, ar ? x + w - pad : x + pad, y + pad + index * 20, ar ? "right" : "left");
+    paintText(ctx, line, ar ? x + w - pad : x + pad, y + pad + index * 22, ar ? "right" : "left");
   });
-  let oy = y + pad + promptLines.length * 20 + 8;
+  let oy = y + pad + promptLines.length * 22 + 10;
   optionLines.forEach((lines) => {
     ctx.beginPath();
     ctx.strokeStyle = "#0c2d6b";
-    ctx.lineWidth = 1.4;
-    ctx.arc(ar ? x + w - pad - 7 : x + pad + 7, oy + 8, 7, 0, Math.PI * 2);
+    ctx.lineWidth = 1.8;
+    ctx.arc(ar ? x + w - pad - 8 : x + pad + 8, oy + 9, 8, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.fillStyle = "#0c2d6b";
-    ctx.font = `12px ${FONT_NAME}`;
+    ctx.fillStyle = "#111827";
+    ctx.font = `14px ${FONT_NAME}`;
     lines.forEach((line, lineIndex) => {
       paintText(
         ctx,
         line,
-        ar ? x + w - pad - 22 : x + pad + 22,
-        oy + lineIndex * 18,
+        ar ? x + w - pad - 26 : x + pad + 26,
+        oy + lineIndex * 20,
         ar ? "right" : "left",
       );
     });
-    oy += lines.length * 18 + 8;
+    oy += lines.length * 20 + 10;
   });
   return h + 14;
 }
 
 function essayHeight(ctx: SKRSContext2D, block: EssayBlock, w: number): number {
-  const pad = 12;
-  ctx.font = `13px ${FONT_NAME}`;
-  return pad + wrap(ctx, `${block.n}) ${block.prompt}`, w - pad * 2).length * 20 + 72;
+  const pad = 14;
+  ctx.font = `15px ${FONT_NAME}`;
+  return pad + wrap(ctx, `${block.n}) ${block.prompt}`, w - pad * 2).length * 22 + 76;
 }
 
 function drawEssayCard(ctx: SKRSContext2D, block: EssayBlock, x: number, y: number, w: number, ar: boolean): number {
-  const pad = 12;
-  ctx.font = `13px ${FONT_NAME}`;
+  const pad = 14;
+  ctx.font = `15px ${FONT_NAME}`;
   const lines = wrap(ctx, `${block.n}) ${block.prompt}`, w - pad * 2);
   const h = essayHeight(ctx, block, w);
   ctx.strokeStyle = "#d4a017";
@@ -401,9 +413,9 @@ function drawEssayCard(ctx: SKRSContext2D, block: EssayBlock, x: number, y: numb
   ctx.setLineDash([5, 4]);
   ctx.strokeRect(x, y, w, h);
   ctx.setLineDash([]);
-  ctx.fillStyle = "#0b1220";
+  ctx.fillStyle = "#111827";
   lines.forEach((line, index) => {
-    paintText(ctx, line, ar ? x + w - pad : x + pad, y + pad + index * 20, ar ? "right" : "left");
+    paintText(ctx, line, ar ? x + w - pad : x + pad, y + pad + index * 22, ar ? "right" : "left");
   });
   for (let i = 0; i < 3; i += 1) {
     const ly = y + pad + lines.length * 20 + 18 + i * 16;
@@ -417,19 +429,20 @@ function drawEssayCard(ctx: SKRSContext2D, block: EssayBlock, x: number, y: numb
 }
 
 function drawAsk(ctx: SKRSContext2D, text: string, x: number, y: number, w: number, ar: boolean): number {
-  ctx.font = `13px ${FONT_NAME}`;
-  const lines = wrap(ctx, text, w - 36);
-  const h = lines.length * 20 + 16;
-  roundRect(ctx, x, y, w, h, 6, "#fff8e8");
-  ctx.strokeStyle = "#f3d48a";
+  ctx.font = `15px ${FONT_NAME}`;
+  const lines = wrap(ctx, text, w - 40);
+  const h = lines.length * 22 + 20;
+  roundRect(ctx, x, y, w, h, 4, "#fff4cc");
+  ctx.strokeStyle = "#d4a017";
+  ctx.lineWidth = 1.6;
   ctx.stroke();
-  ctx.fillStyle = "#ca8a04";
-  paintText(ctx, ar ? "؟؟" : "??", ar ? x + w - 10 : x + 10, y + 8, ar ? "right" : "left");
-  ctx.fillStyle = "#0b1220";
+  ctx.fillStyle = "#92400e";
+  paintText(ctx, ar ? "؟؟" : "??", ar ? x + w - 10 : x + 10, y + 10, ar ? "right" : "left");
+  ctx.fillStyle = "#111827";
   lines.forEach((line, index) => {
-    paintText(ctx, line, ar ? x + w - 32 : x + 32, y + 8 + index * 20, ar ? "right" : "left");
+    paintText(ctx, line, ar ? x + w - 36 : x + 36, y + 10 + index * 22, ar ? "right" : "left");
   });
-  return h + 12;
+  return h + 14;
 }
 
 function drawLessonArt(ctx: SKRSContext2D, art: string, x: number, y: number, w: number, h: number) {
@@ -578,7 +591,7 @@ function drawTerms(
   let rowH = 0;
   while (index < block.items.length && index < from + limit) {
     const item = block.items[index]!;
-    ctx.font = `12px ${FONT_NAME}`;
+    ctx.font = `14px ${FONT_NAME}`;
     const meaningLines = wrap(ctx, item.meaning, colW - icon - 20);
     const h = Math.max(68, 18 + meaningLines.length * 16 + 16);
     const cx = x + (ar ? (col === 0 ? colW + gap : 0) : col * (colW + gap));
@@ -589,12 +602,12 @@ function drawTerms(
     drawTermIcon(ctx, item.art, ar ? cx + colW - 10 - icon : cx + 10, cy + 8, icon, block.color);
     const textX = ar ? cx + colW - icon - 18 : cx + icon + 18;
     ctx.fillStyle = block.color;
-    ctx.font = `13px ${FONT_NAME}`;
+    ctx.font = `15px ${FONT_NAME}`;
     paintText(ctx, item.term, textX, cy + 8, ar ? "right" : "left");
-    ctx.fillStyle = "#334155";
-    ctx.font = `12px ${FONT_NAME}`;
+    ctx.fillStyle = "#111827";
+    ctx.font = `14px ${FONT_NAME}`;
     meaningLines.forEach((line, lineIndex) => {
-      paintText(ctx, line, textX, cy + 28 + lineIndex * 16, ar ? "right" : "left");
+      paintText(ctx, line, textX, cy + 30 + lineIndex * 18, ar ? "right" : "left");
     });
     rowH = Math.max(rowH, h);
     col += 1;
@@ -628,12 +641,12 @@ async function drawPhoto(
     drawLessonArt(ctx, block.art, imgX, y, imgW, imgH);
   }
   ctx.fillStyle = "#0c2d6b";
-  ctx.font = `14px ${FONT_NAME}`;
+  ctx.font = `16px ${FONT_NAME}`;
   paintText(ctx, `1  ${block.title}`, ar ? textX + textW : textX, y, ar ? "right" : "left");
-  ctx.fillStyle = "#334155";
-  ctx.font = `12px ${FONT_NAME}`;
+  ctx.fillStyle = "#111827";
+  ctx.font = `14px ${FONT_NAME}`;
   wrap(ctx, block.intro, textW).slice(0, 5).forEach((line, index) => {
-    paintText(ctx, line, ar ? textX + textW : textX, y + 28 + index * 18, ar ? "right" : "left");
+    paintText(ctx, line, ar ? textX + textW : textX, y + 30 + index * 20, ar ? "right" : "left");
   });
   return imgH + 16;
 }
@@ -644,9 +657,9 @@ function colWidths(count: number, w: number): number[] {
 }
 
 function tableRowHeight(ctx: SKRSContext2D, cells: string[], widths: number[]): number {
-  ctx.font = `12px ${FONT_NAME}`;
+  ctx.font = `14px ${FONT_NAME}`;
   const lines = cells.map((cell, index) => wrap(ctx, cell, (widths[index] ?? widths[0]!) - 14).length);
-  return Math.max(32, Math.max(...lines) * 17 + 12);
+  return Math.max(36, Math.max(...lines) * 19 + 14);
 }
 
 function drawTable(
@@ -666,7 +679,7 @@ function drawTable(
     ctx.fillStyle = "#0c2d6b";
     ctx.fillRect(x, y, w, 30);
     ctx.fillStyle = "#ffffff";
-    ctx.font = `12px ${FONT_NAME}`;
+    ctx.font = `14px ${FONT_NAME}`;
     let ox = 0;
     const order = ar ? block.headers.map((_, i) => i).reverse() : block.headers.map((_, i) => i);
     const wOrder = ar ? [...widths].reverse() : widths;
@@ -694,24 +707,24 @@ function drawTable(
       ctx.strokeStyle = "#c5d0de";
       ctx.strokeRect(cx, rowY, cw, rh);
       ctx.fillStyle = "#111827";
-      ctx.font = `12px ${FONT_NAME}`;
+      ctx.font = `14px ${FONT_NAME}`;
       wrap(ctx, cell, cw - 14).forEach((line, lineIndex) => {
-        paintText(ctx, line, ar ? cx + cw - 7 : cx + 7, rowY + 7 + lineIndex * 17, ar ? "right" : "left");
+        paintText(ctx, line, ar ? cx + cw - 7 : cx + 7, rowY + 8 + lineIndex * 19, ar ? "right" : "left");
       });
       ox += cw;
     });
     used += rh;
     if (row.example) {
-      ctx.font = `12px ${FONT_NAME}`;
+      ctx.font = `14px ${FONT_NAME}`;
       const exampleLines = wrap(ctx, row.example, w - 16);
-      const eh = exampleLines.length * 17 + 12;
-      ctx.fillStyle = "#fff8e8";
+      const eh = exampleLines.length * 19 + 14;
+      ctx.fillStyle = "#fff4cc";
       ctx.fillRect(x, y + used, w, eh);
-      ctx.strokeStyle = "#f3d48a";
+      ctx.strokeStyle = "#d4a017";
       ctx.strokeRect(x, y + used, w, eh);
-      ctx.fillStyle = "#3f3f46";
+      ctx.fillStyle = "#111827";
       exampleLines.forEach((line, lineIndex) => {
-        paintText(ctx, line, ar ? x + w - 8 : x + 8, y + used + 6 + lineIndex * 17, ar ? "right" : "left");
+        paintText(ctx, line, ar ? x + w - 8 : x + 8, y + used + 7 + lineIndex * 19, ar ? "right" : "left");
       });
       used += eh;
     }
@@ -721,34 +734,35 @@ function drawTable(
 }
 
 function drawPoints(ctx: SKRSContext2D, items: string[], x: number, y: number, w: number, ar: boolean): number {
-  ctx.font = `12px ${FONT_NAME}`;
+  ctx.font = `14px ${FONT_NAME}`;
   let used = 0;
   items.forEach((item, index) => {
     const lines = wrap(ctx, `${index + 1}. ${item}`, w - 8);
-    ctx.fillStyle = "#0b1220";
+    ctx.fillStyle = "#111827";
     lines.forEach((line, lineIndex) => {
-      paintText(ctx, line, ar ? x + w : x, y + used + lineIndex * 18, ar ? "right" : "left");
+      paintText(ctx, line, ar ? x + w : x, y + used + lineIndex * 20, ar ? "right" : "left");
     });
-    used += lines.length * 18 + 6;
+    used += lines.length * 20 + 8;
   });
-  return used + 8;
+  return used + 10;
 }
 
 function drawTakeaway(ctx: SKRSContext2D, text: string, x: number, y: number, w: number, ar: boolean): number {
-  ctx.font = `12px ${FONT_NAME}`;
+  ctx.font = `14px ${FONT_NAME}`;
   const lines = wrap(ctx, text, w - 20);
-  const h = lines.length * 18 + 16;
-  roundRect(ctx, x, y, w, h, 6, "#fff8e8");
-  ctx.strokeStyle = "#f3d48a";
+  const h = lines.length * 20 + 20;
+  roundRect(ctx, x, y, w, h, 4, "#fff4cc");
+  ctx.strokeStyle = "#d4a017";
+  ctx.lineWidth = 1.5;
   ctx.stroke();
-  ctx.fillStyle = "#0b1220";
+  ctx.fillStyle = "#111827";
   lines.forEach((line, index) => {
-    paintText(ctx, line, ar ? x + w - 10 : x + 10, y + 8 + index * 18, ar ? "right" : "left");
+    paintText(ctx, line, ar ? x + w - 10 : x + 10, y + 10 + index * 20, ar ? "right" : "left");
   });
-  return h + 12;
+  return h + 14;
 }
 
-function drawScene(ctx: SKRSContext2D, block: SceneBlock, x: number, y: number, w: number): number {
+function drawScene(ctx: SKRSContext2D, block: SceneBlock, x: number, y: number, w: number, ar: boolean): number {
   const h = 88;
   roundRect(ctx, x, y, w, h, 14, fade(block.color, 0.08));
   ctx.fillStyle = block.color;
@@ -770,14 +784,16 @@ function drawScene(ctx: SKRSContext2D, block: SceneBlock, x: number, y: number, 
     ctx.fillStyle = "#e5e7eb";
     ctx.fillRect(x + 22, y + 34, 36, 18);
   }
+  const align = ar ? "right" : "left";
+  const tx = ar ? x + w - 14 : x + 78;
   ctx.fillStyle = block.color;
-  ctx.font = `12px ${FONT_NAME}`;
-  paintText(ctx, block.term, x + w - 14, y + 14, "right");
-  ctx.fillStyle = "#334155";
-  ctx.font = `11px ${FONT_NAME}`;
-  const lines = wrap(ctx, block.scene, w - 90);
+  ctx.font = `14px ${FONT_NAME}`;
+  paintText(ctx, block.term, tx, y + 12, align);
+  ctx.fillStyle = "#111827";
+  ctx.font = `13px ${FONT_NAME}`;
+  const lines = wrap(ctx, block.scene, w - 96);
   lines.slice(0, 3).forEach((line, index) => {
-    paintText(ctx, line, x + w - 14, y + 34 + index * 15, "right");
+    paintText(ctx, line, tx, y + 34 + index * 17, align);
   });
   return h + 8;
 }
@@ -838,7 +854,7 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
     text: `${chapter.id}. ${ar ? chapter.titleAr : chapter.titleEn}`,
     color: chapter.color,
   });
-  blocks.push({ kind: "text", text: bookletSafe(locale, ar ? chapter.blurbAr : chapter.blurbEn), size: 12, gap: 14 });
+  blocks.push({ kind: "text", text: bookletSafe(locale, ar ? chapter.blurbAr : chapter.blurbEn), size: 15, gap: 16 });
   const map = mindMapForChapter(chapter.id);
   if (map) {
     blocks.push({ kind: "section", text: ar ? "الخريطة الذهنية" : "Mind map" });
@@ -936,9 +952,9 @@ function pushEssayGuides(
     if (!guide) return;
     blocks.push({
       kind: "text",
-      text: `${ar ? "مقالي" : "Essay"} ${index + 1}: ${guide}`,
-      size: 12,
-      gap: 10,
+      text: `${ar ? "مقالي" : "Essay"} ${index + 1}: ${bookletSafe(locale, guide)}`,
+      size: 14,
+      gap: 12,
     });
   });
 }
@@ -954,8 +970,8 @@ function pushAnswerKey(
     blocks.push({
       kind: "text",
       text: `${block.title}: ${block.answers.map((row, index) => `${index + 1}-${bookletAnswerMark(locale, row.index)}`).join("  ")}`,
-      size: 12,
-      gap: 10,
+      size: 14,
+      gap: 12,
     });
   }
 }
@@ -964,8 +980,10 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
   const ar = locale === "ar";
   const blocks: Block[] = [
     { kind: "banner", text: ar ? BRAND.nameAr : BRAND.nameEn, color: "#0c2d6b" },
-    { kind: "text", text: ar ? "ملزمة الطالب — البرمجة والذكاء الاصطناعي" : "Student booklet — Programming and Artificial Intelligence", size: 20, gap: 10 },
-    { kind: "text", text: `${ar ? BRAND.teacherAr : BRAND.teacherEn} · ${BRAND.phone} · 2026–2027`, size: 13, gap: 12 },
+    { kind: "text", text: ar ? "ملزمة الطالب — البرمجة والذكاء الاصطناعي" : "Student booklet — Programming and Artificial Intelligence", size: 22, gap: 12 },
+    { kind: "text", text: ar ? BRAND.teacherAr : BRAND.teacherEn, size: 16, gap: 8 },
+    { kind: "text", text: BRAND.phone, size: 16, gap: 8 },
+    { kind: "text", text: "2026–2027", size: 14, gap: 14 },
   ];
 
   if (scope === "faiz") {
@@ -984,7 +1002,7 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
       for (const section of pack.note.sections) {
         blocks.push({ kind: "section", text: ar ? section.headingAr : section.headingEn });
         for (const body of ar ? section.bodyAr : section.bodyEn) {
-          blocks.push({ kind: "text", text: `• ${body}`, size: 12, gap: 8 });
+          blocks.push({ kind: "text", text: `• ${bookletSafe(locale, body)}`, size: 14, gap: 10 });
         }
       }
       pushQuestions(blocks, locale, pack.practice);
@@ -1061,15 +1079,15 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
     ctx.lineTo(PAGE_W - margin, PAGE_H - foot);
     ctx.stroke();
     const badge = ar ? "البكالوريا" : "Baccalaureate";
-    ctx.font = `10px ${FONT_NAME}`;
-    const badgeW = Math.max(72, ctx.measureText(badge).width + 16);
+    ctx.font = `12px ${FONT_NAME}`;
+    const badgeW = Math.max(80, ctx.measureText(badge).width + 16);
     const badgeX = ar ? PAGE_W - margin - badgeW : margin;
-    roundRect(ctx, badgeX, PAGE_H - 24, badgeW, 16, 3, "#059669");
+    roundRect(ctx, badgeX, PAGE_H - 24, badgeW, 16, 3, "#047857");
     ctx.fillStyle = "#ffffff";
-    ctx.font = `10px ${FONT_NAME}`;
+    ctx.font = `12px ${FONT_NAME}`;
     paintText(ctx, badge, badgeX + badgeW / 2, PAGE_H - 22, "center");
-    ctx.fillStyle = "#52525b";
-    ctx.font = `11px ${FONT_NAME}`;
+    ctx.fillStyle = "#111827";
+    ctx.font = `13px ${FONT_NAME}`;
     paintText(ctx, String(n), ar ? margin : PAGE_W - margin, PAGE_H - 22, ar ? "left" : "right");
     paintText(ctx, BRAND.phone, PAGE_W / 2, PAGE_H - 22, "center");
   };
@@ -1078,7 +1096,7 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
     drawFooter(pageNo);
     pageNo += 1;
     const page = pdf.addPage([PAGE_W, PAGE_H]);
-    const image = await pdf.embedJpg(canvas.toBuffer("image/jpeg", 92));
+    const image = await pdf.embedJpg(canvas.toBuffer("image/jpeg", 96));
     page.drawImage(image, { x: 0, y: 0, width: PAGE_W, height: PAGE_H });
   };
 
@@ -1181,8 +1199,8 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       continue;
     }
     if (block.kind === "ask") {
-      ctx.font = `13px ${FONT_NAME}`;
-      const h = wrap(ctx, block.text, maxWidth - 36).length * 20 + 28;
+      ctx.font = `15px ${FONT_NAME}`;
+      const h = wrap(ctx, block.text, maxWidth - 40).length * 22 + 32;
       if (need(h, y)) {
         await flush();
         reset();
@@ -1192,8 +1210,8 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       continue;
     }
     if (block.kind === "points") {
-      ctx.font = `12px ${FONT_NAME}`;
-      const h = block.items.reduce((sum, item) => sum + wrap(ctx, item, maxWidth).length * 18 + 6, 16);
+      ctx.font = `14px ${FONT_NAME}`;
+      const h = block.items.reduce((sum, item) => sum + wrap(ctx, item, maxWidth).length * 20 + 8, 16);
       if (need(Math.min(h, 80), y)) {
         await flush();
         reset();
@@ -1203,8 +1221,8 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       continue;
     }
     if (block.kind === "takeaway") {
-      ctx.font = `12px ${FONT_NAME}`;
-      const h = wrap(ctx, block.text, maxWidth - 20).length * 18 + 28;
+      ctx.font = `14px ${FONT_NAME}`;
+      const h = wrap(ctx, block.text, maxWidth - 20).length * 20 + 32;
       if (need(h, y)) {
         await flush();
         reset();
@@ -1241,9 +1259,9 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       let header = true;
       while (from < block.rows.length) {
         const row = block.rows[from]!;
-        ctx.font = `12px ${FONT_NAME}`;
+        ctx.font = `14px ${FONT_NAME}`;
         const widths = colWidths(block.headers.length, maxWidth);
-        const exampleH = row.example ? wrap(ctx, row.example, maxWidth - 16).length * 17 + 12 : 0;
+        const exampleH = row.example ? wrap(ctx, row.example, maxWidth - 16).length * 19 + 14 : 0;
         const h = (header ? 30 : 0) + tableRowHeight(ctx, row.cells, widths) + exampleH + 10;
         if (need(h, y)) {
           await flush();
@@ -1263,7 +1281,7 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       reset();
       y = margin;
     }
-    y += drawScene(ctx, block, margin, y, maxWidth);
+    y += drawScene(ctx, block, margin, y, maxWidth, ar);
   }
   await flush();
   return pdf.save();
