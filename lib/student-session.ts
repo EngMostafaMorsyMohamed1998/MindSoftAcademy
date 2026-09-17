@@ -88,7 +88,7 @@ export async function ensureBoundDevice(studentId: string): Promise<void> {
   });
 }
 
-export async function bindStudentDevice(studentId: string): Promise<void> {
+export async function bindStudentDevice(studentId: string, replace = true): Promise<void> {
   const store = await cookies();
   const requestHeaders = await headers();
   const deviceId = (await deviceFromRequest()) ?? newDeviceId();
@@ -96,6 +96,7 @@ export async function bindStudentDevice(studentId: string): Promise<void> {
     studentId,
     deviceId,
     label: deviceLabel(requestHeaders.get("user-agent") || ""),
+    replace,
   });
   store.set(DEVICE_COOKIE, deviceId, {
     httpOnly: true,

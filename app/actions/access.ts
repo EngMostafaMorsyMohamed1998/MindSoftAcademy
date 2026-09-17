@@ -31,11 +31,12 @@ import {
 import { parseBulkStudents } from "@/lib/class-clock";
 import { getLesson, isChapterId } from "@/lib/curriculum";
 import { FAIZ_PAPER_ID } from "@/lib/faiz";
-import { bindStudentDevice, setStudentCookie } from "@/lib/student-session";
+import { bindStudentDevice, getStudentSession, setStudentCookie } from "@/lib/student-session";
 import { parseDeviceLimit } from "@/lib/devices";
 import { listVisibleCodes, rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
 import { after } from "next/server";
+import { redirect } from "next/navigation";
 import { notifySessionParents } from "@/lib/telegram-notify";
 
 export type FormState = {
@@ -80,6 +81,13 @@ export async function activateAccess(
     return { error: message };
   }
   return { error: null, ok: true };
+}
+
+export async function claimThisDevice(): Promise<void> {
+  const student = await getStudentSession();
+  if (!student) redirect("/activate");
+  await bindStudentDevice(student.id, true);
+  redirect("/dashboard");
 }
 
 export async function teacherSignIn(

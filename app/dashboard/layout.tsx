@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { claimThisDevice } from "@/app/actions/access";
 import { getAnnouncement, getCodeById } from "@/lib/access-store";
 import { ensureBoundDevice } from "@/lib/student-session";
 import { BRAND } from "@/lib/brand";
@@ -52,9 +53,17 @@ export default async function DashboardLayout({
           <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-background px-6 text-center">
             <h1 className="font-serif text-3xl">{t(locale, "deviceBlockedTitle")}</h1>
             <p className="mt-3 max-w-md text-sm text-foreground/65">{t(locale, "deviceBlockedLead")}</p>
+            <form action={claimThisDevice} className="mt-6">
+              <button
+                type="submit"
+                className="inline-flex items-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white"
+              >
+                {t(locale, "deviceClaimMine")}
+              </button>
+            </form>
             <LogoutButton
               label={t(locale, "logout")}
-              className="mt-6 inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white"
+              className="mt-3 inline-flex items-center gap-1 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary"
             />
           </div>
         );

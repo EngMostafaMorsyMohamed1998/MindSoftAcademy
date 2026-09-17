@@ -1247,6 +1247,16 @@ export function findCodeByPhone(phone: string, codes: { id: string; name: string
 }
 
 export async function listDevices(studentId?: string): Promise<StudentDevice[]> {
+  try {
+    const { readDeviceRows } = await import("@/lib/class-db");
+    const dedicated = await readDeviceRows();
+    if (dedicated) {
+      const rows = parseDevices(dedicated);
+      return studentId ? devicesForStudent(rows, studentId) : rows;
+    }
+  } catch {
+    // Fall through to the class store.
+  }
   const rows = parseDevices((await readStore()).devices);
   return studentId ? devicesForStudent(rows, studentId) : rows;
 }
@@ -1284,12 +1294,27 @@ export async function claimStudentDevice(input: {
   studentId: string;
   deviceId: string;
   label: string;
+  replace?: boolean;
 }): Promise<StudentDevice> {
   const store = await readStore();
   const limit = parseDeviceLimit(store.deviceLimit);
-  const rows = parseDevices(store.devices);
+  let rows = parseDevices(await listDevices());
   if (!canRegisterDevice(rows, input.studentId, input.deviceId, limit)) {
-    throw new Error("DEVICE_LIMIT");
+    if (!input.replace) throw new Error("DEVICE_LIMIT");
+    const extras = devicesForStudent(rows, input.studentId)
+      .filter((row) => row.deviceId !== input.deviceId)
+      .sort((a, b) => a.lastAt.localeCompare(b.lastAt));
+    const dropCount = Math.max(1, devicesForStudent(rows, input.studentId).length - limit + 1);
+    const drop = extras.slice(0, dropCount);
+    rows = rows.filter((row) => !drop.some((item) => item.id === row.id));
+    for (const row of drop) {
+      try {
+        const { deleteDeviceRow } = await import("@/lib/class-db");
+        await deleteDeviceRow(row.id);
+      } catch {
+        // Dedicated row may already be gone.
+      }
+    }
   }
   const now = new Date().toISOString();
   const existing = rows.find(
