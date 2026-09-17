@@ -1,4 +1,4 @@
-import { CHAPTERS, type Chapter, type ChapterId } from "@/lib/curriculum";
+import { CHAPTERS, isChapterId, type Chapter, type ChapterId } from "@/lib/curriculum";
 import { FAIZ_UNITS } from "@/lib/faiz";
 import { FAIZ_ESSAYS, FAIZ_OBJECTIVES } from "@/lib/faiz-exam";
 import { FAIZ_NOTES, type FaizUnitNote } from "@/lib/faiz-notes";
@@ -137,6 +137,29 @@ export function bookletChapterPack(chapter: Chapter): BookletChapterPack {
     essays,
     scenes,
     answers: withAnswers(practice),
+  };
+}
+
+export type BookletScope = ChapterId | "faiz";
+
+export function isBookletScope(value: string | null | undefined): value is BookletScope {
+  return value === "faiz" || (typeof value === "string" && isChapterId(value));
+}
+
+export function bookletHomeworkForChapter(chapter: Chapter): BookletHomeworkPack {
+  const pool = chapterMcqPool(chapter.id);
+  const mcq = pool.slice(BOOKLET_PRACTICE, BOOKLET_PRACTICE + BOOKLET_HOMEWORK_PER_CHAPTER);
+  const picked = mcq.length ? mcq : pool.slice(0, BOOKLET_HOMEWORK_PER_CHAPTER);
+  const essays = analysisForChapter(chapter.id)
+    .slice(BOOKLET_CHAPTER_ESSAYS, BOOKLET_CHAPTER_ESSAYS + BOOKLET_HOMEWORK_ESSAYS)
+    .map(analysisAsEssay);
+  return {
+    id: `ch-${chapter.id}`,
+    titleAr: `واجب الفصل ${chapter.id}`,
+    titleEn: `Chapter ${chapter.id} homework`,
+    mcq: picked,
+    essays,
+    answers: withAnswers(picked),
   };
 }
 

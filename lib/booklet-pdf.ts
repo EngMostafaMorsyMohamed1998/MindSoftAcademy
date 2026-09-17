@@ -3,7 +3,17 @@ import { createCanvas, GlobalFonts, loadImage, type Image, type SKRSContext2D } 
 import { PDFDocument } from "pdf-lib";
 import { BRAND } from "@/lib/brand";
 import { CHAPTER_FIGURES } from "@/components/booklet-figures";
-import { bookletLetters, bookletOptions, buildBookletDocument, type BookletChapterPack } from "@/lib/booklet-pack";
+import {
+  bookletChapterPack,
+  bookletFaizHomework,
+  bookletFaizPacks,
+  bookletHomeworkForChapter,
+  bookletLetters,
+  bookletOptions,
+  type BookletChapterPack,
+  type BookletScope,
+} from "@/lib/booklet-pack";
+import { getChapter } from "@/lib/curriculum";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { Locale } from "@/lib/locale";
 import { mindMapForChapter, mindMapForFaiz, type MindNode } from "@/lib/mind-maps";
@@ -825,66 +835,9 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
   });
 }
 
-function buildBlocks(locale: Locale): Block[] {
-  const ar = locale === "ar";
-  const doc = buildBookletDocument();
-  const blocks: Block[] = [
-    { kind: "banner", text: ar ? BRAND.nameAr : BRAND.nameEn, color: "#0c2d6b" },
-    { kind: "text", text: ar ? "ملزمة الطالب — البرمجة والذكاء الاصطناعي" : "Student booklet — Programming & AI", size: 20, gap: 10 },
-    { kind: "text", text: `${ar ? BRAND.teacherAr : BRAND.teacherEn} · 2026–2027`, size: 13, gap: 18 },
-  ];
-
-  for (const part of doc.parts) {
-    blocks.push({
-      kind: "banner",
-      text: part.part === 1 ? (ar ? "الجزء الأول" : "Part 1") : ar ? "الجزء الثاني" : "Part 2",
-      color: "#0c2d6b",
-    });
-    for (const pack of part.chapters) pushChapter(blocks, pack, locale);
-    blocks.push({ kind: "banner", text: ar ? part.homework.titleAr : part.homework.titleEn, color: "#92400e" });
-    pushQuestions(blocks, locale, part.homework.mcq);
-    part.homework.essays.forEach((essay, index) => {
-      blocks.push({
-        kind: "essay",
-        n: index + 1,
-        prompt: ar ? essay.promptAr : essay.promptEn,
-      });
-    });
-  }
-
-  blocks.push({ kind: "banner", text: ar ? "كتاب الفائز" : "Al-Faiz", color: "#0c2d6b" });
-  for (const pack of doc.faiz) {
-    const color =
-      pack.note.id === "f2" ? "#7f1d1d" : pack.note.id === "f3" ? "#134e4a" : pack.note.id === "f4" ? "#4a1942" : "#0c2d6b";
-    const accent =
-      pack.note.id === "f2" ? "#f59e0b" : pack.note.id === "f3" ? "#2dd4bf" : pack.note.id === "f4" ? "#e879f9" : "#c4a35a";
-    blocks.push({ kind: "banner", text: ar ? pack.note.titleAr : pack.note.titleEn, color });
-    const map = mindMapForFaiz(pack.note.id);
-    if (map) blocks.push({ kind: "map", root: map, color, accent });
-    for (const id of CHAPTER_FIGURES[pack.note.id] ?? []) {
-      blocks.push({ kind: "figure", id, color, title: figureTitle(id, ar) });
-    }
-    for (const section of pack.note.sections) {
-      blocks.push({ kind: "section", text: ar ? section.headingAr : section.headingEn });
-      for (const body of ar ? section.bodyAr : section.bodyEn) {
-        blocks.push({ kind: "text", text: `• ${body}`, size: 12, gap: 8 });
-      }
-    }
-    pushQuestions(blocks, locale, pack.practice);
-  }
-
+function pushAnswerKey(blocks: Block[], ar: boolean, rows: { title: string; answers: { letter: string }[] }[]) {
   blocks.push({ kind: "banner", text: ar ? "مفتاح الإجابة" : "Answer key", color: "#0c2d6b" });
-  const keys = [
-    ...doc.parts.flatMap(({ chapters }) =>
-      chapters.map((pack) => ({
-        title: ar ? `الفصل ${pack.chapter.id}` : `Chapter ${pack.chapter.id}`,
-        answers: pack.answers,
-      })),
-    ),
-    ...doc.parts.map(({ homework }) => ({ title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers })),
-    ...doc.faiz.map((pack) => ({ title: ar ? pack.note.titleAr : pack.note.titleEn, answers: pack.answers })),
-  ];
-  for (const block of keys) {
+  for (const block of rows) {
     blocks.push({
       kind: "text",
       text: `${block.title}: ${block.answers.map((row, index) => `${index + 1}${row.letter}`).join("  ")}`,
@@ -892,10 +845,77 @@ function buildBlocks(locale: Locale): Block[] {
       gap: 10,
     });
   }
+}
+
+function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
+  const ar = locale === "ar";
+  const blocks: Block[] = [
+    { kind: "banner", text: ar ? BRAND.nameAr : BRAND.nameEn, color: "#0c2d6b" },
+    { kind: "text", text: ar ? "ملزمة الطالب — البرمجة والذكاء الاصطناعي" : "Student booklet — Programming & AI", size: 20, gap: 10 },
+    { kind: "text", text: `${ar ? BRAND.teacherAr : BRAND.teacherEn} · 2026–2027`, size: 13, gap: 12 },
+  ];
+
+  if (scope === "faiz") {
+    blocks.push({ kind: "text", text: ar ? "ملزمة كتاب الفائز" : "Al-Faiz booklet", size: 16, gap: 16 });
+    for (const pack of bookletFaizPacks()) {
+      const color =
+        pack.note.id === "f2" ? "#7f1d1d" : pack.note.id === "f3" ? "#134e4a" : pack.note.id === "f4" ? "#4a1942" : "#0c2d6b";
+      const accent =
+        pack.note.id === "f2" ? "#f59e0b" : pack.note.id === "f3" ? "#2dd4bf" : pack.note.id === "f4" ? "#e879f9" : "#c4a35a";
+      blocks.push({ kind: "banner", text: ar ? pack.note.titleAr : pack.note.titleEn, color });
+      const map = mindMapForFaiz(pack.note.id);
+      if (map) blocks.push({ kind: "map", root: map, color, accent });
+      for (const id of CHAPTER_FIGURES[pack.note.id] ?? []) {
+        blocks.push({ kind: "figure", id, color, title: figureTitle(id, ar) });
+      }
+      for (const section of pack.note.sections) {
+        blocks.push({ kind: "section", text: ar ? section.headingAr : section.headingEn });
+        for (const body of ar ? section.bodyAr : section.bodyEn) {
+          blocks.push({ kind: "text", text: `• ${body}`, size: 12, gap: 8 });
+        }
+      }
+      pushQuestions(blocks, locale, pack.practice);
+    }
+    const homework = bookletFaizHomework();
+    blocks.push({ kind: "banner", text: ar ? homework.titleAr : homework.titleEn, color: "#92400e" });
+    pushQuestions(blocks, locale, homework.mcq);
+    homework.essays.forEach((essay, index) => {
+      blocks.push({ kind: "essay", n: index + 1, prompt: ar ? essay.promptAr : essay.promptEn });
+    });
+    pushAnswerKey(blocks, ar, [
+      ...bookletFaizPacks().map((pack) => ({
+        title: ar ? pack.note.titleAr : pack.note.titleEn,
+        answers: pack.answers,
+      })),
+      { title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers },
+    ]);
+    return blocks;
+  }
+
+  const chapter = getChapter(scope);
+  if (!chapter) return blocks;
+  const pack = bookletChapterPack(chapter);
+  const homework = bookletHomeworkForChapter(chapter);
+  blocks.push({
+    kind: "text",
+    text: ar ? `ملزمة الفصل ${chapter.id} — ${chapter.titleAr}` : `Chapter ${chapter.id} booklet — ${chapter.titleEn}`,
+    size: 16,
+    gap: 16,
+  });
+  pushChapter(blocks, pack, locale);
+  blocks.push({ kind: "banner", text: ar ? homework.titleAr : homework.titleEn, color: "#92400e" });
+  pushQuestions(blocks, locale, homework.mcq);
+  homework.essays.forEach((essay, index) => {
+    blocks.push({ kind: "essay", n: index + 1, prompt: ar ? essay.promptAr : essay.promptEn });
+  });
+  pushAnswerKey(blocks, ar, [
+    { title: ar ? "تدريبات الفصل" : "Chapter practice", answers: pack.answers },
+    { title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers },
+  ]);
   return blocks;
 }
 
-export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
+export async function buildBookletPdf(locale: Locale, scope: BookletScope): Promise<Uint8Array> {
   ensureFont();
   const ar = locale === "ar";
   const margin = 40;
@@ -905,7 +925,7 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   const pdf = await PDFDocument.create();
-  const blocks = buildBlocks(locale);
+  const blocks = buildBlocks(locale, scope);
 
   const reset = () => {
     ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
@@ -1093,6 +1113,7 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
   return pdf.save();
 }
 
-export function bookletFileName(locale: Locale): string {
-  return locale === "ar" ? "ملزمة-MindSoft-2027.pdf" : "MindSoft-booklet-2027.pdf";
+export function bookletFileName(locale: Locale, scope: BookletScope): string {
+  if (scope === "faiz") return locale === "ar" ? "ملزمة-الفائز-MindSoft-2027.pdf" : "MindSoft-faiz-2027.pdf";
+  return locale === "ar" ? `ملزمة-الفصل-${scope}-MindSoft-2027.pdf` : `MindSoft-chapter-${scope}-2027.pdf`;
 }

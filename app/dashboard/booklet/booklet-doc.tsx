@@ -3,6 +3,8 @@ import { BookletFigure, CHAPTER_FIGURES, SceneCard } from "@/components/booklet-
 import { BookletMindMap } from "@/components/booklet-mind-map";
 import { TextbookLesson } from "@/components/textbook-page";
 import {
+  bookletChapterPack,
+  bookletHomeworkForChapter,
   bookletLetters,
   bookletOptions,
   buildBookletDocument,
@@ -11,6 +13,7 @@ import {
   type BookletHomeworkPack,
   type BookletMcq,
 } from "@/lib/booklet-pack";
+import { getChapter, type ChapterId } from "@/lib/curriculum";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { Locale } from "@/lib/locale";
 import { mindMapForChapter, mindMapForFaiz } from "@/lib/mind-maps";
@@ -163,7 +166,7 @@ function ChapterBlock({ locale, pack }: { locale: Locale; pack: BookletChapterPa
 
       <PrintSection n="5" title={ar ? "تدريبات الفصل" : "Chapter practice"}>
         <p className="text-xs text-foreground/55">
-          {ar ? "ظلّل الاختيار. الإجابات في تبويب مفتاح الإجابة." : "Mark a choice. Answers are in the answer-key tab."}
+          {ar ? "ظلّل الاختيار. الإجابات في آخر الملزمة." : "Mark a choice. Answers are at the end of this booklet."}
         </p>
         <McqBlock locale={locale} rows={pack.practice} />
       </PrintSection>
@@ -198,8 +201,8 @@ export function BookletCover({
       </div>
       <p className="mt-5 text-sm leading-relaxed text-foreground/70">
         {ar
-          ? "افتح تبويب الجزء. كل فصل: خريطة، رسوم، ملخص، أسئلة. آخر الجزء واجب. راجع الإجابات بعد الحل."
-          : "Open a part tab. Each chapter has a map, figures, notes, and questions. Homework is at the end of the part."}
+          ? "كل فصل ملزمة لوحده: خريطة، رسوم، شرح، أسئلة، واجب، وإجابات. اختار التبويب ونزّل. هنجمع الملازم بعدين."
+          : "Each chapter is its own booklet: map, figures, notes, questions, homework, and answers. Pick a tab and download. We will bind them later."}
       </p>
       <ol className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
         {doc.parts.flatMap(({ chapters }) =>
@@ -215,16 +218,37 @@ export function BookletCover({
   );
 }
 
-export function BookletPartPane({ locale, part }: { locale: Locale; part: 1 | 2 }) {
-  const doc = buildBookletDocument();
-  const block = doc.parts.find((row) => row.part === part);
-  if (!block) return null;
+export function BookletChapterPane({ locale, chapterId }: { locale: Locale; chapterId: ChapterId }) {
+  const ar = locale === "ar";
+  const chapter = getChapter(chapterId);
+  if (!chapter) return null;
+  const pack = bookletChapterPack(chapter);
+  const homework = bookletHomeworkForChapter(chapter);
   return (
     <div className="print-sheet rounded-3xl bg-white p-5 ring-1 ring-primary/10 sm:p-7">
-      {block.chapters.map((pack) => (
-        <ChapterBlock key={pack.chapter.id} locale={locale} pack={pack} />
-      ))}
-      <HomeworkBlock locale={locale} pack={block.homework} />
+      <ChapterBlock locale={locale} pack={pack} />
+      <HomeworkBlock locale={locale} pack={homework} />
+      <section className="mt-8 rounded-3xl bg-primary/5 p-5">
+        <h4 className="font-serif text-xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h4>
+        <p className="mt-3 text-sm leading-8">
+          <strong>{ar ? "تدريبات:" : "Practice:"}</strong>{" "}
+          {pack.answers.map((row, index) => (
+            <span key={row.id} className="ms-2 inline-block">
+              {index + 1}
+              {row.letter}
+            </span>
+          ))}
+        </p>
+        <p className="mt-2 text-sm leading-8">
+          <strong>{ar ? "واجب:" : "Homework:"}</strong>{" "}
+          {homework.answers.map((row, index) => (
+            <span key={row.id} className="ms-2 inline-block">
+              {index + 1}
+              {row.letter}
+            </span>
+          ))}
+        </p>
+      </section>
     </div>
   );
 }
@@ -273,42 +297,29 @@ export function BookletFaizPane({ locale }: { locale: Locale }) {
         );
       })}
       <HomeworkBlock locale={locale} pack={faizHomework} />
-    </div>
-  );
-}
-
-export function BookletAnswersPane({ locale }: { locale: Locale }) {
-  const ar = locale === "ar";
-  const doc = buildBookletDocument();
-  const blocks = [
-    ...doc.parts.flatMap(({ chapters }) =>
-      chapters.map((pack) => ({
-        title: ar ? `الفصل ${pack.chapter.id}` : `Chapter ${pack.chapter.id}`,
-        answers: pack.answers,
-      })),
-    ),
-    ...doc.parts.map(({ homework }) => ({ title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers })),
-    ...doc.faiz.map((pack) => ({ title: ar ? pack.note.titleAr : pack.note.titleEn, answers: pack.answers })),
-    { title: ar ? doc.faizHomework.titleAr : doc.faizHomework.titleEn, answers: doc.faizHomework.answers },
-  ];
-  return (
-    <div className="print-sheet print-break rounded-3xl bg-white p-5 ring-1 ring-primary/10 sm:p-7">
-      <h3 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h3>
-      <p className="mt-1 text-sm text-foreground/60">{ar ? "راجعه بعد ما تحل، مش قبل." : "Check after you finish, not before."}</p>
-      <div className="mt-4 space-y-4">
-        {blocks.map((block) => (
-          <article key={block.title} className="print-keep rounded-2xl bg-primary/5 p-3">
-            <p className="text-sm font-semibold">{block.title}</p>
-            <p className="mt-2 text-sm leading-8">
-              {block.answers.map((row, index) => (
-                <span key={row.id} className="ms-3 inline-block">
-                  {index + 1} {row.letter}
-                </span>
-              ))}
-            </p>
-          </article>
+      <section className="mt-8 rounded-3xl bg-primary/5 p-5">
+        <h4 className="font-serif text-xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h4>
+        {faiz.map((pack) => (
+          <p key={pack.note.id} className="mt-3 text-sm leading-8">
+            <strong>{ar ? pack.note.titleAr : pack.note.titleEn}:</strong>{" "}
+            {pack.answers.map((row, index) => (
+              <span key={row.id} className="ms-2 inline-block">
+                {index + 1}
+                {row.letter}
+              </span>
+            ))}
+          </p>
         ))}
-      </div>
+        <p className="mt-2 text-sm leading-8">
+          <strong>{ar ? "واجب:" : "Homework:"}</strong>{" "}
+          {faizHomework.answers.map((row, index) => (
+            <span key={row.id} className="ms-2 inline-block">
+              {index + 1}
+              {row.letter}
+            </span>
+          ))}
+        </p>
+      </section>
     </div>
   );
 }

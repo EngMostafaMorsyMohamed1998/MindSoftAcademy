@@ -32,13 +32,20 @@ export function BookletViewer({
     if (busy) return;
     setBusy(true);
     try {
-      const response = await fetch(`/api/booklet?lang=${locale}`);
+      const response = await fetch(`/api/booklet?lang=${locale}&chapter=${active}`);
       if (!response.ok) throw new Error("download");
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = ar ? "ملزمة-MindSoft-2027.pdf" : "MindSoft-booklet-2027.pdf";
+      link.download =
+        active === "faiz"
+          ? ar
+            ? "ملزمة-الفائز-MindSoft-2027.pdf"
+            : "MindSoft-faiz-2027.pdf"
+          : ar
+            ? `ملزمة-الفصل-${active}-MindSoft-2027.pdf`
+            : `MindSoft-chapter-${active}-2027.pdf`;
       document.body.append(link);
       link.click();
       link.remove();
@@ -90,7 +97,7 @@ export function BookletViewer({
         </div>
       </div>
       {tabs.map((tab) => (
-        <div key={tab.id} className={tab.id === active ? "booklet-pane" : "booklet-pane hidden print:block"}>
+        <div key={tab.id} className={tab.id === active ? "booklet-pane" : "booklet-pane hidden"}>
           {tab.body}
         </div>
       ))}

@@ -1,8 +1,9 @@
-import { BookletAnswersPane, BookletCover, BookletFaizPane, BookletPartPane } from "./booklet-doc";
+import { BookletChapterPane, BookletCover, BookletFaizPane } from "./booklet-doc";
 import { BookletViewer } from "./booklet-viewer";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { BRAND } from "@/lib/brand";
+import { CHAPTERS } from "@/lib/curriculum";
 
 export default async function BookletPage() {
   const locale = await getLocale();
@@ -24,29 +25,17 @@ export default async function BookletPage() {
         downloadLabel={t(locale, "downloadBooklet")}
         downloadingLabel={t(locale, "downloadingBooklet")}
         tabs={[
-          {
-            id: "p1",
-            labelAr: "الجزء الأول",
-            labelEn: "Part 1",
-            body: <BookletPartPane locale={locale} part={1} />,
-          },
-          {
-            id: "p2",
-            labelAr: "الجزء الثاني",
-            labelEn: "Part 2",
-            body: <BookletPartPane locale={locale} part={2} />,
-          },
+          ...CHAPTERS.map((chapter) => ({
+            id: chapter.id,
+            labelAr: `الفصل ${chapter.id}`,
+            labelEn: `Ch. ${chapter.id}`,
+            body: <BookletChapterPane locale={locale} chapterId={chapter.id} />,
+          })),
           {
             id: "faiz",
             labelAr: "الفائز",
             labelEn: "Al-Faiz",
             body: <BookletFaizPane locale={locale} />,
-          },
-          {
-            id: "key",
-            labelAr: "الإجابات",
-            labelEn: "Answers",
-            body: <BookletAnswersPane locale={locale} />,
           },
         ]}
       />

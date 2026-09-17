@@ -186,8 +186,8 @@ body {
     font-size: 12px !important;
   }
 
-  .booklet-pane {
-    display: block !important;
+  .booklet-pane.hidden {
+    display: none !important;
   }
 
   .booklet-tabs {
