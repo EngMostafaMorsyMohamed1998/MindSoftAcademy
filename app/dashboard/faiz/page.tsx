@@ -58,9 +58,15 @@ export default async function FaizTrackPage() {
         <h2 className="text-lg font-semibold">{t(locale, "faizUnits")}</h2>
         <ol className="mt-4 grid gap-2 sm:grid-cols-2">
           {FAIZ_UNITS.map((unit, index) => (
-            <li key={unit.id} className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
-              <span className="font-semibold text-primary">{index + 1}.</span>{" "}
-              {locale === "ar" ? unit.titleAr : unit.titleEn}
+            <li key={unit.id}>
+              <Link
+                href={`/dashboard/faiz/${unit.id}`}
+                className="block rounded-2xl bg-primary/5 px-3 py-2 text-sm hover:bg-primary/10"
+              >
+                <span className="font-semibold text-primary">{index + 1}.</span>{" "}
+                {locale === "ar" ? unit.titleAr : unit.titleEn}
+                <span className="ms-2 text-xs text-primary/60">{t(locale, "faizReadUnit")}</span>
+              </Link>
             </li>
           ))}
         </ol>

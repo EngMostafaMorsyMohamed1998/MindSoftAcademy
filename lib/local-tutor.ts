@@ -1,5 +1,6 @@
 import { CHAPTERS, getLesson, type Chapter } from "@/lib/curriculum";
-import { getBook, type Book } from "@/lib/library";
+import { FAIZ_NOTES, type FaizUnitNote } from "@/lib/faiz-notes";
+import { FAIZ_BOOK, getBook, type Book } from "@/lib/library";
 import { LESSON_NOTES, type LessonNote } from "@/lib/lessons";
 import { BANK_FACTS } from "@/lib/question-bank";
 import type { BankFact } from "@/lib/question-bank/types";
@@ -214,6 +215,59 @@ function mapReply(picked: ScoredNote[], query: string, ar: boolean): string {
   return [prefix, "", ...chunks].join("\n");
 }
 
+function faizHaystack(note: FaizUnitNote): string {
+  return normalize(
+    [
+      note.titleAr,
+      note.titleEn,
+      note.takeawayAr,
+      note.takeawayEn,
+      ...note.sections.flatMap((section) => [
+        section.headingAr,
+        section.headingEn,
+        ...section.bodyAr,
+        ...section.bodyEn,
+      ]),
+      ...note.termsAr.flatMap((term) => [term.term, term.meaning]),
+      ...note.termsEn.flatMap((term) => [term.term, term.meaning]),
+    ].join(" "),
+  );
+}
+
+function pickFaizNotes(query: string): FaizUnitNote[] {
+  const words = tokens(query);
+  const scored = FAIZ_NOTES.map((note) => {
+    const hay = faizHaystack(note);
+    let score = 0;
+    for (const word of words) {
+      if (hay.includes(word)) score += word.length > 6 ? 3 : 2;
+    }
+    const unitHit = query.match(/(?:وحده|وحدة|unit)\s*([1-4])/i);
+    if (unitHit?.[1] === note.id.slice(1)) score += 8;
+    return { note, score };
+  })
+    .filter((row) => row.score > 0)
+    .sort((a, b) => b.score - a.score);
+  if (scored.length) return scored.slice(0, 2).map((row) => row.note);
+  return FAIZ_NOTES.slice(0, 1);
+}
+
+function explainFaiz(note: FaizUnitNote, ar: boolean): string {
+  const title = ar ? note.titleAr : note.titleEn;
+  const body = note.sections.flatMap((section) => (ar ? section.bodyAr : section.bodyEn));
+  const terms = ar ? note.termsAr : note.termsEn;
+  const takeaway = ar ? note.takeawayAr : note.takeawayEn;
+  const termLines = terms.map((term) => `• ${term.term}: ${term.meaning}`);
+  return [`${title}`, "", ...body.slice(0, 4), "", ...termLines, "", ar ? `الخلاصة: ${takeaway}` : `Takeaway: ${takeaway}`]
+    .filter((line, index, rows) => line !== "" || rows[index - 1] !== "")
+    .join("\n");
+}
+
+function wantsFaiz(query: string, book?: Book): boolean {
+  if (book?.slug === FAIZ_BOOK.slug || book?.kind === "workbook") return true;
+  return /(الفائز|فايز|al-?faiz|faiz)/i.test(query);
+}
+
 export function askLocalTutor(input: {
   message: string;
   bookSlug?: string;
@@ -222,6 +276,11 @@ export function askLocalTutor(input: {
   const book = input.bookSlug ? getBook(input.bookSlug) : undefined;
   const query = [input.message, input.currentTopic ?? ""].join(" ");
   const ar = arabic(input.message) || book?.language === "ar";
+  if (wantsFaiz(query, book)) {
+    const notes = pickFaizNotes(query);
+    const prefix = ar ? "من كتاب الفائز جوّه المنصة:" : "From the Al-Faiz book on this platform:";
+    return [prefix, "", ...notes.map((note) => explainFaiz(note, ar))].join("\n");
+  }
   const picked = pickNotes(query, book);
   if (!picked.length) {
     return ar
