@@ -3,6 +3,7 @@ import { BookletFigure, CHAPTER_FIGURES, SceneCard } from "@/components/booklet-
 import { BookletMindMap } from "@/components/booklet-mind-map";
 import { TextbookLesson } from "@/components/textbook-page";
 import {
+  bookletAnswerMark,
   bookletChapterPack,
   bookletHomeworkForChapter,
   bookletLetters,
@@ -99,7 +100,7 @@ function HomeworkBlock({ locale, pack }: { locale: Locale; pack: BookletHomework
   const ar = locale === "ar";
   return (
     <section className="print-break mt-8 rounded-3xl bg-[#fff8e8] p-5 ring-1 ring-[#d4a017]/40">
-      <p className="text-xs font-semibold text-primary/70">{ar ? "واجب نهاية الجزء — سلّمه في الحصة" : "End-of-part homework — hand it in class"}</p>
+      <p className="text-xs font-semibold text-primary/70">{ar ? "واجب نهاية الفصل — سلّمه في الحصة" : "End-of-chapter homework — hand it in class"}</p>
       <h3 className="mt-1 font-serif text-2xl">{ar ? pack.titleAr : pack.titleEn}</h3>
       <McqBlock locale={locale} rows={pack.mcq} />
       <EssayBlock locale={locale} rows={pack.essays} />
@@ -234,8 +235,7 @@ export function BookletChapterPane({ locale, chapterId }: { locale: Locale; chap
           <strong>{ar ? "تدريبات:" : "Practice:"}</strong>{" "}
           {pack.answers.map((row, index) => (
             <span key={row.id} className="ms-2 inline-block">
-              {index + 1}
-              {row.letter}
+              {index + 1}-{bookletAnswerMark(locale, row.index)}
             </span>
           ))}
         </p>
@@ -243,8 +243,7 @@ export function BookletChapterPane({ locale, chapterId }: { locale: Locale; chap
           <strong>{ar ? "واجب:" : "Homework:"}</strong>{" "}
           {homework.answers.map((row, index) => (
             <span key={row.id} className="ms-2 inline-block">
-              {index + 1}
-              {row.letter}
+              {index + 1}-{bookletAnswerMark(locale, row.index)}
             </span>
           ))}
         </p>
@@ -304,8 +303,7 @@ export function BookletFaizPane({ locale }: { locale: Locale }) {
             <strong>{ar ? pack.note.titleAr : pack.note.titleEn}:</strong>{" "}
             {pack.answers.map((row, index) => (
               <span key={row.id} className="ms-2 inline-block">
-                {index + 1}
-                {row.letter}
+                {index + 1}-{bookletAnswerMark(locale, row.index)}
               </span>
             ))}
           </p>
@@ -314,8 +312,7 @@ export function BookletFaizPane({ locale }: { locale: Locale }) {
           <strong>{ar ? "واجب:" : "Homework:"}</strong>{" "}
           {faizHomework.answers.map((row, index) => (
             <span key={row.id} className="ms-2 inline-block">
-              {index + 1}
-              {row.letter}
+              {index + 1}-{bookletAnswerMark(locale, row.index)}
             </span>
           ))}
         </p>

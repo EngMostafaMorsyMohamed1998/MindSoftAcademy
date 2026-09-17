@@ -4,6 +4,7 @@ import { PDFDocument } from "pdf-lib";
 import { BRAND } from "@/lib/brand";
 import { CHAPTER_FIGURES } from "@/components/booklet-figures";
 import {
+  bookletAnswerMark,
   bookletChapterPack,
   bookletFaizHomework,
   bookletFaizPacks,
@@ -835,12 +836,17 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
   });
 }
 
-function pushAnswerKey(blocks: Block[], ar: boolean, rows: { title: string; answers: { letter: string }[] }[]) {
+function pushAnswerKey(
+  blocks: Block[],
+  locale: Locale,
+  rows: { title: string; answers: { index: number }[] }[],
+) {
+  const ar = locale === "ar";
   blocks.push({ kind: "banner", text: ar ? "مفتاح الإجابة" : "Answer key", color: "#0c2d6b" });
   for (const block of rows) {
     blocks.push({
       kind: "text",
-      text: `${block.title}: ${block.answers.map((row, index) => `${index + 1}${row.letter}`).join("  ")}`,
+      text: `${block.title}: ${block.answers.map((row, index) => `${index + 1}-${bookletAnswerMark(locale, row.index)}`).join("  ")}`,
       size: 12,
       gap: 10,
     });
@@ -882,7 +888,7 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
     homework.essays.forEach((essay, index) => {
       blocks.push({ kind: "essay", n: index + 1, prompt: ar ? essay.promptAr : essay.promptEn });
     });
-    pushAnswerKey(blocks, ar, [
+    pushAnswerKey(blocks, locale, [
       ...bookletFaizPacks().map((pack) => ({
         title: ar ? pack.note.titleAr : pack.note.titleEn,
         answers: pack.answers,
@@ -908,7 +914,7 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
   homework.essays.forEach((essay, index) => {
     blocks.push({ kind: "essay", n: index + 1, prompt: ar ? essay.promptAr : essay.promptEn });
   });
-  pushAnswerKey(blocks, ar, [
+  pushAnswerKey(blocks, locale, [
     { title: ar ? "تدريبات الفصل" : "Chapter practice", answers: pack.answers },
     { title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers },
   ]);

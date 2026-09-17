@@ -30,12 +30,17 @@ export type BookletEssay = {
   promptEn: string;
 };
 
+export type BookletAnswer = {
+  id: string;
+  index: number;
+};
+
 export type BookletChapterPack = {
   chapter: Chapter;
   practice: BookletMcq[];
   essays: BookletEssay[];
   scenes: BankFact[];
-  answers: { id: string; letter: string }[];
+  answers: BookletAnswer[];
 };
 
 export type BookletHomeworkPack = {
@@ -44,13 +49,13 @@ export type BookletHomeworkPack = {
   titleEn: string;
   mcq: BookletMcq[];
   essays: BookletEssay[];
-  answers: { id: string; letter: string }[];
+  answers: BookletAnswer[];
 };
 
 export type BookletFaizPack = {
   note: FaizUnitNote;
   practice: BookletMcq[];
-  answers: { id: string; letter: string }[];
+  answers: BookletAnswer[];
 };
 
 const ARABIC = /[\u0600-\u06FF]/;
@@ -78,26 +83,50 @@ export function bookletOptions(locale: Locale, optionsAr: string[], optionsEn: s
   return rows;
 }
 
-function asMcq(question: HomeworkQuestion): BookletMcq {
+function shuffleBookletMcq(question: BookletMcq): BookletMcq {
+  const count = Math.min(4, Math.max(question.optionsAr.length, question.optionsEn.length));
+  if (count < 2) return question;
+  let seed = 2027;
+  for (let i = 0; i < question.id.length; i += 1) {
+    seed = (seed + question.id.charCodeAt(i) * (i + 3)) >>> 0;
+  }
+  const order = shuffled(
+    Array.from({ length: count }, (_, index) => index),
+    seed,
+  );
+  const next = order.indexOf(question.correctIndex);
   return {
+    ...question,
+    optionsAr: order.map((index) => question.optionsAr[index] ?? ""),
+    optionsEn: order.map((index) => question.optionsEn[index] ?? ""),
+    correctIndex: next >= 0 ? next : 0,
+  };
+}
+
+function asMcq(question: HomeworkQuestion): BookletMcq {
+  return shuffleBookletMcq({
     id: question.id,
     promptAr: question.promptAr,
     promptEn: question.promptEn,
     optionsAr: question.optionsAr,
     optionsEn: question.optionsEn,
     correctIndex: question.correctIndex,
-  };
+  });
 }
 
 function objectiveAsMcq(question: ObjectiveQuestion): BookletMcq {
-  return {
+  return shuffleBookletMcq({
     id: question.id,
     promptAr: question.promptAr,
     promptEn: question.promptEn,
     optionsAr: [...(question.optionsAr ?? [])],
     optionsEn: [...(question.optionsEn ?? [])],
     correctIndex: question.correctIndex,
-  };
+  });
+}
+
+export function bookletAnswerMark(locale: Locale, index: number): string {
+  return bookletLetters(locale)[index] ?? String(index + 1);
 }
 
 function analysisAsEssay(row: AnalysisPrompt): BookletEssay {
@@ -108,12 +137,8 @@ function essayAsEssay(row: EssayQuestion): BookletEssay {
   return { id: row.id, promptAr: row.promptAr, promptEn: row.promptEn };
 }
 
-function answerLetter(index: number): string {
-  return ["أ", "ب", "ج", "د", "هـ"][index] ?? String(index + 1);
-}
-
-function withAnswers(rows: BookletMcq[]): { id: string; letter: string }[] {
-  return rows.map((row) => ({ id: row.id, letter: answerLetter(row.correctIndex) }));
+function withAnswers(rows: BookletMcq[]): BookletAnswer[] {
+  return rows.map((row) => ({ id: row.id, index: row.correctIndex }));
 }
 
 function chapterMcqPool(chapterId: ChapterId): BookletMcq[] {
