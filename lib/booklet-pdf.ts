@@ -836,6 +836,27 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
   });
 }
 
+function pushEssayGuides(
+  blocks: Block[],
+  locale: Locale,
+  title: string,
+  essays: { guideAr: string; guideEn: string }[],
+) {
+  if (!essays.length) return;
+  const ar = locale === "ar";
+  blocks.push({ kind: "section", text: title });
+  essays.forEach((essay, index) => {
+    const guide = (ar ? essay.guideAr : essay.guideEn).trim();
+    if (!guide) return;
+    blocks.push({
+      kind: "text",
+      text: `${ar ? "مقالي" : "Essay"} ${index + 1}: ${guide}`,
+      size: 12,
+      gap: 10,
+    });
+  });
+}
+
 function pushAnswerKey(
   blocks: Block[],
   locale: Locale,
@@ -895,6 +916,7 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
       })),
       { title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers },
     ]);
+    pushEssayGuides(blocks, locale, ar ? "مقالي واجب الفائز" : "Al-Faiz essays", homework.essays);
     return blocks;
   }
 
@@ -918,6 +940,8 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
     { title: ar ? "تدريبات الفصل" : "Chapter practice", answers: pack.answers },
     { title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers },
   ]);
+  pushEssayGuides(blocks, locale, ar ? "مقالي التدريبات" : "Practice essays", pack.essays);
+  pushEssayGuides(blocks, locale, ar ? "مقالي الواجب" : "Homework essays", homework.essays);
   return blocks;
 }
 

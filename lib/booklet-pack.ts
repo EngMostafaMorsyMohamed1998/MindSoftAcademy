@@ -28,6 +28,8 @@ export type BookletEssay = {
   id: string;
   promptAr: string;
   promptEn: string;
+  guideAr: string;
+  guideEn: string;
 };
 
 export type BookletAnswer = {
@@ -130,11 +132,23 @@ export function bookletAnswerMark(locale: Locale, index: number): string {
 }
 
 function analysisAsEssay(row: AnalysisPrompt): BookletEssay {
-  return { id: row.id, promptAr: row.promptAr, promptEn: row.promptEn };
+  return {
+    id: row.id,
+    promptAr: row.promptAr,
+    promptEn: row.promptEn,
+    guideAr: row.guideAr,
+    guideEn: row.guideEn,
+  };
 }
 
 function essayAsEssay(row: EssayQuestion): BookletEssay {
-  return { id: row.id, promptAr: row.promptAr, promptEn: row.promptEn };
+  return {
+    id: row.id,
+    promptAr: row.promptAr,
+    promptEn: row.promptEn,
+    guideAr: row.guideAr,
+    guideEn: row.guideEn,
+  };
 }
 
 function withAnswers(rows: BookletMcq[]): BookletAnswer[] {

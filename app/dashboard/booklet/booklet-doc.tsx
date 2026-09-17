@@ -96,6 +96,24 @@ function EssayBlock({ locale, rows }: { locale: Locale; rows: BookletEssay[] }) 
   );
 }
 
+function EssayAnswers({ locale, title, rows }: { locale: Locale; title: string; rows: BookletEssay[] }) {
+  const ar = locale === "ar";
+  if (!rows.length) return null;
+  return (
+    <div className="mt-4 space-y-3">
+      <p className="text-sm font-semibold">{title}</p>
+      {rows.map((row, index) => (
+        <article key={row.id} className="print-keep rounded-2xl bg-white/70 p-3">
+          <p className="text-xs font-semibold text-primary/70">
+            {ar ? "مقالي" : "Essay"} {index + 1}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed">{ar ? row.guideAr : row.guideEn}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 function HomeworkBlock({ locale, pack }: { locale: Locale; pack: BookletHomeworkPack }) {
   const ar = locale === "ar";
   return (
@@ -247,6 +265,8 @@ export function BookletChapterPane({ locale, chapterId }: { locale: Locale; chap
             </span>
           ))}
         </p>
+        <EssayAnswers locale={locale} title={ar ? "مقالي التدريبات" : "Practice essays"} rows={pack.essays} />
+        <EssayAnswers locale={locale} title={ar ? "مقالي الواجب" : "Homework essays"} rows={homework.essays} />
       </section>
     </div>
   );
@@ -316,6 +336,7 @@ export function BookletFaizPane({ locale }: { locale: Locale }) {
             </span>
           ))}
         </p>
+        <EssayAnswers locale={locale} title={ar ? "مقالي واجب الفائز" : "Al-Faiz essays"} rows={faizHomework.essays} />
       </section>
     </div>
   );
