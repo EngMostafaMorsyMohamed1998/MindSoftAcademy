@@ -113,8 +113,17 @@ body {
     break-after: page;
   }
 
+  .print-keep,
   figure,
-  article {
+  .booklet-q {
     break-inside: avoid;
+  }
+
+  .booklet-pane {
+    display: block !important;
+  }
+
+  .booklet-tabs {
+    display: none !important;
   }
 }

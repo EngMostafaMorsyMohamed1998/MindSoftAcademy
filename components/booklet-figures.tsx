@@ -66,7 +66,7 @@ function Arrow() {
 
 function Draw({ children, tall }: { children: ReactNode; tall?: boolean }) {
   return (
-    <svg viewBox="0 0 220 90" className={tall ? "h-24 w-full" : "h-20 w-full"} aria-hidden>
+    <svg viewBox="0 0 220 90" className={tall ? "h-28 w-full" : "h-24 w-full"} aria-hidden>
       {children}
     </svg>
   );

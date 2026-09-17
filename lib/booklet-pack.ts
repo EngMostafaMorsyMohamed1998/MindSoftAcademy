@@ -8,11 +8,11 @@ import type { AnalysisPrompt, BankFact } from "@/lib/question-bank/types";
 import { shuffled } from "@/lib/shuffle";
 import type { EssayQuestion, ObjectiveQuestion } from "@/lib/exams";
 
-export const BOOKLET_PRACTICE = 36;
-export const BOOKLET_CHAPTER_ESSAYS = 6;
-export const BOOKLET_SCENES = 4;
-export const BOOKLET_HOMEWORK_PER_CHAPTER = 12;
-export const BOOKLET_HOMEWORK_ESSAYS = 3;
+export const BOOKLET_PRACTICE = 24;
+export const BOOKLET_CHAPTER_ESSAYS = 3;
+export const BOOKLET_SCENES = 3;
+export const BOOKLET_HOMEWORK_PER_CHAPTER = 8;
+export const BOOKLET_HOMEWORK_ESSAYS = 2;
 
 export type BookletMcq = {
   id: string;
@@ -92,7 +92,7 @@ function withAnswers(rows: BookletMcq[]): { id: string; letter: string }[] {
 
 function chapterMcqPool(chapterId: ChapterId): BookletMcq[] {
   return shuffled(
-    questionsForChapter(chapterId).filter((row) => row.kind === "mcq"),
+    questionsForChapter(chapterId).filter((row) => row.kind === "mcq" && row.optionsAr.length >= 2 && row.promptAr.trim()),
     2027 + Number(chapterId) * 31,
   ).map(asMcq);
 }
@@ -172,4 +172,15 @@ export function bookletParts() {
     { part: 1 as const, chapters: CHAPTERS.filter((chapter) => chapter.part === 1) },
     { part: 2 as const, chapters: CHAPTERS.filter((chapter) => chapter.part === 2) },
   ];
+}
+
+export function buildBookletDocument() {
+  const parts = bookletParts().map(({ part, chapters }) => ({
+    part,
+    chapters: chapters.map((chapter) => bookletChapterPack(chapter)),
+    homework: bookletHomeworkForPart(part),
+  }));
+  const faiz = bookletFaizPacks();
+  const faizHomework = bookletFaizHomework();
+  return { parts, faiz, faizHomework };
 }

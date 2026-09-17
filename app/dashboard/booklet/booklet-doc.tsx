@@ -1,57 +1,61 @@
-import { ChapterMindMap } from "@/components/chapter-mind-map";
 import { BookletFigure, CHAPTER_FIGURES, SceneCard } from "@/components/booklet-figures";
-import type { Chapter } from "@/lib/curriculum";
+import { BookletMindMap } from "@/components/booklet-mind-map";
 import {
-  bookletChapterPack,
-  bookletFaizHomework,
-  bookletFaizPacks,
-  bookletHomeworkForPart,
-  bookletParts,
+  buildBookletDocument,
+  type BookletChapterPack,
   type BookletEssay,
   type BookletHomeworkPack,
   type BookletMcq,
 } from "@/lib/booklet-pack";
-import { LESSON_NOTES, type LessonNote } from "@/lib/lessons";
+import { LESSON_NOTES } from "@/lib/lessons";
 import type { Locale } from "@/lib/locale";
 import { mindMapForChapter, mindMapForFaiz } from "@/lib/mind-maps";
 
+const LETTERS = ["أ", "ب", "ج", "د"];
+
+function Field({ label }: { label: string }) {
+  return (
+    <label className="block text-sm">
+      <span className="font-semibold">{label}</span>
+      <span className="mt-2 block h-8 border-b border-primary/30" />
+    </label>
+  );
+}
+
 function WriteLines({ count = 4 }: { count?: number }) {
   return (
-    <div className="mt-3 space-y-4 text-foreground/20">
+    <div className="mt-3 space-y-3">
       {Array.from({ length: count }, (_, index) => (
-        <p key={index}>________________________________________________________________</p>
+        <div key={index} className="h-7 border-b border-dashed border-primary/25" />
       ))}
     </div>
   );
 }
 
-function McqBlock({
-  locale,
-  rows,
-  start = 1,
-}: {
-  locale: Locale;
-  rows: BookletMcq[];
-  start?: number;
-}) {
+function McqBlock({ locale, rows }: { locale: Locale; rows: BookletMcq[] }) {
   const ar = locale === "ar";
   return (
-    <ol className="mt-3 space-y-4" start={start}>
-      {rows.map((row, index) => (
-        <li key={row.id} className="text-sm leading-relaxed">
-          <p className="font-medium">
-            {start + index}) {ar ? row.promptAr : row.promptEn}
-          </p>
-          <ul className="mt-2 grid gap-1 sm:grid-cols-2">
-            {row.optionsAr.map((option, optionIndex) => (
-              <li key={`${row.id}-${optionIndex}`} className="rounded-xl bg-primary/5 px-2 py-1 text-xs">
-                <span className="font-semibold">{["أ", "ب", "ج", "د"][optionIndex] ?? optionIndex + 1})</span>{" "}
-                {ar ? option : row.optionsEn[optionIndex]}
-              </li>
-            ))}
-          </ul>
-        </li>
-      ))}
+    <ol className="mt-4 list-none space-y-5">
+      {rows.map((row, index) => {
+        const options = ar ? row.optionsAr : row.optionsEn;
+        return (
+          <li key={row.id} className="booklet-q rounded-2xl bg-primary/[0.04] p-3">
+            <p className="text-sm font-medium leading-relaxed">
+              <span className="ms-1 font-bold text-primary">{index + 1}.</span> {ar ? row.promptAr : row.promptEn}
+            </p>
+            <ul className="mt-2 space-y-1.5">
+              {options.slice(0, 4).map((option, optionIndex) => (
+                <li key={`${row.id}-${optionIndex}`} className="flex items-start gap-2 text-sm leading-relaxed">
+                  <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-primary/30 text-[10px] font-bold text-primary">
+                    {LETTERS[optionIndex]}
+                  </span>
+                  <span>{option}</span>
+                </li>
+              ))}
+            </ul>
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -59,11 +63,11 @@ function McqBlock({
 function EssayBlock({ locale, rows }: { locale: Locale; rows: BookletEssay[] }) {
   const ar = locale === "ar";
   return (
-    <div className="mt-4 space-y-5">
+    <div className="mt-4 space-y-4">
       {rows.map((row, index) => (
-        <article key={row.id} className="rounded-2xl border border-dashed border-primary/25 p-3">
+        <article key={row.id} className="print-keep rounded-2xl border border-dashed border-primary/25 p-3">
           <p className="text-sm font-semibold">
-            {ar ? "سؤال مقالي" : "Essay"} {index + 1}
+            {ar ? "مقالي" : "Essay"} {index + 1}
           </p>
           <p className="mt-2 text-sm leading-relaxed">{ar ? row.promptAr : row.promptEn}</p>
           <WriteLines count={5} />
@@ -73,52 +77,31 @@ function EssayBlock({ locale, rows }: { locale: Locale; rows: BookletEssay[] }) 
   );
 }
 
-function HomeworkSection({
-  locale,
-  pack,
-}: {
-  locale: Locale;
-  pack: BookletHomeworkPack;
-}) {
+function HomeworkBlock({ locale, pack }: { locale: Locale; pack: BookletHomeworkPack }) {
   const ar = locale === "ar";
   return (
-    <section className="print-break mt-8 rounded-3xl bg-accent/15 p-5 ring-1 ring-accent">
-      <p className="text-xs font-semibold uppercase tracking-wide text-primary/70">
-        {ar ? "واجب نهاية الجزء" : "End-of-part homework"}
-      </p>
+    <section className="print-break mt-8 rounded-3xl bg-[#fff8e8] p-5 ring-1 ring-[#d4a017]/40">
+      <p className="text-xs font-semibold text-primary/70">{ar ? "واجب نهاية الجزء — سلّمه في الحصة" : "End-of-part homework — hand it in class"}</p>
       <h3 className="mt-1 font-serif text-2xl">{ar ? pack.titleAr : pack.titleEn}</h3>
-      <p className="mt-2 text-sm text-foreground/65">
-        {ar
-          ? "حل الاختيار من متعدد، وبعدين المقال. سلّم الورقة في الحصة."
-          : "Solve the multiple choice, then the essays. Hand the paper in class."}
-      </p>
       <McqBlock locale={locale} rows={pack.mcq} />
       <EssayBlock locale={locale} rows={pack.essays} />
     </section>
   );
 }
 
-function ChapterSection({
-  locale,
-  chapter,
-  notes,
-}: {
-  locale: Locale;
-  chapter: Chapter;
-  notes: LessonNote[];
-}) {
+function ChapterBlock({ locale, pack }: { locale: Locale; pack: BookletChapterPack }) {
   const ar = locale === "ar";
-  const pack = bookletChapterPack(chapter);
+  const { chapter } = pack;
   const map = mindMapForChapter(chapter.id);
   const figures = CHAPTER_FIGURES[chapter.id] ?? [];
-  const chapterNotes = notes.filter((note) => note.chapterId === chapter.id);
+  const notes = LESSON_NOTES.filter((note) => note.chapterId === chapter.id);
 
   return (
     <section className="print-break border-t border-primary/10 pt-6">
       <p className="text-xs font-semibold text-primary/60">
         {chapter.part === 1 ? (ar ? "الجزء الأول" : "Part 1") : ar ? "الجزء الثاني" : "Part 2"}
       </p>
-      <h3 className="text-xl font-semibold">
+      <h3 className="mt-1 text-2xl font-semibold">
         {chapter.id}. {ar ? chapter.titleAr : chapter.titleEn}
       </h3>
       <p className="mt-1 text-sm text-foreground/65">{ar ? chapter.blurbAr : chapter.blurbEn}</p>
@@ -126,17 +109,17 @@ function ChapterSection({
       {map ? (
         <div className="mt-5">
           <h4 className="mb-2 text-sm font-semibold">{ar ? "الخريطة الذهنية" : "Mind map"}</h4>
-          <ChapterMindMap locale={locale} root={map} color={chapter.color} accent={chapter.accent} />
+          <BookletMindMap locale={locale} root={map} color={chapter.color} accent={chapter.accent} />
         </div>
       ) : null}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
         {figures.map((id) => (
           <BookletFigure key={id} id={id} locale={locale} color={chapter.color} />
         ))}
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="mt-5 grid gap-4 sm:grid-cols-3">
         {pack.scenes.map((scene) => (
           <SceneCard
             key={scene.id}
@@ -148,31 +131,28 @@ function ChapterSection({
         ))}
       </div>
 
-      {chapterNotes.map((note) => {
+      {notes.map((note) => {
         const lesson = chapter.lessons.find((item) => item.id === note.id);
         const body = ar ? note.bodyAr : note.bodyEn;
         const terms = ar ? note.termsAr : note.termsEn;
         return (
-          <article key={note.id} className="mt-5">
+          <article key={note.id} className="mt-6 rounded-3xl bg-white p-4 ring-1 ring-primary/10">
             <h4 className="font-semibold">
-              {note.id} {ar ? lesson?.titleAr : lesson?.titleEn}
+              {note.id} — {ar ? lesson?.titleAr : lesson?.titleEn}
             </h4>
-            <ul className="mt-2 list-disc space-y-1 ps-5 text-sm">
+            <ul className="mt-3 list-disc space-y-2 ps-5 text-sm leading-relaxed">
               {body.map((line) => (
                 <li key={line}>{line}</li>
               ))}
             </ul>
-            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-primary/60">
-              {ar ? "مصطلحات" : "Key terms"}
-            </p>
-            <ul className="mt-1 text-sm">
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
               {terms.map((term) => (
-                <li key={term.term}>
+                <p key={term.term} className="rounded-xl bg-primary/5 px-3 py-2 text-sm">
                   <strong>{term.term}:</strong> {term.meaning}
-                </li>
+                </p>
               ))}
-            </ul>
-            <p className="mt-2 text-sm">
+            </div>
+            <p className="mt-3 rounded-xl bg-[#fff8e8] px-3 py-2 text-sm">
               <strong>{ar ? "الخلاصة:" : "Takeaway:"}</strong> {ar ? note.takeawayAr : note.takeawayEn}
             </p>
           </article>
@@ -182,7 +162,7 @@ function ChapterSection({
       <div className="mt-6">
         <h4 className="text-lg font-semibold">{ar ? "تدريبات الفصل" : "Chapter practice"}</h4>
         <p className="mt-1 text-xs text-foreground/55">
-          {ar ? `${pack.practice.length} سؤال اختيار من متعدد. الإجابات في آخر الملزمة.` : `${pack.practice.length} multiple-choice questions. Answers are at the back.`}
+          {ar ? "ظلّل الاختيار. الإجابات في تبويب مفتاح الإجابة." : "Mark a choice. Answers are in the answer-key tab."}
         </p>
         <McqBlock locale={locale} rows={pack.practice} />
         <h4 className="mt-6 text-lg font-semibold">{ar ? "حلّل واكتب" : "Analyse and write"}</h4>
@@ -192,138 +172,140 @@ function ChapterSection({
   );
 }
 
-export function BookletDoc({
+export function BookletCover({
   locale,
-  notes,
   teacher,
   brand,
 }: {
   locale: Locale;
-  notes: LessonNote[];
   teacher: string;
   brand: string;
 }) {
   const ar = locale === "ar";
-  const parts = bookletParts();
-  const faizPacks = bookletFaizPacks();
-  const faizHomework = bookletFaizHomework();
-  const partHomeworks = [bookletHomeworkForPart(1), bookletHomeworkForPart(2)];
-  const answerBlocks = [
-    ...parts.flatMap(({ chapters }) =>
-      chapters.map((chapter) => ({
-        title: ar ? `الفصل ${chapter.id}` : `Chapter ${chapter.id}`,
-        answers: bookletChapterPack(chapter).answers,
+  const doc = buildBookletDocument();
+  return (
+    <header className="print-keep mb-6 rounded-3xl bg-white p-6 ring-1 ring-primary/10 sm:p-8">
+      <p className="text-xs font-semibold tracking-wide text-primary/60">{brand}</p>
+      <h2 className="mt-1 font-serif text-3xl">{ar ? "ملزمة الطالب" : "Student booklet"}</h2>
+      <p className="mt-1 text-sm text-foreground/65">{teacher} · 2026–2027 · 2Bac</p>
+      <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        <Field label={ar ? "الاسم" : "Name"} />
+        <Field label={ar ? "رقم التليفون" : "Phone"} />
+        <Field label={ar ? "المجموعة" : "Group"} />
+      </div>
+      <p className="mt-5 text-sm leading-relaxed text-foreground/70">
+        {ar
+          ? "افتح تبويب الجزء. كل فصل: خريطة، رسوم، ملخص، أسئلة. آخر الجزء واجب. راجع الإجابات بعد الحل."
+          : "Open a part tab. Each chapter has a map, figures, notes, and questions. Homework is at the end of the part."}
+      </p>
+      <ol className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+        {doc.parts.flatMap(({ chapters }) =>
+          chapters.map((pack) => (
+            <li key={pack.chapter.id} className="rounded-2xl px-3 py-2 text-white" style={{ background: pack.chapter.color }}>
+              {pack.chapter.id}. {ar ? pack.chapter.titleAr : pack.chapter.titleEn}
+            </li>
+          )),
+        )}
+        <li className="rounded-2xl bg-primary px-3 py-2 text-white">{ar ? "كتاب الفائز + واجبه" : "Al-Faiz + homework"}</li>
+      </ol>
+    </header>
+  );
+}
+
+export function BookletPartPane({ locale, part }: { locale: Locale; part: 1 | 2 }) {
+  const doc = buildBookletDocument();
+  const block = doc.parts.find((row) => row.part === part);
+  if (!block) return null;
+  return (
+    <div className="print-sheet rounded-3xl bg-white p-5 ring-1 ring-primary/10 sm:p-7">
+      {block.chapters.map((pack) => (
+        <ChapterBlock key={pack.chapter.id} locale={locale} pack={pack} />
+      ))}
+      <HomeworkBlock locale={locale} pack={block.homework} />
+    </div>
+  );
+}
+
+export function BookletFaizPane({ locale }: { locale: Locale }) {
+  const ar = locale === "ar";
+  const { faiz, faizHomework } = buildBookletDocument();
+  return (
+    <div className="print-sheet rounded-3xl bg-white p-5 ring-1 ring-primary/10 sm:p-7">
+      <h3 className="font-serif text-2xl">{ar ? "كتاب الفائز" : "Al-Faiz"}</h3>
+      {faiz.map((pack) => {
+        const map = mindMapForFaiz(pack.note.id);
+        const figures = CHAPTER_FIGURES[pack.note.id] ?? [];
+        const color =
+          pack.note.id === "f2" ? "#7f1d1d" : pack.note.id === "f3" ? "#134e4a" : pack.note.id === "f4" ? "#4a1942" : "#0c2d6b";
+        const accent =
+          pack.note.id === "f2" ? "#f59e0b" : pack.note.id === "f3" ? "#2dd4bf" : pack.note.id === "f4" ? "#e879f9" : "#c4a35a";
+        return (
+          <article key={pack.note.id} className="print-break mt-6">
+            <h4 className="text-xl font-semibold">{ar ? pack.note.titleAr : pack.note.titleEn}</h4>
+            {map ? (
+              <div className="mt-4">
+                <BookletMindMap locale={locale} root={map} color={color} accent={accent} />
+              </div>
+            ) : null}
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {figures.map((id) => (
+                <BookletFigure key={`${pack.note.id}-${id}`} id={id} locale={locale} color={color} />
+              ))}
+            </div>
+            <div className="mt-4 space-y-3">
+              {pack.note.sections.map((section) => (
+                <div key={section.headingAr} className="rounded-2xl bg-primary/5 p-3">
+                  <p className="text-sm font-semibold">{ar ? section.headingAr : section.headingEn}</p>
+                  {(ar ? section.bodyAr : section.bodyEn).map((line) => (
+                    <p key={line} className="mt-2 text-sm leading-relaxed text-foreground/75">
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <h5 className="mt-5 text-lg font-semibold">{ar ? "أسئلة الوحدة" : "Unit questions"}</h5>
+            <McqBlock locale={locale} rows={pack.practice} />
+          </article>
+        );
+      })}
+      <HomeworkBlock locale={locale} pack={faizHomework} />
+    </div>
+  );
+}
+
+export function BookletAnswersPane({ locale }: { locale: Locale }) {
+  const ar = locale === "ar";
+  const doc = buildBookletDocument();
+  const blocks = [
+    ...doc.parts.flatMap(({ chapters }) =>
+      chapters.map((pack) => ({
+        title: ar ? `الفصل ${pack.chapter.id}` : `Chapter ${pack.chapter.id}`,
+        answers: pack.answers,
       })),
     ),
-    ...partHomeworks.map((pack) => ({ title: ar ? pack.titleAr : pack.titleEn, answers: pack.answers })),
-    ...faizPacks.map((pack) => ({
-      title: ar ? pack.note.titleAr : pack.note.titleEn,
-      answers: pack.answers,
-    })),
-    { title: ar ? faizHomework.titleAr : faizHomework.titleEn, answers: faizHomework.answers },
+    ...doc.parts.map(({ homework }) => ({ title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers })),
+    ...doc.faiz.map((pack) => ({ title: ar ? pack.note.titleAr : pack.note.titleEn, answers: pack.answers })),
+    { title: ar ? doc.faizHomework.titleAr : doc.faizHomework.titleEn, answers: doc.faizHomework.answers },
   ];
-
   return (
-    <div className="print-sheet space-y-8 rounded-3xl bg-white p-6 ring-1 ring-primary/10 sm:p-8">
-      <header className="print-break border-b border-primary/15 pb-4">
-        <p className="text-xs font-semibold tracking-wide text-primary/60">{brand}</p>
-        <h2 className="mt-1 font-serif text-3xl">
-          {ar ? "الملزمة الكبرى — أسئلة وصور وخرائط" : "The large booklet — questions, figures, maps"}
-        </h2>
-        <p className="mt-1 text-sm text-foreground/65">{teacher} · 2026–2027 · 2Bac</p>
-        <p className="mt-3 text-sm">
-          {ar
-            ? "الاسم: ________________    الرقم: ________________    المجموعة: ______"
-            : "Name: ________________    Phone: ________________    Group: ______"}
-        </p>
-        <p className="mt-4 text-sm leading-relaxed text-foreground/70">
-          {ar
-            ? "كل فصل: خريطة ذهنية، رسوم، صور مواقف، ملخص، ثم أسئلة. آخر كل جزء واجب كامل. آخر الملزمة مفتاح الإجابة."
-            : "Each chapter has a mind map, figures, scene pictures, a summary, then questions. Each part ends with full homework. The answer key is at the back."}
-        </p>
-        <ol className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-          {parts.flatMap(({ chapters }) =>
-            chapters.map((chapter) => (
-              <li key={chapter.id} className="rounded-2xl px-3 py-2 text-white" style={{ background: chapter.color }}>
-                {chapter.id}. {ar ? chapter.titleAr : chapter.titleEn}
-              </li>
-            )),
-          )}
-          <li className="rounded-2xl bg-primary px-3 py-2 text-white">
-            {ar ? "كتاب الفائز + واجبه" : "Al-Faiz + its homework"}
-          </li>
-        </ol>
-      </header>
-
-      {parts.map(({ part, chapters }) => (
-        <div key={part}>
-          {chapters.map((chapter) => (
-            <ChapterSection key={chapter.id} locale={locale} chapter={chapter} notes={notes} />
-          ))}
-          <HomeworkSection locale={locale} pack={partHomeworks[part - 1]!} />
-        </div>
-      ))}
-
-      <section className="print-break border-t border-primary/10 pt-6">
-        <h3 className="font-serif text-2xl">{ar ? "كتاب الفائز — مكتوب" : "Al-Faiz — written"}</h3>
-        {faizPacks.map((pack) => {
-          const map = mindMapForFaiz(pack.note.id);
-          const figures = CHAPTER_FIGURES[pack.note.id] ?? [];
-          const color = pack.note.id === "f2" ? "#7f1d1d" : pack.note.id === "f3" ? "#134e4a" : pack.note.id === "f4" ? "#4a1942" : "#0c2d6b";
-          const accent = pack.note.id === "f2" ? "#f59e0b" : pack.note.id === "f3" ? "#2dd4bf" : pack.note.id === "f4" ? "#e879f9" : "#c4a35a";
-          return (
-            <article key={pack.note.id} className="mt-6">
-              <h4 className="text-xl font-semibold">{ar ? pack.note.titleAr : pack.note.titleEn}</h4>
-              {map ? (
-                <div className="mt-4">
-                  <ChapterMindMap locale={locale} root={map} color={color} accent={accent} />
-                </div>
-              ) : null}
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {figures.map((id) => (
-                  <BookletFigure key={`${pack.note.id}-${id}`} id={id} locale={locale} color={color} />
-                ))}
-              </div>
-              <div className="mt-4 space-y-4">
-                {pack.note.sections.map((section) => (
-                  <div key={section.headingAr} className="rounded-2xl bg-primary/5 p-3">
-                    <p className="text-sm font-semibold">{ar ? section.headingAr : section.headingEn}</p>
-                    {(ar ? section.bodyAr : section.bodyEn).map((line) => (
-                      <p key={line} className="mt-2 text-sm leading-relaxed text-foreground/75">
-                        {line}
-                      </p>
-                    ))}
-                  </div>
-                ))}
-              </div>
-              <h5 className="mt-5 text-lg font-semibold">{ar ? "أسئلة الوحدة" : "Unit questions"}</h5>
-              <McqBlock locale={locale} rows={pack.practice} />
-            </article>
-          );
-        })}
-        <HomeworkSection locale={locale} pack={faizHomework} />
-      </section>
-
-      <section className="print-break border-t border-primary/10 pt-6">
-        <h3 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h3>
-        <p className="mt-1 text-sm text-foreground/60">
-          {ar ? "راجع بعد ما تحل، مش قبل." : "Check after you finish, not before."}
-        </p>
-        <div className="mt-4 space-y-4">
-          {answerBlocks.map((block) => (
-            <article key={block.title} className="rounded-2xl bg-primary/5 p-3">
-              <p className="text-sm font-semibold">{block.title}</p>
-              <p className="mt-2 text-xs leading-7">
-                {block.answers.map((row, index) => (
-                  <span key={row.id} className="me-3">
-                    {index + 1}) {row.letter}
-                  </span>
-                ))}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
+    <div className="print-sheet print-break rounded-3xl bg-white p-5 ring-1 ring-primary/10 sm:p-7">
+      <h3 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h3>
+      <p className="mt-1 text-sm text-foreground/60">{ar ? "راجعه بعد ما تحل، مش قبل." : "Check after you finish, not before."}</p>
+      <div className="mt-4 space-y-4">
+        {blocks.map((block) => (
+          <article key={block.title} className="print-keep rounded-2xl bg-primary/5 p-3">
+            <p className="text-sm font-semibold">{block.title}</p>
+            <p className="mt-2 text-sm leading-8">
+              {block.answers.map((row, index) => (
+                <span key={row.id} className="ms-3 inline-block">
+                  {index + 1} {row.letter}
+                </span>
+              ))}
+            </p>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }
