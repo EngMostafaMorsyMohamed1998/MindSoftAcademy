@@ -1,4 +1,5 @@
 import { getChapter, getLesson, type ChapterId } from "@/lib/curriculum";
+import { getFaizNote, type FaizUnitId } from "@/lib/faiz-notes";
 import { notesForChapter } from "@/lib/lessons";
 
 export type MindNode = {
@@ -47,6 +48,43 @@ export function mindMapForChapter(chapterId: ChapterId): MindNode | null {
         })),
       };
     }),
+  };
+}
+
+export function mindMapForFaiz(id: FaizUnitId): MindNode | null {
+  const note = getFaizNote(id);
+  if (!note) return null;
+  return {
+    id: `faiz-${id}`,
+    labelAr: note.titleAr,
+    labelEn: note.titleEn,
+    hintAr: note.takeawayAr,
+    hintEn: note.takeawayEn,
+    children: note.sections.map((section, index) => ({
+      id: `${id}-s${index}`,
+      labelAr: section.headingAr,
+      labelEn: section.headingEn,
+      hintAr: section.bodyAr[0],
+      hintEn: section.bodyEn[0],
+      children:
+        index === 0
+          ? note.termsAr.map((term, termIndex) => ({
+              id: `${id}-t${termIndex}`,
+              labelAr: term.term,
+              labelEn: note.termsEn[termIndex]?.term ?? term.term,
+              hintAr: term.meaning,
+              hintEn: note.termsEn[termIndex]?.meaning ?? term.meaning,
+              children: [],
+            }))
+          : section.bodyAr.slice(0, 3).map((line, lineIndex) => ({
+              id: `${id}-s${index}-l${lineIndex}`,
+              labelAr: line.slice(0, 42),
+              labelEn: (section.bodyEn[lineIndex] ?? line).slice(0, 42),
+              hintAr: line,
+              hintEn: section.bodyEn[lineIndex] ?? line,
+              children: [],
+            })),
+    })),
   };
 }
 

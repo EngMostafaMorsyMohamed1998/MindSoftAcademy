@@ -1,6 +1,5 @@
 import { PrintButton } from "@/components/print-button";
 import { BookletDoc } from "./booklet-doc";
-import { CHAPTERS } from "@/lib/curriculum";
 import { LESSON_NOTES } from "@/lib/lessons";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
@@ -20,7 +19,6 @@ export default async function BookletPage() {
       </div>
       <BookletDoc
         locale={locale}
-        chapters={CHAPTERS}
         notes={LESSON_NOTES}
         teacher={locale === "ar" ? BRAND.teacherAr : BRAND.teacherEn}
         brand={locale === "ar" ? BRAND.nameAr : BRAND.nameEn}

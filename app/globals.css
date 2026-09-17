@@ -112,4 +112,9 @@ body {
   .print-break {
     break-after: page;
   }
+
+  figure,
+  article {
+    break-inside: avoid;
+  }
 }

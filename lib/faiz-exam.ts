@@ -26,7 +26,7 @@ function essay(
   return { id, promptAr, promptEn, guideAr, guideEn, points: 8 };
 }
 
-const FAIZ_OBJECTIVES: ObjectiveQuestion[] = [
+export const FAIZ_OBJECTIVES: ObjectiveQuestion[] = [
   mcq("faiz-1", "أي ترتيب يصف تطور تقنية المعلومات بشكل أصح؟", "Which order best describes the development of IT?", ["الهاتف الذكي ثم الحاسوب ثم الإنترنت", "الحاسوب ثم الإنترنت ثم الهواتف المحمولة ثم السحابة", "السحابة ثم الإنترنت ثم الحاسوب", "الإنترنت ثم الآلة الكاتبة ثم الحاسوب"], ["Smartphone then computer then Internet", "Computer then Internet then mobile phones then cloud", "Cloud then Internet then computer", "Internet then typewriter then computer"], 1),
   mcq("faiz-2", "الذكاء الاصطناعي في أبسط تعريف هو:", "Artificial intelligence, in its simplest definition, is:", ["روبوت يشبه الإنسان فقط", "قدرة الآلة على أداء مهام تحتاج عادة ذكاءً بشريًا", "برنامج يحفظ الدرجات", "شبكة واي فاي سريعة"], ["A human-looking robot only", "A machine’s ability to do tasks that usually need human intelligence", "A program that stores grades", "A fast Wi-Fi network"], 1),
   mcq("faiz-3", "العلاقة الصحيحة:", "The correct relationship is:", ["التعلم العميق جزء من التعلم الآلي، والتعلم الآلي جزء من الذكاء الاصطناعي", "الذكاء الاصطناعي جزء من التعلم العميق فقط", "التعلم الآلي والذكاء الاصطناعي مترادفان دائمًا", "التعلم العميق لا علاقة له بالذكاء الاصطناعي"], ["Deep learning is part of machine learning, which is part of AI", "AI is only a part of deep learning", "Machine learning and AI are always synonyms", "Deep learning is unrelated to AI"], 0),
@@ -85,7 +85,7 @@ const FAIZ_OBJECTIVES: ObjectiveQuestion[] = [
   mcq("faiz-56", "بعد تسليم امتحان الفائز، الدرجة الموضوعية تُحسب من:", "After submitting the Al-Faiz exam, the objective score is calculated from:", ["الأسئلة المغلقة فقط، والتحليل للمدرس", "لون الغلاف", "سرعة النت يوم الامتحان", "طول الاسم"], ["Closed questions only; analysis is for the teacher", "Cover colour", "Internet speed on exam day", "Name length"], 0),
 ];
 
-const FAIZ_ESSAYS: EssayQuestion[] = [
+export const FAIZ_ESSAYS: EssayQuestion[] = [
   essay(
     "faiz-e1",
     "اشرح الفرق بين التعلم الآلي والتعلم العميق، ومثّل بمثال مدرسي واحد لكل منهما. اذكر خطرًا أخلاقيًا واحدًا إذا اعتمدنا على نموذج بلا مراجعة.",
