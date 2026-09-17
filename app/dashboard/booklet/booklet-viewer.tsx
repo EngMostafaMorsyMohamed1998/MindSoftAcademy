@@ -32,7 +32,7 @@ export function BookletViewer({
     if (busy) return;
     setBusy(true);
     try {
-      const response = await fetch("/api/booklet");
+      const response = await fetch(`/api/booklet?lang=${locale}`);
       if (!response.ok) throw new Error("download");
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);

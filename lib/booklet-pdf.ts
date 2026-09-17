@@ -14,7 +14,6 @@ const PAGE_W = 595;
 const PAGE_H = 842;
 const SCALE = 2.2;
 const LETTERS = ["أ", "ب", "ج", "د"];
-const arabicRe = /[\u0600-\u06FF]/;
 
 let fontReady = false;
 
@@ -86,7 +85,7 @@ function paintText(
   y: number,
   align: "left" | "right" | "center",
 ) {
-  ctx.direction = arabicRe.test(text) ? "rtl" : "ltr";
+  ctx.direction = "ltr";
   ctx.textAlign = align;
   ctx.textBaseline = "top";
   ctx.fillText(text, x, y);
@@ -129,13 +128,16 @@ function drawFigure(
   roundRect(ctx, x, y, w, h, 16, fade(color, 0.08));
   ctx.fillStyle = color;
   ctx.font = `13px ${FONT_NAME}`;
-  paintText(ctx, title, x + w - 14, y + 10, "right");
+  paintText(ctx, title, ar ? x + w - 14 : x + 14, y + 10, ar ? "right" : "left");
 
   const innerTop = y + 34;
+  const tr = (arabic: string, english: string) => (ar ? arabic : english);
   if (id === "ai-life") {
-    ["اقتراح فيديو", "فرز المصنع", "مراجعة الكتاب"].forEach((label, index) => {
-      boxLabel(ctx, label, x + 20 + index * ((w - 40) / 3), innerTop + 28, (w - 56) / 3, 44, color, 13);
-    });
+    [tr("اقتراح فيديو", "Video suggest"), tr("فرز المصنع", "Factory sort"), tr("مراجعة الكتاب", "Check the book")].forEach(
+      (label, index) => {
+        boxLabel(ctx, label, x + 20 + index * ((w - 40) / 3), innerTop + 28, (w - 56) / 3, 44, color, 13);
+      },
+    );
   } else if (id === "it-timeline") {
     const steps = ar
       ? ["حاسوب", "إنترنت", "محمول", "سحابة", "ذكاء"]
@@ -148,64 +150,70 @@ function drawFigure(
       boxLabel(ctx, step, bx, innerTop + 28, bw, 36, color, 12);
     });
   } else if (id === "ai-nest") {
-    ["ذكاء اصطناعي", "تعلم آلي", "تعلم عميق", "توليدي"].forEach((label, index) => {
-      boxLabel(ctx, label, x + 24 + index * 10, innerTop + index * 22, w - 48 - index * 20, 20, color, 11);
-    });
+    [tr("ذكاء اصطناعي", "AI"), tr("تعلم آلي", "Machine learning"), tr("تعلم عميق", "Deep learning"), tr("توليدي", "Generative")].forEach(
+      (label, index) => {
+        boxLabel(ctx, label, x + 24 + index * 10, innerTop + index * 22, w - 48 - index * 20, 20, color, 11);
+      },
+    );
   } else if (id === "encrypt") {
-    boxLabel(ctx, "نص واضح", x + 20, innerTop + 28, 110, 36, color, 13);
+    boxLabel(ctx, tr("نص واضح", "Plain text"), x + 20, innerTop + 28, 110, 36, color, 13);
     arrow(ctx, x + 136, innerTop + 46, x + 168, innerTop + 46, color);
-    boxLabel(ctx, "المفتاح", x + 172, innerTop + 24, 90, 44, "#111827", 13);
+    boxLabel(ctx, tr("المفتاح", "Key"), x + 172, innerTop + 24, 90, 44, "#111827", 13);
     arrow(ctx, x + 268, innerTop + 46, x + 300, innerTop + 46, color);
-    boxLabel(ctx, "نص مشفّر", x + 304, innerTop + 28, 110, 36, color, 13);
+    boxLabel(ctx, tr("نص مشفّر", "Cipher"), x + 304, innerTop + 28, 110, 36, color, 13);
   } else if (id === "auth") {
     boxLabel(ctx, "2FA", x + w / 2 - 40, innerTop + 4, 80, 28, "#111827", 13);
-    ["تعرفه", "تملكه", "أنت عليه"].forEach((label, index) => {
+    [tr("تعرفه", "Know"), tr("تملكه", "Have"), tr("أنت عليه", "Are")].forEach((label, index) => {
       boxLabel(ctx, label, x + 24 + index * ((w - 48) / 3 + 4), innerTop + 44, (w - 64) / 3, 32, color, 12);
     });
   } else if (id === "firewall") {
-    boxLabel(ctx, "إنترنت", x + 18, innerTop + 28, 90, 36, color, 12);
-    boxLabel(ctx, "جدار الحماية", x + 140, innerTop + 20, 120, 52, "#111827", 12);
-    boxLabel(ctx, "داخلية", x + 290, innerTop + 8, 90, 24, color, 11);
-    boxLabel(ctx, "ضيوف", x + 290, innerTop + 36, 90, 24, color, 11);
-    boxLabel(ctx, "حساسة", x + 290, innerTop + 64, 90, 24, color, 11);
+    boxLabel(ctx, tr("إنترنت", "Internet"), x + 18, innerTop + 28, 90, 36, color, 12);
+    boxLabel(ctx, tr("جدار الحماية", "Firewall"), x + 140, innerTop + 20, 120, 52, "#111827", 12);
+    boxLabel(ctx, tr("داخلية", "LAN"), x + 290, innerTop + 8, 90, 24, color, 11);
+    boxLabel(ctx, tr("ضيوف", "Guest"), x + 290, innerTop + 36, 90, 24, color, 11);
+    boxLabel(ctx, tr("حساسة", "Secure"), x + 290, innerTop + 64, 90, 24, color, 11);
   } else if (id === "web-stack") {
-    ["واجهة أمامية", "خادم / خلفية", "بيانات"].forEach((label, index) => {
+    [tr("واجهة أمامية", "Frontend"), tr("خادم / خلفية", "Backend"), tr("بيانات", "Data")].forEach((label, index) => {
       boxLabel(ctx, label, x + 40, innerTop + 4 + index * 28, w - 80, 24, color, 12);
     });
   } else if (id === "http") {
-    boxLabel(ctx, "المتصفح", x + 24, innerTop + 28, 110, 36, color, 13);
+    boxLabel(ctx, tr("المتصفح", "Browser"), x + 24, innerTop + 28, 110, 36, color, 13);
     ctx.fillStyle = color;
     ctx.font = `14px ${FONT_NAME}`;
     paintText(ctx, "GET / POST", x + w / 2, innerTop + 36, "center");
-    boxLabel(ctx, "الخادم", x + w - 134, innerTop + 28, 110, 36, "#111827", 13);
+    boxLabel(ctx, tr("الخادم", "Server"), x + w - 134, innerTop + 28, 110, 36, "#111827", 13);
   } else if (id === "html-css-js") {
     [
-      ["HTML", "البنية"],
-      ["CSS", "الشكل"],
-      ["JavaScript", "التفاعل"],
+      ["HTML", tr("البنية", "structure")],
+      ["CSS", tr("الشكل", "look")],
+      ["JavaScript", tr("التفاعل", "action")],
     ].forEach(([name, hint], index) => {
       const bx = x + 18 + index * ((w - 36) / 3);
       boxLabel(ctx, `${name} — ${hint}`, bx, innerTop + 20, (w - 48) / 3, 52, color, 12);
     });
   } else if (id === "media") {
-    ["JPEG صورة", "PNG شفافية", "نص للمراجعة"].forEach((label, index) => {
-      boxLabel(ctx, label, x + 20 + index * ((w - 40) / 3), innerTop + 24, (w - 56) / 3, 48, color, 12);
-    });
+    [tr("JPEG صورة", "JPEG photo"), tr("PNG شفافية", "PNG clear"), tr("نص للمراجعة", "Text to check")].forEach(
+      (label, index) => {
+        boxLabel(ctx, label, x + 20 + index * ((w - 40) / 3), innerTop + 24, (w - 56) / 3, 48, color, 12);
+      },
+    );
   } else if (id === "ux") {
-    ["هدف", "خطوات", "قياس", "تعديل"].forEach((label, index) => {
+    [tr("هدف", "Goal"), tr("خطوات", "Steps"), tr("قياس", "Measure"), tr("تعديل", "Change")].forEach((label, index) => {
       boxLabel(ctx, label, x + 16 + index * ((w - 32) / 4), innerTop + 28, (w - 48) / 4, 36, color, 12);
     });
   } else if (id === "collect") {
-    boxLabel(ctx, "أولية: استطلاع", x + 24, innerTop + 24, w / 2 - 36, 48, color, 13);
-    boxLabel(ctx, "ثانوية: تقرير", x + w / 2 + 12, innerTop + 24, w / 2 - 36, 48, "#111827", 13);
+    boxLabel(ctx, tr("أولية: استطلاع", "Primary: survey"), x + 24, innerTop + 24, w / 2 - 36, 48, color, 13);
+    boxLabel(ctx, tr("ثانوية: تقرير", "Secondary: report"), x + w / 2 + 12, innerTop + 24, w / 2 - 36, 48, "#111827", 13);
   } else if (id === "clean") {
-    ["تواريخ موحّدة", "قيم ناقصة", "قيم شاذة"].forEach((label, index) => {
-      boxLabel(ctx, label, x + 18 + index * ((w - 36) / 3), innerTop + 24, (w - 48) / 3, 44, color, 12);
-    });
+    [tr("تواريخ موحّدة", "Unified dates"), tr("قيم ناقصة", "Missing values"), tr("قيم شاذة", "Outliers")].forEach(
+      (label, index) => {
+        boxLabel(ctx, label, x + 18 + index * ((w - 36) / 3), innerTop + 24, (w - 48) / 3, 44, color, 12);
+      },
+    );
   } else if (id === "api") {
-    boxLabel(ctx, "تطبيقك", x + 24, innerTop + 28, 110, 36, color, 13);
+    boxLabel(ctx, tr("تطبيقك", "Your app"), x + 24, innerTop + 28, 110, 36, color, 13);
     boxLabel(ctx, "API", x + w / 2 - 40, innerTop + 28, 80, 36, "#111827", 13);
-    boxLabel(ctx, "بيانات", x + w - 134, innerTop + 28, 110, 36, color, 13);
+    boxLabel(ctx, tr("بيانات", "Data"), x + w - 134, innerTop + 28, 110, 36, color, 13);
   } else if (id === "charts") {
     ctx.fillStyle = color;
     [28, 48, 70].forEach((bar, index) => {
@@ -248,7 +256,7 @@ function drawFigure(
       ctx.fill();
     });
   } else if (id === "ml-types") {
-    ["بإشراف", "بلا إشراف", "تعزيز"].forEach((label, index) => {
+    [tr("بإشراف", "Supervised"), tr("بلا إشراف", "Unsupervised"), tr("تعزيز", "Reinforcement")].forEach((label, index) => {
       boxLabel(ctx, label, x + 18 + index * ((w - 36) / 3), innerTop + 24, (w - 48) / 3, 44, color, 13);
     });
   } else if (id === "neural") {
@@ -261,9 +269,9 @@ function drawFigure(
       });
     });
   } else {
-    boxLabel(ctx, "سؤال", x + 20, innerTop + 28, 110, 36, color, 13);
-    boxLabel(ctx, "نموذج", x + w / 2 - 45, innerTop + 28, 90, 36, "#111827", 13);
-    boxLabel(ctx, "الكتاب", x + w - 130, innerTop + 28, 110, 36, color, 13);
+    boxLabel(ctx, tr("سؤال", "Question"), x + 20, innerTop + 28, 110, 36, color, 13);
+    boxLabel(ctx, tr("نموذج", "Model"), x + w / 2 - 45, innerTop + 28, 90, 36, "#111827", 13);
+    boxLabel(ctx, tr("الكتاب", "Book"), x + w - 130, innerTop + 28, 110, 36, color, 13);
   }
   return h + 10;
 }
