@@ -15,6 +15,7 @@ import type { ClassSession } from "@/lib/class-session";
 import { weekdayName } from "@/lib/week-plan";
 import { BRAND } from "@/lib/brand";
 import { CHAPTERS } from "@/lib/curriculum";
+import { examPaperTitle } from "@/lib/faiz";
 import { buildClassRoster, parentWeeklyWhatsappText, siteUrl } from "@/lib/class-roster";
 import { buildReportPdf } from "@/lib/report-pdf";
 import { sendTelegramDocument, sendTelegramMessage, type TelegramLink } from "@/lib/telegram";
@@ -43,7 +44,8 @@ async function deliver(links: TelegramLink[], text: string, filename: string, pd
 }
 
 function examTitle(chapterId: string, locale: "ar" | "en"): string {
-  if (chapterId === "mix") return locale === "ar" ? "امتحان تجريبي مخلوط" : "Mixed mock exam";
+  const named = examPaperTitle(chapterId, locale);
+  if (named) return named;
   const chapter = CHAPTERS.find((item) => item.id === chapterId);
   if (!chapter) return chapterId;
   return locale === "ar" ? `الفصل ${chapter.id} — ${chapter.titleAr}` : `Chapter ${chapter.id} — ${chapter.titleEn}`;

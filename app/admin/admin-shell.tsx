@@ -10,6 +10,7 @@ import {
   markStudentAttendance,
   markStudentFee,
   openClassExam,
+  openFaizExam,
   openMixedMock,
   openSurprise,
   saveAnnouncement,
@@ -39,6 +40,7 @@ import { absenteeWhatsappText, sessionsInMonth, type ClassSession } from "@/lib/
 import { codeWhatsappText, feesWhatsappText, parentWeeklyWhatsappText, whatsappHref, type ClassRow } from "@/lib/class-roster";
 import { starLabel } from "@/lib/week-stars";
 import { CHAPTERS } from "@/lib/curriculum";
+import { examPaperTitle } from "@/lib/faiz";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 import type { AccessCode, CourseCertificate, DeviceLimit, EssayGrade, ExamSubmission, StudentDevice, TelegramLink } from "@/lib/access-store";
@@ -119,6 +121,7 @@ export function AdminShell({
   const [announceState, announceAction, announcePending] = useActionState(saveAnnouncement, initial);
   const [examState, examAction, examPending] = useActionState(openClassExam, initial);
   const [mixState, mixAction, mixPending] = useActionState(openMixedMock, initial);
+  const [faizState, faizAction, faizPending] = useActionState(openFaizExam, initial);
   const [closeState, closeAction, closePending] = useActionState(stopClassExam, initial);
   const [slotState, slotAction, slotPending] = useActionState(saveWeekSlot, initial);
   const [groupState, groupAction, groupPending] = useActionState(saveClassGroup, initial);
@@ -296,7 +299,8 @@ export function AdminShell({
           <p className={`mt-1 text-sm font-semibold ${liveWindow ? "text-emerald-700" : "text-foreground/70"}`}>
             {liveWindow
               ? `${t(locale, "examWindowOpen")} · ${
-                  liveWindow.chapterId === "mix" ? t(locale, "mixedMock") : liveWindow.chapterId
+                  examPaperTitle(liveWindow.chapterId, locale) ||
+                  (liveWindow.chapterId === "mix" ? t(locale, "mixedMock") : liveWindow.chapterId)
                 }${liveWindow.mode === "ministry" ? ` · ${t(locale, "ministryExam")}` : ""}`
               : t(locale, "examClosedNow")}
           </p>
@@ -531,6 +535,30 @@ export function AdminShell({
                 {t(locale, "startClassExam")}
               </button>
             </form>
+            <form action={faizAction} className="mt-4 grid gap-3 rounded-2xl bg-primary/5 p-3 ring-1 ring-primary/15">
+              <p className="text-sm font-semibold">{t(locale, "faizExam")}</p>
+              <p className="text-xs text-foreground/60">{t(locale, "faizExamHint")}</p>
+              <label className="grid gap-1 text-sm font-medium">
+                {t(locale, "examMinutes")}
+                <input
+                  name="minutes"
+                  type="number"
+                  min={5}
+                  max={180}
+                  step={5}
+                  defaultValue={60}
+                  className="h-11 rounded-2xl border border-primary/15 bg-white px-3 text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={faizPending}
+                className="h-12 rounded-full bg-primary text-sm font-semibold text-white"
+              >
+                {t(locale, "startFaizExam")}
+              </button>
+            </form>
+            {faizState.error ? <p className="mt-2 text-sm text-red-700">{faizState.error}</p> : null}
             <form action={mixAction} className="mt-4 grid gap-3 rounded-2xl bg-accent/15 p-3">
               <p className="text-sm font-semibold">{t(locale, "mixedMock")}</p>
               <p className="text-xs text-foreground/60">{t(locale, "mixedMockHint")}</p>
@@ -1408,7 +1436,7 @@ export function AdminShell({
                   <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                     <strong>{exam.name}</strong>
                     <span className="text-foreground/55">
-                      {t(locale, "chapterExam")} {exam.chapterId} · {exam.objectiveScore}/{exam.objectiveTotal}
+                      {t(locale, "chapterExam")} {examPaperTitle(exam.chapterId, locale) || exam.chapterId} · {exam.objectiveScore}/{exam.objectiveTotal}
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-foreground/45">{exam.submittedAt.replace("T", " ").slice(0, 16)}</p>

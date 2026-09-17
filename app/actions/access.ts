@@ -28,6 +28,7 @@ import {
 } from "@/lib/access-store";
 import { parseBulkStudents } from "@/lib/class-clock";
 import { isChapterId } from "@/lib/curriculum";
+import { FAIZ_PAPER_ID } from "@/lib/faiz";
 import { bindStudentDevice, setStudentCookie } from "@/lib/student-session";
 import { parseDeviceLimit } from "@/lib/devices";
 import { listVisibleCodes, rememberIssuedCode } from "@/lib/teacher-roster";
@@ -263,6 +264,23 @@ export async function openMixedMock(
   const minutes = Number(read(formData, "minutes") || "90");
   const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 90 * 60;
   const window = await startExamWindow("mix", duration, "ministry");
+  return {
+    error: null,
+    ok: true,
+    examChapterId: window.chapterId,
+    examClosesAt: window.closesAt,
+    examMode: window.mode,
+  };
+}
+
+export async function openFaizExam(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!(await isTeacher())) return { error: "FORBIDDEN" };
+  const minutes = Number(read(formData, "minutes") || "60");
+  const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 60 * 60;
+  const window = await startExamWindow(FAIZ_PAPER_ID, duration, "class");
   return {
     error: null,
     ok: true,

@@ -1,4 +1,5 @@
 import { CHAPTERS, isChapterId, type ChapterId } from "@/lib/curriculum";
+import { faizExam } from "@/lib/faiz-exam";
 import { questionsForChapter, type HomeworkQuestion } from "@/lib/homework-bank";
 import { analysisForChapter } from "@/lib/question-bank";
 import { shuffled } from "@/lib/shuffle";
@@ -25,7 +26,7 @@ export type EssayQuestion = {
   points: number;
 };
 
-export type ExamPaperId = ChapterId | "mix";
+export type ExamPaperId = ChapterId | "mix" | "faiz";
 
 export type ChapterExam = {
   chapterId: ExamPaperId;
@@ -1020,6 +1021,13 @@ export function mixedMinistryExam(seed = examPaperSeed("mix")): ChapterExam {
 }
 
 export function examForChapter(id: string, seed = examPaperSeed(id)): ChapterExam | undefined {
+  if (id === "faiz") {
+    const paper = faizExam(seed);
+    if (paper.objectives.length < EXAM_OBJECTIVE_COUNT || paper.essays.length < EXAM_ESSAY_COUNT) {
+      return undefined;
+    }
+    return paper;
+  }
   if (id === "mix") {
     const objectives = pickObjectives(
       uniqueById(CHAPTERS.flatMap((chapter) => chapterObjectivePool(chapter.id))),

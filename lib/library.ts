@@ -9,6 +9,8 @@
 
 export type BookLanguage = "ar" | "en";
 
+export type BookKind = "ministry" | "workbook";
+
 export type Book = {
   slug: string;
   /** Title as printed on the ministry page. */
@@ -16,6 +18,7 @@ export type Book = {
   titleEn: string;
   language: BookLanguage;
   part: 1 | 2;
+  kind?: BookKind;
   /** Path served by Next from `public/`. */
   file: string;
   sourceUrl: string;
@@ -81,6 +84,22 @@ export const BOOKS: Book[] = [
   },
 ];
 
+export const FAIZ_BOOK: Book = {
+  slug: "faiz-programming-ar-part1",
+  title: "الفائز — برمجة 2 بكالوريا الجزء الأول 2027",
+  titleEn: "Al-Faiz — Programming, 2nd Baccalaureate, Part 1 (2027)",
+  language: "ar",
+  part: 1,
+  kind: "workbook",
+  file: "/books/faiz-programming-ar-part1.pdf",
+  sourceUrl: "/books/faiz-programming-ar-part1.pdf",
+  sizeMb: 60.4,
+};
+
 export function getBook(slug: string): Book | undefined {
-  return BOOKS.find((book) => book.slug === slug);
+  return allBooks().find((book) => book.slug === slug);
+}
+
+export function allBooks(): Book[] {
+  return [...BOOKS, FAIZ_BOOK];
 }

@@ -25,8 +25,8 @@ export function BookViewer({
           {backLabel}
         </Link>
         <span className="inline-flex items-center rounded-full bg-primary/8 px-2.5 py-1 text-xs font-medium text-primary">
-          Official copy · {book.language === "ar" ? "العربية" : "English"} ·
-          Part {book.part}
+          {book.kind === "workbook" ? "Al-Faiz" : "Official copy"} ·{" "}
+          {book.language === "ar" ? "العربية" : "English"} · Part {book.part}
         </span>
       </div>
 
@@ -51,15 +51,17 @@ export function BookViewer({
             <Download className="size-4" aria-hidden="true" />
             Download PDF
           </a>
-          <a
-            href={book.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-primary/15 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
-          >
-            Official copy
-            <ExternalLink className="size-3.5" aria-hidden="true" />
-          </a>
+          {book.kind === "workbook" ? null : (
+            <a
+              href={book.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-primary/15 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
+            >
+              Official copy
+              <ExternalLink className="size-3.5" aria-hidden="true" />
+            </a>
+          )}
         </div>
       </div>
 

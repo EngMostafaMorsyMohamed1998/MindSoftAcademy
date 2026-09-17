@@ -5,6 +5,7 @@ import { chapterHomeworkDone, isChapterUnlocked } from "@/lib/chapter-progress";
 import { examWindowOpen } from "@/lib/class-clock";
 import { studentProgress } from "@/lib/student-progress";
 import { CHAPTERS } from "@/lib/curriculum";
+import { FAIZ_PAPER_ID } from "@/lib/faiz";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 
@@ -20,6 +21,20 @@ export default async function ExamsIndexPage() {
       <h1 className="font-serif text-3xl">{t(locale, "navExams")}</h1>
       <p className="mt-2 text-sm text-foreground/65">{t(locale, "examWindowHint")}</p>
       <ul className="mt-6 space-y-3">
+        {examWindowOpen(examWindow, FAIZ_PAPER_ID) ? (
+          <li>
+            <Link
+              href={`/dashboard/exam/${FAIZ_PAPER_ID}`}
+              className="flex items-center justify-between rounded-2xl bg-white p-4 ring-2 ring-primary"
+            >
+              <span>
+                <span className="block font-semibold">{t(locale, "faizExam")}</span>
+                <span className="text-xs text-foreground/55">{t(locale, "faizExamHint")}</span>
+              </span>
+              <span className="text-sm font-semibold text-primary">{t(locale, "startExam")}</span>
+            </Link>
+          </li>
+        ) : null}
         {examWindowOpen(examWindow, "mix") ? (
           <li>
             <Link

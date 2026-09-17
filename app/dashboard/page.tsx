@@ -53,6 +53,7 @@ export default async function DashboardHomePage() {
   const shortcuts = [
     { href: "/dashboard/leaderboard", label: t(locale, "navLeaderboard"), icon: Trophy },
     { href: "/dashboard/chapters", label: t(locale, "navChapters"), icon: BookOpen },
+    { href: "/dashboard/faiz", label: t(locale, "navFaiz"), icon: BookOpen },
     { href: "/dashboard/exams", label: t(locale, "navExams"), icon: ClipboardCheck },
     { href: "/dashboard/games", label: t(locale, "navGames"), icon: Gamepad2 },
     { href: "/dashboard/booklet", label: t(locale, "navBooklet"), icon: Printer },

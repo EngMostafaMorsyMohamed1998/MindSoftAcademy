@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BOOKS, getBook } from "@/lib/library";
+import { allBooks, getBook } from "@/lib/library";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale";
 import { BookViewer } from "../../library/book-viewer";
 
 export function generateStaticParams() {
-  return BOOKS.map((book) => ({ slug: book.slug }));
+  return allBooks().map((book) => ({ slug: book.slug }));
 }
 
 export async function generateMetadata({
@@ -35,12 +37,14 @@ export default async function CourseBookPage({
   if (!book) {
     notFound();
   }
+  const locale = await getLocale();
+  const workbook = book.kind === "workbook";
 
   return (
     <BookViewer
       book={book}
-      backHref="/dashboard/courses"
-      backLabel="Courses"
+      backHref={workbook ? "/dashboard/faiz" : "/dashboard/courses"}
+      backLabel={workbook ? t(locale, "navFaiz") : t(locale, "navBook")}
       page={Number.isFinite(page) && page > 0 ? page : undefined}
     />
   );

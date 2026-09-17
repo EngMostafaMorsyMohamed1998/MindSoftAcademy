@@ -1,4 +1,5 @@
 import { isChapterId } from "@/lib/curriculum";
+import { isFaizPaper } from "@/lib/faiz";
 
 export const REVIEW_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -34,9 +35,12 @@ export function parseExamChapter(raw: string): { chapterId: string; mode: ExamMo
   if (raw === "mix" || raw === "mixm") {
     return { chapterId: "mix", mode: "ministry" };
   }
+  if (raw === "faiz" || raw === "faizm") {
+    return { chapterId: "faiz", mode: raw.endsWith("m") ? "ministry" : "class" };
+  }
   if (raw.endsWith("m")) {
     const chapterId = raw.slice(0, -1);
-    if (isChapterId(chapterId)) return { chapterId, mode: "ministry" };
+    if (isChapterId(chapterId) || isFaizPaper(chapterId)) return { chapterId, mode: "ministry" };
   }
   return { chapterId: raw, mode: "class" };
 }
