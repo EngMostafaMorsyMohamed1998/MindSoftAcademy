@@ -177,7 +177,7 @@ export function BookletFigure({
     return (
       <Frame locale={locale} color={color} titleAr="شكل 5 — المصادقة" titleEn="Fig 5 — Authentication" captionAr="المصادقة بعاملين: شيء تعرفه + شيء تملكه أو أنت عليه." captionEn="Two factors: something you know plus something you have or are.">
         <div className="flex flex-col items-center gap-2">
-          <Pill label="2FA" color={color} dark />
+          <Pill label={ar ? "تحقق بخطوتين" : "Two-step check"} color={color} dark />
           <div className="grid w-full grid-cols-3 gap-2">
             {bits.map((bit) => (
               <Pill key={bit} label={bit} color={color} />
@@ -223,19 +223,19 @@ export function BookletFigure({
 
   if (id === "http") {
     return (
-      <Frame locale={locale} color={color} titleAr="شكل 8 — GET و POST" titleEn="Fig 8 — GET and POST" captionAr="GET يجلب من غير تغيير مقصود. POST يرسل عشان ينشئ أو يعالج." captionEn="GET fetches without intending to change. POST sends data to create or process.">
+      <Frame locale={locale} color={color} titleAr="شكل 8 — طلب قراءة وطلب إرسال" titleEn="Fig 8 — Read and send" captionAr="طلب القراءة يجلب من غير تغيير مقصود. طلب الإرسال يرسل عشان ينشئ أو يعالج." captionEn="A read request fetches without intending to change. A send request creates or processes.">
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2">
             <Pill label={ar ? "المتصفح" : "Browser"} color={color} />
             <span className="text-xs font-bold" style={{ color }}>
-              {ar ? "← GET" : "GET →"}
+              {ar ? "← قراءة" : "Read →"}
             </span>
             <Pill label={ar ? "الخادم" : "Server"} color={color} dark />
           </div>
           <div className="flex items-center justify-center gap-2">
             <Pill label={ar ? "المتصفح" : "Browser"} color={color} />
             <span className="text-xs font-bold" style={{ color }}>
-              {ar ? "← POST" : "POST →"}
+              {ar ? "← إرسال" : "Send →"}
             </span>
             <Pill label={ar ? "الخادم" : "Server"} color={color} dark />
           </div>
@@ -247,14 +247,14 @@ export function BookletFigure({
   if (id === "html-css-js") {
     const trio = ar
       ? [
-          { label: "HTML — البنية", hint: "عناوين وفقرات" },
-          { label: "CSS — الشكل", hint: "ألوان وتنسيق" },
-          { label: "JavaScript — التفاعل", hint: "بعد التحميل" },
+          { label: "هيكل الصفحة — البنية", hint: "عناوين وفقرات" },
+          { label: "تنسيق الصفحة — الشكل", hint: "ألوان وتنسيق" },
+          { label: "لغة التفاعل", hint: "بعد التحميل" },
         ]
       : [
-          { label: "HTML — structure", hint: "Headings and links" },
-          { label: "CSS — look", hint: "Colour and layout" },
-          { label: "JavaScript — action", hint: "After load" },
+          { label: "Page structure", hint: "Headings and links" },
+          { label: "Page style", hint: "Colour and layout" },
+          { label: "Page action", hint: "After load" },
         ];
     return (
       <Frame locale={locale} color={color} titleAr="شكل 9 — ثلاثية الصفحة" titleEn="Fig 9 — Page trio" captionAr="الهيكل، بعدين الشكل، بعدين الحركة." captionEn="Structure, then look, then motion.">
@@ -277,17 +277,17 @@ export function BookletFigure({
   if (id === "media") {
     const items = ar
       ? [
-          { label: "JPEG", hint: "صور فوتوغرافية" },
-          { label: "PNG", hint: "شفافية وحواف" },
+          { label: "صورة مضغوطة", hint: "صور فوتوغرافية" },
+          { label: "صورة شفافة", hint: "شفافية وحواف" },
           { label: "النص", hint: "دقة ومراجعة" },
         ]
       : [
-          { label: "JPEG", hint: "Photographs" },
-          { label: "PNG", hint: "Transparency" },
+          { label: "Compressed photo", hint: "Photographs" },
+          { label: "Clear-background photo", hint: "Transparency" },
           { label: "Text", hint: "Exact review" },
         ];
     return (
-      <Frame locale={locale} color={color} titleAr="شكل 10 — اختيار الوسيط" titleEn="Fig 10 — Pick the medium" captionAr="JPEG للصورة، PNG للرسوم الشفافة، والنص لما تحتاج ترجع بسرعة." captionEn="JPEG for photos, PNG for sharp graphics, text when you need to look up.">
+      <Frame locale={locale} color={color} titleAr="شكل 10 — اختيار الوسيط" titleEn="Fig 10 — Pick the medium" captionAr="الصورة المضغوطة للتصوير، والصورة الشفافة للرسوم، والنص لما تحتاج ترجع بسرعة." captionEn="Use a compressed photo for pictures, a clear-background image for graphics, and text when you need to look up.">
         <div className="grid grid-cols-3 gap-2">
           {items.map((item) => (
             <div key={item.label} className="rounded-2xl bg-primary/5 px-2 py-3 text-center">
@@ -346,11 +346,11 @@ export function BookletFigure({
 
   if (id === "api") {
     return (
-      <Frame locale={locale} color={color} titleAr="شكل 14 — البيانات المفتوحة و API" titleEn="Fig 14 — Open data & API" captionAr="اطلب الخدمة بطريقة متفق عليها، واذكر المصدر." captionEn="Ask in an agreed way, and cite the source.">
+      <Frame locale={locale} color={color} titleAr="شكل 14 — البيانات المفتوحة والواجهة البرمجية" titleEn="Fig 14 — Open data and the data door" captionAr="اطلب الخدمة بطريقة متفق عليها، واذكر المصدر." captionEn="Ask in an agreed way, and cite the source.">
         <div className="flex items-center justify-center gap-2">
           <Pill label={ar ? "تطبيقك" : "Your app"} color={color} />
           <Arrow flip={ar} />
-          <Pill label="API" color={color} dark />
+          <Pill label={ar ? "واجهة برمجية" : "Data door"} color={color} dark />
           <Arrow flip={ar} />
           <Pill label={ar ? "البيانات" : "Data"} color={color} />
         </div>

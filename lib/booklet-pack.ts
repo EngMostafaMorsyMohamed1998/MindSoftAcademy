@@ -1,8 +1,10 @@
+import { bookletSafe, hasArabic } from "@/lib/booklet-lang";
 import { CHAPTERS, isChapterId, type Chapter, type ChapterId } from "@/lib/curriculum";
 import { FAIZ_UNITS } from "@/lib/faiz";
 import { FAIZ_ESSAYS, FAIZ_OBJECTIVES } from "@/lib/faiz-exam";
 import { FAIZ_NOTES, type FaizUnitNote } from "@/lib/faiz-notes";
-import { questionsForChapter, type HomeworkQuestion } from "@/lib/homework-bank";
+import { questionsForChapter, questionsForLesson, type HomeworkQuestion } from "@/lib/homework-bank";
+import { LESSON_NOTES } from "@/lib/lessons";
 import { analysisForChapter, BANK_FACTS } from "@/lib/question-bank";
 import type { AnalysisPrompt, BankFact } from "@/lib/question-bank/types";
 import type { Locale } from "@/lib/locale";
@@ -60,27 +62,27 @@ export type BookletFaizPack = {
   answers: BookletAnswer[];
 };
 
-const ARABIC = /[\u0600-\u06FF]/;
-
 export function bookletLetters(locale: Locale): string[] {
   return locale === "ar" ? ["أ", "ب", "ج", "د"] : ["A", "B", "C", "D"];
 }
 
+export function bookletPrompt(locale: Locale, promptAr: string, promptEn: string): string {
+  return bookletSafe(locale, locale === "ar" ? promptAr : promptEn);
+}
+
 export function bookletOptions(locale: Locale, optionsAr: string[], optionsEn: string[]): string[] {
-  const primary = locale === "ar" ? optionsAr : optionsEn;
-  const secondary = locale === "ar" ? optionsEn : optionsAr;
-  const count = Math.min(4, Math.max(primary.length, secondary.length));
+  const count = Math.min(4, Math.max(optionsAr.length, optionsEn.length));
   const rows: string[] = [];
   for (let index = 0; index < count; index += 1) {
-    const wanted = primary[index]?.trim() ?? "";
-    const other = secondary[index]?.trim() ?? "";
-    if (locale === "en") {
-      if (wanted && !ARABIC.test(wanted)) rows.push(wanted);
-      else if (other && !ARABIC.test(other)) rows.push(other);
-      else rows.push(wanted || other);
-    } else if (wanted && ARABIC.test(wanted)) rows.push(wanted);
-    else if (other && ARABIC.test(other)) rows.push(other);
-    else rows.push(wanted || other);
+    const ar = optionsAr[index]?.trim() ?? "";
+    const en = optionsEn[index]?.trim() ?? "";
+    if (locale === "ar") {
+      const pick = hasArabic(ar) ? ar : hasArabic(en) ? en : ar || en;
+      rows.push(bookletSafe("ar", pick));
+    } else {
+      const pick = en && !hasArabic(en) ? en : ar && !hasArabic(ar) ? ar : en || ar;
+      rows.push(bookletSafe("en", pick));
+    }
   }
   return rows;
 }
@@ -155,16 +157,30 @@ function withAnswers(rows: BookletMcq[]): BookletAnswer[] {
   return rows.map((row) => ({ id: row.id, index: row.correctIndex }));
 }
 
+function usableMcq(row: HomeworkQuestion): boolean {
+  return row.kind === "mcq" && row.optionsAr.length >= 2 && Boolean(row.promptAr.trim() || row.promptEn.trim());
+}
+
 function chapterMcqPool(chapterId: ChapterId): BookletMcq[] {
   return shuffled(
-    questionsForChapter(chapterId).filter((row) => row.kind === "mcq" && row.optionsAr.length >= 2 && row.promptAr.trim()),
+    questionsForChapter(chapterId).filter(usableMcq),
     2027 + Number(chapterId) * 31,
   ).map(asMcq);
 }
 
+export const BOOKLET_LESSON_DRILLS = 6;
+
+export function bookletLessonPractice(lessonId: string): BookletMcq[] {
+  const chapterSeed = Number(lessonId.split("-")[0] ?? "1") * 31;
+  return shuffled(questionsForLesson(lessonId).filter(usableMcq), 2027 + chapterSeed + lessonId.length).slice(0, BOOKLET_LESSON_DRILLS).map(asMcq);
+}
+
+function chapterLessonIds(chapterId: ChapterId): string[] {
+  return LESSON_NOTES.filter((note) => note.chapterId === chapterId).map((note) => note.id);
+}
+
 export function bookletChapterPack(chapter: Chapter): BookletChapterPack {
-  const pool = chapterMcqPool(chapter.id);
-  const practice = pool.slice(0, BOOKLET_PRACTICE);
+  const practice = chapterLessonIds(chapter.id).flatMap((id) => bookletLessonPractice(id));
   const essays = analysisForChapter(chapter.id).slice(0, BOOKLET_CHAPTER_ESSAYS).map(analysisAsEssay);
   const scenes = shuffled(
     BANK_FACTS.filter((row) => row.chapterId === chapter.id),
@@ -186,9 +202,10 @@ export function isBookletScope(value: string | null | undefined): value is Bookl
 }
 
 export function bookletHomeworkForChapter(chapter: Chapter): BookletHomeworkPack {
-  const pool = chapterMcqPool(chapter.id);
-  const mcq = pool.slice(BOOKLET_PRACTICE, BOOKLET_PRACTICE + BOOKLET_HOMEWORK_PER_CHAPTER);
-  const picked = mcq.length ? mcq : pool.slice(0, BOOKLET_HOMEWORK_PER_CHAPTER);
+  const used = new Set(chapterLessonIds(chapter.id).flatMap((id) => bookletLessonPractice(id).map((row) => row.id)));
+  const pool = chapterMcqPool(chapter.id).filter((row) => !used.has(row.id));
+  const mcq = pool.slice(0, BOOKLET_HOMEWORK_PER_CHAPTER);
+  const picked = mcq.length ? mcq : chapterMcqPool(chapter.id).slice(0, BOOKLET_HOMEWORK_PER_CHAPTER);
   const essays = analysisForChapter(chapter.id)
     .slice(BOOKLET_CHAPTER_ESSAYS, BOOKLET_CHAPTER_ESSAYS + BOOKLET_HOMEWORK_ESSAYS)
     .map(analysisAsEssay);

@@ -1,3 +1,4 @@
+import { bookletSafe, termArt } from "@/lib/booklet-lang";
 import type { TextbookPage } from "@/lib/textbook-pages";
 import type { Locale } from "@/lib/locale";
 
@@ -5,7 +6,7 @@ function PhotoArt({ art }: { art: string }) {
   return (
     <svg viewBox="0 0 320 200" className="h-full w-full" aria-hidden>
       <rect width="320" height="200" fill="#e8eef6" />
-      {art === "nest" ? (
+      {art === "nest" || art === "ai" ? (
         <>
           <circle cx="160" cy="100" r="74" fill="#0c2d6b" />
           <circle cx="160" cy="100" r="50" fill="#1d4ed8" />
@@ -24,7 +25,7 @@ function PhotoArt({ art }: { art: string }) {
           <rect x="70" y="110" width="180" height="56" rx="8" fill="#0c2d6b" />
           <path d="M110 84 L110 110 M210 84 L210 110" stroke="#334155" strokeWidth="4" />
         </>
-      ) : art === "web" || art === "http" || art === "html" ? (
+      ) : art === "web" || art === "http" || art === "html" || art === "cloud" || art === "ux" ? (
         <>
           <rect x="36" y="28" width="248" height="144" rx="12" fill="#fff" stroke="#cbd5e1" />
           <rect x="36" y="28" width="248" height="30" fill="#0c2d6b" />
@@ -34,7 +35,7 @@ function PhotoArt({ art }: { art: string }) {
           <rect x="54" y="100" width="210" height="8" rx="4" fill="#cbd5e1" />
           <rect x="54" y="118" width="180" height="8" rx="4" fill="#cbd5e1" />
         </>
-      ) : art === "chart" || art === "regress" || art === "data" || art === "clean" ? (
+      ) : art === "chart" || art === "regress" || art === "data" || art === "clean" || art === "sample" || art === "api" ? (
         <>
           <rect x="44" y="28" width="232" height="144" rx="10" fill="#fff" />
           <rect x="68" y="118" width="28" height="36" fill="#0c2d6b" />
@@ -62,7 +63,7 @@ function PhotoArt({ art }: { art: string }) {
           <rect x="64" y="50" width="54" height="36" fill="#c4a35a" />
           <rect x="202" y="50" width="54" height="36" fill="#7f1d1d" />
         </>
-      ) : art === "incident" ? (
+      ) : art === "incident" || art === "phish" || art === "fake" ? (
         <>
           <polygon points="160,36 250,164 70,164" fill="#f59e0b" />
           <rect x="152" y="78" width="16" height="48" fill="#111827" />
@@ -95,14 +96,14 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
         <span className="text-sm font-bold">
           {ar ? "الدرس" : "Lesson"} {page.id}
         </span>
-        <span className="text-sm font-semibold">{ar ? page.titleAr : page.titleEn}</span>
+        <span className="text-sm font-semibold">{bookletSafe(locale, ar ? page.titleAr : page.titleEn)}</span>
       </header>
 
       <div className="px-4 py-5 sm:px-6">
         <p className="textbook-ask rounded-sm border border-amber-200 bg-[#fff8e8] px-3 py-3 text-[15px] font-semibold leading-8">
-          <span className="textbook-ask-mark">؟؟</span>{" "}
+          <span className="textbook-ask-mark">{ar ? "؟؟" : "??"}</span>{" "}
           <span className="text-zinc-500">{ar ? "السؤال الرئيسي:" : "Main question:"}</span>{" "}
-          {ar ? page.questionAr : page.questionEn}
+          {bookletSafe(locale, ar ? page.questionAr : page.questionEn)}
         </p>
 
         <div className="textbook-figure mt-5 grid items-start gap-4 sm:grid-cols-[200px_minmax(0,1fr)]">
@@ -121,56 +122,80 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
               <span className="me-2 inline-flex size-6 items-center justify-center rounded-full bg-[#0c2d6b] text-[11px] text-white">
                 1
               </span>
-              {ar ? page.sectionAr : page.sectionEn}
+              {bookletSafe(locale, ar ? page.sectionAr : page.sectionEn)}
             </h4>
-            <p className="mt-2 text-sm leading-7 text-zinc-700">{ar ? page.introAr : page.introEn}</p>
+            <p className="mt-2 text-sm leading-7 text-zinc-700">{bookletSafe(locale, ar ? page.introAr : page.introEn)}</p>
             {points.length ? (
               <ol className="mt-3 list-decimal space-y-1.5 ps-5 text-sm leading-7 text-zinc-700">
                 {points.map((point) => (
-                  <li key={point}>{point}</li>
+                  <li key={point}>{bookletSafe(locale, point)}</li>
                 ))}
               </ol>
             ) : null}
           </div>
         </div>
 
-        <table className="textbook-table mt-5 w-full border-collapse text-sm">
-          <colgroup>
-            {colCount === 2 ? (
-              <>
-                <col className="w-[28%]" />
-                <col className="w-[72%]" />
-              </>
-            ) : (
-              <>
-                <col className="w-[22%]" />
-                <col className="w-[40%]" />
-                <col className="w-[38%]" />
-              </>
-            )}
-          </colgroup>
-          <thead>
-            <tr>
-              {headers.map((header) => (
-                <th key={header}>{header}</th>
+        {page.headersAr[0] === "المصطلح" || page.headersEn[0] === "Term" ? (
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {page.rows.map((row, index) => {
+              const term = bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""));
+              const meaning = bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""));
+              return (
+                <div key={`${page.id}-term-${index}`} className="flex gap-3 rounded-2xl bg-[#f4f7fb] p-3 ring-1 ring-zinc-200">
+                  <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-white">
+                    <PhotoArt art={termArt(term, meaning)} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-[#0c2d6b]">{term}</p>
+                    <p className="mt-1 text-sm leading-6 text-zinc-700">{meaning}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <table className="textbook-table mt-5 w-full border-collapse text-sm">
+            <colgroup>
+              {colCount === 2 ? (
+                <>
+                  <col className="w-[28%]" />
+                  <col className="w-[72%]" />
+                </>
+              ) : (
+                <>
+                  <col className="w-[22%]" />
+                  <col className="w-[40%]" />
+                  <col className="w-[38%]" />
+                </>
+              )}
+            </colgroup>
+            <thead>
+              <tr>
+                {headers.map((header) => (
+                  <th key={header}>{bookletSafe(locale, header)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {page.rows.map((row, index) => (
+                <TextbookRows
+                  key={`${page.id}-${index}`}
+                  cells={(ar ? row.cellsAr : row.cellsEn).map((cell) => bookletSafe(locale, cell))}
+                  example={
+                    row.exampleAr || row.exampleEn
+                      ? bookletSafe(locale, (ar ? row.exampleAr : row.exampleEn) ?? "")
+                      : undefined
+                  }
+                  cols={colCount}
+                  zebra={index % 2 === 1}
+                />
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {page.rows.map((row, index) => (
-              <TextbookRows
-                key={`${page.id}-${index}`}
-                cells={ar ? row.cellsAr : row.cellsEn}
-                example={ar ? row.exampleAr : row.exampleEn}
-                cols={colCount}
-                zebra={index % 2 === 1}
-              />
-            ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        )}
 
         <p className="textbook-takeaway mt-5 rounded-sm bg-[#fff8e8] px-3 py-3 text-sm leading-7 ring-1 ring-amber-200">
-          <strong>{ar ? "الخلاصة:" : "Takeaway:"}</strong> {ar ? page.takeawayAr : page.takeawayEn}
+          <strong>{ar ? "الخلاصة:" : "Takeaway:"}</strong> {bookletSafe(locale, ar ? page.takeawayAr : page.takeawayEn)}
         </p>
       </div>
 

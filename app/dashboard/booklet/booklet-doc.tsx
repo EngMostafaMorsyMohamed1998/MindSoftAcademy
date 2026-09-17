@@ -2,12 +2,15 @@ import type { ReactNode } from "react";
 import { BookletFigure, CHAPTER_FIGURES, SceneCard } from "@/components/booklet-figures";
 import { BookletMindMap } from "@/components/booklet-mind-map";
 import { TextbookLesson } from "@/components/textbook-page";
+import { bookletSafe } from "@/lib/booklet-lang";
 import {
   bookletAnswerMark,
   bookletChapterPack,
   bookletHomeworkForChapter,
+  bookletLessonPractice,
   bookletLetters,
   bookletOptions,
+  bookletPrompt,
   buildBookletDocument,
   type BookletChapterPack,
   type BookletEssay,
@@ -20,11 +23,11 @@ import type { Locale } from "@/lib/locale";
 import { mindMapForChapter, mindMapForFaiz } from "@/lib/mind-maps";
 import { textbookPageFor } from "@/lib/textbook-pages";
 
-function PrintSection({ n, title, children }: { n: string; title: string; children: ReactNode }) {
+function PrintSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="booklet-section mt-7">
       <p className="booklet-section-title mb-3 inline-flex rounded-full bg-primary px-3 py-1 text-xs font-bold text-white">
-        {n} — {title}
+        {title}
       </p>
       <div>{children}</div>
     </section>
@@ -60,7 +63,7 @@ function McqBlock({ locale, rows }: { locale: Locale; rows: BookletMcq[] }) {
         return (
           <li key={row.id} className="booklet-q rounded-2xl border border-primary/15 bg-primary/[0.04] p-4">
             <p className="text-sm font-semibold leading-7">
-              <span className="ms-1 font-bold text-primary">{index + 1}.</span> {ar ? row.promptAr : row.promptEn}
+              <span className="ms-1 font-bold text-primary">{index + 1}.</span> {bookletPrompt(locale, row.promptAr, row.promptEn)}
             </p>
             <ul className="mt-3 space-y-2.5">
               {options.map((option, optionIndex) => (
@@ -88,7 +91,7 @@ function EssayBlock({ locale, rows }: { locale: Locale; rows: BookletEssay[] }) 
           <p className="text-sm font-semibold">
             {ar ? "مقالي" : "Essay"} {index + 1}
           </p>
-          <p className="mt-2 text-sm leading-relaxed">{ar ? row.promptAr : row.promptEn}</p>
+          <p className="mt-2 text-sm leading-relaxed">{bookletPrompt(locale, row.promptAr, row.promptEn)}</p>
           <WriteLines count={5} />
         </article>
       ))}
@@ -107,7 +110,7 @@ function EssayAnswers({ locale, title, rows }: { locale: Locale; title: string; 
           <p className="text-xs font-semibold text-primary/70">
             {ar ? "مقالي" : "Essay"} {index + 1}
           </p>
-          <p className="mt-1 text-sm leading-relaxed">{ar ? row.guideAr : row.guideEn}</p>
+          <p className="mt-1 text-sm leading-relaxed">{bookletSafe(locale, ar ? row.guideAr : row.guideEn)}</p>
         </article>
       ))}
     </div>
@@ -139,18 +142,18 @@ function ChapterBlock({ locale, pack }: { locale: Locale; pack: BookletChapterPa
         {chapter.part === 1 ? (ar ? "الجزء الأول" : "Part 1") : ar ? "الجزء الثاني" : "Part 2"}
       </p>
       <h3 className="mt-1 text-2xl font-semibold">
-        {chapter.id}. {ar ? chapter.titleAr : chapter.titleEn}
+        {chapter.id}. {bookletSafe(locale, ar ? chapter.titleAr : chapter.titleEn)}
       </h3>
-      <p className="mt-1 text-sm leading-7 text-foreground/65">{ar ? chapter.blurbAr : chapter.blurbEn}</p>
+      <p className="mt-1 text-sm leading-7 text-foreground/65">{bookletSafe(locale, ar ? chapter.blurbAr : chapter.blurbEn)}</p>
 
       {map ? (
-        <PrintSection n="1" title={ar ? "الخريطة الذهنية" : "Mind map"}>
+        <PrintSection title={ar ? "الخريطة الذهنية" : "Mind map"}>
           <BookletMindMap locale={locale} root={map} color={chapter.color} accent={chapter.accent} />
         </PrintSection>
       ) : null}
 
       {figures.length ? (
-        <PrintSection n="2" title={ar ? "الرسوم والأشكال" : "Figures"}>
+        <PrintSection title={ar ? "الرسوم والأشكال" : "Figures"}>
           <div className="grid gap-4 md:grid-cols-2">
             {figures.map((id) => (
               <BookletFigure key={id} id={id} locale={locale} color={chapter.color} />
@@ -160,37 +163,41 @@ function ChapterBlock({ locale, pack }: { locale: Locale; pack: BookletChapterPa
       ) : null}
 
       {pack.scenes.length ? (
-        <PrintSection n="3" title={ar ? "مواقف من الحياة" : "Real-life scenes"}>
+        <PrintSection title={ar ? "مواقف من الحياة" : "Real-life scenes"}>
           <div className="grid gap-4 sm:grid-cols-3">
             {pack.scenes.map((scene) => (
               <SceneCard
                 key={scene.id}
                 locale={locale}
                 color={chapter.color}
-                term={ar ? scene.termAr : scene.termEn}
-                scene={ar ? scene.sceneAr : scene.sceneEn}
+                term={bookletSafe(locale, ar ? scene.termAr : scene.termEn)}
+                scene={bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn)}
               />
             ))}
           </div>
         </PrintSection>
       ) : null}
 
-      <PrintSection n="4" title={ar ? "شرح الدروس" : "Lesson notes"}>
-        {notes.map((note) => {
-          const page = textbookPageFor(note.id);
-          if (!page) return null;
-          return <TextbookLesson key={note.id} locale={locale} page={page} />;
-        })}
-      </PrintSection>
+      {notes.map((note) => {
+        const page = textbookPageFor(note.id);
+        if (!page) return null;
+        const drills = bookletLessonPractice(note.id);
+        return (
+          <div key={note.id} className="print-break">
+            <TextbookLesson locale={locale} page={page} />
+            {drills.length ? (
+              <PrintSection title={ar ? `تدريبات الدرس ${page.id}` : `Lesson ${page.id} practice`}>
+                <p className="text-xs text-foreground/55">
+                  {ar ? "ظلّل الاختيار. الإجابات في آخر الملزمة." : "Mark a choice. Answers are at the end of this booklet."}
+                </p>
+                <McqBlock locale={locale} rows={drills} />
+              </PrintSection>
+            ) : null}
+          </div>
+        );
+      })}
 
-      <PrintSection n="5" title={ar ? "تدريبات الفصل" : "Chapter practice"}>
-        <p className="text-xs text-foreground/55">
-          {ar ? "ظلّل الاختيار. الإجابات في آخر الملزمة." : "Mark a choice. Answers are at the end of this booklet."}
-        </p>
-        <McqBlock locale={locale} rows={pack.practice} />
-      </PrintSection>
-
-      <PrintSection n="6" title={ar ? "حلّل واكتب" : "Analyse and write"}>
+      <PrintSection title={ar ? "حلّل واكتب" : "Analyse and write"}>
         <EssayBlock locale={locale} rows={pack.essays} />
       </PrintSection>
     </section>
