@@ -213,8 +213,8 @@ export async function openSurprise(
   try {
     const question = await startSurprise(chapterId);
     return { error: null, ok: true, surpriseId: question.id, surpriseClosesAt: question.closesAt };
-  } catch {
-    return { error: "MISSING" };
+  } catch (error) {
+    return { error: error instanceof Error && error.message === "SAVE" ? "SAVE" : "MISSING" };
   }
 }
 

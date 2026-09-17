@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { LoaderCircle, Zap } from "lucide-react";
 import { TrueFalsePick } from "@/components/true-false-pick";
 import { t } from "@/lib/i18n";
@@ -15,40 +16,54 @@ type SurpriseState = {
   remaining?: number;
   answered?: boolean;
   choice?: number;
+  needsLogin?: boolean;
 };
 
 export function SurpriseCatcher({ locale }: { locale: Locale }) {
+  const pathname = usePathname();
   const [state, setState] = useState<SurpriseState>({ open: false });
   const [pending, setPending] = useState(false);
+  const hide = pathname.startsWith("/admin");
 
   useEffect(() => {
+    if (hide) return;
     let cancelled = false;
     async function pull() {
       try {
-        const response = await fetch("/api/surprise", { cache: "no-store" });
+        const response = await fetch("/api/surprise", { cache: "no-store", credentials: "same-origin" });
+        if (!response.ok) return;
         const body = (await response.json()) as SurpriseState;
         if (!cancelled) setState(body);
       } catch {
-        if (!cancelled) setState({ open: false });
+        // Keep the last snapshot if the poll fails.
       }
     }
     void pull();
-    const id = window.setInterval(() => void pull(), 2000);
+    const id = window.setInterval(() => void pull(), 1000);
     return () => {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, []);
+  }, [hide]);
 
   async function pick(choice: number) {
     if (!state.open || state.answered || pending) return;
+    if (state.needsLogin) {
+      window.location.href = "/activate";
+      return;
+    }
     setPending(true);
     try {
       const response = await fetch("/api/surprise", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({ choice }),
       });
+      if (response.status === 401) {
+        window.location.href = "/activate";
+        return;
+      }
       if (response.ok) {
         setState((prev) => ({ ...prev, answered: true, choice }));
       }
@@ -57,7 +72,7 @@ export function SurpriseCatcher({ locale }: { locale: Locale }) {
     }
   }
 
-  if (!state.open || !state.prompt) return null;
+  if (hide || !state.open || !state.prompt) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-primary-dark/70 p-4 sm:items-center">

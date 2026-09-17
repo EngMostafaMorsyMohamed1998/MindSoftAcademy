@@ -3,6 +3,7 @@ import { Cairo, Geist, Geist_Mono, Newsreader } from "next/font/google";
 import { BRAND } from "@/lib/brand";
 import { getLocale, localeDir } from "@/lib/locale";
 import { getTheme } from "@/lib/theme";
+import { SurpriseCatcher } from "@/components/surprise-catcher";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,6 +44,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body suppressHydrationWarning className="flex min-h-full flex-col">
         {children}
+        <SurpriseCatcher locale={locale} />
       </body>
     </html>
   );

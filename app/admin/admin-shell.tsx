@@ -671,7 +671,11 @@ export function AdminShell({
               />
             </div>
             {surpriseState.error || surpriseCloseState.error ? (
-              <p className="mt-2 text-sm text-red-700">{surpriseState.error || surpriseCloseState.error}</p>
+              <p className="mt-2 text-sm text-red-700">
+                {surpriseState.error === "SAVE"
+                  ? t(locale, "surpriseSaveFail")
+                  : surpriseState.error || surpriseCloseState.error}
+              </p>
             ) : null}
           </section>
 

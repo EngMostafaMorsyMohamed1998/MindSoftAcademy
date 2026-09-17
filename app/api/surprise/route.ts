@@ -9,19 +9,24 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   const locale = await getLocale();
   const question = await getSurprise();
   if (!question || !surpriseOpen(question)) {
-    return NextResponse.json({ open: false });
+    return NextResponse.json({ open: false }, { headers: { "Cache-Control": "no-store" } });
   }
-  const mine = (await listSurpriseAnswers(question.id)).find((row) => row.studentId === user.id);
-  return NextResponse.json({
-    open: true,
-    ...publicSurprise(question, locale),
-    answered: Boolean(mine),
-    choice: mine?.choice,
-  });
+  const mine = user
+    ? (await listSurpriseAnswers(question.id)).find((row) => row.studentId === user.id)
+    : null;
+  return NextResponse.json(
+    {
+      open: true,
+      ...publicSurprise(question, locale),
+      answered: Boolean(mine),
+      choice: mine?.choice,
+      needsLogin: !user,
+    },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
 
 export async function POST(request: Request) {

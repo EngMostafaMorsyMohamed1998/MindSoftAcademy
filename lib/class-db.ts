@@ -853,11 +853,39 @@ export async function writeGroupRows(groups: ClassGroup[]): Promise<boolean> {
   }
 }
 
+export async function ensureSurpriseTables(): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "ClassSurprise" (
+        "id" TEXT NOT NULL,
+        "payload" TEXT NOT NULL,
+        CONSTRAINT "ClassSurprise_pkey" PRIMARY KEY ("id")
+      )
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "ClassSurpriseAnswer" (
+        "id" TEXT NOT NULL,
+        "surpriseId" TEXT NOT NULL,
+        "studentId" TEXT NOT NULL,
+        "choice" INTEGER NOT NULL,
+        "correct" BOOLEAN NOT NULL,
+        "answeredAt" TIMESTAMP(3) NOT NULL,
+        CONSTRAINT "ClassSurpriseAnswer_pkey" PRIMARY KEY ("id")
+      )
+    `);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function readSurpriseState(): Promise<{
   question: SurpriseQuestion | null;
   answers: SurpriseAnswer[];
 } | null> {
   if (!hasLiveDatabase()) return null;
+  await ensureSurpriseTables();
   try {
     const [row, answers] = await Promise.all([
       prisma.classSurprise.findUnique({ where: { id: "current" } }),
@@ -893,6 +921,7 @@ export async function writeSurpriseState(
   answers: SurpriseAnswer[],
 ): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
+  await ensureSurpriseTables();
   try {
     const rows = parseSurpriseAnswers(answers);
     await prisma.$transaction([

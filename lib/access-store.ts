@@ -750,13 +750,29 @@ export async function closeExamWindow(): Promise<void> {
   await persistExamWindow(null);
 }
 
+async function dedicatedSurprise(): Promise<{
+  question: SurpriseQuestion | null;
+  answers: SurpriseAnswer[];
+} | null> {
+  try {
+    const { readSurpriseState } = await import("@/lib/class-db");
+    return await readSurpriseState();
+  } catch {
+    return null;
+  }
+}
+
 export async function getSurprise(): Promise<SurpriseQuestion | null> {
+  const dedicated = await dedicatedSurprise();
+  if (dedicated?.question) return dedicated.question;
   return parseSurprise((await readStore()).surprise);
 }
 
 export async function listSurpriseAnswers(surpriseId?: string): Promise<SurpriseAnswer[]> {
-  const store = await readStore();
-  const rows = parseSurpriseAnswers(store.surpriseAnswers);
+  const dedicated = await dedicatedSurprise();
+  const rows = dedicated?.answers.length
+    ? dedicated.answers
+    : parseSurpriseAnswers((await readStore()).surpriseAnswers);
   return surpriseId ? rows.filter((row) => row.surpriseId === surpriseId) : rows;
 }
 
@@ -764,6 +780,25 @@ export async function startSurprise(chapterId: ChapterId): Promise<SurpriseQuest
   const question = pickSurpriseQuestion(chapterId);
   if (!question) {
     throw new Error("NO_QUESTION");
+  }
+  try {
+    const { writeSurpriseState } = await import("@/lib/class-db");
+    const saved = await writeSurpriseState(question, []);
+    const url =
+      process.env.DATABASE_URL ||
+      process.env.POSTGRES_PRISMA_URL ||
+      process.env.POSTGRES_URL ||
+      "";
+    const liveDb = Boolean(url) && !url.includes("build:build@127.0.0.1");
+    if (liveDb && !saved) throw new Error("SAVE");
+  } catch (error) {
+    if (error instanceof Error && error.message === "SAVE") throw error;
+    const url =
+      process.env.DATABASE_URL ||
+      process.env.POSTGRES_PRISMA_URL ||
+      process.env.POSTGRES_URL ||
+      "";
+    if (url && !url.includes("build:build@127.0.0.1")) throw new Error("SAVE");
   }
   const store = await readStore();
   store.surprise = question;
@@ -773,6 +808,15 @@ export async function startSurprise(chapterId: ChapterId): Promise<SurpriseQuest
 }
 
 export async function closeSurprise(): Promise<void> {
+  const current = await getSurprise();
+  const closed = current ? { ...current, closesAt: new Date().toISOString() } : null;
+  const answers = current ? await listSurpriseAnswers(current.id) : [];
+  try {
+    const { writeSurpriseState } = await import("@/lib/class-db");
+    await writeSurpriseState(closed, answers);
+  } catch {
+    // Fall through to the class store.
+  }
   const store = await readStore();
   if (store.surprise) {
     store.surprise = { ...store.surprise, closesAt: new Date().toISOString() };
@@ -784,12 +828,10 @@ export async function answerSurprise(input: {
   studentId: string;
   choice: number;
 }): Promise<SurpriseAnswer | null> {
-  const store = await readStore();
-  const question = parseSurprise(store.surprise);
+  const question = await getSurprise();
   if (!question || !surpriseOpen(question)) return null;
-  const existing = parseSurpriseAnswers(store.surpriseAnswers).find(
-    (row) => row.studentId === input.studentId && row.surpriseId === question.id,
-  );
+  const current = await listSurpriseAnswers(question.id);
+  const existing = current.find((row) => row.studentId === input.studentId);
   if (existing) return existing;
   const choice = Math.floor(input.choice);
   if (!Number.isFinite(choice) || choice < 0 || choice >= question.optionsAr.length) {
@@ -802,7 +844,15 @@ export async function answerSurprise(input: {
     correct: choice === question.correctIndex,
     answeredAt: new Date().toISOString(),
   };
-  store.surpriseAnswers = [...parseSurpriseAnswers(store.surpriseAnswers), row];
+  try {
+    const { writeSurpriseState } = await import("@/lib/class-db");
+    await writeSurpriseState(question, [...current, row]);
+  } catch {
+    // Fall through to the class store.
+  }
+  const store = await readStore();
+  store.surprise = question;
+  store.surpriseAnswers = [...current, row];
   await writeStore(store, { replaceSurprise: true });
   return row;
 }
