@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBook } from "@/lib/library";
-import { askTutor, hasGeminiKey, TutorError } from "@/lib/tutor";
+import { askTutor, TutorError } from "@/lib/tutor";
 
 export const runtime = "nodejs";
 
@@ -40,17 +40,6 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Unknown bookSlug." },
       { status: 404 },
-    );
-  }
-
-  if (!hasGeminiKey()) {
-    return NextResponse.json(
-      {
-        error:
-          "مفتاح GEMINI_API_KEY غير مضبوط. أضفه إلى ملف .env ثم أعد تشغيل الخادم.",
-        code: "missing_key",
-      },
-      { status: 503 },
     );
   }
 

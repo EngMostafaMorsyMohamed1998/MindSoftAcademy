@@ -139,11 +139,8 @@ async function generateWithModel(
 export async function askTutor(input: TutorRequest): Promise<string> {
   const key = process.env.GEMINI_API_KEY?.trim();
   if (!key) {
-    throw new TutorError(
-      "missing_key",
-      "مفتاح GEMINI_API_KEY غير مضبوط. أضفه إلى ملف .env ثم أعد تشغيل الخادم.",
-      503,
-    );
+    const { askLocalTutor } = await import("@/lib/local-tutor");
+    return askLocalTutor(input);
   }
 
   const genAI = new GoogleGenerativeAI(key);
@@ -158,16 +155,7 @@ export async function askTutor(input: TutorRequest): Promise<string> {
       prompt,
     );
   } catch (error) {
-    if (error instanceof TutorError) {
-      throw error;
-    }
-
     const status = geminiHttpStatus(error);
-    if (status === 429 || status === 401 || status === 403) {
-      throw mapGeminiError(error);
-    }
-
-    // gemini-1.5-flash is retired on some keys; retry once with a current Flash model.
     if (status === 404 && GEMINI_MODEL !== GEMINI_FALLBACK_MODEL) {
       try {
         return await generateWithModel(
@@ -176,13 +164,12 @@ export async function askTutor(input: TutorRequest): Promise<string> {
           systemInstruction,
           prompt,
         );
-      } catch (fallbackError) {
-        throw fallbackError instanceof TutorError
-          ? fallbackError
-          : mapGeminiError(fallbackError);
+      } catch {
+        const { askLocalTutor } = await import("@/lib/local-tutor");
+        return askLocalTutor(input);
       }
     }
-
-    throw mapGeminiError(error);
+    const { askLocalTutor } = await import("@/lib/local-tutor");
+    return askLocalTutor(input);
   }
 }

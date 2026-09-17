@@ -96,6 +96,10 @@ export const FAIZ_BOOK: Book = {
   sizeMb: 60.4,
 };
 
+export function bookSrc(book: Book): string {
+  return book.kind === "workbook" ? book.file : book.sourceUrl;
+}
+
 export function getBook(slug: string): Book | undefined {
   return allBooks().find((book) => book.slug === slug);
 }

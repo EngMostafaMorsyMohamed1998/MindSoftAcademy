@@ -24,12 +24,9 @@ function newId() {
 function errorFromResponse(status: number, body: { error?: string; code?: string }) {
   if (body.error) return body.error;
   if (status === 429) {
-    return "وصلت إلى حد الاستخدام لـ Gemini. انتظر دقيقة ثم أعد المحاولة.";
+    return "جرّب بعد دقيقة.";
   }
-  if (status === 503) {
-    return "مفتاح GEMINI_API_KEY غير مضبوط. أضفه إلى ملف .env ثم أعد تشغيل الخادم.";
-  }
-  return "حدث خطأ أثناء التواصل مع المعلم الذكي.";
+  return "حصل خطأ. اسأل تاني بجملة أقصر.";
 }
 
 export function AiTutorChat({
@@ -115,11 +112,10 @@ export function AiTutorChat({
           AI Tutor
         </p>
         <h2 className="mt-1 text-sm font-semibold text-primary-dark">
-          Ask about this textbook
+          اسأل عن الدرس
         </h2>
         <p className="mt-1 text-xs leading-relaxed text-foreground/55">
-          Gemini 1.5 Flash answers from the 2bac syllabus and this book’s
-          context.
+          بيرد من منهج الكتاب جوّه المنصة.
         </p>
       </header>
 

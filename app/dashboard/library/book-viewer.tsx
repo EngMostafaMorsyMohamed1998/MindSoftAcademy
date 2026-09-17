@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Download, ExternalLink } from "lucide-react";
 import type { Book } from "@/lib/library";
+import { bookSrc } from "@/lib/library";
 import { AiTutorChat } from "./ai-tutor-chat";
 
 export function BookViewer({
@@ -44,7 +45,7 @@ export function BookViewer({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <a
-            href={book.file}
+            href={bookSrc(book)}
             download
             className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-muted"
           >
@@ -68,7 +69,7 @@ export function BookViewer({
       <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(19rem,3fr)]">
         <div className="overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-sm shadow-primary/5" dir="ltr">
           <iframe
-            src={page ? `${book.file}#page=${page}` : book.file}
+            src={page ? `${bookSrc(book)}#page=${page}` : bookSrc(book)}
             title={book.titleEn}
             className="h-[75vh] w-full min-h-125 bg-white"
           />
