@@ -12,6 +12,17 @@ import {
   type ArenaRound,
   type ArenaTheme,
 } from "@/lib/arena";
+import {
+  BowArt,
+  CAR_COLORS,
+  CarArt,
+  ConeArt,
+  DOLL_DRESSES,
+  DOLL_HAIR,
+  DollArt,
+  DressArt,
+  TireArt,
+} from "@/components/arena-art";
 import { bookletLetters, bookletOptions } from "@/lib/booklet-pack";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
@@ -160,18 +171,7 @@ export function Arena3D({ locale }: { locale: Locale }) {
         className={`arena-stage is-${theme ?? "cars"} ${phase === "run" ? "is-run" : ""} ${flash === "ok" ? "is-ok" : ""} ${flash === "bad" ? "is-bad" : ""}`}
         style={{ "--heat": `${heat}` } as CSSProperties}
       >
-        <div className="arena-sky" />
-        <div className="arena-streaks" aria-hidden="true" />
-        <div className="arena-grid" aria-hidden="true" />
-        <div className="arena-rings">
-          {rounds.map((row, index) => (
-            <span
-              key={row.id}
-              className={`arena-ring ${index === room ? "is-now" : ""} ${index < room ? "is-done" : ""}`}
-              style={{ "--room": row.color, "--glow": row.accent, "--i": `${index - room}` } as CSSProperties}
-            />
-          ))}
-        </div>
+        <ThemeWorld theme={theme ?? "cars"} rushing={phase === "run"} />
         <ThemeRig theme={theme ?? "cars"} />
 
         <div className="arena-hud">
@@ -202,7 +202,7 @@ export function Arena3D({ locale }: { locale: Locale }) {
                 onClick={() => start("cars")}
               >
                 <span className="arena-pick-icon" aria-hidden="true">
-                  <span className="arena-mini-car" />
+                  <CarArt color="#dc2626" className="arena-pick-art" />
                 </span>
                 <strong>{t(locale, "arenaBoy")}</strong>
                 <em>{t(locale, "arenaBoyTheme")}</em>
@@ -214,7 +214,7 @@ export function Arena3D({ locale }: { locale: Locale }) {
                 onClick={() => start("dolls")}
               >
                 <span className="arena-pick-icon" aria-hidden="true">
-                  <span className="arena-mini-doll" />
+                  <DollArt className="arena-pick-art is-doll" />
                 </span>
                 <strong>{t(locale, "arenaGirl")}</strong>
                 <em>{t(locale, "arenaGirlTheme")}</em>
@@ -227,6 +227,7 @@ export function Arena3D({ locale }: { locale: Locale }) {
         {phase === "run" && current ? (
           <QuestionBoard
             locale={locale}
+            theme={theme ?? "cars"}
             round={current}
             picked={picked}
             locked={busy}
@@ -254,38 +255,96 @@ export function Arena3D({ locale }: { locale: Locale }) {
   );
 }
 
+function ThemeWorld({ theme, rushing }: { theme: ArenaTheme; rushing: boolean }) {
+  return (
+    <div className={`arena-world3 ${rushing ? "is-rush" : ""} is-${theme}`} aria-hidden="true">
+      <div className="arena-sky" />
+      <span className="arena-wall is-left" />
+      <span className="arena-wall is-right" />
+      <div className="arena-grid" />
+      <div className="arena-side is-left">
+        {Array.from({ length: 6 }, (_, index) => (
+          <span key={`l${index}`} className="arena-prop" style={{ "--d": `${index * 0.55}` } as CSSProperties}>
+            <WorldRacer theme={theme} index={index} />
+          </span>
+        ))}
+      </div>
+      <div className="arena-side is-right">
+        {Array.from({ length: 6 }, (_, index) => (
+          <span key={`r${index}`} className="arena-prop" style={{ "--d": `${index * 0.55 + 0.28}` } as CSSProperties}>
+            <WorldRacer theme={theme} index={index + 2} />
+          </span>
+        ))}
+      </div>
+      <div className="arena-gear is-left">
+        {Array.from({ length: 5 }, (_, index) => (
+          <span key={`gl${index}`} className="arena-prop is-gear" style={{ "--d": `${index * 0.7}` } as CSSProperties}>
+            <WorldGear theme={theme} index={index} />
+          </span>
+        ))}
+      </div>
+      <div className="arena-gear is-right">
+        {Array.from({ length: 5 }, (_, index) => (
+          <span key={`gr${index}`} className="arena-prop is-gear" style={{ "--d": `${index * 0.7 + 0.35}` } as CSSProperties}>
+            <WorldGear theme={theme} index={index + 1} />
+          </span>
+        ))}
+      </div>
+      {rushing ? <div className="arena-streaks" /> : null}
+    </div>
+  );
+}
+
+function WorldRacer({ theme, index }: { theme: ArenaTheme; index: number }) {
+  if (theme === "cars") {
+    return <CarArt color={CAR_COLORS[index % CAR_COLORS.length]} className="arena-side-art" />;
+  }
+  return (
+    <DollArt
+      dress={DOLL_DRESSES[index % DOLL_DRESSES.length]}
+      hair={DOLL_HAIR[index % DOLL_HAIR.length]}
+      className="arena-side-art is-doll"
+    />
+  );
+}
+
+function WorldGear({ theme, index }: { theme: ArenaTheme; index: number }) {
+  if (theme === "cars") {
+    return index % 2 === 0 ? <TireArt className="arena-gear-art" /> : <ConeArt className="arena-gear-art" />;
+  }
+  return index % 2 === 0 ? (
+    <DressArt color={DOLL_DRESSES[index % DOLL_DRESSES.length]} className="arena-gear-art" />
+  ) : (
+    <BowArt className="arena-gear-art" />
+  );
+}
+
 function ThemeRig({ theme }: { theme: ArenaTheme }) {
   if (theme === "dolls") {
     return (
       <div className="arena-rig is-dolls" aria-hidden="true">
-        <span className="arena-house" />
-        <span className="arena-doll-body" />
-        <span className="arena-doll-head" />
-        <span className="arena-bow" />
-        <span className="arena-bag" />
+        <DollArt className="arena-player-art is-doll" />
+        <span className="arena-cart" />
       </div>
     );
   }
   return (
     <div className="arena-rig is-cars" aria-hidden="true">
-      <span className="arena-hood" />
-      <span className="arena-dash" />
-      <span className="arena-wheel is-left" />
-      <span className="arena-wheel is-right" />
-      <span className="arena-light is-left" />
-      <span className="arena-light is-right" />
+      <CarArt color="#dc2626" className="arena-player-art" />
     </div>
   );
 }
 
 function QuestionBoard({
   locale,
+  theme,
   round,
   picked,
   locked,
   onPick,
 }: {
   locale: Locale;
+  theme: ArenaTheme;
   round: ArenaRound;
   picked: number | null;
   locked: boolean;
@@ -309,10 +368,18 @@ function QuestionBoard({
               key={`${round.id}-${index}`}
               type="button"
               disabled={locked}
-              className={`arena-gate ${state}`}
-              style={{ "--room": round.color, "--glow": round.accent, "--lane": `${index}` } as CSSProperties}
+              className={`arena-gate is-${theme} ${state}`}
               onClick={() => onPick(index)}
             >
+              {theme === "cars" ? (
+                <CarArt color={CAR_COLORS[index] ?? "#dc2626"} className="arena-gate-art" />
+              ) : (
+                <DollArt
+                  dress={DOLL_DRESSES[index] ?? "#db2777"}
+                  hair={DOLL_HAIR[index] ?? "#431407"}
+                  className="arena-gate-art is-doll"
+                />
+              )}
               <span className="arena-gate-letter">{letters[index]}</span>
               <span className="arena-gate-text">{option}</span>
             </button>
