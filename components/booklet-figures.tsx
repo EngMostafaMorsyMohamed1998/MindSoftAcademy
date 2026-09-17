@@ -445,17 +445,17 @@ export function BookletFigure({
 }
 
 export const CHAPTER_FIGURES: Record<string, string[]> = {
-  "1": ["it-timeline", "ai-nest", "ai-life"],
+  "1": ["it-timeline", "ai-nest", "ai-life", "llm"],
   "2": ["encrypt", "auth", "firewall"],
   "3": ["web-stack", "http", "html-css-js"],
-  "4": ["media", "ux"],
+  "4": ["media", "ux", "html-css-js"],
   "5": ["collect", "clean", "api"],
-  "6": ["charts", "regress"],
-  "7": ["ml-types", "neural", "llm"],
-  f1: ["it-timeline", "ai-nest", "llm"],
+  "6": ["charts", "regress", "collect"],
+  "7": ["ml-types", "neural", "llm", "ai-nest"],
+  f1: ["it-timeline", "ai-nest", "ai-life", "llm"],
   f2: ["encrypt", "auth", "firewall"],
   f3: ["web-stack", "http", "html-css-js"],
-  f4: ["media", "ux"],
+  f4: ["media", "ux", "charts"],
 };
 
 type SceneKind = "lab" | "cloud" | "phone" | "lock" | "factory" | "browser" | "table" | "class";

@@ -10,7 +10,7 @@ import type { EssayQuestion, ObjectiveQuestion } from "@/lib/exams";
 
 export const BOOKLET_PRACTICE = 24;
 export const BOOKLET_CHAPTER_ESSAYS = 3;
-export const BOOKLET_SCENES = 3;
+export const BOOKLET_SCENES = 6;
 export const BOOKLET_HOMEWORK_PER_CHAPTER = 8;
 export const BOOKLET_HOMEWORK_ESSAYS = 2;
 

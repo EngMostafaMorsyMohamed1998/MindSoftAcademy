@@ -1,6 +1,4 @@
 import path from "path";
-// @ts-expect-error -- no bundled types
-import { ArabicShaper } from "arabic-persian-reshaper";
 import { createCanvas, GlobalFonts, type SKRSContext2D } from "@napi-rs/canvas";
 import { PDFDocument } from "pdf-lib";
 import { BRAND } from "@/lib/brand";
@@ -33,11 +31,6 @@ function fade(color: string, alpha = 0.1): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-function visual(text: string): string {
-  if (!arabicRe.test(text)) return text;
-  return [...ArabicShaper.convertArabic(text)].reverse().join("");
-}
-
 type TextBlock = { kind: "text"; text: string; size: number; gap?: number };
 type FigureBlock = { kind: "figure"; id: string; color: string; title: string };
 type MapBlock = { kind: "map"; root: MindNode; color: string; accent: string };
@@ -51,7 +44,7 @@ function wrap(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
   let current = words[0]!;
   for (const word of words.slice(1)) {
     const next = `${current} ${word}`;
-    if (ctx.measureText(visual(next)).width <= maxWidth) current = next;
+    if (ctx.measureText(next).width <= maxWidth) current = next;
     else {
       lines.push(current);
       current = word;
@@ -68,10 +61,10 @@ function paintText(
   y: number,
   align: "left" | "right" | "center",
 ) {
-  ctx.direction = "ltr";
+  ctx.direction = arabicRe.test(text) ? "rtl" : "ltr";
   ctx.textAlign = align;
   ctx.textBaseline = "top";
-  ctx.fillText(visual(text), x, y);
+  ctx.fillText(text, x, y);
 }
 
 function roundRect(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number, fill: string) {
@@ -98,14 +91,18 @@ function arrow(ctx: SKRSContext2D, x1: number, y1: number, x2: number, y2: numbe
 }
 
 function drawFigure(ctx: SKRSContext2D, id: string, color: string, title: string, x: number, y: number, w: number): number {
-  const h = 132;
+  const h = 168;
   roundRect(ctx, x, y, w, h, 16, fade(color, 0.08));
   ctx.fillStyle = color;
   ctx.font = `13px ${FONT_NAME}`;
   paintText(ctx, title, x + w - 14, y + 10, "right");
 
   const innerTop = y + 34;
-  if (id === "it-timeline") {
+  if (id === "ai-life") {
+    ["اقتراح فيديو", "فرز المصنع", "مراجعة الكتاب"].forEach((label, index) => {
+      boxLabel(ctx, label, x + 20 + index * ((w - 40) / 3), innerTop + 28, (w - 56) / 3, 44, color, 13);
+    });
+  } else if (id === "it-timeline") {
     const steps = ["حاسوب", "إنترنت", "محمول", "سحابة", "ذكاء"];
     const bw = (w - 40) / steps.length - 8;
     steps.forEach((step, index) => {
@@ -506,7 +503,7 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
       continue;
     }
     if (block.kind === "figure") {
-      const h = 142;
+      const h = 180;
       if (need(h, y)) {
         await flush();
         reset();
