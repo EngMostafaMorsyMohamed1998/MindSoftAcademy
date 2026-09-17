@@ -25,7 +25,6 @@ import { buildWeekStars, starLabel } from "@/lib/week-stars";
 import { QuestMap } from "./quest-map";
 import { WeekBoard } from "./week-board";
 import { telegramBotHref } from "@/lib/telegram";
-import { weekdayName } from "@/lib/week-plan";
 
 export default async function DashboardHomePage() {
   const user = await getCurrentUser();
@@ -78,10 +77,9 @@ export default async function DashboardHomePage() {
             <span dir="ltr">
               {user.points} {t(locale, "points")} · L{level}
             </span>
-            {mine && homeGroup ? (
+            {mine ? (
               <>
                 {" · "}
-                {homeGroup.name} {weekdayName(locale, homeGroup.weekday)}{" "}
                 {t(locale, "boardRank")}{" "}
                 <span dir="ltr">
                   #{mine.rank} / {ranks.length}

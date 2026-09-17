@@ -13,9 +13,11 @@ export function buildClassRanks(
     usedAt?: string | null;
     suspendedAt?: string | null;
   }[],
+  options?: { requireUsed?: boolean },
 ): ClassRank[] {
+  const requireUsed = options?.requireUsed !== false;
   return codes
-    .filter((row) => row.usedAt && !row.suspendedAt)
+    .filter((row) => !row.suspendedAt && (!requireUsed || row.usedAt))
     .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name, "ar"))
     .map((row, index) => ({
       id: row.id,
@@ -40,5 +42,8 @@ export function buildGroupRanks(
   studentIds: string[],
 ): ClassRank[] {
   const allowed = new Set(studentIds);
-  return buildClassRanks(codes.filter((row) => allowed.has(row.id)));
+  return buildClassRanks(
+    codes.filter((row) => allowed.has(row.id)),
+    { requireUsed: false },
+  );
 }
