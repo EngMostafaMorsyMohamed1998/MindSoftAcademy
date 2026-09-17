@@ -44,6 +44,10 @@ export function groupsOnWeekday(groups: ClassGroup[], weekday: number): ClassGro
   return sortClassGroups(groups.filter((row) => row.weekday === weekday));
 }
 
+export function groupsForStudent(groups: ClassGroup[], studentId: string): ClassGroup[] {
+  return sortClassGroups(groups.filter((row) => row.studentIds.includes(studentId)));
+}
+
 function parseStudentIds(value: unknown): string[] {
   if (Array.isArray(value)) return value.map((id) => String(id || "").trim()).filter(Boolean);
   if (typeof value !== "string" || !value.trim()) return [];

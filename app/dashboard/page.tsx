@@ -6,6 +6,7 @@ import { allChaptersPassed } from "@/lib/chapter-progress";
 import {
   getWeekPlan,
   listAttendance,
+  listClassGroups,
   listCodes,
   listExams,
   listHomeworkResults,
@@ -15,7 +16,8 @@ import { studentProgress } from "@/lib/student-progress";
 import { CHAPTERS, getLesson } from "@/lib/curriculum";
 import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
-import { buildClassRanks, rankForStudent } from "@/lib/leaderboard";
+import { groupsForStudent } from "@/lib/class-groups";
+import { buildGroupRanks, rankForStudent } from "@/lib/leaderboard";
 import { getLocale } from "@/lib/locale";
 import { openMakeups } from "@/lib/makeup";
 import { levelFromPoints } from "@/lib/student-profile";
@@ -23,12 +25,13 @@ import { buildWeekStars, starLabel } from "@/lib/week-stars";
 import { QuestMap } from "./quest-map";
 import { WeekBoard } from "./week-board";
 import { telegramBotHref } from "@/lib/telegram";
+import { weekdayName } from "@/lib/week-plan";
 
 export default async function DashboardHomePage() {
   const user = await getCurrentUser();
   if (!user) return null;
   const locale = await getLocale();
-  const [{ completed, unlocks }, weekPlan, makeups, attendance, exams, homework, codes] =
+  const [{ completed, unlocks }, weekPlan, makeups, attendance, exams, homework, codes, groups] =
     await Promise.all([
       studentProgress(),
       getWeekPlan(),
@@ -37,11 +40,13 @@ export default async function DashboardHomePage() {
       listExams(),
       listHomeworkResults(),
       listCodes(),
+      listClassGroups(),
     ]);
   const telegramHref = telegramBotHref();
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
   const { level } = levelFromPoints(user.points);
-  const ranks = buildClassRanks(codes);
+  const homeGroup = groupsForStudent(groups, user.id)[0] ?? null;
+  const ranks = homeGroup ? buildGroupRanks(codes, homeGroup.studentIds) : [];
   const mine = rankForStudent(ranks, user.id);
   const open = openMakeups(makeups, user.id);
   const week = buildWeekStars({
@@ -73,9 +78,10 @@ export default async function DashboardHomePage() {
             <span dir="ltr">
               {user.points} {t(locale, "points")} · L{level}
             </span>
-            {mine ? (
+            {mine && homeGroup ? (
               <>
                 {" · "}
+                {homeGroup.name} {weekdayName(locale, homeGroup.weekday)}{" "}
                 {t(locale, "boardRank")}{" "}
                 <span dir="ltr">
                   #{mine.rank} / {ranks.length}

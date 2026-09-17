@@ -28,3 +28,17 @@ export function buildClassRanks(
 export function rankForStudent(rows: ClassRank[], studentId: string): ClassRank | null {
   return rows.find((row) => row.id === studentId) ?? null;
 }
+
+export function buildGroupRanks(
+  codes: {
+    id: string;
+    name: string;
+    points: number;
+    usedAt?: string | null;
+    suspendedAt?: string | null;
+  }[],
+  studentIds: string[],
+): ClassRank[] {
+  const allowed = new Set(studentIds);
+  return buildClassRanks(codes.filter((row) => allowed.has(row.id)));
+}
