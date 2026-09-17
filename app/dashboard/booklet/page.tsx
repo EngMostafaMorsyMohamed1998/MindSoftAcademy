@@ -21,6 +21,8 @@ export default async function BookletPage() {
       <BookletViewer
         locale={locale}
         printLabel={t(locale, "printNow")}
+        downloadLabel={t(locale, "downloadBooklet")}
+        downloadingLabel={t(locale, "downloadingBooklet")}
         tabs={[
           {
             id: "p1",
