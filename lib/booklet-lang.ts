@@ -42,8 +42,9 @@ export function cleanArabic(text: string): string {
   next = next
     .replace(LATIN_WORD, "")
     .replace(/\(\s*\)/g, "")
-    .replace(/\s{2,}/g, " ")
-    .replace(/\s+([،.:])/g, "$1")
+    .replace(/[^\S\n]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[^\S\n]+([،.:])/g, "$1")
     .trim();
   return next;
 }
@@ -51,8 +52,9 @@ export function cleanArabic(text: string): string {
 export function cleanEnglish(text: string): string {
   return text
     .replace(/[\u0600-\u06FF]+/g, "")
-    .replace(/\s{2,}/g, " ")
-    .replace(/\s+([,.])/g, "$1")
+    .replace(/[^\S\n]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[^\S\n]+([,.])/g, "$1")
     .trim();
 }
 

@@ -273,9 +273,7 @@ export function ChapterExamPlayer({
               <p className="mt-3 text-sm font-medium">
                 {locale === "ar" ? essay.promptAr : essay.promptEn}
               </p>
-              <p className="mt-1 text-xs text-foreground/50">
-                {locale === "ar" ? essay.guideAr : essay.guideEn}
-              </p>
+              <p className="mt-1 text-sm font-semibold text-[#374151]">{t(locale, "essayHint")}</p>
               <textarea
                 value={essays[essay.id] ?? ""}
                 onChange={(event) =>
@@ -338,8 +336,8 @@ export function ChapterExamPlayer({
                   {locale === "ar" ? question.promptAr : question.promptEn}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-foreground/50" lang={locale}>
-                {locale === "ar" ? question.guideAr : question.guideEn}
+              <p className="mt-1 text-sm font-semibold text-[#374151]" lang={locale}>
+                {t(locale, "essayHint")}
               </p>
               <textarea
                 value={essays[question.id] ?? ""}

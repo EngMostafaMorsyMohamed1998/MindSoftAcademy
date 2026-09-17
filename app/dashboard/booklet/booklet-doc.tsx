@@ -111,7 +111,9 @@ function EssayAnswers({ locale, title, rows }: { locale: Locale; title: string; 
           <p className="text-sm font-extrabold text-primary">
             {ar ? "مقالي" : "Essay"} {index + 1}
           </p>
-          <p className="mt-2 text-base font-semibold leading-8 text-[#111827]">{bookletSafe(locale, ar ? row.guideAr : row.guideEn)}</p>
+          <div className="mt-2 space-y-1 text-base font-semibold leading-8 text-[#111827] whitespace-pre-line">
+            {bookletSafe(locale, ar ? row.guideAr : row.guideEn)}
+          </div>
         </article>
       ))}
     </div>

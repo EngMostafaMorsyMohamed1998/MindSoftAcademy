@@ -1,3 +1,5 @@
+import { CLEAR_GUIDES } from "@/lib/question-bank/clear-guides";
+import { clarifyAnalysis } from "@/lib/question-bank/guide";
 import { CHAPTER_1_ANALYSIS, CHAPTER_1_FACTS } from "@/lib/question-bank/chapter-1";
 import { CHAPTER_2_ANALYSIS, CHAPTER_2_FACTS } from "@/lib/question-bank/chapter-2";
 import { CHAPTER_3_ANALYSIS, CHAPTER_3_FACTS } from "@/lib/question-bank/chapter-3";
@@ -26,7 +28,7 @@ export const BANK_ANALYSIS: AnalysisPrompt[] = [
   ...CHAPTER_5_ANALYSIS,
   ...CHAPTER_6_ANALYSIS,
   ...CHAPTER_7_ANALYSIS,
-];
+].map((row) => clarifyAnalysis(row, CLEAR_GUIDES[row.id]));
 
 export const BANK_MCQ = [...expandFactsToHomework(BANK_FACTS), ...expandNotesToHomework()];
 

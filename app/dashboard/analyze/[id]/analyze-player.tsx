@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnswerGuide } from "@/components/answer-guide";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 import type { AnalysisPrompt } from "@/lib/question-bank/types";
@@ -32,15 +33,15 @@ export function AnalyzePlayer({
       <p className="text-xs font-semibold text-primary/60" dir="ltr">
         {index + 1} / {questions.length}
       </p>
-      <p className="mt-3 text-base leading-relaxed">
+      <p className="mt-3 text-lg font-semibold leading-9 text-[#111827]">
         {locale === "ar" ? question.promptAr : question.promptEn}
       </p>
-      <p className="mt-2 text-sm text-foreground/55">{t(locale, "essayHint")}</p>
+      <p className="mt-2 text-base font-semibold text-[#374151]">{t(locale, "essayHint")}</p>
       <textarea
         value={answer}
         onChange={(event) => setAnswer(event.target.value)}
         rows={7}
-        className="mt-4 w-full rounded-2xl border border-primary/15 bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/40"
+        className="mt-4 w-full rounded-xl border-2 border-primary/20 bg-background px-4 py-3 text-base font-semibold leading-8 outline-none focus:ring-2 focus:ring-accent/40"
         placeholder={t(locale, "writeAnswer")}
       />
       <div className="mt-4 flex flex-wrap gap-2">
@@ -61,12 +62,7 @@ export function AnalyzePlayer({
           </button>
         ) : null}
       </div>
-      {showGuide ? (
-        <p className="mt-4 rounded-2xl bg-accent/15 px-4 py-3 text-sm leading-relaxed">
-          <strong>{t(locale, "analyzeGuide")}: </strong>
-          {locale === "ar" ? question.guideAr : question.guideEn}
-        </p>
-      ) : null}
+      {showGuide ? <AnswerGuide locale={locale} text={locale === "ar" ? question.guideAr : question.guideEn} /> : null}
     </div>
   );
 }
