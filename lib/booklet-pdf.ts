@@ -12,7 +12,7 @@ import { textbookPageFor } from "@/lib/textbook-pages";
 const FONT_NAME = "NotoNaskh";
 const PAGE_W = 595;
 const PAGE_H = 842;
-const SCALE = 1.45;
+const SCALE = 2.2;
 const LETTERS = ["أ", "ب", "ج", "د"];
 const arabicRe = /[\u0600-\u06FF]/;
 
@@ -115,7 +115,16 @@ function arrow(ctx: SKRSContext2D, x1: number, y1: number, x2: number, y2: numbe
   ctx.stroke();
 }
 
-function drawFigure(ctx: SKRSContext2D, id: string, color: string, title: string, x: number, y: number, w: number): number {
+function drawFigure(
+  ctx: SKRSContext2D,
+  id: string,
+  color: string,
+  title: string,
+  x: number,
+  y: number,
+  w: number,
+  ar = true,
+): number {
   const h = 168;
   roundRect(ctx, x, y, w, h, 16, fade(color, 0.08));
   ctx.fillStyle = color;
@@ -128,10 +137,15 @@ function drawFigure(ctx: SKRSContext2D, id: string, color: string, title: string
       boxLabel(ctx, label, x + 20 + index * ((w - 40) / 3), innerTop + 28, (w - 56) / 3, 44, color, 13);
     });
   } else if (id === "it-timeline") {
-    const steps = ["حاسوب", "إنترنت", "محمول", "سحابة", "ذكاء"];
+    const steps = ar
+      ? ["حاسوب", "إنترنت", "محمول", "سحابة", "ذكاء"]
+      : ["Computer", "Internet", "Mobile", "Cloud", "AI"];
     const bw = (w - 40) / steps.length - 8;
     steps.forEach((step, index) => {
-      boxLabel(ctx, step, x + 16 + index * (bw + 10), innerTop + 28, bw, 36, color, 12);
+      const bx = ar
+        ? x + w - 16 - (index + 1) * bw - index * 10
+        : x + 16 + index * (bw + 10);
+      boxLabel(ctx, step, bx, innerTop + 28, bw, 36, color, 12);
     });
   } else if (id === "ai-nest") {
     ["ذكاء اصطناعي", "تعلم آلي", "تعلم عميق", "توليدي"].forEach((label, index) => {
@@ -876,32 +890,33 @@ function buildBlocks(locale: Locale): Block[] {
 export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
   ensureFont();
   const ar = locale === "ar";
-  const width = PAGE_W * SCALE;
-  const height = PAGE_H * SCALE;
-  const margin = 40 * SCALE;
-  const maxWidth = width - margin * 2;
-  const canvas = createCanvas(width, height);
+  const margin = 40;
+  const maxWidth = PAGE_W - margin * 2;
+  const canvas = createCanvas(PAGE_W * SCALE, PAGE_H * SCALE);
   const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   const pdf = await PDFDocument.create();
   const blocks = buildBlocks(locale);
 
   const reset = () => {
+    ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, PAGE_W, PAGE_H);
     ctx.fillStyle = "#0b1220";
   };
 
   const flush = async () => {
     const page = pdf.addPage([PAGE_W, PAGE_H]);
-    const image = await pdf.embedJpg(canvas.toBuffer("image/jpeg", 80));
+    const image = await pdf.embedJpg(canvas.toBuffer("image/jpeg", 92));
     page.drawImage(image, { x: 0, y: 0, width: PAGE_W, height: PAGE_H });
   };
 
   const need = (h: number, y: number) => {
-    return y + h > height - margin;
+    return y + h > PAGE_H - margin;
   };
 
-  const textX = ar ? width - margin : margin;
+  const textX = ar ? PAGE_W - margin : margin;
   const textAlign = ar ? "right" : "left";
   const images = new Map<string, Image>();
   for (const block of blocks) {
@@ -914,7 +929,7 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
   let y = margin;
   for (const block of blocks) {
     if (block.kind === "text") {
-      const size = block.size * SCALE;
+      const size = block.size;
       ctx.font = `${size}px ${FONT_NAME}`;
       ctx.fillStyle = "#0b1220";
       const chunks = block.text ? wrap(ctx, block.text, maxWidth) : [""];
@@ -974,7 +989,7 @@ export async function buildBookletPdf(locale: Locale): Promise<Uint8Array> {
         reset();
         y = margin;
       }
-      y += drawFigure(ctx, block.id, block.color, block.title, margin, y, maxWidth);
+      y += drawFigure(ctx, block.id, block.color, block.title, margin, y, maxWidth, ar);
       continue;
     }
     if (block.kind === "map") {

@@ -24,7 +24,7 @@ function Frame({
       <p className="px-3 pt-3 text-xs font-semibold" style={{ color }}>
         {ar ? titleAr : titleEn}
       </p>
-      <div className="p-3" dir="ltr">
+      <div className="p-3" dir={ar ? "rtl" : "ltr"} style={{ unicodeBidi: "isolate" }}>
         {children}
       </div>
       <figcaption className="px-3 pb-3 text-[11px] leading-relaxed text-foreground/65">
@@ -38,28 +38,27 @@ function Pill({
   label,
   color,
   dark,
-  dir,
 }: {
   label: string;
   color: string;
   dark?: boolean;
-  dir?: "rtl" | "ltr";
 }) {
+  const arabic = /[\u0600-\u06FF]/.test(label);
   return (
     <span
-      dir={dir}
+      dir={arabic ? "rtl" : "ltr"}
       className="inline-flex min-h-10 items-center justify-center rounded-2xl px-3 py-2 text-center text-xs font-semibold leading-snug text-white"
-      style={{ background: dark ? "#111827" : color }}
+      style={{ background: dark ? "#111827" : color, unicodeBidi: "isolate" }}
     >
       {label}
     </span>
   );
 }
 
-function Arrow() {
+function Arrow({ flip }: { flip?: boolean }) {
   return (
     <span className="px-1 text-sm font-bold text-foreground/40" aria-hidden>
-      →
+      {flip ? "←" : "→"}
     </span>
   );
 }
@@ -86,15 +85,30 @@ export function BookletFigure({
 
   if (id === "it-timeline") {
     const steps = ar
-      ? ["حاسوب", "إنترنت", "محمول", "سحابة", "ذكاء"]
-      : ["Computer", "Internet", "Mobile", "Cloud", "AI"];
+      ? [
+          { label: "حاسوب", year: "1940" },
+          { label: "إنترنت", year: "1990" },
+          { label: "محمول", year: "2007" },
+          { label: "سحابة", year: "2010" },
+          { label: "ذكاء", year: "الآن" },
+        ]
+      : [
+          { label: "Computer", year: "1940" },
+          { label: "Internet", year: "1990" },
+          { label: "Mobile", year: "2007" },
+          { label: "Cloud", year: "2010" },
+          { label: "AI", year: "now" },
+        ];
     return (
-      <Frame locale={locale} color={color} titleAr="شكل 1 — خط الزمن" titleEn="Fig 1 — Timeline" captionAr="كل مرحلة غيّرت الشغل والتعلم، مش بس شكل الجهاز." captionEn="Each stage changed work and learning, not only the machine’s look.">
-        <div className="flex items-center justify-between gap-1">
+      <Frame locale={locale} color={color} titleAr="شكل 1 — خط الزمن" titleEn="Fig 1 — Timeline" captionAr="من اليمين لليسار: الأقدم ثم الأحدث. كل مرحلة غيّرت الشغل والتعلم." captionEn="Oldest to newest. Each stage changed work and learning, not only the machine.">
+        <div className="flex items-stretch justify-between gap-1">
           {steps.map((step, index) => (
-            <div key={step} className="flex flex-1 items-center">
-              <Pill label={step} color={color} dir={rtl} />
-              {index < steps.length - 1 ? <Arrow /> : null}
+            <div key={step.label} className="flex flex-1 items-center">
+              <div className="min-w-0 flex-1 text-center">
+                <Pill label={step.label} color={color} />
+                <p className="mt-1 text-[10px] font-semibold text-foreground/55">{step.year}</p>
+              </div>
+              {index < steps.length - 1 ? <Arrow flip={ar} /> : null}
             </div>
           ))}
         </div>
@@ -113,7 +127,12 @@ export function BookletFigure({
             <div
               key={ring}
               className="rounded-2xl px-3 py-2 text-center text-xs font-semibold text-white"
-              style={{ background: color, opacity: 1 - index * 0.12, marginInline: `${index * 12}px` }}
+              style={{
+                background: color,
+                opacity: 1 - index * 0.12,
+                marginInline: `${index * 12}px`,
+                unicodeBidi: "isolate",
+              }}
               dir={rtl}
             >
               {ring}
@@ -132,7 +151,7 @@ export function BookletFigure({
       <Frame locale={locale} color={color} titleAr="شكل 3 — أين يظهر الذكاء" titleEn="Fig 3 — Where AI appears" captionAr="مثال يومي، مثال صناعي، وقاعدة: راجع المخرج من الكتاب." captionEn="A daily example, an industry example, and the rule: check the output.">
         <div className="grid grid-cols-3 gap-2">
           {cards.map((card) => (
-            <Pill key={card} label={card} color={color} dir={rtl} />
+            <Pill key={card} label={card} color={color} />
           ))}
         </div>
       </Frame>
@@ -143,11 +162,11 @@ export function BookletFigure({
     return (
       <Frame locale={locale} color={color} titleAr="شكل 4 — التشفير" titleEn="Fig 4 — Encryption" captionAr="الرسالة واضحة عند صاحب المفتاح فقط." captionEn="Only the key holder can read the message.">
         <div className="flex items-center justify-center gap-2">
-          <Pill label={ar ? "نص واضح" : "Plain text"} color={color} dir={rtl} />
-          <Arrow />
-          <Pill label={ar ? "المفتاح" : "Key"} color={color} dark dir={rtl} />
-          <Arrow />
-          <Pill label={ar ? "نص مشفّر" : "Cipher"} color={color} dir={rtl} />
+          <Pill label={ar ? "نص واضح" : "Plain text"} color={color} />
+          <Arrow flip={ar} />
+          <Pill label={ar ? "المفتاح" : "Key"} color={color} dark />
+          <Arrow flip={ar} />
+          <Pill label={ar ? "نص مشفّر" : "Cipher"} color={color} />
         </div>
       </Frame>
     );
@@ -161,7 +180,7 @@ export function BookletFigure({
           <Pill label="2FA" color={color} dark />
           <div className="grid w-full grid-cols-3 gap-2">
             {bits.map((bit) => (
-              <Pill key={bit} label={bit} color={color} dir={rtl} />
+              <Pill key={bit} label={bit} color={color} />
             ))}
           </div>
         </div>
@@ -173,14 +192,14 @@ export function BookletFigure({
     return (
       <Frame locale={locale} color={color} titleAr="شكل 6 — الجدار والشبكة" titleEn="Fig 6 — Firewall" captionAr="الجدار يفلتر الحركة. افصل الضيوف عن الأجهزة الحساسة." captionEn="The firewall filters traffic. Keep guests off sensitive devices.">
         <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-1">
-          <Pill label={ar ? "إنترنت" : "Internet"} color={color} dir={rtl} />
-          <Arrow />
-          <Pill label={ar ? "جدار الحماية" : "Firewall"} color={color} dark dir={rtl} />
-          <Arrow />
+          <Pill label={ar ? "إنترنت" : "Internet"} color={color} />
+          <Arrow flip={ar} />
+          <Pill label={ar ? "جدار الحماية" : "Firewall"} color={color} dark />
+          <Arrow flip={ar} />
           <div className="grid gap-1">
-            <Pill label={ar ? "داخلية" : "LAN"} color={color} dir={rtl} />
-            <Pill label={ar ? "ضيوف" : "Guest"} color={color} dir={rtl} />
-            <Pill label={ar ? "حساسة" : "Secure"} color={color} dir={rtl} />
+            <Pill label={ar ? "داخلية" : "LAN"} color={color} />
+            <Pill label={ar ? "ضيوف" : "Guest"} color={color} />
+            <Pill label={ar ? "حساسة" : "Secure"} color={color} />
           </div>
         </div>
       </Frame>
@@ -195,7 +214,7 @@ export function BookletFigure({
       <Frame locale={locale} color={color} titleAr="شكل 7 — طبقات التطبيق" titleEn="Fig 7 — App layers" captionAr="المتصفح يعرض. الخادم يقرر ويحفظ." captionEn="The browser shows. The server decides and stores.">
         <div className="space-y-2">
           {layers.map((layer) => (
-            <Pill key={layer} label={layer} color={color} dir={rtl} />
+            <Pill key={layer} label={layer} color={color} />
           ))}
         </div>
       </Frame>
@@ -207,18 +226,18 @@ export function BookletFigure({
       <Frame locale={locale} color={color} titleAr="شكل 8 — GET و POST" titleEn="Fig 8 — GET and POST" captionAr="GET يجلب من غير تغيير مقصود. POST يرسل عشان ينشئ أو يعالج." captionEn="GET fetches without intending to change. POST sends data to create or process.">
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <Pill label={ar ? "المتصفح" : "Browser"} color={color} dir={rtl} />
+            <Pill label={ar ? "المتصفح" : "Browser"} color={color} />
             <span className="text-xs font-bold" style={{ color }}>
-              GET →
+              {ar ? "← GET" : "GET →"}
             </span>
-            <Pill label={ar ? "الخادم" : "Server"} color={color} dark dir={rtl} />
+            <Pill label={ar ? "الخادم" : "Server"} color={color} dark />
           </div>
           <div className="flex items-center justify-center gap-2">
-            <Pill label={ar ? "المتصفح" : "Browser"} color={color} dir={rtl} />
+            <Pill label={ar ? "المتصفح" : "Browser"} color={color} />
             <span className="text-xs font-bold" style={{ color }}>
-              POST →
+              {ar ? "← POST" : "POST →"}
             </span>
-            <Pill label={ar ? "الخادم" : "Server"} color={color} dark dir={rtl} />
+            <Pill label={ar ? "الخادم" : "Server"} color={color} dark />
           </div>
         </div>
       </Frame>
@@ -292,8 +311,8 @@ export function BookletFigure({
         <div className="flex items-center justify-between gap-1">
           {steps.map((step, index) => (
             <div key={step} className="flex flex-1 items-center">
-              <Pill label={step} color={color} dir={rtl} />
-              {index < steps.length - 1 ? <Arrow /> : null}
+              <Pill label={step} color={color} />
+              {index < steps.length - 1 ? <Arrow flip={ar} /> : null}
             </div>
           ))}
         </div>
@@ -305,8 +324,8 @@ export function BookletFigure({
     return (
       <Frame locale={locale} color={color} titleAr="شكل 12 — جمع البيانات" titleEn="Fig 12 — Collecting data" captionAr="أولية من المصدر. ثانوية من مصدر جاهز. احذر العينة المنحازة." captionEn="Primary from the source. Secondary from a ready source. Watch biased samples.">
         <div className="grid grid-cols-2 gap-2">
-          <Pill label={ar ? "أولية: استطلاع أو قياس" : "Primary: survey"} color={color} dir={rtl} />
-          <Pill label={ar ? "ثانوية: تقرير جاهز" : "Secondary: report"} color={color} dark dir={rtl} />
+          <Pill label={ar ? "أولية: استطلاع أو قياس" : "Primary: survey"} color={color} />
+          <Pill label={ar ? "ثانوية: تقرير جاهز" : "Secondary: report"} color={color} dark />
         </div>
       </Frame>
     );
@@ -318,7 +337,7 @@ export function BookletFigure({
       <Frame locale={locale} color={color} titleAr="شكل 13 — تنظيف الجدول" titleEn="Fig 13 — Cleaning" captionAr="وحّد الشكل، أصلح الناقص، وراجع الشاذ." captionEn="Unify formats, fix missing values, review outliers.">
         <div className="grid grid-cols-3 gap-2">
           {bits.map((bit) => (
-            <Pill key={bit} label={bit} color={color} dir={rtl} />
+            <Pill key={bit} label={bit} color={color} />
           ))}
         </div>
       </Frame>
@@ -329,11 +348,11 @@ export function BookletFigure({
     return (
       <Frame locale={locale} color={color} titleAr="شكل 14 — البيانات المفتوحة و API" titleEn="Fig 14 — Open data & API" captionAr="اطلب الخدمة بطريقة متفق عليها، واذكر المصدر." captionEn="Ask in an agreed way, and cite the source.">
         <div className="flex items-center justify-center gap-2">
-          <Pill label={ar ? "تطبيقك" : "Your app"} color={color} dir={rtl} />
-          <Arrow />
+          <Pill label={ar ? "تطبيقك" : "Your app"} color={color} />
+          <Arrow flip={ar} />
           <Pill label="API" color={color} dark />
-          <Arrow />
-          <Pill label={ar ? "البيانات" : "Data"} color={color} dir={rtl} />
+          <Arrow flip={ar} />
+          <Pill label={ar ? "البيانات" : "Data"} color={color} />
         </div>
       </Frame>
     );
@@ -393,7 +412,7 @@ export function BookletFigure({
       <Frame locale={locale} color={color} titleAr="شكل 17 — أنواع التعلم" titleEn="Fig 17 — ML types" captionAr="النوع يتبع شكل البيانات والهدف." captionEn="The type follows the data and the goal.">
         <div className="grid grid-cols-3 gap-2">
           {kinds.map((kind) => (
-            <Pill key={kind} label={kind} color={color} dir={rtl} />
+            <Pill key={kind} label={kind} color={color} />
           ))}
         </div>
       </Frame>
@@ -431,11 +450,11 @@ export function BookletFigure({
     return (
       <Frame locale={locale} color={color} titleAr="شكل 19 — راجع المساعد" titleEn="Fig 19 — Check the helper" captionAr="الجملة المرتبة ممكن تطلع غلط. راجع الكتاب قبل التسليم." captionEn="A tidy sentence can still be wrong. Check the book before you submit.">
         <div className="flex items-center justify-center gap-2">
-          <Pill label={ar ? "سؤال الطالب" : "Question"} color={color} dir={rtl} />
-          <Arrow />
-          <Pill label={ar ? "النموذج" : "Model"} color={color} dark dir={rtl} />
-          <Arrow />
-          <Pill label={ar ? "الكتاب" : "Book"} color={color} dir={rtl} />
+          <Pill label={ar ? "سؤال الطالب" : "Question"} color={color} />
+          <Arrow flip={ar} />
+          <Pill label={ar ? "النموذج" : "Model"} color={color} dark />
+          <Arrow flip={ar} />
+          <Pill label={ar ? "الكتاب" : "Book"} color={color} />
         </div>
       </Frame>
     );
