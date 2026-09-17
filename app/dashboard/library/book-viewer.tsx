@@ -66,11 +66,11 @@ export function BookViewer({
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(19rem,3fr)]">
-        <div className="overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-sm shadow-primary/5">
+        <div className="overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-sm shadow-primary/5" dir="ltr">
           <iframe
             src={page ? `${book.file}#page=${page}` : book.file}
             title={book.titleEn}
-            className="h-[75vh] w-full min-h-125"
+            className="h-[75vh] w-full min-h-125 bg-white"
           />
         </div>
         <AiTutorChat book={book} />

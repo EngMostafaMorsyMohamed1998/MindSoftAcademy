@@ -35,6 +35,7 @@ yarn-error.log*
 
 # ministry textbooks (~93 MB) — restore with `npm run books:fetch`
 /public/books/*.pdf
+!/public/books/faiz-programming-ar-part1.pdf
 
 # prisma
 /prisma/dev.db
