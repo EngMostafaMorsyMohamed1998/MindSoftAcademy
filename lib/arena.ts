@@ -4,8 +4,10 @@ import { questionsForChapter, withShuffledOptions } from "@/lib/homework-bank";
 import { shuffled } from "@/lib/shuffle";
 
 export const ARENA_ID = "arena3d";
-export const ARENA_XP = 40;
+export const ARENA_XP = 50;
 export const ARENA_LIVES = 3;
+export const ARENA_ROUNDS = 12;
+export const ARENA_SECONDS = 14;
 
 export type ArenaRound = {
   id: string;
@@ -20,31 +22,39 @@ export type ArenaRound = {
   correctIndex: number;
 };
 
+function seedFrom(id: string, extra: number) {
+  let value = extra;
+  for (let i = 0; i < id.length; i += 1) value = (value + id.charCodeAt(i) * (i + 2)) >>> 0;
+  return value;
+}
+
 export function buildArenaRounds(seed: number): ArenaRound[] {
   const rooms: ArenaRound[] = [];
 
   CHAPTERS.forEach((chapter, index) => {
-    const pool = questionsForChapter(chapter.id).filter(
+    const all = questionsForChapter(chapter.id).filter(
       (row) =>
         row.kind === "mcq" &&
         row.optionsAr.length >= 4 &&
         row.optionsEn.length >= 4 &&
         row.promptAr.trim(),
     );
-    const picked = shuffled(pool, seed + Number(chapter.id) * 97 + index)[0];
-    if (!picked) return;
-    const question = withShuffledOptions(picked, seed + index * 13);
-    rooms.push({
-      id: question.id,
-      color: chapter.color,
-      accent: chapter.accent,
-      titleAr: `قاعة ${chapter.id} — ${chapter.titleAr}`,
-      titleEn: `Hall ${chapter.id} — ${chapter.titleEn}`,
-      promptAr: question.promptAr,
-      promptEn: question.promptEn,
-      optionsAr: question.optionsAr.slice(0, 4),
-      optionsEn: question.optionsEn.slice(0, 4),
-      correctIndex: question.correctIndex,
+    const short = all.filter((row) => row.promptAr.length < 140);
+    const picked = shuffled(short.length ? short : all, seed + Number(chapter.id) * 97).slice(0, 2);
+    picked.forEach((row, pickIndex) => {
+      const question = withShuffledOptions(row, seed + index * 13 + pickIndex);
+      rooms.push({
+        id: `${question.id}-${pickIndex}`,
+        color: chapter.color,
+        accent: chapter.accent,
+        titleAr: `${chapter.id} · ${chapter.titleAr}`,
+        titleEn: `${chapter.id} · ${chapter.titleEn}`,
+        promptAr: question.promptAr,
+        promptEn: question.promptEn,
+        optionsAr: question.optionsAr.slice(0, 4),
+        optionsEn: question.optionsEn.slice(0, 4),
+        correctIndex: question.correctIndex,
+      });
     });
   });
 
@@ -54,14 +64,14 @@ export function buildArenaRounds(seed: number): ArenaRound[] {
   if (faiz && faizAr.length >= 4 && faizEn.length >= 4) {
     const order = shuffled(
       faizAr.map((_, index) => index),
-      seed + 701,
+      seedFrom(faiz.id, seed + 701),
     );
     rooms.push({
       id: faiz.id,
       color: "#4a1942",
       accent: "#e879f9",
-      titleAr: "قاعة الفائز",
-      titleEn: "Al-Faiz hall",
+      titleAr: "الفائز",
+      titleEn: "Al-Faiz",
       promptAr: faiz.promptAr,
       promptEn: faiz.promptEn,
       optionsAr: order.map((index) => faizAr[index] ?? ""),
@@ -70,5 +80,13 @@ export function buildArenaRounds(seed: number): ArenaRound[] {
     });
   }
 
-  return rooms;
+  return shuffled(rooms, seed + 11).slice(0, ARENA_ROUNDS);
+}
+
+export function arenaSeconds(combo: number): number {
+  return Math.max(8, ARENA_SECONDS - Math.floor(combo / 3));
+}
+
+export function arenaScore(combo: number, secondsLeft: number): number {
+  return 80 + combo * 25 + Math.round(secondsLeft * 8);
 }

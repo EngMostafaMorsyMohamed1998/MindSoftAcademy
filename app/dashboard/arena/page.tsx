@@ -6,8 +6,8 @@ import { getLocale } from "@/lib/locale";
 export default async function ArenaPage() {
   const locale = await getLocale();
   return (
-    <div className="mx-auto w-full max-w-6xl">
-      <Link href="/dashboard/games" className="text-sm font-medium text-primary">
+    <div className="arena-page">
+      <Link href="/dashboard/games" className="mb-2 inline-block px-1 text-sm font-medium text-primary">
         {t(locale, "back")}
       </Link>
       <Arena3D locale={locale} />
