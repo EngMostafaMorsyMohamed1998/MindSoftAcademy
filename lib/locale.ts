@@ -13,6 +13,9 @@ export function parseTrack(value: unknown): Locale {
 }
 
 export async function getLocale(): Promise<Locale> {
+  const store = await cookies();
+  const picked = store.get(LANG_COOKIE)?.value;
+  if (isLocale(picked)) return picked;
   try {
     const { getStudentSession } = await import("@/lib/student-session");
     const student = await getStudentSession();
@@ -20,9 +23,7 @@ export async function getLocale(): Promise<Locale> {
   } catch {
     // cookies() is unavailable outside a request
   }
-  const store = await cookies();
-  const raw = store.get(LANG_COOKIE)?.value;
-  return isLocale(raw) ? raw : "ar";
+  return "ar";
 }
 
 export function localeDir(locale: Locale): "rtl" | "ltr" {

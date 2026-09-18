@@ -1,7 +1,7 @@
 import { EXTRA_HOMEWORK } from "@/lib/homework-extra";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { ChapterId } from "@/lib/curriculum";
-import { BANK_MCQ } from "@/lib/question-bank";
+import { expandNotesToHomework } from "@/lib/question-bank/expand";
 import { shuffled } from "@/lib/shuffle";
 
 export type HomeworkKind = "mcq" | "tf";
@@ -25,6 +25,20 @@ function pushQuestion(bank: HomeworkQuestion[], question: HomeworkQuestion) {
   bank.push(question);
 }
 
+function otherTerms(
+  termsAr: { term: string; meaning: string }[],
+  termsEn: { term: string; meaning: string }[],
+  index: number,
+) {
+  return termsAr
+    .map((item, otherIndex) => ({
+      ar: item,
+      en: termsEn[otherIndex] ?? item,
+      otherIndex,
+    }))
+    .filter((row) => row.otherIndex !== index);
+}
+
 function buildBank(): HomeworkQuestion[] {
   const bank: HomeworkQuestion[] = [];
 
@@ -33,50 +47,45 @@ function buildBank(): HomeworkQuestion[] {
     const termsEn = note.termsEn;
     termsAr.forEach((term, index) => {
       const en = termsEn[index] ?? { term: term.term, meaning: term.meaning };
+      const others = otherTerms(termsAr, termsEn, index);
+
       pushQuestion(bank, {
         id: `${note.id}-tf-${index}`,
         lessonId: note.id,
         chapterId: note.chapterId,
         kind: "tf",
-        promptAr: `هل هذا صحيح؟ «${term.term}» ${term.meaning}`,
-        promptEn: `Is this true? “${en.term}” ${en.meaning}`,
+        promptAr: `هل صحيح أن «${term.term}» يعني: ${term.meaning}؟`,
+        promptEn: `Is it true that “${en.term}” means: ${en.meaning}?`,
         optionsAr: ["صح", "غلط"],
         optionsEn: ["True", "False"],
         correctIndex: 0,
       });
-      const other = termsAr[(index + 1) % termsAr.length];
-      const otherEn = termsEn[(index + 1) % Math.max(termsEn.length, 1)] ?? other;
-      if (other && other.term !== term.term) {
+
+      const other = others[0];
+      if (other) {
         pushQuestion(bank, {
           id: `${note.id}-tf-x-${index}`,
           lessonId: note.id,
           chapterId: note.chapterId,
           kind: "tf",
-          promptAr: `هل هذا صحيح؟ «${term.term}» ${other.meaning}`,
-          promptEn: `Is this true? “${en.term}” ${otherEn.meaning}`,
+          promptAr: `هل صحيح أن «${term.term}» يعني: ${other.ar.meaning}؟`,
+          promptEn: `Is it true that “${en.term}” means: ${other.en.meaning}?`,
           optionsAr: ["صح", "غلط"],
           optionsEn: ["True", "False"],
           correctIndex: 1,
         });
       }
-      const wrong = termsAr
-        .map((item, otherIndex) => ({
-          ar: item,
-          en: termsEn[otherIndex] ?? item,
-          otherIndex,
-        }))
-        .filter((row) => row.otherIndex !== index)
-        .slice(0, 3);
-      if (wrong.length === 3) {
+
+      if (others.length >= 3) {
         pushQuestion(bank, {
           id: `${note.id}-mcq-${index}`,
           lessonId: note.id,
           chapterId: note.chapterId,
           kind: "mcq",
-          promptAr: `ما معنى «${term.term}»؟`,
-          promptEn: `What does “${en.term}” mean?`,
-          optionsAr: [term.meaning, ...wrong.map((row) => row.ar.meaning)],
-          optionsEn: [en.meaning, ...wrong.map((row) => row.en.meaning)],
+          promptAr: `ما معنى «${term.term}» حسب المنهج؟`,
+          promptEn: `What does “${en.term}” mean in this lesson?`,
+          optionsAr: [term.meaning, ...others.slice(0, 3).map((row) => row.ar.meaning)],
+          optionsEn: [en.meaning, ...others.slice(0, 3).map((row) => row.en.meaning)],
           correctIndex: 0,
         });
         pushQuestion(bank, {
@@ -84,23 +93,23 @@ function buildBank(): HomeworkQuestion[] {
           lessonId: note.id,
           chapterId: note.chapterId,
           kind: "mcq",
-          promptAr: `أي مصطلح يطابق هذا المعنى: «${term.meaning}»؟`,
-          promptEn: `Which term matches this meaning: “${en.meaning}”?`,
-          optionsAr: [term.term, ...wrong.map((row) => row.ar.term)],
-          optionsEn: [en.term, ...wrong.map((row) => row.en.term)],
+          promptAr: `أي مصطلح من المنهج يطابق هذا المعنى: «${term.meaning}»؟`,
+          promptEn: `Which lesson term matches this meaning: “${en.meaning}”?`,
+          optionsAr: [term.term, ...others.slice(0, 3).map((row) => row.ar.term)],
+          optionsEn: [en.term, ...others.slice(0, 3).map((row) => row.en.term)],
           correctIndex: 0,
         });
       }
-      const farther = termsAr[(index + 2) % termsAr.length];
-      const fartherEn = termsEn[(index + 2) % Math.max(termsEn.length, 1)] ?? farther;
-      if (farther && farther.term !== term.term && farther.term !== other?.term) {
+
+      const farther = others[1];
+      if (farther) {
         pushQuestion(bank, {
           id: `${note.id}-tf-x2-${index}`,
           lessonId: note.id,
           chapterId: note.chapterId,
           kind: "tf",
-          promptAr: `هل هذا صحيح؟ «${term.term}» ${farther.meaning}`,
-          promptEn: `Is this true? “${en.term}” ${fartherEn.meaning}`,
+          promptAr: `هل صحيح أن «${term.term}» يعني: ${farther.ar.meaning}؟`,
+          promptEn: `Is it true that “${en.term}” means: ${farther.en.meaning}?`,
           optionsAr: ["صح", "غلط"],
           optionsEn: ["True", "False"],
           correctIndex: 1,
@@ -113,8 +122,8 @@ function buildBank(): HomeworkQuestion[] {
       lessonId: note.id,
       chapterId: note.chapterId,
       kind: "tf",
-      promptAr: note.takeawayAr,
-      promptEn: note.takeawayEn,
+      promptAr: `هل هذه الخلاصة صحيحة حسب المنهج؟ ${note.takeawayAr}`,
+      promptEn: `Is this takeaway true for the lesson? ${note.takeawayEn}`,
       optionsAr: ["صح", "غلط"],
       optionsEn: ["True", "False"],
       correctIndex: 0,
@@ -127,8 +136,8 @@ function buildBank(): HomeworkQuestion[] {
         lessonId: note.id,
         chapterId: note.chapterId,
         kind: "tf",
-        promptAr: `هل هذه فكرة هذا الدرس؟ ${otherNote.takeawayAr}`,
-        promptEn: `Is this the idea of this lesson? ${otherNote.takeawayEn}`,
+        promptAr: `هل هذه خلاصة هذا الدرس؟ ${otherNote.takeawayAr}`,
+        promptEn: `Is this the takeaway of this lesson? ${otherNote.takeawayEn}`,
         optionsAr: ["صح", "غلط"],
         optionsEn: ["True", "False"],
         correctIndex: 1,
@@ -142,8 +151,8 @@ function buildBank(): HomeworkQuestion[] {
         lessonId: note.id,
         chapterId: note.chapterId,
         kind: "tf",
-        promptAr: line,
-        promptEn: lineEn,
+        promptAr: `هل هذا صحيح حسب منهج الدرس؟ ${line}`,
+        promptEn: `Is this true according to the lesson? ${lineEn}`,
         optionsAr: ["صح", "غلط"],
         optionsEn: ["True", "False"],
         correctIndex: 0,
@@ -155,7 +164,7 @@ function buildBank(): HomeworkQuestion[] {
     pushQuestion(bank, extra);
   }
 
-  for (const extra of BANK_MCQ) {
+  for (const extra of expandNotesToHomework()) {
     pushQuestion(bank, extra);
   }
 
@@ -163,6 +172,7 @@ function buildBank(): HomeworkQuestion[] {
 }
 
 const BANK = buildBank();
+const EXTRA_IDS = new Set(EXTRA_HOMEWORK.map((row) => row.id));
 
 export function homeworkBankSize(): number {
   return BANK.length;
@@ -176,6 +186,13 @@ export function questionsForChapter(chapterId: ChapterId): HomeworkQuestion[] {
   return BANK.filter((item) => item.chapterId === chapterId);
 }
 
+function isCurriculumMcq(question: HomeworkQuestion): boolean {
+  return (
+    question.kind === "mcq" &&
+    (EXTRA_IDS.has(question.id) || question.id.includes("-mcq-") || question.id.includes("-n-best-") || question.id.includes("-x"))
+  );
+}
+
 export function pickLessonHomework(
   lessonId: string,
   seed: number,
@@ -185,22 +202,24 @@ export function pickLessonHomework(
   const classQs = extras.filter((question) => question.lessonId === lessonId).slice(0, 2);
   const want = Math.max(0, size - classQs.length);
   const pool = questionsForLesson(lessonId);
-  const mcq = shuffled(
-    pool.filter((question) => question.kind === "mcq"),
-    seed,
+  const preferred = shuffled(pool.filter(isCurriculumMcq), seed);
+  const otherMcq = shuffled(
+    pool.filter((question) => question.kind === "mcq" && !preferred.includes(question)),
+    seed + 11,
   );
   const tf = shuffled(
     pool.filter((question) => question.kind === "tf"),
     seed + 41,
   );
-  const mcqWanted = Math.min(mcq.length, Math.max(want - 3, Math.ceil(want * 0.8)));
-  const picked = [...mcq.slice(0, mcqWanted)];
-  const remaining = want - picked.length;
-  picked.push(...tf.slice(0, remaining));
-  if (picked.length < want) {
-    picked.push(...mcq.slice(mcqWanted, mcqWanted + (want - picked.length)));
+  const picked = [...preferred];
+  if (picked.length < Math.ceil(want * 0.75)) {
+    picked.push(...otherMcq.slice(0, Math.ceil(want * 0.75) - picked.length));
   }
-  return shuffled([...classQs, ...picked], seed + 7).slice(0, Math.min(size, classQs.length + picked.length));
+  picked.push(...tf.slice(0, Math.max(0, want - picked.length)));
+  if (picked.length < want) {
+    picked.push(...otherMcq.slice(0, want - picked.length));
+  }
+  return shuffled([...classQs, ...picked.slice(0, want)], seed + 7).slice(0, Math.min(size, classQs.length + want));
 }
 
 export function withShuffledOptions(

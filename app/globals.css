@@ -215,9 +215,10 @@ body {
 }
 
 .textbook-ask-mark {
-  color: #a16207;
-  font-size: 1.5rem;
-  font-weight: 800;
+  display: inline-flex;
+  margin-inline-end: 0.4rem;
+  vertical-align: -0.35em;
+  color: #b45309;
 }
 
 .booklet-q {
@@ -351,6 +352,15 @@ body {
   }
 }
 
+.arena-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .arena-page {
   margin-inline: -1rem;
 }
@@ -384,16 +394,11 @@ body {
     linear-gradient(180deg, #1a0b2e 0%, #070b18 42%, #020309 100%);
 }
 
-.arena-stage.is-cars {
+.arena-stage.is-robot {
   background:
-    radial-gradient(circle at 50% 16%, rgba(255, 140, 0, calc(0.18 + var(--heat) * 0.25)), transparent 32%),
-    linear-gradient(180deg, #1a1408 0%, #0b0d12 46%, #05060a 100%);
-}
-
-.arena-stage.is-dolls {
-  background:
-    radial-gradient(circle at 50% 16%, rgba(244, 114, 182, calc(0.22 + var(--heat) * 0.22)), transparent 34%),
-    linear-gradient(180deg, #3b1540 0%, #1a0d24 46%, #120816 100%);
+    radial-gradient(circle at 50% 18%, rgba(212, 160, 23, calc(0.22 + var(--heat) * 0.28)), transparent 36%),
+    radial-gradient(circle at 20% 8%, rgba(56, 189, 248, 0.16), transparent 28%),
+    linear-gradient(180deg, #071c45 0%, #06122c 46%, #030814 100%);
 }
 
 .arena-world3,
@@ -439,18 +444,78 @@ body {
   transform-origin: right center;
 }
 
-.arena-world3.is-cars .arena-wall {
+.arena-world3.is-robot .arena-grid {
   background:
-    repeating-linear-gradient(90deg, #1f2937 0 18px, #111827 18px 36px),
-    linear-gradient(#374151, #0f172a);
-  box-shadow: inset 0 0 0 8px #b45309;
+    linear-gradient(to top, #030814 8%, transparent 70%),
+    repeating-linear-gradient(to right, rgba(212, 160, 23, 0.3) 0 2px, transparent 2px 72px),
+    repeating-linear-gradient(to bottom, rgba(56, 189, 248, 0.2) 0 2px, transparent 2px 72px);
 }
 
-.arena-world3.is-dolls .arena-wall {
+.arena-racer {
+  pointer-events: none;
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  transform: translateX(-50%) rotateX(8deg) rotateY(-12deg);
+  transform-style: preserve-3d;
+}
+
+.arena-racer.is-hero {
+  bottom: 1%;
+  width: min(42%, 300px);
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.45));
+}
+
+.arena-racer.is-rival {
+  bottom: calc(28% + var(--lead, 0) * 5%);
+  width: min(24%, 170px);
+  opacity: 0.82;
+  filter: hue-rotate(168deg) saturate(0.75) brightness(1.05) drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
+}
+
+.arena-racer.is-rival.is-close {
+  bottom: 16%;
+  width: min(30%, 210px);
+  opacity: 0.95;
+}
+
+.arena-racer-glow {
+  position: absolute;
+  inset: 18% 10% 4%;
+  border-radius: 999px;
   background:
-    repeating-linear-gradient(#f9a8d4 0 12px, #fbcfe8 12px 24px),
-    linear-gradient(#831843, #4a044e);
-  box-shadow: inset 0 0 0 8px #f472b6;
+    radial-gradient(circle, rgba(56, 189, 248, 0.28), transparent 62%),
+    radial-gradient(circle, rgba(212, 160, 23, 0.22), transparent 70%);
+  filter: blur(18px);
+}
+
+.arena-racer-img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  mask-image: radial-gradient(ellipse 70% 78% at 50% 46%, #000 52%, transparent 78%);
+}
+
+.arena-stage.is-run .arena-racer.is-hero {
+  animation: arena-bob 0.32s ease-in-out infinite;
+}
+
+.arena-panel-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.1rem;
+}
+
+.arena-ready-bot {
+  width: 7.5rem;
+  flex-shrink: 0;
+}
+
+.arena-panel-hero .arena-cta {
+  margin-top: 0.6rem;
 }
 
 .arena-grid {
@@ -872,6 +937,11 @@ body {
   box-shadow: 0 10px 0 rgba(0, 0, 0, 0.35), 0 0 0 2px rgba(253, 224, 71, 0.55);
   transform: translateZ(20px);
   transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.arena-gate.is-robot {
+  background: rgba(7, 28, 69, 0.82);
+  box-shadow: 0 12px 0 rgba(3, 8, 20, 0.55), 0 0 0 2px rgba(212, 160, 23, 0.7);
 }
 
 .arena-gate.is-dolls {

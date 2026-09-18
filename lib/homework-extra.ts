@@ -49,6 +49,26 @@ function tf(
 export const EXTRA_HOMEWORK: ExtraHomework[] = [
   mcq("1-1-x1", "1-1", "1", "ما أفضل مثال على الحوسبة السحابية؟", "What is the best example of cloud computing?", ["شراء قرص صلب وتخزينه في البيت", "فتح البريد والملفات من أي جهاز عبر الإنترنت", "طباعة ورقة من معمل المدرسة", "إغلاق الواي فاي حتى لا يخرج الجهاز"], ["Buying a hard disk and keeping it at home", "Opening mail and files from any device over the Internet", "Printing a sheet in the school lab", "Turning Wi-Fi off so the device never leaves"], 1),
   mcq("1-1-x2", "1-1", "1", "سيارة تحتاج قرار فرامل في جزء من الثانية. ما الأنسب؟", "A car must decide to brake in a fraction of a second. What is best?", ["إرسال الصورة للسحابة ثم الانتظار", "معالجة الإشارة على السيارة نفسها", "طباعة التقرير بعد أسبوع", "إيقاف كل الحساسات"], ["Send the image to the cloud and wait", "Process the signal on the car itself", "Print a report after a week", "Turn every sensor off"], 1),
+  mcq(
+    "1-1-x5",
+    "1-1",
+    "1",
+    "المعلم يعرض حاسوب الستينيات جنب لابتوب. ليه اللابتوب أقوى؟",
+    "The teacher shows a 1960s room-sized computer next to a laptop. Why is the laptop stronger?",
+    [
+      "لأن الصندوق الأصغر أقوى دايمًا",
+      "لأن عدد الترانزستورات على الشريحة زاد (قانون مور)",
+      "لأن اللابتوب خدمة سحابية",
+      "لأن الصورتين على السبورة واقع معزز",
+    ],
+    [
+      "Because a smaller box is always stronger",
+      "Because the chip now has more transistors (Moore's Law)",
+      "Because a laptop is a cloud service",
+      "Because two pictures on the board mean AR",
+    ],
+    1,
+  ),
   tf("1-1-x3", "1-1", "1", "قانون مور اقترب من حد فيزيائي؛ لذلك تظهر أفكار مثل المعالجة المتوازية.", "Moore's Law is near a physical limit, so ideas like parallel processing appear.", true),
   tf("1-1-x4", "1-1", "1", "الواقع الافتراضي يضيف طبقة صغيرة فوق الشارع ولا يستبدل العالم.", "Virtual reality only adds a thin layer on the street and never replaces the world.", false),
 

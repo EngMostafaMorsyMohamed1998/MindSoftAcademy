@@ -67,7 +67,6 @@ const PAGE_1_1: TextbookPage = {
   sectionEn: "A short history of IT",
   introAr: "الجدول يلخص المحطات الرئيسية: من حاسوب يملأ غرفة، إلى خدمات سحابية تصل للهاتف.",
   introEn: "The table sums up the main stops: from a room-sized computer to cloud services on a phone.",
-  photo: "/booklet/it-computer-room.jpg",
   art: "lab",
   headersAr: ["الفترة الزمنية", "التقنيات والأحداث الرئيسية", "التأثير على المجتمع"],
   headersEn: ["Period", "Key technologies and events", "Effect on society"],

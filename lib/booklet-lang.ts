@@ -68,23 +68,77 @@ export function bookletSafe(locale: Locale, text: string): string {
   return locale === "ar" ? cleanArabic(text) : cleanEnglish(text);
 }
 
+function foldArabicArticle(text: string): string {
+  return text.toLowerCase().replace(/(^|[^\u0600-\u06FF])ال(?=[\u0600-\u06FF])/g, "$1");
+}
+
 export function termArt(term: string, meaning = ""): string {
-  const hay = `${term} ${meaning}`.toLowerCase();
-  if (/تشفير|مفتاح|lock|encrypt|cipher|password/.test(hay)) return "lock";
-  if (/جدار|firewall|شبكة|راوتر/.test(hay)) return "firewall";
-  if (/تصيد|phishing|احتيال/.test(hay)) return "phish";
-  if (/تزييف|deepfake|صورة مفتع/.test(hay)) return "fake";
-  if (/سحاب|cloud/.test(hay)) return "cloud";
-  if (/عينه|عيّنة|مجتمع|sample|population/.test(hay)) return "sample";
-  if (/نظيف|شاذ|مفقود|outlier|missing|clean/.test(hay)) return "clean";
-  if (/واجهة برمج|api/.test(hay)) return "api";
-  if (/جدول|بيانات|data|csv/.test(hay)) return "data";
-  if (/أعمدة|رسم|chart|انحدار|regress/.test(hay)) return "chart";
-  if (/ويب|متصفح|صفحة|html|http|browser/.test(hay)) return "web";
-  if (/تجربة|ux|مستخدم/.test(hay)) return "ux";
-  if (/تعلم|عصب|نموذج|ml|neural|llm/.test(hay)) return "ml";
-  if (/ذكاء|ai/.test(hay)) return "ai";
-  if (/أخلاق|تحيز|ethic|bias/.test(hay)) return "ethics";
-  if (/حاسوب|مختبر|lab|computer/.test(hay)) return "lab";
+  const t = foldArabicArticle(term);
+  const m = foldArabicArticle(meaning);
+  const onTerm = (pattern: RegExp) => pattern.test(t);
+  const onMeaning = (pattern: RegExp) => pattern.test(m);
+
+  if (onTerm(/تزييف|deepfake/)) return "fake";
+  if (onTerm(/توليدي|generative|هلوسة|hallucin|\bllms?\b|نموذج لغة|توكن|\btoken\b|توجيه|\bprompt/)) return "llm";
+  if (onTerm(/تعلم عميق|عميق|deep learning|عصب|neuron|neural|\bweight\b|وزن|طبقة|\blayer\b|صندوق|black box/)) {
+    return "neural";
+  }
+  if (onTerm(/تعلم آلي|machine learning|بإشراف|بلا إشراف|supervised|unsupervised|تعزيز|reinforcement|تصنيف|classif|تدريب|\btrain\b/)) {
+    return "ml";
+  }
+  if (onTerm(/ضيق|narrow|توصية|recommend|صيانة|maintenance/)) return "life";
+  if (onTerm(/^ai$|الذكاء الاصطناعي|ذكاء اصطناعي/)) return "ai";
+  if (onTerm(/تصيد|phish|حادث|\bincident\b|احتواء|containment|مخاطر|risk management|خطة استجابة|استجابة|response plan/)) {
+    return "incident";
+  }
+  if (onTerm(/تشفير|مفتاح|مصادق|encrypt|cipher|password|symmetric|asymmetric|\bmfa\b|auth|خصوصية|privacy|\bvpn\b|شبكة خاصة/)) {
+    return "lock";
+  }
+  if (onTerm(/جدار|firewall|تقسيم|segment|صلاحية|privilege/)) return "firewall";
+  if (onTerm(/عينه|عيّنة|مجتمع|\bsample\b|population|أولية|ثانوية|primary|secondary|تحيز عينة|تحيز العينة|sampling bias/)) {
+    return "sample";
+  }
+  if (onTerm(/أخلاق|تحيز|ethic|\bbias\b|شفاف|transpar|مساءل|accountab/)) return "ethics";
+  if (onTerm(/سحاب|\bcloud\b|طرفية|\bedge\b/)) return "cloud";
+  if (onTerm(/وسائط|ضغط ملفات|ضغط الملفات|نص بديل|multimedia|compress|alt text|دقة|quality vs|جودة مقابل/)) {
+    return "media";
+  }
+  if (onTerm(/صفّان|صفان|\bduplicate\b/)) return "clean";
+  if (onTerm(/تكرار/) && onMeaning(/صف|نسخ|duplicate|error/)) return "clean";
+  if (
+    onTerm(
+      /تجربة مستخدم|تجربة المستخدم|\bux\b|واجهة مستخدم|واجهة المستخدم|\bui\b|تسلسل|hierarchy|نقر|usability|قابلية|أ\/ب|a\/b|رضا|satisfaction|أولي|prototype|خروج|drop-off|زمن مهمة|زمن المهمة|task time|iteration|تكرار|دليل قرار|دليل القرار|decision|click count/,
+    )
+  ) {
+    return "ux";
+  }
+  if (onTerm(/هيكل صفحة|هيكل الصفحة|\bhtml\b|تنسيق صفحة|تنسيق الصفحة|\bcss\b|لغة تفاعل|لغة التفاعل|javascript|إتاحة|accessib/)) {
+    return "html";
+  }
+  if (onTerm(/بروتوكول|\bhttps?\b|طلب قراءة|طلب إرسال/)) return "http";
+  if (onTerm(/أمامية|خلفية|frontend|backend|عميل|client–server|client-server/)) return "web";
+  if (onTerm(/واجهة برمج|واجهة برمجة|\bapis?\b|بيانات مفتوحة|open data|ترخيص|licence|تاريخ تحديث|تاريخ التحديث|update date|\brest\b|\bjson\b|موارد/)) {
+    return "api";
+  }
+  if (onTerm(/انحدار|بواقي|residual|regress|استكمال|extrapola|تفسيري|explanatory/)) return "regress";
+  if (
+    onTerm(
+      /أعمدة|دائرة|خط زمني|bar chart|line chart|\bpie\b|إحصاء|descriptive|inference|استدلال|فرضية|hypothesis|ثقة|confidence|\bsource\b|مصدر/,
+    )
+  ) {
+    return "chart";
+  }
+  if (onTerm(/مفقود|شاذ|outlier|missing|تطبيع|تقييس|normali|standardis|\bduplicate\b/)) return "clean";
+  if (onTerm(/جدول|بيانات|\bdata\b|\bdatabase\b|قاعدة بيانات|csv/)) return "data";
+  if (onTerm(/مور|moore|حاسوب|مختبر|\blab\b|computer|transistor/)) return "lab";
+
+  if (onMeaning(/توليدي|generative|هلوسة|hallucin|\bllms?\b/)) return "llm";
+  if (onMeaning(/تعلم عميق|deep learning|neural|عصبون/)) return "neural";
+  if (onMeaning(/تعلم آلي|machine learning|supervised/)) return "ml";
+  if (onMeaning(/ترانزستور|transistor|قانون مور|moore's law/)) return "lab";
+  if (onMeaning(/تشفير|encrypt|مفتاح خاص|password/)) return "lock";
+  if (onMeaning(/جدار حماية|firewall/)) return "firewall";
+  if (onMeaning(/سحاب|cloud service/)) return "cloud";
+  if (onMeaning(/متصفح|browser|frontend|html, css/)) return "web";
   return "note";
 }

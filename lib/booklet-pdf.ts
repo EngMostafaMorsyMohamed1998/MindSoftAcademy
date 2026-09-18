@@ -436,11 +436,14 @@ function drawAsk(ctx: SKRSContext2D, text: string, x: number, y: number, w: numb
   ctx.strokeStyle = "#d4a017";
   ctx.lineWidth = 1.6;
   ctx.stroke();
-  ctx.fillStyle = "#92400e";
-  paintText(ctx, ar ? "؟؟" : "??", ar ? x + w - 10 : x + 10, y + 10, ar ? "right" : "left");
+  const icon = ar ? x + w - 22 : x + 18;
+  fillCircle(ctx, icon, y + 18, 10, "#b45309");
+  ctx.fillStyle = "#fff7ed";
+  ctx.font = `16px ${FONT_NAME}`;
+  paintText(ctx, "?", icon, y + 10, "center");
   ctx.fillStyle = "#111827";
   lines.forEach((line, index) => {
-    paintText(ctx, line, ar ? x + w - 36 : x + 36, y + 10 + index * 22, ar ? "right" : "left");
+    paintText(ctx, line, ar ? x + w - 40 : x + 36, y + 10 + index * 22, ar ? "right" : "left");
   });
   return h + 14;
 }
@@ -512,28 +515,31 @@ function drawLessonArt(
     strokeLine(ctx, x + w * 0.78, y + h * 0.34, x + w * 0.78, y + h * 0.48, "#334155", 3);
     return;
   }
-  if (art === "nest" || art === "ai") {
+  if (art === "nest") {
     const rings = ar
       ? ["ذكاء اصطناعي", "تعلم آلي", "عميق", "توليدي"]
       : ["AI", "ML", "Deep", "Gen"];
     const colors = ["#0c2d6b", "#1d4ed8", "#3b82f6", "#c4a35a"];
-    if (!wide) {
-      colors.forEach((color, index) => {
-        fillCircle(ctx, cx, cy, Math.max(6, Math.min(w, h) * (0.42 - index * 0.09)), color);
-      });
-      return;
-    }
     rings.forEach((label, index) => {
-      const top = y + 8 + index * ((h - 16) / 4);
-      const inset = 8 + index * 10;
-      roundRect(ctx, x + inset, top, w - inset * 2, (h - 20) / 4 - 4, 8, colors[index]!);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = `12px ${FONT_NAME}`;
-      paintText(ctx, label, cx, top + 6, "center");
+      const top = y + 6 + index * ((h - 12) / 4);
+      const inset = 6 + index * 8;
+      roundRect(ctx, x + inset, top, w - inset * 2, (h - 16) / 4 - 3, 7, colors[index]!);
+      if (wide) {
+        ctx.fillStyle = index === 3 ? "#111827" : "#ffffff";
+        ctx.font = `11px ${FONT_NAME}`;
+        paintText(ctx, label, cx, top + 4, "center");
+      }
     });
     return;
   }
-  if (art === "web" || art === "http" || art === "html" || art === "cloud" || art === "ux") {
+  if (art === "ai") {
+    roundRect(ctx, cx - w * 0.16, y + h * 0.18, w * 0.32, h * 0.36, 10, "#0c2d6b");
+    fillCircle(ctx, cx - w * 0.06, y + h * 0.34, Math.max(3, w * 0.035), "#fde68a");
+    fillCircle(ctx, cx + w * 0.06, y + h * 0.34, Math.max(3, w * 0.035), "#fde68a");
+    roundRect(ctx, cx - w * 0.22, y + h * 0.6, w * 0.44, h * 0.22, 8, "#1d4ed8");
+    return;
+  }
+  if (art === "web" || art === "http" || art === "html") {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(x + 8, y + 10, w - 16, h - 20);
     ctx.fillStyle = "#0c2d6b";
@@ -546,7 +552,27 @@ function drawLessonArt(
     ctx.fillRect(x + 16, y + 62, w * 0.4, 6);
     return;
   }
-  if (art === "chart" || art === "regress" || art === "data" || art === "clean" || art === "sample" || art === "api") {
+  if (art === "cloud") {
+    ctx.fillStyle = "#0c2d6b";
+    ctx.beginPath();
+    ctx.ellipse(cx, y + h * 0.52, w * 0.28, h * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x + w * 0.32, y + h * 0.54, w * 0.14, h * 0.16, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x + w * 0.68, y + h * 0.54, w * 0.13, h * 0.15, 0, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  if (art === "ux") {
+    [0.12, 0.34, 0.56, 0.78].forEach((px, index) => {
+      const heights = [0.36, 0.48, 0.58, 0.36];
+      roundRect(ctx, x + w * px, y + h * (0.72 - heights[index]!), w * 0.16, h * heights[index]!, 6, ["#0c2d6b", "#1d4ed8", "#3b82f6", "#c4a35a"][index]!);
+    });
+    return;
+  }
+  if (art === "chart") {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(x + 8, y + 8, w - 16, h - 16);
     const base = y + h - 22;
@@ -563,7 +589,54 @@ function drawLessonArt(
     strokeLine(ctx, x + 16, base, x + w - 16, base, "#94a3b8", 2);
     return;
   }
-  if (art === "neural" || art === "ml" || art === "llm") {
+  if (art === "regress") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + 8, y + 8, w - 16, h - 16);
+    strokeLine(ctx, x + 16, y + h - 20, x + w - 16, y + h - 20, "#111827", 2);
+    strokeLine(ctx, x + 16, y + h - 20, x + 16, y + 16, "#111827", 2);
+    strokeLine(ctx, x + 22, y + h - 28, x + w - 22, y + 28, "#1d4ed8", 3);
+    [
+      [0.28, 0.68],
+      [0.44, 0.55],
+      [0.6, 0.42],
+      [0.76, 0.32],
+    ].forEach(([px, py]) => fillCircle(ctx, x + w * px, y + h * py, 4, "#0c2d6b"));
+    return;
+  }
+  if (art === "data") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + 10, y + 12, w - 20, h - 24);
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x + 10, y + 12, w - 20, 16);
+    strokeLine(ctx, x + w * 0.38, y + 12, x + w * 0.38, y + h - 12, "#93c5fd", 2);
+    strokeLine(ctx, x + 10, y + h * 0.5, x + w - 10, y + h * 0.5, "#cbd5e1", 2);
+    return;
+  }
+  if (art === "clean") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + 8, y + 14, w * 0.55, h - 28);
+    ctx.strokeStyle = "#0c2d6b";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 8, y + 14, w * 0.55, h - 28);
+    fillCircle(ctx, x + w * 0.78, cy, Math.max(8, w * 0.1), "#16a34a");
+    return;
+  }
+  if (art === "sample") {
+    fillCircle(ctx, x + w * 0.28, y + h * 0.32, 7, "#94a3b8");
+    fillCircle(ctx, cx, y + h * 0.28, 7, "#0c2d6b");
+    fillCircle(ctx, x + w * 0.72, y + h * 0.32, 7, "#94a3b8");
+    fillCircle(ctx, x + w * 0.22, y + h * 0.7, 7, "#94a3b8");
+    fillCircle(ctx, cx, y + h * 0.66, 9, "#c4a35a");
+    fillCircle(ctx, x + w * 0.78, y + h * 0.7, 7, "#94a3b8");
+    return;
+  }
+  if (art === "api") {
+    roundRect(ctx, x + 8, y + h * 0.3, w * 0.24, h * 0.4, 6, "#0c2d6b");
+    roundRect(ctx, x + w * 0.38, y + h * 0.22, w * 0.24, h * 0.56, 6, "#111827");
+    roundRect(ctx, x + w * 0.68, y + h * 0.3, w * 0.24, h * 0.4, 6, "#c4a35a");
+    return;
+  }
+  if (art === "neural") {
     const left = [
       [x + w * 0.18, y + h * 0.28],
       [x + w * 0.18, y + h * 0.72],
@@ -581,6 +654,18 @@ function drawLessonArt(
     left.forEach(([lx, ly]) => fillCircle(ctx, lx, ly, Math.max(4, w * 0.045), "#0c2d6b"));
     mid.forEach(([mx, my]) => fillCircle(ctx, mx, my, Math.max(4, w * 0.045), "#1d4ed8"));
     fillCircle(ctx, right[0][0], right[0][1], Math.max(5, w * 0.05), "#c4a35a");
+    return;
+  }
+  if (art === "ml") {
+    roundRect(ctx, x + 8, y + h * 0.28, w * 0.24, h * 0.48, 6, "#0c2d6b");
+    roundRect(ctx, x + w * 0.38, y + h * 0.18, w * 0.24, h * 0.64, 6, "#1d4ed8");
+    roundRect(ctx, x + w * 0.68, y + h * 0.3, w * 0.24, h * 0.4, 6, "#c4a35a");
+    return;
+  }
+  if (art === "llm") {
+    roundRect(ctx, x + 8, y + 12, w * 0.46, h * 0.38, 8, "#0c2d6b");
+    roundRect(ctx, x + w * 0.42, y + h * 0.52, w * 0.46, h * 0.3, 8, "#c4a35a");
+    fillCircle(ctx, x + w * 0.78, y + h * 0.28, Math.max(6, w * 0.08), "#f59e0b");
     return;
   }
   if (art === "ethics") {
@@ -648,13 +733,9 @@ function drawTermIcon(ctx: SKRSContext2D, art: string, x: number, y: number, siz
       ? "incident"
       : art === "sample" || art === "api"
         ? "data"
-        : art === "cloud" || art === "ux"
-          ? "web"
-          : art === "ai"
-            ? "nest"
-            : art === "note"
-              ? "lab"
-              : art;
+        : art === "note"
+          ? "lab"
+          : art;
   roundRect(ctx, x, y, size, size, 10, fade(color, 0.14));
   drawLessonArt(ctx, mapped, x + 6, y + 6, size - 12, size - 12, ar);
 }

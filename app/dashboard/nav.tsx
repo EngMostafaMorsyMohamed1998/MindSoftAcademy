@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "./logout-button";
 import type { CurrentUser } from "@/lib/current-user";
@@ -101,10 +102,14 @@ export function DashboardNav({
               theme={theme}
               className="inline-flex items-center justify-center rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
             />
-            <p className="inline-flex items-center justify-center rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold">
-              {t(locale, locale === "en" ? "trackEn" : "trackAr")}
-            </p>
+            <LanguageToggle
+              locale={locale}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-[11px] font-medium text-white/80"
+            />
           </div>
+          <p className="text-center text-[11px] text-white/45">
+            {t(locale, "trackLabel")}: {t(locale, locale === "en" ? "trackEn" : "trackAr")}
+          </p>
           <Link
             href="/dashboard/leaderboard"
             className="flex items-center gap-3 rounded-2xl bg-white/8 px-3 py-3 hover:bg-white/12"
@@ -134,9 +139,10 @@ export function DashboardNav({
             theme={theme}
             className="inline-flex size-9 items-center justify-center rounded-full border-2 border-primary/20 bg-primary text-white dark:border-accent/40 dark:bg-accent dark:text-primary-dark"
           />
-          <span className="inline-flex items-center rounded-full border-2 border-primary/20 bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-white dark:border-accent/40 dark:bg-accent dark:text-primary-dark">
-            {t(locale, locale === "en" ? "trackEn" : "trackAr")}
-          </span>
+          <LanguageToggle
+            locale={locale}
+            className="inline-flex items-center gap-1 rounded-full border border-primary/15 bg-primary/80 px-2.5 py-1.5 text-[11px] font-medium text-white dark:border-accent/30 dark:bg-accent/80 dark:text-primary-dark"
+          />
         </div>
       </header>
 

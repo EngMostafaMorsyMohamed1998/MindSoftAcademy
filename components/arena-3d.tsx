@@ -1,28 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { awardArenaXp } from "@/app/actions/study";
+import { HeroRobot } from "@/components/hero-robot";
 import {
   ARENA_LIVES,
   ARENA_ROUNDS,
   ARENA_XP,
+  arenaKmh,
   arenaScore,
   arenaSeconds,
   buildArenaRounds,
   type ArenaRound,
-  type ArenaTheme,
 } from "@/lib/arena";
-import {
-  BowArt,
-  CAR_COLORS,
-  CarArt,
-  ConeArt,
-  DOLL_DRESSES,
-  DOLL_HAIR,
-  DollArt,
-  DressArt,
-  TireArt,
-} from "@/components/arena-art";
 import { bookletLetters, bookletOptions } from "@/lib/booklet-pack";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
@@ -33,11 +24,10 @@ type Phase = "ready" | "run" | "won" | "lost";
 export function Arena3D({ locale }: { locale: Locale }) {
   const ar = locale === "ar";
   const [seed, setSeed] = useState(1);
-  const [theme, setTheme] = useState<ArenaTheme | null>(null);
   const [phase, setPhase] = useState<Phase>("ready");
   const rounds = useMemo(
-    () => (phase === "ready" ? [] : buildArenaRounds(seed)),
-    [phase, seed],
+    () => (phase === "ready" ? [] : buildArenaRounds(seed, locale === "ar")),
+    [phase, seed, locale],
   );
   const [room, setRoom] = useState(0);
   const [lives, setLives] = useState(ARENA_LIVES);
@@ -51,11 +41,12 @@ export function Arena3D({ locale }: { locale: Locale }) {
   const busyRef = useRef(false);
   const current = rounds[room];
   const limit = arenaSeconds(combo);
+  const kmh = arenaKmh(combo);
+  const lead = correct - (ARENA_LIVES - lives);
 
-  function start(next: ArenaTheme) {
+  function start() {
     busyRef.current = false;
     setSeed(newAttemptSeed());
-    setTheme(next);
     setRoom(0);
     setLives(ARENA_LIVES);
     setCorrect(0);
@@ -70,7 +61,6 @@ export function Arena3D({ locale }: { locale: Locale }) {
 
   function restart() {
     busyRef.current = false;
-    setTheme(null);
     setPhase("ready");
     setRoom(0);
     setLives(ARENA_LIVES);
@@ -94,7 +84,7 @@ export function Arena3D({ locale }: { locale: Locale }) {
     setBusy(false);
   }
 
-  function finishRight(nextRoom: number, nextCorrect: number) {
+  function finishRight(nextRoom: number) {
     if (nextRoom >= rounds.length) {
       setPhase("won");
       void awardArenaXp();
@@ -105,7 +95,6 @@ export function Arena3D({ locale }: { locale: Locale }) {
     setFlash(null);
     busyRef.current = false;
     setBusy(false);
-    void nextCorrect;
   }
 
   function choose(index: number) {
@@ -113,31 +102,29 @@ export function Arena3D({ locale }: { locale: Locale }) {
     busyRef.current = true;
     setBusy(true);
     const hit = index === current.correctIndex;
-    setPicked(index < 0 ? null : index);
+    setPicked(index < 0 ? 1 : index);
     setFlash(hit ? "ok" : "bad");
     if (hit) {
       const nextCombo = combo + 1;
-      const nextCorrect = correct + 1;
-      const gained = arenaScore(nextCombo, left);
       setCombo(nextCombo);
-      setCorrect(nextCorrect);
-      setScore((value) => value + gained);
-      window.setTimeout(() => finishRight(room + 1, nextCorrect), 520);
+      setCorrect((value) => value + 1);
+      setScore((value) => value + arenaScore(nextCombo, left));
+      window.setTimeout(() => finishRight(room + 1), 640);
       return;
     }
     const nextLives = lives - 1;
     setLives(nextLives);
     setCombo(0);
-    window.setTimeout(() => finishWrong(nextLives), 480);
+    window.setTimeout(() => finishWrong(nextLives), 520);
   }
 
   useEffect(() => {
     if (phase !== "run" || busy) return;
-    const start = Date.now();
+    const started = Date.now();
     const total = arenaSeconds(combo);
     setLeft(total);
     const tick = window.setInterval(() => {
-      const remain = Math.max(0, total - (Date.now() - start) / 1000);
+      const remain = Math.max(0, total - (Date.now() - started) / 1000);
       setLeft(remain);
       if (remain <= 0) {
         window.clearInterval(tick);
@@ -145,7 +132,6 @@ export function Arena3D({ locale }: { locale: Locale }) {
       }
     }, 60);
     return () => window.clearInterval(tick);
-    // Restart the clock only when a new gate opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, room, busy]);
 
@@ -163,16 +149,27 @@ export function Arena3D({ locale }: { locale: Locale }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, room, current, combo, lives, left]);
 
-  const heat = Math.min(1, combo / 6);
-
   return (
     <div className="arena-shell">
       <div
-        className={`arena-stage is-${theme ?? "cars"} ${phase === "run" ? "is-run" : ""} ${flash === "ok" ? "is-ok" : ""} ${flash === "bad" ? "is-bad" : ""}`}
-        style={{ "--heat": `${heat}` } as CSSProperties}
+        className={`arena-stage is-robot ${phase === "run" ? "is-run" : ""} ${flash === "ok" ? "is-ok" : ""} ${flash === "bad" ? "is-bad" : ""}`}
+        style={{ ["--heat" as string]: String(Math.min(1, combo / 8)), ["--lead" as string]: String(lead) }}
       >
-        <ThemeWorld theme={theme ?? "cars"} rushing={phase === "run"} />
-        <ThemeRig theme={theme ?? "cars"} />
+        <div className={`arena-world3 is-robot ${phase === "run" ? "is-rush" : ""}`}>
+          <div className="arena-sky" />
+          <div className="arena-grid" />
+          <div className="arena-streaks" />
+          {phase !== "ready" ? (
+            <div className={`arena-racer is-rival ${lead >= 0 ? "is-behind" : "is-close"}`} aria-hidden>
+              <span className="arena-racer-glow" />
+              <Image src="/mascots/hero-robot.png" alt="" width={320} height={428} className="arena-racer-img" />
+            </div>
+          ) : null}
+          <div className="arena-racer is-hero" aria-hidden>
+            <span className="arena-racer-glow" />
+            <Image src="/mascots/hero-robot.png" alt="" width={420} height={560} priority className="arena-racer-img" />
+          </div>
+        </div>
 
         <div className="arena-hud">
           <p className="arena-hearts">{"♥".repeat(Math.max(0, lives))}{"♡".repeat(Math.max(0, ARENA_LIVES - lives))}</p>
@@ -182,7 +179,13 @@ export function Arena3D({ locale }: { locale: Locale }) {
           <p>
             {t(locale, "arenaCombo")} ×{combo}
           </p>
+          <p className="arena-speed" dir="ltr">
+            {kmh} {t(locale, "arenaSpeed")}
+          </p>
           <p dir="ltr">{score}</p>
+          <p>
+            {t(locale, "arenaRival")} {lead >= 0 ? "▼" : "▲"}
+          </p>
         </div>
         {phase === "run" ? (
           <div className="arena-timer" style={{ "--left": `${left / limit}` } as CSSProperties}>
@@ -191,59 +194,32 @@ export function Arena3D({ locale }: { locale: Locale }) {
         ) : null}
 
         {phase === "ready" ? (
-          <div className="arena-panel">
-            <p className="arena-kicker">3D</p>
+          <div className="arena-panel arena-panel-hero">
+            <div className="arena-ready-bot">
+              <HeroRobot alt={t(locale, "robotAlt")} size="compact" />
+            </div>
+            <p className="arena-kicker">MINDSOFT</p>
             <h2>{t(locale, "arenaAsk")}</h2>
             <p>{t(locale, "arenaHint")}</p>
-            <div className="arena-pick">
-              <button
-                type="button"
-                className="arena-pick-card is-boy"
-                onClick={() => start("cars")}
-              >
-                <span className="arena-pick-icon" aria-hidden="true">
-                  <CarArt color="#dc2626" className="arena-pick-art" />
-                </span>
-                <strong>{t(locale, "arenaBoy")}</strong>
-                <em>{t(locale, "arenaBoyTheme")}</em>
-                <small>{t(locale, "arenaBoyLead")}</small>
-              </button>
-              <button
-                type="button"
-                className="arena-pick-card is-girl"
-                onClick={() => start("dolls")}
-              >
-                <span className="arena-pick-icon" aria-hidden="true">
-                  <DollArt className="arena-pick-art is-doll" />
-                </span>
-                <strong>{t(locale, "arenaGirl")}</strong>
-                <em>{t(locale, "arenaGirlTheme")}</em>
-                <small>{t(locale, "arenaGirlLead")}</small>
-              </button>
-            </div>
+            <button type="button" className="arena-cta" onClick={start}>
+              {t(locale, "arenaStart")}
+            </button>
           </div>
         ) : null}
 
         {phase === "run" && current ? (
-          <QuestionBoard
-            locale={locale}
-            theme={theme ?? "cars"}
-            round={current}
-            picked={picked}
-            locked={busy}
-            onPick={choose}
-          />
+          <QuestionBoard locale={locale} round={current} picked={picked} locked={busy} onPick={choose} />
         ) : null}
 
         {phase === "won" || phase === "lost" ? (
           <div className="arena-panel">
-            <p className="arena-kicker">{phase === "won" ? "XP" : theme === "dolls" ? "STOP" : "CRASH"}</p>
+            <p className="arena-kicker">{phase === "won" ? "XP" : "STOP"}</p>
             <h2>{phase === "won" ? t(locale, "arenaWin") : t(locale, "arenaLose")}</h2>
             <p className="font-serif text-4xl">
               {phase === "won" ? `+${ARENA_XP}` : score} {t(locale, "points")}
             </p>
             <p>
-              {ar ? "صحّحت" : "Solved"} {correct}/{rounds.length} · {t(locale, "arenaCombo")} ×{combo}
+              {ar ? "صحّحت" : "Solved"} {correct}/{rounds.length} · {kmh} {t(locale, "arenaSpeed")} · {t(locale, "arenaCombo")} ×{combo}
             </p>
             <button type="button" className="arena-cta" onClick={restart}>
               {t(locale, "arenaRetry")}
@@ -255,96 +231,14 @@ export function Arena3D({ locale }: { locale: Locale }) {
   );
 }
 
-function ThemeWorld({ theme, rushing }: { theme: ArenaTheme; rushing: boolean }) {
-  return (
-    <div className={`arena-world3 ${rushing ? "is-rush" : ""} is-${theme}`} aria-hidden="true">
-      <div className="arena-sky" />
-      <span className="arena-wall is-left" />
-      <span className="arena-wall is-right" />
-      <div className="arena-grid" />
-      <div className="arena-side is-left">
-        {Array.from({ length: 6 }, (_, index) => (
-          <span key={`l${index}`} className="arena-prop" style={{ "--d": `${index * 0.55}` } as CSSProperties}>
-            <WorldRacer theme={theme} index={index} />
-          </span>
-        ))}
-      </div>
-      <div className="arena-side is-right">
-        {Array.from({ length: 6 }, (_, index) => (
-          <span key={`r${index}`} className="arena-prop" style={{ "--d": `${index * 0.55 + 0.28}` } as CSSProperties}>
-            <WorldRacer theme={theme} index={index + 2} />
-          </span>
-        ))}
-      </div>
-      <div className="arena-gear is-left">
-        {Array.from({ length: 5 }, (_, index) => (
-          <span key={`gl${index}`} className="arena-prop is-gear" style={{ "--d": `${index * 0.7}` } as CSSProperties}>
-            <WorldGear theme={theme} index={index} />
-          </span>
-        ))}
-      </div>
-      <div className="arena-gear is-right">
-        {Array.from({ length: 5 }, (_, index) => (
-          <span key={`gr${index}`} className="arena-prop is-gear" style={{ "--d": `${index * 0.7 + 0.35}` } as CSSProperties}>
-            <WorldGear theme={theme} index={index + 1} />
-          </span>
-        ))}
-      </div>
-      {rushing ? <div className="arena-streaks" /> : null}
-    </div>
-  );
-}
-
-function WorldRacer({ theme, index }: { theme: ArenaTheme; index: number }) {
-  if (theme === "cars") {
-    return <CarArt color={CAR_COLORS[index % CAR_COLORS.length]} className="arena-side-art" />;
-  }
-  return (
-    <DollArt
-      dress={DOLL_DRESSES[index % DOLL_DRESSES.length]}
-      hair={DOLL_HAIR[index % DOLL_HAIR.length]}
-      className="arena-side-art is-doll"
-    />
-  );
-}
-
-function WorldGear({ theme, index }: { theme: ArenaTheme; index: number }) {
-  if (theme === "cars") {
-    return index % 2 === 0 ? <TireArt className="arena-gear-art" /> : <ConeArt className="arena-gear-art" />;
-  }
-  return index % 2 === 0 ? (
-    <DressArt color={DOLL_DRESSES[index % DOLL_DRESSES.length]} className="arena-gear-art" />
-  ) : (
-    <BowArt className="arena-gear-art" />
-  );
-}
-
-function ThemeRig({ theme }: { theme: ArenaTheme }) {
-  if (theme === "dolls") {
-    return (
-      <div className="arena-rig is-dolls" aria-hidden="true">
-        <DollArt className="arena-player-art is-doll" />
-        <span className="arena-cart" />
-      </div>
-    );
-  }
-  return (
-    <div className="arena-rig is-cars" aria-hidden="true">
-      <CarArt color="#dc2626" className="arena-player-art" />
-    </div>
-  );
-}
-
 function QuestionBoard({
   locale,
-  theme,
   round,
   picked,
   locked,
   onPick,
 }: {
   locale: Locale;
-  theme: ArenaTheme;
   round: ArenaRound;
   picked: number | null;
   locked: boolean;
@@ -368,18 +262,9 @@ function QuestionBoard({
               key={`${round.id}-${index}`}
               type="button"
               disabled={locked}
-              className={`arena-gate is-${theme} ${state}`}
+              className={`arena-gate is-robot ${state}`}
               onClick={() => onPick(index)}
             >
-              {theme === "cars" ? (
-                <CarArt color={CAR_COLORS[index] ?? "#dc2626"} className="arena-gate-art" />
-              ) : (
-                <DollArt
-                  dress={DOLL_DRESSES[index] ?? "#db2777"}
-                  hair={DOLL_HAIR[index] ?? "#431407"}
-                  className="arena-gate-art is-doll"
-                />
-              )}
               <span className="arena-gate-letter">{letters[index]}</span>
               <span className="arena-gate-text">{option}</span>
             </button>

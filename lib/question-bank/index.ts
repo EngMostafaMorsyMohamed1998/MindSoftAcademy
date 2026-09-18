@@ -8,7 +8,7 @@ import { CHAPTER_4_ANALYSIS, CHAPTER_4_FACTS } from "@/lib/question-bank/chapter
 import { CHAPTER_5_ANALYSIS, CHAPTER_5_FACTS } from "@/lib/question-bank/chapter-5";
 import { CHAPTER_6_ANALYSIS, CHAPTER_6_FACTS } from "@/lib/question-bank/chapter-6";
 import { CHAPTER_7_ANALYSIS, CHAPTER_7_FACTS } from "@/lib/question-bank/chapter-7";
-import { expandFactsToHomework, expandNotesToHomework } from "@/lib/question-bank/expand";
+import { expandNotesToHomework } from "@/lib/question-bank/expand";
 import type { AnalysisPrompt, BankFact } from "@/lib/question-bank/types";
 
 export const BANK_FACTS: BankFact[] = [
@@ -31,7 +31,7 @@ export const BANK_ANALYSIS: AnalysisPrompt[] = [
   ...CHAPTER_7_ANALYSIS,
 ].map((row) => clarifyAnalysis(row, CLEAR_GUIDES[row.id] ?? MORE_GUIDES[row.id]));
 
-export const BANK_MCQ = [...expandFactsToHomework(BANK_FACTS), ...expandNotesToHomework()];
+export const BANK_MCQ = expandNotesToHomework();
 
 export function analysisForLesson(lessonId: string): AnalysisPrompt[] {
   return BANK_ANALYSIS.filter((row) => row.lessonId === lessonId);

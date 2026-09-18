@@ -30,7 +30,7 @@ function seedFrom(id: string, extra: number) {
   return value;
 }
 
-export function buildArenaRounds(seed: number): ArenaRound[] {
+export function buildArenaRounds(seed: number, includeFaiz = true): ArenaRound[] {
   const rooms: ArenaRound[] = [];
 
   CHAPTERS.forEach((chapter, index) => {
@@ -60,7 +60,7 @@ export function buildArenaRounds(seed: number): ArenaRound[] {
     });
   });
 
-  const faiz = shuffled(FAIZ_OBJECTIVES, seed + 700)[0];
+  const faiz = includeFaiz ? shuffled(FAIZ_OBJECTIVES, seed + 700)[0] : undefined;
   const faizAr = faiz?.optionsAr ?? [];
   const faizEn = faiz?.optionsEn ?? [];
   if (faiz && faizAr.length >= 4 && faizEn.length >= 4) {
@@ -86,9 +86,13 @@ export function buildArenaRounds(seed: number): ArenaRound[] {
 }
 
 export function arenaSeconds(combo: number): number {
-  return Math.max(8, ARENA_SECONDS - Math.floor(combo / 3));
+  return Math.max(5, 13.5 - combo * 0.75);
+}
+
+export function arenaKmh(combo: number): number {
+  return 90 + combo * 22;
 }
 
 export function arenaScore(combo: number, secondsLeft: number): number {
-  return 80 + combo * 25 + Math.round(secondsLeft * 8);
+  return 90 + combo * 35 + Math.round(secondsLeft * 10);
 }

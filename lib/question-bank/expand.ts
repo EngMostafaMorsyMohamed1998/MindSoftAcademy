@@ -36,13 +36,15 @@ function uniqueWhys(
   facts: BankFact[],
   lessonId: string,
   take: number,
-  skip: string,
+  skipWhy: string,
+  skipTerm: string,
 ): { ar: string; en: string }[] {
   const seen = new Set<string>();
   const rows: { ar: string; en: string }[] = [];
   for (const fact of facts) {
     if (fact.lessonId !== lessonId) continue;
-    if (fact.whyAr === skip || seen.has(fact.whyAr)) continue;
+    if (fact.termAr === skipTerm) continue;
+    if (fact.whyAr === skipWhy || seen.has(fact.whyAr)) continue;
     seen.add(fact.whyAr);
     rows.push({ ar: fact.whyAr, en: fact.whyEn });
     if (rows.length >= take) break;
@@ -54,13 +56,15 @@ function uniqueScenes(
   facts: BankFact[],
   lessonId: string,
   take: number,
-  skip: string,
+  skipScene: string,
+  skipTerm: string,
 ): { ar: string; en: string }[] {
   const seen = new Set<string>();
   const rows: { ar: string; en: string }[] = [];
   for (const fact of facts) {
     if (fact.lessonId !== lessonId) continue;
-    if (fact.sceneAr === skip || seen.has(fact.sceneAr)) continue;
+    if (fact.termAr === skipTerm) continue;
+    if (fact.sceneAr === skipScene || seen.has(fact.sceneAr)) continue;
     seen.add(fact.sceneAr);
     rows.push({ ar: fact.sceneAr, en: fact.sceneEn });
     if (rows.length >= take) break;
@@ -81,8 +85,8 @@ export function expandFactsToHomework(facts: BankFact[]): ExpandedMcq[] {
       lessonId: fact.lessonId,
       chapterId: fact.chapterId,
       kind: "mcq",
-      promptAr: `الموقف: ${fact.sceneAr} ما التصرف الصحيح؟`,
-      promptEn: `Situation: ${fact.sceneEn} What is the right move?`,
+      promptAr: `${fact.sceneAr} ما الإجابة الصحيحة؟`,
+      promptEn: `${fact.sceneEn} What is the correct answer?`,
       optionsAr: [fact.claimAr, ...fact.wrongAr],
       optionsEn: [fact.claimEn, ...fact.wrongEn],
       correctIndex: 0,
@@ -93,8 +97,8 @@ export function expandFactsToHomework(facts: BankFact[]): ExpandedMcq[] {
       lessonId: fact.lessonId,
       chapterId: fact.chapterId,
       kind: "mcq",
-      promptAr: `الموقف: ${fact.sceneAr} أي تصرف خطأ؟`,
-      promptEn: `Situation: ${fact.sceneEn} Which move is wrong?`,
+      promptAr: `${fact.sceneAr} أي إجابة خطأ؟`,
+      promptEn: `${fact.sceneEn} Which answer is wrong?`,
       optionsAr: [fact.wrongAr[0], fact.claimAr, fact.wrongAr[1], fact.wrongAr[2]],
       optionsEn: [fact.wrongEn[0], fact.claimEn, fact.wrongEn[1], fact.wrongEn[2]],
       correctIndex: 0,
@@ -107,8 +111,8 @@ export function expandFactsToHomework(facts: BankFact[]): ExpandedMcq[] {
         lessonId: fact.lessonId,
         chapterId: fact.chapterId,
         kind: "mcq",
-        promptAr: `الموقف: ${fact.sceneAr} ما المصطلح الأنسب؟`,
-        promptEn: `Situation: ${fact.sceneEn} Which term fits best?`,
+        promptAr: `${fact.sceneAr} ما المصطلح الصحيح؟`,
+        promptEn: `${fact.sceneEn} Which term is correct?`,
         optionsAr: [fact.termAr, otherTerms[0]!, otherTerms[1]!, otherTerms[2]!],
         optionsEn: [
           fact.termEn,
@@ -120,22 +124,22 @@ export function expandFactsToHomework(facts: BankFact[]): ExpandedMcq[] {
       });
     }
 
-    const otherWhys = uniqueWhys(facts, fact.lessonId, 3, fact.whyAr);
+    const otherWhys = uniqueWhys(facts, fact.lessonId, 3, fact.whyAr, fact.termAr);
     if (otherWhys.length === 3) {
       bank.push({
         id: `${fact.id}-y`,
         lessonId: fact.lessonId,
         chapterId: fact.chapterId,
         kind: "mcq",
-        promptAr: `لماذا نختار هذا الحل: «${fact.claimAr}»؟`,
-        promptEn: `Why choose this solution: “${fact.claimEn}”?`,
+        promptAr: `لماذا الإجابة الصحيحة: «${fact.claimAr}»؟`,
+        promptEn: `Why is this the correct answer: “${fact.claimEn}”?`,
         optionsAr: [fact.whyAr, otherWhys[0]!.ar, otherWhys[1]!.ar, otherWhys[2]!.ar],
         optionsEn: [fact.whyEn, otherWhys[0]!.en, otherWhys[1]!.en, otherWhys[2]!.en],
         correctIndex: 0,
       });
     }
 
-    const otherScenes = uniqueScenes(facts, fact.lessonId, 3, fact.sceneAr);
+    const otherScenes = uniqueScenes(facts, fact.lessonId, 3, fact.sceneAr, fact.termAr);
     if (otherScenes.length === 3) {
       bank.push({
         id: `${fact.id}-s`,
@@ -175,8 +179,8 @@ export function expandNotesToHomework(): ExpandedMcq[] {
         lessonId: note.id,
         chapterId: note.chapterId,
         kind: "mcq",
-        promptAr: `أي اختيار يصف «${term.term}» بدقة؟`,
-        promptEn: `Which choice describes “${en.term}” accurately?`,
+        promptAr: `ما المعنى الصحيح لمصطلح «${term.term}» في المنهج؟`,
+        promptEn: `What is the correct meaning of “${en.term}” in the lesson?`,
         optionsAr: [term.meaning, ...pick.map((row) => row.ar.meaning)],
         optionsEn: [en.meaning, ...pick.map((row) => row.en.meaning)],
         correctIndex: 0,
@@ -187,8 +191,8 @@ export function expandNotesToHomework(): ExpandedMcq[] {
         lessonId: note.id,
         chapterId: note.chapterId,
         kind: "mcq",
-        promptAr: `أي معنى لا يناسب «${term.term}»؟`,
-        promptEn: `Which meaning does not fit “${en.term}”?`,
+        promptAr: `أي معنى لا يناسب مصطلح «${term.term}» في المنهج؟`,
+        promptEn: `Which meaning does not fit “${en.term}” in the lesson?`,
         optionsAr: [pick[0]!.ar.meaning, term.meaning, pick[1]!.ar.meaning, pick[2]!.ar.meaning],
         optionsEn: [pick[0]!.en.meaning, en.meaning, pick[1]!.en.meaning, pick[2]!.en.meaning],
         correctIndex: 0,
