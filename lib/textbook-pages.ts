@@ -1,4 +1,5 @@
 import { CHAPTERS } from "@/lib/curriculum";
+import { explainsForLesson, type LessonExplain } from "@/lib/lesson-explains";
 import { LESSON_NOTES, type LessonNote } from "@/lib/lessons";
 
 export type TextbookRow = {
@@ -26,6 +27,7 @@ export type TextbookPage = {
   rows: TextbookRow[];
   pointsAr: string[];
   pointsEn: string[];
+  explains: LessonExplain[];
   takeawayAr: string;
   takeawayEn: string;
 };
@@ -65,13 +67,24 @@ const PAGE_1_1: TextbookPage = {
   questionEn: "How did IT grow through its main stages, and how did each stage change society?",
   sectionAr: "تاريخ تكنولوجيا المعلومات (IT)",
   sectionEn: "A short history of IT",
-  introAr: "الجدول يلخص المحطات الرئيسية: من حاسوب يملأ غرفة، إلى خدمات سحابية تصل للهاتف.",
-  introEn: "The table sums up the main stops: from a room-sized computer to cloud services on a phone.",
+  introAr: "الجدول يلخص المحطات الرئيسية: من حاسوب يملأ غرفة، إلى خدمات سحابية تصل للهاتف. بعد الجدول شرح كامل لقانون مور والسحابة والطرفية والواقع المعزز والافتراضي.",
+  introEn: "The table sums up the main stops: from a room-sized computer to cloud services on a phone. After the table comes a full explanation of Moore's Law, cloud, edge, AR and VR.",
   art: "lab",
   headersAr: ["الفترة الزمنية", "التقنيات والأحداث الرئيسية", "التأثير على المجتمع"],
   headersEn: ["Period", "Key technologies and events", "Effect on society"],
-  pointsAr: [],
-  pointsEn: [],
+  pointsAr: [
+    "قانون مور: عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين — التعريف عن الكثافة مش عن حجم الصندوق.",
+    "الحوسبة السحابية تقدّم التخزين والبرامج كخدمة عبر الإنترنت.",
+    "الحوسبة الطرفية تعالج البيانات على الجهاز لما التأخير خطر.",
+    "AR يضيف طبقة رقمية على الواقع؛ VR يستبدله بعالم محاكى.",
+  ],
+  pointsEn: [
+    "Moore's Law: transistors on a chip roughly double every two years — density, not box size.",
+    "Cloud computing delivers storage and software as a service over the Internet.",
+    "Edge computing processes data on the device when delay is dangerous.",
+    "AR overlays the real world; VR replaces it with a simulated space.",
+  ],
+  explains: explainsForLesson("1-1"),
   takeawayAr: "التقنية لا تقفز مرة واحدة؛ كل مرحلة تغيّر كيف نتواصل ونعمل وندفع.",
   takeawayEn: "IT did not jump once; each stage changed how we communicate, work, and pay.",
   rows: [
@@ -167,6 +180,7 @@ function fromNote(note: LessonNote): TextbookPage {
     }),
     pointsAr: note.bodyAr.slice(1),
     pointsEn: note.bodyEn.slice(1),
+    explains: explainsForLesson(note.id),
     takeawayAr: note.takeawayAr,
     takeawayEn: note.takeawayEn,
   };

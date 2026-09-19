@@ -22,8 +22,11 @@ for (const note of LESSON_NOTES) {
     if (question.correctIndex < 0 || question.correctIndex >= question.optionsAr.length) {
       problems.push(`${question.id}: bad correctIndex`);
     }
-    if (/Situation:|ما التصرف|right move/i.test(`${question.promptAr} ${question.promptEn}`)) {
-      problems.push(`${question.id}: leftover scene wording`);
+    if (/Situation:|ما التصرف|right move|في المنهج|حسب المنهج|in the lesson|خلاصة هذا الدرس/i.test(`${question.promptAr} ${question.promptEn}`)) {
+      problems.push(`${question.id}: leftover wording`);
+    }
+    if (question.id.includes("-n-not-") || question.id.includes("-take-x") || question.id.includes("-body-")) {
+      problems.push(`${question.id}: confusing generated question`);
     }
   }
 }

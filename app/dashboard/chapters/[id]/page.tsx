@@ -9,6 +9,7 @@ import { gamesForChapter } from "@/lib/games";
 import { notesForChapter } from "@/lib/lessons";
 import { mindMapForChapter } from "@/lib/mind-maps";
 import { bookletSafe } from "@/lib/booklet-lang";
+import { explainsForLesson } from "@/lib/lesson-explains";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { BOOKS } from "@/lib/library";
@@ -153,6 +154,20 @@ export default async function ChapterPage({
                   </div>
                 ))}
               </dl>
+              {explainsForLesson(note.id).map((item) => (
+                <article key={`${note.id}-${item.termEn}`} className="mt-3 rounded-2xl bg-primary/5 p-4">
+                  <p className="text-sm font-extrabold text-primary">
+                    {bookletSafe(locale, locale === "ar" ? item.termAr : item.termEn)}
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-foreground/80">
+                    {bookletSafe(locale, locale === "ar" ? item.bodyAr : item.bodyEn)}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-7 text-foreground">
+                    {locale === "ar" ? "مثال: " : "Example: "}
+                    {bookletSafe(locale, locale === "ar" ? item.exampleAr : item.exampleEn)}
+                  </p>
+                </article>
+              ))}
               <p className="mt-4 rounded-xl bg-accent/15 px-3 py-2 text-sm">
                 <strong>{t(locale, "takeaway")}: </strong>
                 {bookletSafe(locale, locale === "ar" ? note.takeawayAr : note.takeawayEn)}

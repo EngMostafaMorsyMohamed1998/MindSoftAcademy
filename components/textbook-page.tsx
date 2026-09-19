@@ -117,6 +117,37 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
           </table>
         )}
 
+        {page.explains.length ? (
+          <div className="mt-6 space-y-4">
+            <h4 className="text-xl font-extrabold text-[#0c2d6b]">
+              {ar ? "شرح المصطلحات — اقرأ قبل التدريبات" : "Term explanations — read before the drills"}
+            </h4>
+            {page.explains.map((item) => {
+              const title = bookletSafe(locale, ar ? item.termAr : item.termEn);
+              const body = bookletSafe(locale, ar ? item.bodyAr : item.bodyEn);
+              const example = bookletSafe(locale, ar ? item.exampleAr : item.exampleEn);
+              return (
+                <article key={`${page.id}-${item.termEn}`} className="rounded-xl bg-[#eef3fb] p-5 ring-1 ring-slate-300">
+                  <div className="flex gap-3">
+                    <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-white">
+                      <TextbookArt art={termArt(title, body)} locale={locale} compact />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-lg font-extrabold text-[#0c2d6b]">{title}</p>
+                      <p className="mt-2 text-base font-semibold leading-8 text-[#111827]">{body}</p>
+                    </div>
+                  </div>
+                  {example ? (
+                    <p className="mt-3 rounded-sm bg-[#fff4cc] px-3 py-2 text-base font-semibold leading-7 text-[#111827] ring-1 ring-amber-300">
+                      <strong>{ar ? "مثال:" : "Example:"}</strong> {example}
+                    </p>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+        ) : null}
+
         <p className="textbook-takeaway mt-6 rounded-sm bg-[#fff4cc] px-4 py-4 text-base font-bold leading-8 text-[#111827] ring-1 ring-amber-300">
           <strong>{ar ? "الخلاصة:" : "Takeaway:"}</strong> {bookletSafe(locale, ar ? page.takeawayAr : page.takeawayEn)}
         </p>

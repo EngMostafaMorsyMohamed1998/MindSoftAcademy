@@ -6,7 +6,6 @@ import { allChaptersPassed } from "@/lib/chapter-progress";
 import {
   getWeekPlan,
   listAttendance,
-  listClassGroups,
   listCodes,
   listExams,
   listHomeworkResults,
@@ -16,8 +15,7 @@ import { studentProgress } from "@/lib/student-progress";
 import { CHAPTERS, getLesson } from "@/lib/curriculum";
 import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
-import { groupsForStudent } from "@/lib/class-groups";
-import { buildGroupRanks, codesOnSameTrack, rankForStudent } from "@/lib/leaderboard";
+import { buildClassRanks, rankForStudent } from "@/lib/leaderboard";
 import { getLocale } from "@/lib/locale";
 import { openMakeups } from "@/lib/makeup";
 import { levelFromPoints } from "@/lib/student-profile";
@@ -30,7 +28,7 @@ export default async function DashboardHomePage() {
   const user = await getCurrentUser();
   if (!user) return null;
   const locale = await getLocale();
-  const [{ completed, unlocks }, weekPlan, makeups, attendance, exams, homework, codes, groups] =
+  const [{ completed, unlocks }, weekPlan, makeups, attendance, exams, homework, codes] =
     await Promise.all([
       studentProgress(),
       getWeekPlan(),
@@ -39,13 +37,11 @@ export default async function DashboardHomePage() {
       listExams(),
       listHomeworkResults(),
       listCodes(),
-      listClassGroups(),
     ]);
   const telegramHref = telegramBotHref();
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
   const { level } = levelFromPoints(user.points);
-  const homeGroup = groupsForStudent(groups, user.id)[0] ?? null;
-  const ranks = homeGroup ? buildGroupRanks(codesOnSameTrack(codes, user.id), homeGroup.studentIds) : [];
+  const ranks = buildClassRanks(codes, { requireUsed: false });
   const mine = rankForStudent(ranks, user.id);
   const open = openMakeups(makeups, user.id);
   const week = buildWeekStars({

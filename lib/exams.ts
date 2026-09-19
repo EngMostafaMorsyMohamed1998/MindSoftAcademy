@@ -159,8 +159,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       tf("1-t4", "مشاركة بيانات زميل مع نموذج عام تُعد مشكلة خصوصية.", "Sharing a classmate's data with a public model is a privacy problem.", true),
       mcq(
         "1-m5",
-        "ماذا يعني الذكاء الضيق؟",
-        "What does narrow AI mean?",
+        "الذكاء الضيق — نوع معظم أنظمة اليوم — يعني إيه؟",
+        "Narrow AI — the type of most systems today — means what?",
         [
           "نظام يفهم كل المجالات مثل الإنسان",
           "نظام يتقن مهمة واحدة فقط",

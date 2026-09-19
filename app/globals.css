@@ -444,6 +444,15 @@ body {
   transform-origin: right center;
 }
 
+.arena-cam {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  transform: rotateX(var(--rx, 4deg)) rotateY(var(--ry, -6deg));
+  transform-style: preserve-3d;
+  transition: transform 160ms ease-out;
+}
+
 .arena-world3.is-robot .arena-grid {
   background:
     linear-gradient(to top, #030814 8%, transparent 70%),
@@ -451,30 +460,49 @@ body {
     repeating-linear-gradient(to bottom, rgba(56, 189, 248, 0.2) 0 2px, transparent 2px 72px);
 }
 
+.arena-wall.is-robot {
+  background:
+    linear-gradient(180deg, rgba(7, 28, 69, 0.08), rgba(3, 8, 20, 0.72)),
+    repeating-linear-gradient(90deg, rgba(212, 160, 23, 0.16) 0 8px, transparent 8px 42px);
+  box-shadow: inset 0 0 0 2px rgba(212, 160, 23, 0.22);
+}
+
+.arena-stage.is-run .arena-wall.is-robot {
+  animation: arena-wall-rush calc(1.1s - var(--heat) * 0.55s) linear infinite;
+}
+
 .arena-racer {
   pointer-events: none;
   position: absolute;
   z-index: 3;
   left: 50%;
-  transform: translateX(-50%) rotateX(8deg) rotateY(-12deg);
   transform-style: preserve-3d;
+  transform-origin: 50% 86%;
 }
 
 .arena-racer.is-hero {
-  bottom: 1%;
-  width: min(42%, 300px);
+  bottom: 2%;
+  width: min(58%, 440px);
+  height: min(62%, 520px);
   filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.45));
+  animation: arena-hero-idle 3.2s ease-in-out infinite;
 }
 
 .arena-racer.is-rival {
-  bottom: calc(28% + var(--lead, 0) * 5%);
-  width: min(24%, 170px);
-  opacity: 0.82;
+  bottom: calc(36% + var(--lead, 0) * 4.5%);
+  width: min(24%, 200px);
+  height: min(28%, 240px);
+  opacity: 0.78;
   filter: hue-rotate(168deg) saturate(0.75) brightness(1.05) drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
+  animation: arena-rival-idle 3.8s ease-in-out infinite;
+  transition:
+    bottom 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.55s ease,
+    opacity 0.4s ease;
 }
 
 .arena-racer.is-rival.is-close {
-  bottom: 16%;
+  bottom: 15%;
   width: min(30%, 210px);
   opacity: 0.95;
 }
@@ -493,13 +521,65 @@ body {
   position: relative;
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: contain;
-  mask-image: radial-gradient(ellipse 70% 78% at 50% 46%, #000 52%, transparent 78%);
+  mask-image: radial-gradient(ellipse 72% 80% at 50% 48%, #000 58%, transparent 82%);
+}
+
+.arena-racer-shadow {
+  display: block;
+  width: 62%;
+  height: 14px;
+  margin: -6px auto 0;
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgba(3, 8, 20, 0.55), transparent 70%);
+  filter: blur(3px);
+}
+
+.arena-stage.is-run .arena-racer.is-hero .arena-racer-shadow {
+  animation: arena-shadow calc(0.46s - var(--heat) * 0.18s) ease-in-out infinite;
 }
 
 .arena-stage.is-run .arena-racer.is-hero {
-  animation: arena-bob 0.32s ease-in-out infinite;
+  animation: arena-hero-run calc(0.46s - var(--heat) * 0.18s) ease-in-out infinite;
+}
+
+.arena-stage.is-run .arena-racer.is-rival {
+  animation: arena-rival-run calc(0.5s - var(--heat) * 0.16s) ease-in-out infinite;
+}
+
+.arena-stage.is-ok .arena-racer.is-hero {
+  animation-duration: 0.2s;
+}
+
+.arena-stage.is-run .arena-world3 {
+  animation: arena-world-sway calc(0.7s - var(--heat) * 0.22s) ease-in-out infinite;
+}
+
+.arena-dust {
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+  left: 18%;
+  right: 18%;
+  bottom: 6%;
+  height: 22%;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 30% 70%, rgba(212, 160, 23, 0.22), transparent 36%),
+    radial-gradient(circle at 70% 80%, rgba(56, 189, 248, 0.16), transparent 32%);
+  filter: blur(8px);
+}
+
+.arena-dust.is-late {
+  left: 28%;
+  right: 10%;
+  animation-delay: -0.35s;
+}
+
+.arena-stage.is-run .arena-dust {
+  opacity: 0.7;
+  animation: arena-dust 0.55s linear infinite;
 }
 
 .arena-panel-hero {
@@ -529,17 +609,106 @@ body {
   transform-origin: center bottom;
 }
 
+.arena-stage.is-idle .arena-grid {
+  animation: arena-rush 8s linear infinite;
+}
+
 .arena-stage.is-run .arena-grid {
-  animation: arena-rush 0.7s linear infinite;
+  animation: arena-rush calc(0.72s - var(--heat) * 0.42s) linear infinite;
 }
 
 .arena-stage.is-ok .arena-grid {
-  animation-duration: 0.28s;
+  animation-duration: 0.22s;
 }
 
 @keyframes arena-rush {
   to {
     background-position: 0 72px;
+  }
+}
+
+@keyframes arena-wall-rush {
+  to {
+    background-position: 42px 0;
+  }
+}
+
+@keyframes arena-hero-idle {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0) rotateX(8deg) rotateY(-10deg);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-18px) rotateX(4deg) rotateY(-18deg);
+  }
+}
+
+@keyframes arena-rival-idle {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0) rotateX(10deg) rotateY(12deg) scale(0.94);
+  }
+  50% {
+    transform: translateX(-46%) translateY(-12px) rotateX(6deg) rotateY(20deg) scale(1);
+  }
+}
+
+@keyframes arena-hero-run {
+  0% {
+    transform: translateX(-50%) translateY(4px) rotateX(12deg) rotateY(-6deg) rotateZ(-4deg);
+  }
+  25% {
+    transform: translateX(calc(-50% + 14px)) translateY(-22px) rotateX(6deg) rotateY(-18deg) rotateZ(3deg);
+  }
+  50% {
+    transform: translateX(-50%) translateY(6px) rotateX(14deg) rotateY(-4deg) rotateZ(-3deg);
+  }
+  75% {
+    transform: translateX(calc(-50% - 14px)) translateY(-20px) rotateX(6deg) rotateY(-20deg) rotateZ(4deg);
+  }
+  100% {
+    transform: translateX(-50%) translateY(4px) rotateX(12deg) rotateY(-6deg) rotateZ(-4deg);
+  }
+}
+
+@keyframes arena-rival-run {
+  0% {
+    transform: translateX(-50%) translateY(3px) rotateX(12deg) rotateY(8deg) rotateZ(3deg);
+  }
+  50% {
+    transform: translateX(-40%) translateY(-14px) rotateX(6deg) rotateY(18deg) rotateZ(-3deg);
+  }
+  100% {
+    transform: translateX(-50%) translateY(3px) rotateX(12deg) rotateY(8deg) rotateZ(3deg);
+  }
+}
+
+@keyframes arena-world-sway {
+  0%,
+  100% {
+    transform: translateX(0) rotateZ(0);
+  }
+  50% {
+    transform: translateX(-10px) rotateZ(-0.7deg);
+  }
+}
+
+@keyframes arena-dust {
+  to {
+    transform: translateY(18px) scaleX(1.08);
+    opacity: 0.15;
+  }
+}
+
+@keyframes arena-shadow {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scaleX(0.68);
+    opacity: 0.35;
   }
 }
 
@@ -844,8 +1013,15 @@ body {
 
 @keyframes arena-bob {
   50% {
-    transform: translateX(-50%) translateY(4px);
+    transform: translateX(-50%) translateY(-8px);
   }
+}
+
+.arena-hud,
+.arena-play,
+.arena-panel,
+.arena-timer {
+  pointer-events: auto;
 }
 
 .arena-hud {
@@ -1158,6 +1334,11 @@ body {
   .arena-grid,
   .arena-streaks,
   .arena-rig,
+  .arena-racer,
+  .arena-world3,
+  .arena-dust,
+  .arena-wall,
+  .arena-cam,
   .arena-gate,
   .arena-prop,
   .arena-stage.is-bad {

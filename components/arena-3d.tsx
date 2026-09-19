@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { awardArenaXp } from "@/app/actions/study";
 import { HeroRobot } from "@/components/hero-robot";
 import {
@@ -39,10 +39,28 @@ export function Arena3D({ locale }: { locale: Locale }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [left, setLeft] = useState(arenaSeconds(0));
   const busyRef = useRef(false);
+  const stageRef = useRef<HTMLDivElement>(null);
   const current = rounds[room];
   const limit = arenaSeconds(combo);
   const kmh = arenaKmh(combo);
   const lead = correct - (ARENA_LIVES - lives);
+
+  function tilt(event: PointerEvent<HTMLDivElement>) {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const box = stage.getBoundingClientRect();
+    const x = (event.clientX - box.left) / box.width - 0.5;
+    const y = (event.clientY - box.top) / box.height - 0.5;
+    stage.style.setProperty("--rx", `${(6 - y * 10).toFixed(2)}deg`);
+    stage.style.setProperty("--ry", `${(-8 + x * 14).toFixed(2)}deg`);
+  }
+
+  function resetTilt() {
+    const stage = stageRef.current;
+    if (!stage) return;
+    stage.style.setProperty("--rx", "6deg");
+    stage.style.setProperty("--ry", "-8deg");
+  }
 
   function start() {
     busyRef.current = false;
@@ -152,23 +170,37 @@ export function Arena3D({ locale }: { locale: Locale }) {
   return (
     <div className="arena-shell">
       <div
-        className={`arena-stage is-robot ${phase === "run" ? "is-run" : ""} ${flash === "ok" ? "is-ok" : ""} ${flash === "bad" ? "is-bad" : ""}`}
-        style={{ ["--heat" as string]: String(Math.min(1, combo / 8)), ["--lead" as string]: String(lead) }}
+        ref={stageRef}
+        className={`arena-stage is-robot ${phase === "run" ? "is-run" : "is-idle"} ${flash === "ok" ? "is-ok" : ""} ${flash === "bad" ? "is-bad" : ""}`}
+        style={{
+          ["--heat" as string]: String(Math.min(1, combo / 8)),
+          ["--lead" as string]: String(lead),
+          ["--rx" as string]: "6deg",
+          ["--ry" as string]: "-8deg",
+        }}
+        onPointerMove={tilt}
+        onPointerLeave={resetTilt}
       >
-        <div className={`arena-world3 is-robot ${phase === "run" ? "is-rush" : ""}`}>
-          <div className="arena-sky" />
-          <div className="arena-grid" />
-          <div className="arena-streaks" />
-          {phase !== "ready" ? (
-            <div className={`arena-racer is-rival ${lead >= 0 ? "is-behind" : "is-close"}`} aria-hidden>
-              <span className="arena-racer-glow" />
-              <Image src="/mascots/hero-robot.png" alt="" width={320} height={428} className="arena-racer-img" />
-            </div>
-          ) : null}
-          <div className="arena-racer is-hero" aria-hidden>
-            <span className="arena-racer-glow" />
-            <Image src="/mascots/hero-robot.png" alt="" width={420} height={560} priority className="arena-racer-img" />
+        <div className="arena-cam">
+          <div className={`arena-world3 is-robot ${phase === "run" ? "is-rush" : ""}`}>
+            <div className="arena-sky" />
+            <div className="arena-wall is-left is-robot" />
+            <div className="arena-wall is-right is-robot" />
+            <div className="arena-grid" />
+            <div className="arena-streaks" />
+            <span className="arena-dust" />
+            <span className="arena-dust is-late" />
           </div>
+        </div>
+        <div className={`arena-racer is-rival ${lead >= 0 ? "is-behind" : "is-close"}`} aria-hidden>
+          <span className="arena-racer-glow" />
+          <Image src="/mascots/hero-robot.png" alt="" width={320} height={428} className="arena-racer-img" />
+          <span className="arena-racer-shadow" />
+        </div>
+        <div className="arena-racer is-hero" aria-hidden>
+          <span className="arena-racer-glow" />
+          <Image src="/mascots/hero-robot.png" alt="" width={420} height={560} priority className="arena-racer-img" />
+          <span className="arena-racer-shadow" />
         </div>
 
         <div className="arena-hud">

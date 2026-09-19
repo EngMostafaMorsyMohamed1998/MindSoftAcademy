@@ -4,12 +4,10 @@ import { revalidatePath } from "next/cache";
 import {
   createCommunityComment,
   createCommunityPost,
-  listClassGroups,
   removeCommunityComment,
   removeCommunityPost,
   toggleCommunityLike,
 } from "@/lib/access-store";
-import { groupsForStudent } from "@/lib/class-groups";
 import { getCurrentUser } from "@/lib/current-user";
 import { isTeacher } from "@/lib/teacher-session";
 import { BRAND } from "@/lib/brand";
@@ -19,29 +17,29 @@ function refresh() {
   revalidatePath("/admin");
 }
 
-export async function shareCommunityPost(formData: FormData): Promise<void> {
+export async function shareCommunityPost(formData: FormData): Promise<{ ok: boolean }> {
   const body = String(formData.get("body") || "");
   const teacher = await isTeacher();
   if (teacher) {
     const saved = await createCommunityPost({
       authorId: "teacher",
       authorName: BRAND.teacherAr,
-      groupId: String(formData.get("groupId") || ""),
+      groupId: "",
       body,
     });
     if (saved) refresh();
-    return;
+    return { ok: Boolean(saved) };
   }
   const user = await getCurrentUser();
-  if (!user) return;
-  const groups = groupsForStudent(await listClassGroups(), user.id);
+  if (!user) return { ok: false };
   const saved = await createCommunityPost({
     authorId: user.id,
     authorName: user.name,
-    groupId: groups[0]?.id ?? "",
+    groupId: "",
     body,
   });
   if (saved) refresh();
+  return { ok: Boolean(saved) };
 }
 
 export async function likeCommunityPost(formData: FormData): Promise<void> {

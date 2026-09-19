@@ -27,9 +27,24 @@ export function CommunityFeed({
   posts: CommunityFeedPost[];
   empty: string;
 }) {
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+
+  async function onShare(formData: FormData) {
+    setPending(true);
+    setError("");
+    const result = await shareCommunityPost(formData);
+    setPending(false);
+    if (!result.ok) {
+      setError(t(locale, "communityError"));
+      return;
+    }
+    (document.getElementById("community-body") as HTMLTextAreaElement | null)?.form?.reset();
+  }
+
   return (
     <div className="space-y-4">
-      <form action={shareCommunityPost} className="rounded-3xl bg-white p-4 ring-1 ring-primary/10">
+      <form action={onShare} className="rounded-3xl bg-surface p-4 ring-1 ring-primary/10">
         <label htmlFor="community-body" className="sr-only">
           {t(locale, "communityPlaceholder")}
         </label>
@@ -42,10 +57,12 @@ export function CommunityFeed({
           placeholder={t(locale, "communityPlaceholder")}
           className="w-full resize-none rounded-2xl border border-primary/15 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40"
         />
+        {error ? <p className="mt-2 text-sm text-red-700">{error}</p> : null}
         <div className="mt-3 flex justify-end">
           <button
             type="submit"
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white"
+            disabled={pending}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white disabled:opacity-70"
           >
             <Send className="size-4" />
             {t(locale, "communityShare")}
@@ -54,12 +71,12 @@ export function CommunityFeed({
       </form>
 
       {posts.length === 0 ? (
-        <p className="rounded-3xl bg-white p-5 text-sm text-foreground/65 ring-1 ring-primary/10">{empty}</p>
+        <p className="rounded-3xl bg-surface p-5 text-sm text-foreground/65 ring-1 ring-primary/10">{empty}</p>
       ) : (
         posts.map((post) => {
           const mine = post.authorId === viewerId || teacher;
           return (
-            <article key={post.id} className="rounded-3xl bg-white p-4 ring-1 ring-primary/10">
+            <article key={post.id} className="rounded-3xl bg-surface p-4 ring-1 ring-primary/10">
               <div className="flex items-start gap-3">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                   {initials(post.authorName)}

@@ -111,6 +111,7 @@ function asExamWindow(value: ExamWindow | null | undefined): ExamWindow | null {
 function asCode(row: AccessCode): AccessCode {
   return {
     ...row,
+    points: Number.isFinite(row.points) ? Math.max(0, row.points) : 0,
     suspendedAt: row.suspendedAt ?? null,
     suspendReason: row.suspendReason ?? "",
     track: row.track === "en" ? "en" : "ar",
@@ -231,8 +232,12 @@ export async function readStore(): Promise<StoreFile> {
         // Dedicated device tables may not exist yet.
       }
       const local = await readLocalStore();
+      if (!fromDb.codes.length) {
+        const fromBlob = await readBlob();
+        if (fromBlob?.codes.length) fromDb.codes = fromBlob.codes;
+        else if (local?.codes.length) fromDb.codes = local.codes;
+      }
       if (local) {
-        if (!fromDb.codes.length && local.codes.length) fromDb.codes = local.codes;
         fromDb.monthlyFee = parseMonthlyFee(local.monthlyFee);
         if (!fromDb.devices.length) fromDb.devices = parseDevices(local.devices);
         if (!fromDb.deviceLimit) fromDb.deviceLimit = parseDeviceLimit(local.deviceLimit);

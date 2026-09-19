@@ -179,22 +179,10 @@ export function expandNotesToHomework(): ExpandedMcq[] {
         lessonId: note.id,
         chapterId: note.chapterId,
         kind: "mcq",
-        promptAr: `ما المعنى الصحيح لمصطلح «${term.term}» في المنهج؟`,
-        promptEn: `What is the correct meaning of “${en.term}” in the lesson?`,
+        promptAr: `ما المعنى الصحيح لمصطلح «${term.term}»؟`,
+        promptEn: `What is the correct meaning of “${en.term}”?`,
         optionsAr: [term.meaning, ...pick.map((row) => row.ar.meaning)],
         optionsEn: [en.meaning, ...pick.map((row) => row.en.meaning)],
-        correctIndex: 0,
-      });
-
-      bank.push({
-        id: `${note.id}-n-not-${index}`,
-        lessonId: note.id,
-        chapterId: note.chapterId,
-        kind: "mcq",
-        promptAr: `أي معنى لا يناسب مصطلح «${term.term}» في المنهج؟`,
-        promptEn: `Which meaning does not fit “${en.term}” in the lesson?`,
-        optionsAr: [pick[0]!.ar.meaning, term.meaning, pick[1]!.ar.meaning, pick[2]!.ar.meaning],
-        optionsEn: [pick[0]!.en.meaning, en.meaning, pick[1]!.en.meaning, pick[2]!.en.meaning],
         correctIndex: 0,
       });
     });

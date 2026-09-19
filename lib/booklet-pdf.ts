@@ -57,6 +57,7 @@ type AskBlock = { kind: "ask"; text: string };
 type PhotoBlock = { kind: "photo"; src?: string; art: string; title: string; intro: string };
 type TableBlock = { kind: "table"; headers: string[]; rows: { cells: string[]; example?: string }[] };
 type TermsBlock = { kind: "terms"; color: string; items: { term: string; meaning: string; art: string }[] };
+type ExplainBlock = { kind: "explain"; title: string; body: string; example: string; art: string; color: string };
 type PointsBlock = { kind: "points"; items: string[] };
 type TakeawayBlock = { kind: "takeaway"; text: string };
 type BreakBlock = { kind: "break" };
@@ -73,6 +74,7 @@ type Block =
   | PhotoBlock
   | TableBlock
   | TermsBlock
+  | ExplainBlock
   | PointsBlock
   | TakeawayBlock
   | BreakBlock;
@@ -901,6 +903,46 @@ function drawTable(
   return { h: used + 8, next: index };
 }
 
+function drawExplain(
+  ctx: SKRSContext2D,
+  block: ExplainBlock,
+  x: number,
+  y: number,
+  w: number,
+  ar: boolean,
+): number {
+  const icon = 52;
+  ctx.font = `14px ${FONT_NAME}`;
+  const bodyLines = wrap(ctx, block.body, w - icon - 28);
+  const exampleLines = block.example ? wrap(ctx, `${ar ? "مثال:" : "Example:"} ${block.example}`, w - 20) : [];
+  const h = Math.max(72, 28 + bodyLines.length * 18 + (exampleLines.length ? exampleLines.length * 18 + 22 : 8));
+  roundRect(ctx, x, y, w, h, 10, "#eef3fb");
+  ctx.strokeStyle = "#d5deea";
+  ctx.strokeRect(x, y, w, h);
+  drawTermIcon(ctx, block.art, ar ? x + w - 10 - icon : x + 10, y + 10, icon, block.color, ar);
+  const textX = ar ? x + w - icon - 20 : x + icon + 20;
+  ctx.fillStyle = block.color;
+  ctx.font = `15px ${FONT_NAME}`;
+  paintText(ctx, block.title, textX, y + 10, ar ? "right" : "left");
+  ctx.fillStyle = "#111827";
+  ctx.font = `14px ${FONT_NAME}`;
+  bodyLines.forEach((line, index) => {
+    paintText(ctx, line, textX, y + 32 + index * 18, ar ? "right" : "left");
+  });
+  if (exampleLines.length) {
+    const ey = y + 36 + bodyLines.length * 18;
+    ctx.fillStyle = "#fff4cc";
+    ctx.fillRect(x + 8, ey, w - 16, exampleLines.length * 18 + 12);
+    ctx.strokeStyle = "#d4a017";
+    ctx.strokeRect(x + 8, ey, w - 16, exampleLines.length * 18 + 12);
+    ctx.fillStyle = "#111827";
+    exampleLines.forEach((line, index) => {
+      paintText(ctx, line, ar ? x + w - 16 : x + 16, ey + 6 + index * 18, ar ? "right" : "left");
+    });
+  }
+  return h + 10;
+}
+
 function drawPoints(ctx: SKRSContext2D, items: string[], x: number, y: number, w: number, ar: boolean): number {
   ctx.font = `14px ${FONT_NAME}`;
   let used = 0;
@@ -1086,6 +1128,21 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
           example: row.exampleAr || row.exampleEn ? bookletSafe(locale, (ar ? row.exampleAr : row.exampleEn) ?? "") : undefined,
         })),
       });
+    }
+    if (page.explains.length) {
+      blocks.push({ kind: "section", text: ar ? "شرح المصطلحات — اقرأ قبل التدريبات" : "Term explanations — read before the drills" });
+      for (const item of page.explains) {
+        const title = bookletSafe(locale, ar ? item.termAr : item.termEn);
+        const body = bookletSafe(locale, ar ? item.bodyAr : item.bodyEn);
+        blocks.push({
+          kind: "explain",
+          title,
+          body,
+          example: bookletSafe(locale, ar ? item.exampleAr : item.exampleEn),
+          art: termArt(title, body),
+          color: chapter.color,
+        });
+      }
     }
     blocks.push({
       kind: "takeaway",
@@ -1406,6 +1463,17 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
         y = margin;
       }
       y += await drawPhoto(ctx, block, margin, y, maxWidth, ar, images);
+      continue;
+    }
+    if (block.kind === "explain") {
+      ctx.font = `14px ${FONT_NAME}`;
+      const h = wrap(ctx, block.body, maxWidth - 80).length * 18 + (block.example ? wrap(ctx, block.example, maxWidth - 20).length * 18 + 40 : 20) + 40;
+      if (need(Math.min(h, 120), y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      y += drawExplain(ctx, block, margin, y, maxWidth, ar);
       continue;
     }
     if (block.kind === "terms") {

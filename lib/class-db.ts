@@ -450,16 +450,141 @@ export async function readClassDb(): Promise<StoreFile | null> {
   }
 }
 
+export async function setClassCodePoints(id: string, points: number): Promise<number | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const row = await prisma.classCode.update({
+      where: { id },
+      data: { points: Math.max(0, Math.round(points)) },
+      select: { points: true },
+    });
+    return row.points;
+  } catch {
+    return null;
+  }
+}
+
+async function upsertClassCodes(codes: AccessCode[]): Promise<void> {
+  if (!codes.length) return;
+  const existing = await prisma.classCode.findMany({ select: { id: true, points: true } });
+  const prevPoints = new Map(existing.map((row) => [row.id, row.points]));
+  await prisma.$transaction(
+    codes.map((row) =>
+      prisma.classCode.upsert({
+        where: { id: row.id },
+        create: {
+          id: row.id,
+          code: row.code,
+          name: row.name,
+          phone: row.phone,
+          createdAt: asDate(row.createdAt),
+          usedAt: row.usedAt ? asDate(row.usedAt) : null,
+          usedById: row.usedById,
+          points: Math.max(0, row.points),
+          suspendedAt: row.suspendedAt ? asDate(row.suspendedAt) : null,
+          suspendReason: row.suspendReason ?? "",
+          track: row.track === "en" ? "en" : "ar",
+        },
+        update: {
+          code: row.code,
+          name: row.name,
+          phone: row.phone,
+          usedAt: row.usedAt ? asDate(row.usedAt) : null,
+          usedById: row.usedById,
+          suspendedAt: row.suspendedAt ? asDate(row.suspendedAt) : null,
+          suspendReason: row.suspendReason ?? "",
+          track: row.track === "en" ? "en" : "ar",
+          points: Math.max(prevPoints.get(row.id) ?? 0, Math.max(0, row.points)),
+        },
+      }),
+    ),
+  );
+}
+
+async function upsertClassMessages(messages: ChatMessage[]): Promise<void> {
+  if (!messages.length) return;
+  await prisma.$transaction(
+    messages.map((row) =>
+      prisma.classMessage.upsert({
+        where: { id: row.id },
+        create: {
+          id: row.id,
+          studentId: row.studentId,
+          studentName: row.studentName,
+          from: row.from,
+          body: row.body,
+          createdAt: asDate(row.createdAt),
+          readByTeacher: row.readByTeacher,
+          readByStudent: row.readByStudent,
+        },
+        update: {
+          readByTeacher: row.readByTeacher,
+          readByStudent: row.readByStudent,
+        },
+      }),
+    ),
+  );
+}
+
+export async function insertChatMessageRow(message: ChatMessage): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.classMessage.create({
+      data: {
+        id: message.id,
+        studentId: message.studentId,
+        studentName: message.studentName,
+        from: message.from,
+        body: message.body,
+        createdAt: asDate(message.createdAt),
+        readByTeacher: message.readByTeacher,
+        readByStudent: message.readByStudent,
+      },
+    });
+    return true;
+  } catch {
+    try {
+      await prisma.$executeRaw`
+        INSERT INTO "ClassMessage" ("id","studentId","studentName","from","body","createdAt","readByTeacher","readByStudent")
+        VALUES (${message.id}, ${message.studentId}, ${message.studentName}, ${message.from}, ${message.body}, ${asDate(message.createdAt)}, ${message.readByTeacher}, ${message.readByStudent})
+      `;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+export async function markChatReadRows(studentId: string, reader: "student" | "teacher"): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    if (reader === "teacher") {
+      await prisma.classMessage.updateMany({
+        where: { studentId, from: "student", readByTeacher: false },
+        data: { readByTeacher: true },
+      });
+    } else {
+      await prisma.classMessage.updateMany({
+        where: { studentId, from: "teacher", readByStudent: false },
+        data: { readByStudent: true },
+      });
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function writeClassDb(store: StoreFile): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
   await ensureCodeTrackColumn();
   try {
-    // Do not delete ClassCertificate / ClassTelegramLink / ClassDevice /
+    await upsertClassCodes(store.codes);
+    // Do not delete ClassCode / ClassCertificate / ClassTelegramLink / ClassDevice /
     // ClassTelegramBot / ClassGroup / ClassSurprise / ClassLessonExample /
-    // ClassCommunityPost here. Those live in dedicated tables.
+    // ClassCommunityPost here. Codes are upserted so points cannot be wiped.
+    await upsertClassMessages(store.messages);
     await prisma.$transaction([
-      prisma.classCode.deleteMany(),
-      prisma.classMessage.deleteMany(),
       prisma.classExam.deleteMany(),
       prisma.classHomework.deleteMany(),
       prisma.classUnlock.deleteMany(),
@@ -467,41 +592,6 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
       prisma.classAttendance.deleteMany(),
       prisma.classAnnouncement.deleteMany(),
       prisma.classMiss.deleteMany(),
-      ...(store.codes.length
-        ? [
-            prisma.classCode.createMany({
-              data: store.codes.map((row) => ({
-                id: row.id,
-                code: row.code,
-                name: row.name,
-                phone: row.phone,
-                createdAt: asDate(row.createdAt),
-                usedAt: row.usedAt ? asDate(row.usedAt) : null,
-                usedById: row.usedById,
-                points: row.points,
-                suspendedAt: row.suspendedAt ? asDate(row.suspendedAt) : null,
-                suspendReason: row.suspendReason ?? "",
-                track: row.track === "en" ? "en" : "ar",
-              })),
-            }),
-          ]
-        : []),
-      ...(store.messages.length
-        ? [
-            prisma.classMessage.createMany({
-              data: store.messages.map((row) => ({
-                id: row.id,
-                studentId: row.studentId,
-                studentName: row.studentName,
-                from: row.from,
-                body: row.body,
-                createdAt: asDate(row.createdAt),
-                readByTeacher: row.readByTeacher,
-                readByStudent: row.readByStudent,
-              })),
-            }),
-          ]
-        : []),
       ...(store.exams.length
         ? [
             prisma.classExam.createMany({
@@ -1067,12 +1157,35 @@ export async function writeExampleRows(examples: ClassLessonExample[]): Promise<
 }
 
 const COMMUNITY_FILE = "/tmp/mindsoft-community.json";
+const COMMUNITY_BLOB = "mindsoft-community.json";
 
 type CommunityStore = {
   posts: CommunityPost[];
   comments: CommunityComment[];
   likes: CommunityLike[];
 };
+
+function emptyCommunity(): CommunityStore {
+  return { posts: [], comments: [], likes: [] };
+}
+
+function mergeCommunity(base: CommunityStore, extra: CommunityStore): CommunityStore {
+  const posts = [...base.posts];
+  for (const row of extra.posts) {
+    if (!posts.some((item) => item.id === row.id)) posts.push(row);
+  }
+  const comments = [...base.comments];
+  for (const row of extra.comments) {
+    if (!comments.some((item) => item.id === row.id)) comments.push(row);
+  }
+  const likes = [...base.likes];
+  for (const row of extra.likes) {
+    if (!likes.some((item) => item.postId === row.postId && item.studentId === row.studentId)) {
+      likes.push(row);
+    }
+  }
+  return { posts, comments, likes };
+}
 
 async function readLocalCommunity(): Promise<CommunityStore> {
   try {
@@ -1094,6 +1207,45 @@ async function writeLocalCommunity(store: CommunityStore): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function readBlobCommunity(): Promise<CommunityStore> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.VERCEL) return emptyCommunity();
+  try {
+    const { get } = await import("@vercel/blob");
+    const result = await get(COMMUNITY_BLOB, { access: "private", useCache: false });
+    if (!result?.stream) return emptyCommunity();
+    const parsed = JSON.parse(await new Response(result.stream).text()) as Partial<CommunityStore>;
+    return {
+      posts: parseCommunityPosts(parsed.posts),
+      comments: parseCommunityComments(parsed.comments),
+      likes: parseCommunityLikes(parsed.likes),
+    };
+  } catch {
+    return emptyCommunity();
+  }
+}
+
+async function writeBlobCommunity(store: CommunityStore): Promise<boolean> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.VERCEL) return false;
+  try {
+    const { put } = await import("@vercel/blob");
+    await put(COMMUNITY_BLOB, JSON.stringify(store), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      cacheControlMaxAge: 0,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function persistCommunityFallback(store: CommunityStore): Promise<boolean> {
+  const localOk = await writeLocalCommunity(store);
+  const blobOk = await writeBlobCommunity(store);
+  return blobOk || (localOk && !process.env.VERCEL);
 }
 
 export async function ensureCommunityTables(): Promise<boolean> {
@@ -1140,7 +1292,8 @@ export async function ensureCommunityTables(): Promise<boolean> {
 }
 
 export async function readCommunityState(): Promise<CommunityStore> {
-  if (!hasLiveDatabase()) return readLocalCommunity();
+  const fallback = mergeCommunity(await readLocalCommunity(), await readBlobCommunity());
+  if (!hasLiveDatabase()) return fallback;
   await ensureCommunityTables();
   try {
     const [posts, comments, likes] = await Promise.all([
@@ -1148,39 +1301,44 @@ export async function readCommunityState(): Promise<CommunityStore> {
       prisma.classCommunityComment.findMany(),
       prisma.classCommunityLike.findMany(),
     ]);
-    return {
-      posts: parseCommunityPosts(
-        posts.map((row) => ({
-          id: row.id,
-          authorId: row.authorId,
-          authorName: row.authorName,
-          groupId: row.groupId,
-          body: row.body,
-          createdAt: row.createdAt.toISOString(),
-        })),
-      ),
-      comments: parseCommunityComments(
-        comments.map((row) => ({
-          id: row.id,
-          postId: row.postId,
-          authorId: row.authorId,
-          authorName: row.authorName,
-          body: row.body,
-          createdAt: row.createdAt.toISOString(),
-        })),
-      ),
-      likes: parseCommunityLikes(likes.map((row) => ({ postId: row.postId, studentId: row.studentId }))),
-    };
+    return mergeCommunity(
+      {
+        posts: parseCommunityPosts(
+          posts.map((row) => ({
+            id: row.id,
+            authorId: row.authorId,
+            authorName: row.authorName,
+            groupId: row.groupId,
+            body: row.body,
+            createdAt: row.createdAt.toISOString(),
+          })),
+        ),
+        comments: parseCommunityComments(
+          comments.map((row) => ({
+            id: row.id,
+            postId: row.postId,
+            authorId: row.authorId,
+            authorName: row.authorName,
+            body: row.body,
+            createdAt: row.createdAt.toISOString(),
+          })),
+        ),
+        likes: parseCommunityLikes(likes.map((row) => ({ postId: row.postId, studentId: row.studentId }))),
+      },
+      fallback,
+    );
   } catch {
-    return readLocalCommunity();
+    return fallback;
   }
 }
 
 export async function insertCommunityPostRow(post: CommunityPost): Promise<boolean> {
-  if (!hasLiveDatabase()) {
-    const store = await readLocalCommunity();
-    return writeLocalCommunity({ ...store, posts: [post, ...store.posts] });
-  }
+  const store = await readCommunityState();
+  const fallbackOk = await persistCommunityFallback({
+    ...store,
+    posts: [post, ...store.posts.filter((row) => row.id !== post.id)],
+  });
+  if (!hasLiveDatabase()) return fallbackOk || true;
   await ensureCommunityTables();
   try {
     await prisma.classCommunityPost.create({
@@ -1195,19 +1353,26 @@ export async function insertCommunityPostRow(post: CommunityPost): Promise<boole
     });
     return true;
   } catch {
-    return false;
+    try {
+      await prisma.$executeRaw`
+        INSERT INTO "ClassCommunityPost" ("id","authorId","authorName","groupId","body","createdAt")
+        VALUES (${post.id}, ${post.authorId}, ${post.authorName}, ${post.groupId}, ${post.body}, ${asDate(post.createdAt)})
+      `;
+      return true;
+    } catch {
+      return fallbackOk;
+    }
   }
 }
 
 export async function deleteCommunityPostRow(id: string): Promise<boolean> {
-  if (!hasLiveDatabase()) {
-    const store = await readLocalCommunity();
-    return writeLocalCommunity({
-      posts: store.posts.filter((row) => row.id !== id),
-      comments: store.comments.filter((row) => row.postId !== id),
-      likes: store.likes.filter((row) => row.postId !== id),
-    });
-  }
+  const store = await readCommunityState();
+  const fallbackOk = await persistCommunityFallback({
+    posts: store.posts.filter((row) => row.id !== id),
+    comments: store.comments.filter((row) => row.postId !== id),
+    likes: store.likes.filter((row) => row.postId !== id),
+  });
+  if (!hasLiveDatabase()) return fallbackOk || true;
   await ensureCommunityTables();
   try {
     await prisma.$transaction([
@@ -1217,15 +1382,17 @@ export async function deleteCommunityPostRow(id: string): Promise<boolean> {
     ]);
     return true;
   } catch {
-    return false;
+    return fallbackOk;
   }
 }
 
 export async function insertCommunityCommentRow(comment: CommunityComment): Promise<boolean> {
-  if (!hasLiveDatabase()) {
-    const store = await readLocalCommunity();
-    return writeLocalCommunity({ ...store, comments: [...store.comments, comment] });
-  }
+  const store = await readCommunityState();
+  const fallbackOk = await persistCommunityFallback({
+    ...store,
+    comments: [...store.comments.filter((row) => row.id !== comment.id), comment],
+  });
+  if (!hasLiveDatabase()) return fallbackOk || true;
   await ensureCommunityTables();
   try {
     await prisma.classCommunityComment.create({
@@ -1240,7 +1407,15 @@ export async function insertCommunityCommentRow(comment: CommunityComment): Prom
     });
     return true;
   } catch {
-    return false;
+    try {
+      await prisma.$executeRaw`
+        INSERT INTO "ClassCommunityComment" ("id","postId","authorId","authorName","body","createdAt")
+        VALUES (${comment.id}, ${comment.postId}, ${comment.authorId}, ${comment.authorName}, ${comment.body}, ${asDate(comment.createdAt)})
+      `;
+      return true;
+    } catch {
+      return fallbackOk;
+    }
   }
 }
 

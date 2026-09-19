@@ -1,7 +1,6 @@
 import { EXTRA_HOMEWORK } from "@/lib/homework-extra";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { ChapterId } from "@/lib/curriculum";
-import { expandNotesToHomework } from "@/lib/question-bank/expand";
 import { shuffled } from "@/lib/shuffle";
 
 export type HomeworkKind = "mcq" | "tf";
@@ -82,8 +81,8 @@ function buildBank(): HomeworkQuestion[] {
           lessonId: note.id,
           chapterId: note.chapterId,
           kind: "mcq",
-          promptAr: `ما معنى «${term.term}» حسب المنهج؟`,
-          promptEn: `What does “${en.term}” mean in this lesson?`,
+          promptAr: `ما معنى «${term.term}»؟`,
+          promptEn: `What does “${en.term}” mean?`,
           optionsAr: [term.meaning, ...others.slice(0, 3).map((row) => row.ar.meaning)],
           optionsEn: [en.meaning, ...others.slice(0, 3).map((row) => row.en.meaning)],
           correctIndex: 0,
@@ -93,8 +92,8 @@ function buildBank(): HomeworkQuestion[] {
           lessonId: note.id,
           chapterId: note.chapterId,
           kind: "mcq",
-          promptAr: `أي مصطلح من المنهج يطابق هذا المعنى: «${term.meaning}»؟`,
-          promptEn: `Which lesson term matches this meaning: “${en.meaning}”?`,
+          promptAr: `أي مصطلح يطابق هذا المعنى: «${term.meaning}»؟`,
+          promptEn: `Which term matches this meaning: “${en.meaning}”?`,
           optionsAr: [term.term, ...others.slice(0, 3).map((row) => row.ar.term)],
           optionsEn: [en.term, ...others.slice(0, 3).map((row) => row.en.term)],
           correctIndex: 0,
@@ -122,49 +121,15 @@ function buildBank(): HomeworkQuestion[] {
       lessonId: note.id,
       chapterId: note.chapterId,
       kind: "tf",
-      promptAr: `هل هذه الخلاصة صحيحة حسب المنهج؟ ${note.takeawayAr}`,
-      promptEn: `Is this takeaway true for the lesson? ${note.takeawayEn}`,
+      promptAr: `هل هذه الخلاصة صحيحة؟ ${note.takeawayAr}`,
+      promptEn: `Is this takeaway true? ${note.takeawayEn}`,
       optionsAr: ["صح", "غلط"],
       optionsEn: ["True", "False"],
       correctIndex: 0,
     });
-
-    const otherNote = LESSON_NOTES.find((item) => item.chapterId === note.chapterId && item.id !== note.id);
-    if (otherNote) {
-      pushQuestion(bank, {
-        id: `${note.id}-take-x`,
-        lessonId: note.id,
-        chapterId: note.chapterId,
-        kind: "tf",
-        promptAr: `هل هذه خلاصة هذا الدرس؟ ${otherNote.takeawayAr}`,
-        promptEn: `Is this the takeaway of this lesson? ${otherNote.takeawayEn}`,
-        optionsAr: ["صح", "غلط"],
-        optionsEn: ["True", "False"],
-        correctIndex: 1,
-      });
-    }
-
-    note.bodyAr.forEach((line, index) => {
-      const lineEn = note.bodyEn[index] ?? line;
-      pushQuestion(bank, {
-        id: `${note.id}-body-${index}`,
-        lessonId: note.id,
-        chapterId: note.chapterId,
-        kind: "tf",
-        promptAr: `هل هذا صحيح حسب منهج الدرس؟ ${line}`,
-        promptEn: `Is this true according to the lesson? ${lineEn}`,
-        optionsAr: ["صح", "غلط"],
-        optionsEn: ["True", "False"],
-        correctIndex: 0,
-      });
-    });
   }
 
   for (const extra of EXTRA_HOMEWORK) {
-    pushQuestion(bank, extra);
-  }
-
-  for (const extra of expandNotesToHomework()) {
     pushQuestion(bank, extra);
   }
 
@@ -189,7 +154,7 @@ export function questionsForChapter(chapterId: ChapterId): HomeworkQuestion[] {
 function isCurriculumMcq(question: HomeworkQuestion): boolean {
   return (
     question.kind === "mcq" &&
-    (EXTRA_IDS.has(question.id) || question.id.includes("-mcq-") || question.id.includes("-n-best-") || question.id.includes("-x"))
+    (EXTRA_IDS.has(question.id) || question.id.includes("-mcq-") || question.id.includes("-x"))
   );
 }
 

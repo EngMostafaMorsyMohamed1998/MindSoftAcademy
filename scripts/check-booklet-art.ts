@@ -1,4 +1,5 @@
 import { termArt } from "../lib/booklet-lang";
+import { explainsForLesson } from "../lib/lesson-explains";
 import { LESSON_NOTES } from "../lib/lessons";
 import { CHAPTER_1_FACTS } from "../lib/question-bank/chapter-1";
 import { expandFactsToHomework } from "../lib/question-bank/expand";
@@ -54,6 +55,19 @@ for (const note of LESSON_NOTES) {
       failed += 1;
     }
   });
+  const explains = explainsForLesson(note.id);
+  for (const term of note.termsAr) {
+    if (!explains.some((item) => item.termAr === term.term)) {
+      console.error(`${note.id}: missing explanation for ${term.term}`);
+      failed += 1;
+    }
+  }
+  for (const term of note.termsEn) {
+    if (!explains.some((item) => item.termEn === term.term)) {
+      console.error(`${note.id}: missing explanation for ${term.term}`);
+      failed += 1;
+    }
+  }
 }
 
 const termQuestion = expandFactsToHomework(CHAPTER_1_FACTS).find((row) => row.id === "1-1-f07-t");
@@ -77,9 +91,15 @@ if (!termQuestion) {
   }
 }
 
+const moore = explainsForLesson("1-1").find((item) => item.termAr === "قانون مور");
+if (!moore || !/ترانزستور|كل سنتين/.test(moore.bodyAr)) {
+  console.error("lesson 1-1 is missing a full Moore's Law explanation");
+  failed += 1;
+}
+
 if (failed) {
   console.error(`failed: ${failed}`);
   process.exit(1);
 }
 
-console.log(`ok: ${LESSON_NOTES.length} lessons, 1-1-f07-t has Moore's Law`);
+console.log(`ok: ${LESSON_NOTES.length} lessons, Moore's Law explained, 1-1-f07-t has Moore's Law`);

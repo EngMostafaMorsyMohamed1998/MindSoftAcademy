@@ -19,7 +19,13 @@ export default async function ChatToTeacherPage() {
         <h1 className="mt-1 font-serif text-3xl">{t(locale, "chatTitle")}</h1>
         <p className="mt-1 text-sm text-foreground/65">{t(locale, "chatLead")}</p>
       </div>
-      <ChatThread locale={locale} role="student" messages={messages} />
+      <ChatThread
+        locale={locale}
+        role="student"
+        messages={messages}
+        studentId={user.id}
+        studentName={user.name}
+      />
     </div>
   );
 }

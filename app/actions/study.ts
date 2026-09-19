@@ -32,18 +32,27 @@ import { ARENA_XP } from "@/lib/arena";
 import { getGame } from "@/lib/games";
 import { after } from "next/server";
 
+function refreshPoints() {
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/leaderboard");
+}
+
 export async function awardGameXp(gameId: string): Promise<number> {
   const student = await getStudentSession();
   if (!student) return 0;
   const game = getGame(gameId);
   if (!game) return student.points;
-  return addPoints(student.id, game.xp);
+  const next = await addPoints(student.id, game.xp);
+  refreshPoints();
+  return next;
 }
 
 export async function awardArenaXp(): Promise<number> {
   const student = await getStudentSession();
   if (!student) return 0;
-  return addPoints(student.id, ARENA_XP);
+  const next = await addPoints(student.id, ARENA_XP);
+  refreshPoints();
+  return next;
 }
 
 export async function submitChapterExam(input: {
@@ -120,6 +129,7 @@ export async function submitChapterExam(input: {
       }));
     await recordMisses(missed);
     await addPoints(student.id, objectiveScore);
+    refreshPoints();
     const exams = mergeCompleted(
       student.exams,
       await listExamChapterIds(student.id),
@@ -228,7 +238,10 @@ export async function submitLessonHomework(input: {
       clearedAt: null,
     }));
   await recordMisses(missed);
-  if (passed) await addPoints(student.id, score);
+  if (passed) {
+    await addPoints(student.id, score);
+    refreshPoints();
+  }
   if (input.makeupDate && passed) {
     await completeMakeup(student.id, input.makeupDate, score, paper.length);
   }

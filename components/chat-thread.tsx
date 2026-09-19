@@ -76,11 +76,13 @@ export function ChatThread({
       ]);
       formRef.current?.reset();
       router.refresh();
+      return;
     }
+    window.alert(t(locale, "chatError"));
   }
 
   return (
-    <div className="flex min-h-[28rem] flex-1 flex-col overflow-hidden rounded-3xl border border-primary/10 bg-white shadow-sm">
+    <div className="flex min-h-[28rem] flex-1 flex-col overflow-hidden rounded-3xl border border-primary/10 bg-surface shadow-sm">
       <div ref={scroller} className="flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
         {shown.length === 0 ? (
           <p className="py-16 text-center text-sm text-foreground/55">

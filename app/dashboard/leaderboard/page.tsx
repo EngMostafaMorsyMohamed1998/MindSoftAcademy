@@ -1,8 +1,7 @@
-import { listClassGroups, listCodes } from "@/lib/access-store";
-import { groupsForStudent } from "@/lib/class-groups";
+import { listCodes } from "@/lib/access-store";
 import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
-import { buildGroupRanks, codesOnSameTrack, type ClassRank } from "@/lib/leaderboard";
+import { buildClassRanks, type ClassRank } from "@/lib/leaderboard";
 import { getLocale } from "@/lib/locale";
 import { initials } from "@/lib/student-profile";
 
@@ -71,25 +70,24 @@ export default async function ClassBoardPage() {
   const user = await getCurrentUser();
   if (!user) return null;
   const locale = await getLocale();
-  const [codes, groups] = await Promise.all([listCodes(), listClassGroups()]);
-  const mine = groupsForStudent(groups, user.id);
+  const codes = await listCodes();
+  const roster = codes.some((row) => row.id === user.id)
+    ? codes
+    : [
+        {
+          id: user.id,
+          name: user.name,
+          points: user.points,
+          usedAt: new Date().toISOString(),
+          suspendedAt: null,
+        },
+        ...codes,
+      ];
 
   return (
     <div className="mx-auto w-full max-w-4xl">
       <h1 className="font-serif text-3xl">{t(locale, "boardTitle")}</h1>
-
-      {mine.length === 0 ? (
-        <p className="mt-6 rounded-3xl bg-surface p-5 text-sm text-foreground/70">{t(locale, "boardNoGroup")}</p>
-      ) : (
-        mine.map((group) => (
-          <GroupBoard
-            key={group.id}
-            locale={locale}
-            studentId={user.id}
-            ranks={buildGroupRanks(codesOnSameTrack(codes, user.id), group.studentIds)}
-          />
-        ))
-      )}
+      <GroupBoard locale={locale} studentId={user.id} ranks={buildClassRanks(roster, { requireUsed: false })} />
     </div>
   );
 }

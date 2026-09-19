@@ -1,5 +1,4 @@
-import { listClassGroups, listCommunityFeed } from "@/lib/access-store";
-import { groupsForStudent } from "@/lib/class-groups";
+import { listCommunityFeed } from "@/lib/access-store";
 import { getCurrentUser } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
@@ -11,10 +10,10 @@ export default async function CommunityPage() {
   const user = await getCurrentUser();
   if (!user) return null;
   const locale = await getLocale();
-  const groups = groupsForStudent(await listClassGroups(), user.id);
   const posts = await listCommunityFeed({
     viewerId: user.id,
-    groupIds: groups.map((row) => row.id),
+    groupIds: [],
+    seeAll: true,
   });
 
   return (

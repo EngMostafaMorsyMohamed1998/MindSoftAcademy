@@ -40,6 +40,7 @@ import { parseWeekSlots, sortWeekSlots, type WeekSlot } from "@/lib/week-plan";
 import { parseClassGroups, sortClassGroups, type ClassGroup } from "@/lib/class-groups";
 import { parseClassExamples, questionsFromExamples, type ClassLessonExample } from "@/lib/class-examples";
 import type { HomeworkQuestion } from "@/lib/homework-bank";
+import { displayPoints } from "@/lib/student-points";
 import {
   buildCommunityFeed,
   cleanCommunityText,
@@ -264,7 +265,12 @@ function recordFor(
 
 export async function listCodes(): Promise<AccessCode[]> {
   const store = await readStore();
-  return [...store.codes].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return store.codes
+    .map((row) => ({
+      ...row,
+      points: displayPoints(row.points, row.id, store.homework, store.exams),
+    }))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function issueCode(input: {
@@ -348,14 +354,27 @@ export async function redeemCode(input: {
 
 export async function getCodeById(id: string): Promise<AccessCode | null> {
   const store = await readStore();
-  return store.codes.find((item) => item.id === id) ?? null;
+  const record = store.codes.find((item) => item.id === id);
+  if (!record) return null;
+  return {
+    ...record,
+    points: displayPoints(record.points, id, store.homework, store.exams),
+  };
 }
 
 export async function addPoints(id: string, delta: number): Promise<number> {
   const store = await readStore();
   const record = store.codes.find((item) => item.id === id);
   if (!record) return 0;
-  record.points = Math.max(0, record.points + delta);
+  const base = displayPoints(record.points, id, store.homework, store.exams);
+  record.points = Math.max(0, base + (Number.isFinite(delta) ? delta : 0));
+  try {
+    const { setClassCodePoints } = await import("@/lib/class-db");
+    const saved = await setClassCodePoints(id, record.points);
+    if (saved !== null) record.points = Math.max(record.points, saved);
+  } catch {
+    // JSON / Blob fallback still writes below.
+  }
   await writeStore(store);
   return record.points;
 }
@@ -535,6 +554,13 @@ export async function appendChatMessage(input: {
     readByStudent: input.from === "student",
   };
   store.messages.push(message);
+  try {
+    const { insertChatMessageRow } = await import("@/lib/class-db");
+    const saved = await insertChatMessageRow(message);
+    if (saved) return message;
+  } catch {
+    // Fall through to the class store write.
+  }
   await writeStore(store);
   return message;
 }
@@ -556,7 +582,15 @@ export async function markChatRead(
       changed = true;
     }
   }
-  if (changed) await writeStore(store);
+  if (!changed) return;
+  try {
+    const { markChatReadRows } = await import("@/lib/class-db");
+    const saved = await markChatReadRows(studentId, reader);
+    if (saved) return;
+  } catch {
+    // Fall through to the class store write.
+  }
+  await writeStore(store);
 }
 
 export async function listAttendance(): Promise<AttendanceRow[]> {

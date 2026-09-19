@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import {
   appendChatMessage,
   getCodeById,
@@ -7,6 +8,11 @@ import {
 } from "@/lib/access-store";
 import { getCurrentUser } from "@/lib/current-user";
 import { isTeacher } from "@/lib/teacher-session";
+
+function refreshChat() {
+  revalidatePath("/dashboard/chat-to-teacher");
+  revalidatePath("/admin");
+}
 
 export type ChatState = { error: string | null; ok?: boolean };
 
@@ -30,6 +36,7 @@ export async function sendStudentChat(
     body,
   });
   if (!saved) return { error: "EMPTY" };
+  refreshChat();
   return { error: null, ok: true };
 }
 
@@ -49,6 +56,7 @@ export async function sendTeacherChat(
     body,
   });
   if (!saved) return { error: "EMPTY" };
+  refreshChat();
   return { error: null, ok: true };
 }
 
