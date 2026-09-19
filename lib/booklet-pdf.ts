@@ -696,6 +696,21 @@ function drawLessonArt(
     fillCircle(ctx, x + w * 0.78, y + h * 0.28, Math.max(6, w * 0.08), "#f59e0b");
     return;
   }
+  if (art === "glass") {
+    ctx.strokeStyle = "#0c2d6b";
+    ctx.lineWidth = Math.max(4, w * 0.06);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, w * 0.22, h * 0.18, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    fillCircle(ctx, cx, cy, Math.max(5, w * 0.07), "#93c5fd");
+    return;
+  }
+  if (art === "account") {
+    fillCircle(ctx, x + w * 0.32, y + h * 0.32, Math.max(8, w * 0.08), "#0c2d6b");
+    roundRect(ctx, x + w * 0.2, y + h * 0.42, w * 0.24, h * 0.32, 8, "#0c2d6b");
+    roundRect(ctx, x + w * 0.54, y + h * 0.3, w * 0.32, h * 0.4, 8, "#c4a35a");
+    return;
+  }
   if (art === "ethics") {
     ctx.fillStyle = "#0c2d6b";
     ctx.fillRect(cx - 4, y + 12, 8, h - 24);

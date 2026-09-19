@@ -1,4 +1,6 @@
 import { termArt } from "../lib/booklet-lang";
+import { bookletChapterPack } from "../lib/booklet-pack";
+import { CHAPTERS } from "../lib/curriculum";
 import { explainsForLesson } from "../lib/lesson-explains";
 import { LESSON_NOTES } from "../lib/lessons";
 import { CHAPTER_1_FACTS } from "../lib/question-bank/chapter-1";
@@ -23,6 +25,23 @@ const EXPECTED: Record<string, string> = {
   "الواقع المعزز / الافتراضي": "arvr",
   Bias: "ethics",
   التحيز: "ethics",
+  "Narrow AI": "narrow",
+  "الذكاء الضيق": "narrow",
+  Recommender: "rec",
+  "نظام توصية": "rec",
+  "Predictive maintenance": "maintain",
+  "صيانة تنبؤية": "maintain",
+  Privacy: "lock",
+  الخصوصية: "lock",
+  Transparency: "glass",
+  الشفافية: "glass",
+  Accountability: "account",
+  المساءلة: "account",
+  Hallucination: "incident",
+  هلوسة: "incident",
+  الهلوسة: "incident",
+  Deepfake: "fake",
+  "التزييف العميق": "fake",
   Encryption: "lock",
   التشفير: "lock",
   Firewall: "firewall",
@@ -93,6 +112,45 @@ if (!termQuestion) {
   const moveQuestion = expandFactsToHomework(CHAPTER_1_FACTS).find((row) => row.id === "1-1-f07-c");
   if (!moveQuestion || !/Moore's Law/i.test(moveQuestion.optionsEn[moveQuestion.correctIndex] ?? "")) {
     console.error("1-1-f07-c correct answer is unclear");
+    failed += 1;
+  }
+}
+
+for (const chapter of CHAPTERS) {
+  const pack = bookletChapterPack(chapter);
+  const terms = pack.scenes.map((scene) => scene.termEn);
+  if (pack.scenes.length !== 6) {
+    console.error(`chapter ${chapter.id} has ${pack.scenes.length} scenes, expected 6`);
+    failed += 1;
+  }
+  if (new Set(terms).size !== terms.length) {
+    console.error(`chapter ${chapter.id} repeats a scene term: ${terms.join(", ")}`);
+    failed += 1;
+  }
+}
+
+for (const note of LESSON_NOTES.filter((item) => item.chapterId === "1")) {
+  const arts = note.termsEn.map((term) => `${term.term}:${termArt(term.term, term.meaning)}`);
+  const kinds = arts.map((row) => row.split(":")[1]);
+  if (new Set(kinds).size !== kinds.length) {
+    console.error(`${note.id} shares a picture on the same page: ${arts.join(" | ")}`);
+    failed += 1;
+  }
+}
+
+const pairs: [string, string][] = [
+  ["Generative AI", "Hallucination"],
+  ["Cloud computing", "Edge computing"],
+  ["Privacy", "Accountability"],
+  ["Privacy", "Transparency"],
+  ["Accountability", "Transparency"],
+  ["Bias", "Privacy"],
+];
+for (const [left, right] of pairs) {
+  const a = termArt(left);
+  const b = termArt(right);
+  if (a === b) {
+    console.error(`${left} and ${right} share picture ${a}`);
     failed += 1;
   }
 }

@@ -414,6 +414,30 @@ function draw(art: string, ar: boolean, compact: boolean) {
       </>
     );
   }
+  if (art === "glass") {
+    return (
+      <>
+        <ellipse cx="160" cy="96" rx="54" ry="36" fill="none" stroke="#0c2d6b" strokeWidth="10" />
+        <circle cx="160" cy="96" r="18" fill="#93c5fd" />
+        <Move className={move ? "art-pulse" : undefined}>
+          <path d="M196 128 L236 168" stroke="#111827" strokeWidth="12" />
+        </Move>
+        {compact ? null : <Label x={160} y={44} text={ar ? "لماذا؟" : "Why?"} fill="#111827" />}
+      </>
+    );
+  }
+  if (art === "account") {
+    return (
+      <>
+        <circle cx="118" cy="70" r="22" fill="#0c2d6b" />
+        <rect x="90" y="96" width="56" height="52" rx="16" fill="#0c2d6b" />
+        <Move className={move ? "art-bob" : undefined}>
+          <rect x="176" y="64" width="88" height="88" rx="14" fill="#c4a35a" />
+          <path d="M196 108 l16 16 36-36" fill="none" stroke="#111827" strokeWidth="8" />
+        </Move>
+      </>
+    );
+  }
   if (art === "ethics") {
     return (
       <>
@@ -457,6 +481,45 @@ function draw(art: string, ar: boolean, compact: boolean) {
         <circle cx="138" cy="86" r="8" fill="#fde68a" />
         <circle cx="182" cy="86" r="8" fill="#94a3b8" />
         <rect x="136" y="118" width="48" height="8" rx="4" fill="#e2e8f0" />
+      </>
+    );
+  }
+  if (art === "narrow") {
+    return (
+      <>
+        <rect x="28" y="48" width="72" height="104" rx="12" fill="#94a3b8" />
+        <Move className={move ? "art-glow" : undefined}>
+          <rect x="124" y="36" width="72" height="128" rx="12" fill="#c4a35a" />
+        </Move>
+        <rect x="220" y="48" width="72" height="104" rx="12" fill="#94a3b8" />
+        {compact ? null : <Label x={160} y={106} text={ar ? "مهمة" : "One task"} fill="#111827" />}
+      </>
+    );
+  }
+  if (art === "rec") {
+    return (
+      <>
+        <rect x="36" y="28" width="88" height="144" rx="16" fill="#0c2d6b" />
+        <rect x="48" y="44" width="64" height="88" rx="8" fill="#1d4ed8" />
+        <polygon points="68,70 96,88 68,106" fill="#fde68a" />
+        <Move className={move ? "art-bob" : undefined}>
+          <rect x="148" y="48" width="140" height="28" rx="8" fill="#c4a35a" />
+          <rect x="148" y="88" width="110" height="22" rx="8" fill="#93c5fd" />
+          <rect x="148" y="122" width="96" height="22" rx="8" fill="#cbd5e1" />
+        </Move>
+      </>
+    );
+  }
+  if (art === "maintain") {
+    return (
+      <>
+        <rect x="36" y="56" width="140" height="88" rx="14" fill="#0c2d6b" />
+        <circle cx="72" cy="150" r="16" fill="#111827" />
+        <circle cx="140" cy="150" r="16" fill="#111827" />
+        <Move className={move ? "art-pulse" : undefined}>
+          <circle cx="236" cy="88" r="36" fill="#c4a35a" />
+          <circle cx="236" cy="88" r="14" fill="#e8eef6" />
+        </Move>
       </>
     );
   }

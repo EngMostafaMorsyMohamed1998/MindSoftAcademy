@@ -177,6 +177,19 @@ function chapterLessonIds(chapterId: ChapterId): string[] {
   return LESSON_NOTES.filter((note) => note.chapterId === chapterId).map((note) => note.id);
 }
 
+function uniqueTermScenes(facts: BankFact[], take: number, seed: number): BankFact[] {
+  const seen = new Set<string>();
+  const picked: BankFact[] = [];
+  for (const fact of shuffled(facts, seed)) {
+    const key = fact.termEn.trim().toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    picked.push(fact);
+    if (picked.length >= take) break;
+  }
+  return picked;
+}
+
 export function bookletChapterPack(chapter: Chapter): BookletChapterPack {
   const lessonDrills = chapterLessonIds(chapter.id).map((id) => ({
     id,
@@ -184,10 +197,11 @@ export function bookletChapterPack(chapter: Chapter): BookletChapterPack {
   }));
   const practice = lessonDrills.flatMap((row) => row.practice);
   const essays = analysisForChapter(chapter.id).slice(0, BOOKLET_CHAPTER_ESSAYS).map(analysisAsEssay);
-  const scenes = shuffled(
+  const scenes = uniqueTermScenes(
     BANK_FACTS.filter((row) => row.chapterId === chapter.id),
+    BOOKLET_SCENES,
     440 + Number(chapter.id),
-  ).slice(0, BOOKLET_SCENES);
+  );
   return {
     chapter,
     practice,

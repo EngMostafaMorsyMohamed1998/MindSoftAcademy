@@ -91,14 +91,17 @@ export function termArt(term: string, meaning = ""): string {
   const onMeaning = (pattern: RegExp) => pattern.test(m);
 
   if (onTerm(/تزييف|deepfake/)) return "fake";
-  if (onTerm(/توليدي|generative|هلوسة|hallucin|\bllms?\b|نموذج لغة|توكن|\btoken\b|توجيه|\bprompt/)) return "llm";
+  if (onTerm(/هلوسة|hallucin/)) return "incident";
+  if (onTerm(/توليدي|generative|\bllms?\b|نموذج لغة|توكن|\btoken\b|توجيه|\bprompt/)) return "llm";
   if (onTerm(/تعلم عميق|عميق|deep learning|عصب|neuron|neural|\bweight\b|وزن|طبقة|\blayer\b|صندوق|black box/)) {
     return "neural";
   }
   if (onTerm(/تعلم آلي|machine learning|بإشراف|بلا إشراف|supervised|unsupervised|تعزيز|reinforcement|تصنيف|classif|تدريب|\btrain\b/)) {
     return "ml";
   }
-  if (onTerm(/ضيق|narrow|توصية|recommend|صيانة|maintenance/)) return "life";
+  if (onTerm(/ضيق|narrow/)) return "narrow";
+  if (onTerm(/توصية|recommend/)) return "rec";
+  if (onTerm(/صيانة|maintenance/)) return "maintain";
   if (onTerm(/^ai$|الذكاء الاصطناعي|ذكاء اصطناعي/)) return "ai";
   if (onTerm(/تصيد|phish|حادث|\bincident\b|احتواء|containment|مخاطر|risk management|خطة استجابة|استجابة|response plan/)) {
     return "incident";
@@ -111,7 +114,9 @@ export function termArt(term: string, meaning = ""): string {
     return "sample";
   }
   if (onTerm(/واقع معزز|واقع افتراضي|معزز|افتراضي|augmented|\bvr\b|virtual reality|\bar\s*\/\s*vr\b/)) return "arvr";
-  if (onTerm(/أخلاق|تحيز|ethic|\bbias\b|شفاف|transpar|مساءل|accountab/)) return "ethics";
+  if (onTerm(/شفاف|transpar/)) return "glass";
+  if (onTerm(/مساءل|accountab/)) return "account";
+  if (onTerm(/أخلاق|تحيز|ethic|\bbias\b/)) return "ethics";
   if (onTerm(/طرفية|\bedge\b/)) return "edge";
   if (onTerm(/سحاب|\bcloud\b/)) return "cloud";
   if (onTerm(/وسائط|ضغط ملفات|ضغط الملفات|نص بديل|multimedia|compress|alt text|دقة|quality vs|جودة مقابل/)) {
@@ -146,7 +151,8 @@ export function termArt(term: string, meaning = ""): string {
   if (onTerm(/جدول|بيانات|\bdata\b|\bdatabase\b|قاعدة بيانات|csv/)) return "data";
   if (onTerm(/مور|moore|حاسوب|مختبر|\blab\b|computer|transistor/)) return "lab";
 
-  if (onMeaning(/توليدي|generative|هلوسة|hallucin|\bllms?\b/)) return "llm";
+  if (onMeaning(/هلوسة|hallucin/)) return "incident";
+  if (onMeaning(/توليدي|generative|\bllms?\b/)) return "llm";
   if (onMeaning(/تعلم عميق|deep learning|neural|عصبون/)) return "neural";
   if (onMeaning(/تعلم آلي|machine learning|supervised/)) return "ml";
   if (onMeaning(/ترانزستور|transistor|قانون مور|moore's law/)) return "lab";

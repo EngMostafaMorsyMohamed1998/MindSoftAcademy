@@ -56,7 +56,11 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
               ) : nest ? (
-                <AiNestDiagram locale={locale} selected={picked} onSelect={setPicked} />
+                <AiNestDiagram
+                  locale={locale}
+                  selected={picked?.startsWith("explain:") ? picked.slice("explain:".length) : null}
+                  onSelect={(term) => setPicked(`explain:${term}`)}
+                />
               ) : (
                 <div className="aspect-[4/3] w-full">
                   <TextbookArt art={page.art} locale={locale} />
@@ -81,11 +85,12 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
             {page.rows.map((row, index) => {
               const term = bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""));
               const meaning = bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""));
+              const termKey = `term:${row.cellsEn[0] ?? term}`;
               return (
                 <div
                   key={`${page.id}-term-${index}`}
-                  className={`concept-card flex cursor-pointer gap-4 rounded-2xl bg-[#eef3f9] p-4 ${picked === termArt(term, meaning) ? "is-active" : ""}`}
-                  onClick={() => setPicked(termArt(term, meaning))}
+                  className={`concept-card flex cursor-pointer gap-4 rounded-2xl bg-[#eef3f9] p-4 ${picked === termKey ? "is-active" : ""}`}
+                  onClick={() => setPicked(termKey)}
                 >
                   <div className="size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-100">
                     <TextbookArt art={termArt(term, meaning)} locale={locale} compact />
@@ -154,8 +159,8 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
               return (
                 <article
                   key={`${page.id}-${item.termEn}`}
-                  className={`concept-card exp-fade cursor-pointer rounded-2xl bg-[#eef3f9] p-5 ${picked === termArt(title, body) ? "is-active" : ""}`}
-                  onClick={() => setPicked(termArt(title, body))}
+                  className={`concept-card exp-fade cursor-pointer rounded-2xl bg-[#eef3f9] p-5 ${picked === `explain:${item.termEn}` ? "is-active" : ""}`}
+                  onClick={() => setPicked(`explain:${item.termEn}`)}
                 >
                   <div className="flex gap-4">
                     <div className="size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-100">

@@ -5,16 +5,12 @@ import type { Locale } from "@/lib/locale";
 
 export type NestKey = "ai" | "ml" | "dl" | "genai";
 
-const NEST_TO_ART: Record<NestKey, string> = {
-  ai: "ai",
-  ml: "ml",
-  dl: "neural",
-  genai: "llm",
+const NEST_TO_TERM: Record<NestKey, string> = {
+  ai: "AI",
+  ml: "Machine learning",
+  dl: "Deep learning",
+  genai: "Generative AI",
 };
-
-export function nestArt(key: NestKey): string {
-  return NEST_TO_ART[key];
-}
 
 export function AiNestDiagram({
   locale,
@@ -23,14 +19,14 @@ export function AiNestDiagram({
 }: {
   locale: Locale;
   selected?: string | null;
-  onSelect?: (art: string) => void;
+  onSelect?: (term: string) => void;
 }) {
   const ar = locale === "ar";
   const pick = (key: NestKey) => (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
-    onSelect?.(nestArt(key));
+    onSelect?.(NEST_TO_TERM[key]);
   };
-  const active = (art: string) => (selected === art ? " ring-2 ring-white shadow-lg" : "");
+  const active = (key: NestKey) => (selected === NEST_TO_TERM[key] ? " ring-2 ring-white shadow-lg" : "");
 
   return (
     <div className="flex w-full flex-col items-center">
@@ -45,12 +41,12 @@ export function AiNestDiagram({
         >
           <p className="text-xs font-bold text-blue-50">{ar ? "تعلم آلي" : "Machine learning"}</p>
           <div
-            className={`nested-layer mt-2.5 rounded-lg bg-[#3b82f6] p-2.5${active("neural")}`}
+            className={`nested-layer mt-2.5 rounded-lg bg-[#3b82f6] p-2.5${active("dl")}`}
             onClick={pick("dl")}
           >
             <p className="text-xs font-semibold text-white">{ar ? "تعلم عميق" : "Deep learning"}</p>
             <div
-              className={`nested-layer mt-2 rounded-md bg-[#f59e0b] px-2 py-2 text-xs font-extrabold text-slate-900${active("llm")}`}
+              className={`nested-layer mt-2 rounded-md bg-[#f59e0b] px-2 py-2 text-xs font-extrabold text-slate-900${active("genai")}`}
               onClick={pick("genai")}
             >
               {ar ? "توليدي" : "Generative"}
