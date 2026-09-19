@@ -121,11 +121,6 @@ function EssayAnswers({ locale, title, rows }: { locale: Locale; title: string; 
   );
 }
 
-function clipPrompt(text: string): string {
-  const clean = text.replace(/\s+/g, " ").trim();
-  return clean.length > 42 ? `${clean.slice(0, 41)}…` : clean;
-}
-
 function AnswerKeyList({
   locale,
   title,
@@ -150,7 +145,7 @@ function AnswerKeyList({
               {bookletSafe(locale, ar ? row.choiceAr : row.choiceEn)}
             </span>
             <span className="ms-2 font-semibold text-[#374151]">
-              — {clipPrompt(bookletSafe(locale, ar ? row.promptAr : row.promptEn))}
+              — {bookletSafe(locale, ar ? row.promptAr : row.promptEn)}
             </span>
           </li>
         ))}

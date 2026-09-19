@@ -1566,11 +1566,6 @@ function pushEssayGuides(
   });
 }
 
-function clipKeyPrompt(text: string): string {
-  const clean = text.replace(/\s+/g, " ").trim();
-  return clean.length > 36 ? `${clean.slice(0, 35)}…` : clean;
-}
-
 function pushAnswerKey(
   blocks: Block[],
   locale: Locale,
@@ -1585,7 +1580,7 @@ function pushAnswerKey(
     blocks.push({ kind: "section", text: block.title });
     for (const [index, row] of block.answers.entries()) {
       const choice = bookletSafe(locale, ar ? row.choiceAr : row.choiceEn);
-      const prompt = clipKeyPrompt(bookletSafe(locale, ar ? row.promptAr : row.promptEn));
+      const prompt = bookletSafe(locale, ar ? row.promptAr : row.promptEn);
       blocks.push({
         kind: "text",
         text: `${index + 1}-${bookletAnswerMark(locale, row.index)}  ${choice}  —  ${prompt}`,
