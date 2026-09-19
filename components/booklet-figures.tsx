@@ -461,18 +461,25 @@ export function SceneCard({
   scene,
   term,
   art,
+  photo,
 }: {
   locale: Locale;
   color: string;
   scene: string;
   term: string;
   art?: string;
+  photo?: string;
 }) {
   const picture = art ?? termArt(term, scene);
   return (
     <article className="concept-card overflow-hidden rounded-2xl bg-white">
       <div className="booklet-scene-art aspect-[5/3] bg-slate-50">
-        <TextbookArt art={picture} locale={locale} />
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo} alt={term} className="size-full object-contain bg-white" />
+        ) : (
+          <TextbookArt art={picture} locale={locale} />
+        )}
       </div>
       <div className="px-3 py-3">
         <p className="text-sm font-extrabold" style={{ color }}>

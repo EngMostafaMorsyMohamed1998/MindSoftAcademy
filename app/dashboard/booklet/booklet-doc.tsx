@@ -332,7 +332,7 @@ export function BookletLessonPane({ locale, lessonId }: { locale: Locale; lesson
       {pack.scenes.length ? (
         <PrintSection title={ar ? "مواقف من الحياة" : "Real-life scenes"}>
           <div className="grid gap-4 sm:grid-cols-2">
-            {pack.scenes.map((scene) => {
+            {pack.scenes.map((scene, index) => {
               const term = bookletSafe(locale, ar ? scene.termAr : scene.termEn);
               const text = bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn);
               return (
@@ -343,6 +343,7 @@ export function BookletLessonPane({ locale, lessonId }: { locale: Locale; lesson
                   term={term}
                   scene={text}
                   art={artFor(sceneArts, term, text)}
+                  photo={`/api/book-page?lesson=${lessonId}&lang=${locale}&offset=${index + 1}`}
                 />
               );
             })}

@@ -65,19 +65,19 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
                   : "overflow-hidden rounded-2xl bg-zinc-100 ring-1 ring-slate-200"
               }
             >
-              {page.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
-              ) : nest ? (
+              {nest ? (
                 <AiNestDiagram
                   locale={locale}
                   selected={picked?.startsWith("explain:") ? picked.slice("explain:".length) : null}
                   onSelect={(term) => setPicked(`explain:${term}`)}
                 />
               ) : (
-                <div className="aspect-[4/3] w-full">
-                  <TextbookArt art={page.art} locale={locale} />
-                </div>
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={page.photo ?? `/api/book-page?lesson=${page.id}&lang=${locale}`}
+                  alt={ar ? page.sectionAr : page.sectionEn}
+                  className="aspect-[3/4] w-full bg-white object-contain"
+                />
               )}
             </figure>
             <div className={nest ? "lg:col-span-7" : undefined}>

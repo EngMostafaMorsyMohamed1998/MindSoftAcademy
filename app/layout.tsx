@@ -43,7 +43,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${cairo.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}
     >
-      <body suppressHydrationWarning className="flex min-h-full flex-col">
+      <body
+        suppressHydrationWarning
+        className={`flex min-h-full flex-col ${locale === "en" ? geistSans.className : cairo.className}`}
+      >
         {children}
         <SurpriseCatcher locale={locale} />
       </body>

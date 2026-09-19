@@ -26,8 +26,11 @@ import { getChapter } from "@/lib/curriculum";
 import type { Locale } from "@/lib/locale";
 import { mindMapForFaiz, type MindNode } from "@/lib/mind-maps";
 import { textbookPageFor } from "@/lib/textbook-pages";
+import { renderBookPage } from "@/lib/book-page-image";
 
-const FONT_NAME = "NotoNaskh";
+const ARABIC_FONT = "NotoNaskh";
+const LATIN_FONT = "GeistSans";
+const FONT_NAME = ARABIC_FONT;
 const PAGE_W = 595;
 const PAGE_H = 842;
 const SCALE = 2.5;
@@ -37,7 +40,8 @@ let fontReady = false;
 
 function ensureFont() {
   if (fontReady) return;
-  GlobalFonts.registerFromPath(path.join(process.cwd(), "fonts/NotoNaskhArabic-Regular.ttf"), FONT_NAME);
+  GlobalFonts.registerFromPath(path.join(process.cwd(), "fonts/NotoNaskhArabic-Regular.ttf"), ARABIC_FONT);
+  GlobalFonts.registerFromPath(path.join(process.cwd(), "fonts/Geist-Regular.ttf"), LATIN_FONT);
   fontReady = true;
 }
 
@@ -56,8 +60,9 @@ type QuestionBlock = { kind: "question"; n: number; prompt: string; options: str
 type EssayBlock = { kind: "essay"; n: number; prompt: string };
 type FigureBlock = { kind: "figure"; id: string; color: string; title: string };
 type MapBlock = { kind: "map"; root: MindNode; color: string; accent: string };
-type SceneBlock = { kind: "scene"; color: string; term: string; scene: string; art: string };
-type ScenesBlock = { kind: "scenes"; color: string; items: { term: string; scene: string; art: string }[] };
+type SceneItem = { term: string; scene: string; art: string; src?: string };
+type SceneBlock = { kind: "scene"; color: string; term: string; scene: string; art: string; src?: string };
+type ScenesBlock = { kind: "scenes"; color: string; items: SceneItem[] };
 type AskBlock = { kind: "ask"; text: string };
 type PhotoBlock = { kind: "photo"; src?: string; art: string; title: string; intro: string };
 type TableBlock = { kind: "table"; headers: string[]; rows: { cells: string[]; example?: string }[] };
@@ -94,23 +99,19 @@ function fontPx(ctx: SKRSContext2D): number {
   return match ? Number(match[1]) : 14;
 }
 
-const LATIN_SPACE = 0.34;
-
-function latinChunks(text: string): string[] {
-  return text.split(/(\s+)/).filter((part) => part.length > 0);
-}
-
-function chunkWidth(ctx: SKRSContext2D, part: string): number {
-  if (/^\s+$/.test(part)) return part.length * fontPx(ctx) * LATIN_SPACE;
-  return Math.max(ctx.measureText(part).width, part.replace(/\s/g, "").length * fontPx(ctx) * 0.52);
+function applyFace(ctx: SKRSContext2D, text: string) {
+  const size = fontPx(ctx);
+  const bold = /\bbold\b/i.test(ctx.font);
+  ctx.font = `${bold ? "bold " : ""}${size}px ${hasArabic(text) ? ARABIC_FONT : LATIN_FONT}`;
 }
 
 function textWidth(ctx: SKRSContext2D, text: string): number {
-  if (hasArabic(text)) return ctx.measureText(text).width;
-  return latinChunks(text).reduce((sum, part) => sum + chunkWidth(ctx, part), 0);
+  applyFace(ctx, text);
+  return ctx.measureText(text).width;
 }
 
 function wrap(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
+  applyFace(ctx, text);
   ctx.direction = hasArabic(text) ? "rtl" : "ltr";
   const words = text.replace(/\s+/g, " ").trim().split(" ");
   if (!words[0]) return [""];
@@ -135,23 +136,11 @@ function paintText(
   y: number,
   align: "left" | "right" | "center",
 ) {
+  applyFace(ctx, text);
   ctx.textBaseline = "top";
-  if (hasArabic(text)) {
-    ctx.direction = "rtl";
-    ctx.textAlign = align;
-    ctx.fillText(text, x, y);
-    return;
-  }
-  ctx.direction = "ltr";
-  const parts = latinChunks(text);
-  const widths = parts.map((part) => chunkWidth(ctx, part));
-  const total = widths.reduce((sum, width) => sum + width, 0);
-  let cursor = align === "center" ? x - total / 2 : align === "right" ? x - total : x;
-  ctx.textAlign = "left";
-  parts.forEach((part, index) => {
-    if (!/^\s+$/.test(part)) ctx.fillText(part, cursor, y);
-    cursor += widths[index] ?? 0;
-  });
+  ctx.direction = hasArabic(text) ? "rtl" : "ltr";
+  ctx.textAlign = align;
+  ctx.fillText(text, x, y);
 }
 
 function roundRect(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number, fill: string) {
@@ -1125,32 +1114,35 @@ async function drawPhoto(
   ar: boolean,
   images: Map<string, Image>,
 ): Promise<number> {
-  const imgW = 168;
-  const imgH = 126;
-  const imgX = ar ? x + w - imgW : x;
-  const textX = ar ? x : x + imgW + 14;
-  const textW = w - imgW - 14;
+  const imgH = Math.round(w * 0.78);
+  ctx.fillStyle = "#f4f7fb";
+  ctx.fillRect(x, y, w, imgH);
+  ctx.strokeStyle = "#d5deea";
+  ctx.strokeRect(x, y, w, imgH);
   if (block.src && images.has(block.src)) {
-    ctx.drawImage(images.get(block.src)!, imgX, y, imgW, imgH);
+    const image = images.get(block.src)!;
+    const scale = Math.min(w / image.width, imgH / image.height);
+    const dw = image.width * scale;
+    const dh = image.height * scale;
+    ctx.drawImage(image, x + (w - dw) / 2, y + (imgH - dh) / 2, dw, dh);
   } else {
-    drawLessonArt(ctx, block.art, imgX, y, imgW, imgH, ar);
+    drawLessonArt(ctx, block.art, x + 24, y + 16, w - 48, imgH - 32, ar);
   }
   ctx.fillStyle = "#0c2d6b";
   ctx.font = `16px ${FONT_NAME}`;
-  paintText(ctx, `1  ${block.title}`, ar ? textX + textW : textX, y, ar ? "right" : "left");
+  paintText(ctx, `1  ${block.title}`, ar ? x + w : x, y + imgH + 10, ar ? "right" : "left");
   ctx.fillStyle = "#111827";
   ctx.font = `14px ${FONT_NAME}`;
-  const introLines = wrap(ctx, block.intro, textW);
+  const introLines = wrap(ctx, block.intro, w);
   introLines.forEach((line, index) => {
-    paintText(ctx, line, ar ? textX + textW : textX, y + 30 + index * 20, ar ? "right" : "left");
+    paintText(ctx, line, ar ? x + w : x, y + imgH + 34 + index * 20, ar ? "right" : "left");
   });
-  return Math.max(imgH, 30 + introLines.length * 20) + 16;
+  return imgH + 34 + introLines.length * 20 + 16;
 }
 
 function photoHeight(ctx: SKRSContext2D, block: PhotoBlock, w: number): number {
-  const textW = w - 168 - 14;
   ctx.font = `14px ${FONT_NAME}`;
-  return Math.max(126, 30 + wrap(ctx, block.intro, textW).length * 20) + 16;
+  return Math.round(w * 0.78) + 34 + wrap(ctx, block.intro, w).length * 20 + 16;
 }
 
 function colWidths(count: number, w: number): number[] {
@@ -1307,36 +1299,47 @@ function drawTakeaway(ctx: SKRSContext2D, text: string, x: number, y: number, w:
 function sceneCardHeight(ctx: SKRSContext2D, scene: string, cardW: number): number {
   ctx.font = `12px ${FONT_NAME}`;
   const lines = wrap(ctx, scene, cardW - 16);
-  return 88 + 22 + lines.length * 15 + 16;
+  return 126 + 22 + lines.length * 15 + 16;
 }
 
 function drawSceneCard(
   ctx: SKRSContext2D,
-  item: { term: string; scene: string; art: string },
+  item: SceneItem,
   color: string,
   x: number,
   y: number,
   w: number,
   h: number,
   ar: boolean,
+  images: Map<string, Image>,
 ) {
   roundRect(ctx, x, y, w, h, 10, "#ffffff");
   ctx.strokeStyle = "#d6deea";
   ctx.strokeRect(x, y, w, h);
-  drawLessonArt(ctx, item.art, x + 8, y + 8, w - 16, 72, ar);
+  const picture = item.src ? images.get(item.src) : undefined;
+  if (picture) {
+    const boxW = w - 16;
+    const boxH = 110;
+    const scale = Math.min(boxW / picture.width, boxH / picture.height);
+    const dw = picture.width * scale;
+    const dh = picture.height * scale;
+    ctx.drawImage(picture, x + 8 + (boxW - dw) / 2, y + 8 + (boxH - dh) / 2, dw, dh);
+  } else {
+    drawLessonArt(ctx, item.art, x + 8, y + 8, w - 16, 110, ar);
+  }
   ctx.fillStyle = color;
   ctx.font = `13px ${FONT_NAME}`;
-  paintText(ctx, item.term, ar ? x + w - 10 : x + 10, y + 86, ar ? "right" : "left");
+  paintText(ctx, item.term, ar ? x + w - 10 : x + 10, y + 124, ar ? "right" : "left");
   ctx.fillStyle = "#334155";
   ctx.font = `12px ${FONT_NAME}`;
   wrap(ctx, item.scene, w - 16).forEach((line, index) => {
-    paintText(ctx, line, ar ? x + w - 10 : x + 10, y + 106 + index * 15, ar ? "right" : "left");
+    paintText(ctx, line, ar ? x + w - 10 : x + 10, y + 144 + index * 15, ar ? "right" : "left");
   });
 }
 
 function drawScenesGrid(
   ctx: SKRSContext2D,
-  items: { term: string; scene: string; art: string }[],
+  items: SceneItem[],
   color: string,
   x: number,
   y: number,
@@ -1344,6 +1347,7 @@ function drawScenesGrid(
   ar: boolean,
   from: number,
   limit: number,
+  images: Map<string, Image>,
 ): { h: number; next: number } {
   const gap = 10;
   const cols = 2;
@@ -1355,7 +1359,7 @@ function drawScenesGrid(
     const rowH = Math.max(...rowItems.map((item) => sceneCardHeight(ctx, item.scene, cardW)));
     rowItems.forEach((item, col) => {
       const cx = ar ? x + w - (col + 1) * cardW - col * gap : x + col * (cardW + gap);
-      drawSceneCard(ctx, item, color, cx, y + used, cardW, rowH, ar);
+      drawSceneCard(ctx, item, color, cx, y + used, cardW, rowH, ar, images);
     });
     used += rowH + gap;
     index += rowItems.length;
@@ -1455,7 +1459,7 @@ function pushLesson(blocks: Block[], pack: BookletLessonPack, locale: Locale) {
   });
   blocks.push({
     kind: "photo",
-    src: page.photo,
+    src: `book:${pack.lessonId}:0`,
     art: page.art,
     title: bookletSafe(locale, ar ? page.sectionAr : page.sectionEn),
     intro: bookletSafe(locale, ar ? page.introAr : page.introEn),
@@ -1523,10 +1527,15 @@ function pushLesson(blocks: Block[], pack: BookletLessonPack, locale: Locale) {
     blocks.push({
       kind: "scenes",
       color: chapter.color,
-      items: pack.scenes.map((scene) => {
+      items: pack.scenes.map((scene, index) => {
         const term = bookletSafe(locale, ar ? scene.termAr : scene.termEn);
         const text = bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn);
-        return { term, scene: text, art: artFor(pageArts, term, text) };
+        return {
+          term,
+          scene: text,
+          art: artFor(pageArts, term, text),
+          src: `book:${pack.lessonId}:${index + 1}`,
+        };
       }),
     });
   }
@@ -1888,9 +1897,25 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
   const textX = ar ? PAGE_W - margin : margin;
   const textAlign = ar ? "right" : "left";
   const images = new Map<string, Image>();
+  const bookKeys = new Set<string>();
   for (const block of blocks) {
-    if (block.kind === "photo" && block.src && !images.has(block.src)) {
-      images.set(block.src, await loadImage(path.join(process.cwd(), "public", block.src.replace(/^\//, ""))));
+    if (block.kind === "photo" && block.src) bookKeys.add(block.src);
+    if (block.kind === "scenes") {
+      for (const item of block.items) {
+        if (item.src) bookKeys.add(item.src);
+      }
+    }
+  }
+  for (const key of bookKeys) {
+    if (images.has(key)) continue;
+    const match = /^book:([^:]+):(\d+)$/.exec(key);
+    if (match) {
+      const png = await renderBookPage(locale, match[1]!, Number(match[2]));
+      if (png) images.set(key, await loadImage(png));
+      continue;
+    }
+    if (key.startsWith("/")) {
+      images.set(key, await loadImage(path.join(process.cwd(), "public", key.replace(/^\//, ""))));
     }
   }
 
@@ -2149,7 +2174,7 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
           take = Math.min(block.items.length - from, take + 2);
         }
         if (!take) continue;
-        const drawn = drawScenesGrid(ctx, block.items, block.color, margin, y, maxWidth, ar, from, take);
+        const drawn = drawScenesGrid(ctx, block.items, block.color, margin, y, maxWidth, ar, from, take, images);
         y += drawn.h;
         from = drawn.next;
       }

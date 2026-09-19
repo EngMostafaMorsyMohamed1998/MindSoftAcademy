@@ -6,9 +6,11 @@ const nextConfig: NextConfig = {
     "@google/generative-ai",
     "bcryptjs",
     "@napi-rs/canvas",
+    "pdfjs-dist",
   ],
   outputFileTracingIncludes: {
     "/api/booklet": ["./fonts/**/*", "./public/booklet/**/*"],
+    "/api/book-page": ["./fonts/**/*"],
   },
 };
 
