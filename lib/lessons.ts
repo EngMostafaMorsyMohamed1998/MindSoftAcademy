@@ -19,7 +19,7 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "قانون مور", meaning: "عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين." },
       { term: "الحوسبة السحابية", meaning: "تقديم تقنية المعلومات كخدمة عبر الإنترنت." },
       { term: "الحوسبة الطرفية", meaning: "معالجة البيانات على الجهاز نفسه فورًا بدل إرسالها للسحابة." },
-      { term: "الواقع المعزز / الافتراضي", meaning: "AR يضيف طبقة رقمية على الواقع، VR يستبدله بعالم محاكى." },
+      { term: "الواقع المعزز / الافتراضي", meaning: "المعزز يضيف طبقة رقمية على الواقع، والافتراضي يستبدله بعالم محاكى." },
     ],
     termsEn: [
       { term: "Moore's Law", meaning: "Transistors on a chip roughly double about every two years." },
@@ -135,6 +135,7 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "التشفير غير المتماثل", meaning: "زوج مفاتيح: عام للتشفير وخاص للفك." },
       { term: "المصادقة", meaning: "التأكد أن الطرف هو من يدّعي أنه هو." },
       { term: "المصادقة متعددة العوامل", meaning: "شيء تعرفه + شيء تملكه + شيء أنت عليه." },
+      { term: "التجزئة", meaning: "دالة اتجاه واحد: نقارن البصمة ولا نسترجع السر." },
     ],
     termsEn: [
       { term: "Encryption", meaning: "Turn readable data into a form that needs a key." },
@@ -142,10 +143,11 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "Asymmetric", meaning: "A public key encrypts; a private key decrypts." },
       { term: "Authentication", meaning: "Proving a party is who they claim to be." },
       { term: "MFA", meaning: "Something you know + have + are." },
+      { term: "Hash", meaning: "A one-way function: we compare the fingerprint and do not recover the secret." },
     ],
     bodyAr: [
       "كلمة المرور وحدها ضعيفة. أضف عاملًا ثانيًا: رسالة أو تطبيق أو مفتاح.",
-      "التجزئة (Hash) اتجاه واحد: نقارن البصمة لا نسترجع السر.",
+      "التجزئة اتجاه واحد: نقارن البصمة لا نسترجع السر.",
       "الشهادة الرقمية تربط المفتاح العام بهوية موثوقة.",
     ],
     bodyEn: [
@@ -217,7 +219,7 @@ export const LESSON_NOTES: LessonNote[] = [
     chapterId: "3",
     termsAr: [
       { term: "الواجهة الأمامية", meaning: "ما يراه المستخدم في المتصفح: هيكل الصفحة وتنسيقها ولغة التفاعل." },
-      { term: "الخادم / الخلفية", meaning: "المنطق، قواعد البيانات، والصلاحيات على السيرفر." },
+      { term: "الخادم / الخلفية", meaning: "المنطق، قواعد البيانات، والصلاحيات على الخادم." },
       { term: "قاعدة البيانات", meaning: "تخزين دائم للبيانات المنظمة." },
       { term: "العميل-الخادم", meaning: "المتصفح يطلب، والخادم يرد." },
     ],

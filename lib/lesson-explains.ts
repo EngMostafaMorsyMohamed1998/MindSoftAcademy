@@ -43,7 +43,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "الواقع المعزز / الافتراضي",
       termEn: "AR / VR",
       bodyAr:
-        "الواقع المعزز (AR) يضيف طبقة رقمية فوق العالم الحقيقي: الكاميرا تفضل تشوف الشارع، والتطبيق يحط سهم أو اسم أو معلومة فوق الصورة. الواقع الافتراضي (VR) يستبدل الواقع بعالم محاكى: النظارة تغطي العين وتوديك مكان تاني. الغلط الشائع إن الاتنين نفس الحاجة. AR يخدم التجول والتعليم في المكان الحقيقي. VR يخدم التدريب والمحاكاة لما التجربة الحقيقية خطرة أو غالية.",
+        "الواقع المعزز يضيف طبقة رقمية فوق العالم الحقيقي: الكاميرا تفضل تشوف الشارع، والتطبيق يحط سهم أو اسم أو معلومة فوق الصورة. الواقع الافتراضي يستبدل الواقع بعالم محاكى: النظارة تغطي العين وتوديك مكان تاني. الغلط الشائع إن الاتنين نفس الحاجة. المعزز يخدم التجول والتعليم في المكان الحقيقي. الافتراضي يخدم التدريب والمحاكاة لما التجربة الحقيقية خطرة أو غالية.",
       bodyEn:
         "Augmented reality (AR) adds a digital layer on the real world: the camera still sees the street, and the app draws an arrow, a name, or a fact on top. Virtual reality (VR) replaces the real world with a simulated space: a headset covers the eyes and takes you elsewhere. A common mistake is treating them as the same thing. AR helps navigation and on-the-spot learning. VR helps training when the real experience is dangerous or expensive.",
       exampleAr: "تطبيق يوري أسماء المعالم وأنت ماشي في الشارع. نظارة تدريب على معمل كيمياء من غير مواد خطرة.",
@@ -117,7 +117,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "الذكاء الضيق",
       termEn: "Narrow AI",
       bodyAr:
-        "الذكاء الضيق نظام يتقن مهمة واحدة أو مجموعة مهام قريبة: ترجمة، توصية، فلترة بريد. ده شكل معظم أنظمة اليوم، حتى لو البرنامج مشهور وقوي. الذكاء العام (AGI) اللي يفهم أي مهمة زي الإنسان لسه مش شكل الأنظمة المنتشرة. الغلط إنك تعتبر شات يكتب كويس إنه بقى ذكاء عام.",
+        "الذكاء الضيق نظام يتقن مهمة واحدة أو مجموعة مهام قريبة: ترجمة، توصية، فلترة بريد. ده شكل معظم أنظمة اليوم، حتى لو البرنامج مشهور وقوي. الذكاء العام اللي يفهم أي مهمة زي الإنسان لسه مش شكل الأنظمة المنتشرة. الغلط إنك تعتبر شات يكتب كويس إنه بقى ذكاء عام.",
       bodyEn:
         "Narrow AI is expert at one task or a tight family of tasks: translation, recommendation, spam filtering. That is the form of most systems today, even famous strong ones. General AI (AGI) that handles any task like a person is not the form of systems in daily use. A fluent chat is not proof of general intelligence.",
       exampleAr: "فلتر البريد ممتاز في الرسائل المزعجة، ويفشل لو سألته يرتب جدول الحصص.",
@@ -347,7 +347,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "الواجهة الأمامية",
       termEn: "Frontend",
       bodyAr:
-        "الواجهة الأمامية ما يشوفه المستخدم في المتصفح: هيكل الصفحة (HTML) وتنسيقها (CSS) ولغة التفاعل (JavaScript). بتطلب من الخادم وتعرض الرد. متتحطش فيها أسرار: أي حد يفتح أدوات المطوّر يشوف الكود.",
+        "الواجهة الأمامية ما يشوفه المستخدم في المتصفح: هيكل الصفحة وتنسيقها ولغة التفاعل. بتطلب من الخادم وتعرض الرد. متتحطش فيها أسرار: أي حد يفتح أدوات المطوّر يشوف الكود.",
       bodyEn:
         "The frontend is what the user sees in the browser: HTML structure, CSS look, and JavaScript behaviour. It asks the server and shows the reply. Do not put secrets in it: anyone can open developer tools and read the code.",
       exampleAr: "صفحة تسجيل الحضور: صندوق الاسم وزر «حضر» دي واجهة أمامية.",
@@ -357,7 +357,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "الخادم / الخلفية",
       termEn: "Backend",
       bodyAr:
-        "الخلفية المنطق والصلاحيات وقواعد البيانات على السيرفر. هي اللي تقرر ينفع الطالب يشوف درجته ولا لأ، وهي اللي تحفظ. المتصفح يعرض ويطلب؛ الخادم يقرر ويخزّن.",
+        "الخلفية المنطق والصلاحيات وقواعد البيانات على الخادم. هي اللي تقرر ينفع الطالب يشوف درجته ولا لأ، وهي اللي تحفظ. المتصفح يعرض ويطلب؛ الخادم يقرر ويخزّن.",
       bodyEn:
         "The backend is logic, permissions, and databases on the server. It decides whether a student may see a mark, and it stores the data. The browser displays and asks; the server decides and keeps.",
       exampleAr: "لما تدوس حفظ الواجب، الخادم يتأكد إن الكود بتاعك قبل ما يكتب في القاعدة.",
@@ -380,7 +380,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
         "نموذج العميل-الخادم: المتصفح (العميل) يطلب موردًا، والخادم يرد بنتيجة أو خطأ. طبقات التطبيق غالبًا عرض، تطبيق، بيانات. فصل الواجهة عن الخادم يخلي فريقين يشتغلوا وصيانة أسهل.",
       bodyEn:
         "Client–server: the browser (client) requests a resource, and the server replies with a result or an error. App layers are often presentation, application, and data. Splitting frontend and backend lets two teams work and makes maintenance easier.",
-      exampleAr: "الموبايل يطلب قائمة الامتحانات؛ السيرفر يرجّعها بعد ما يتأكد من جلسة الطالب.",
+      exampleAr: "الموبايل يطلب قائمة الامتحانات؛ الخادم يرجّعها بعد ما يتأكد من جلسة الطالب.",
       exampleEn: "The phone asks for the exam list; the server returns it after it checks the student session.",
     },
   ],
@@ -389,20 +389,20 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "بروتوكول الويب",
       termEn: "HTTP",
       bodyAr:
-        "HTTP بروتوكول طلب واستجابة: العميل يقول الطريقة والعنوان، والخادم يرد بجسم ورمز حالة. الطرق الشائعة: GET للقراءة من غير تعديل، POST للإنشاء، PUT بديل كامل، PATCH تعديل جزئي، DELETE للحذف بعد إذن. من غير الاتفاق ده التطبيقان مش هيفهموا بعض.",
+        "بروتوكول الويب طلب واستجابة: العميل يقول الطريقة والعنوان، والخادم يرد بجسم ورمز حالة. الطرق الشائعة: الجلب للقراءة من غير تعديل، الإرسال للإنشاء، البديل الكامل أو التعديل الجزئي للتحديث، والحذف بعد إذن. من غير الاتفاق ده التطبيقان مش هيفهموا بعض.",
       bodyEn:
         "HTTP is a request–response protocol: the client names a method and a URL, and the server replies with a body and a status code. Common methods: GET to read, POST to create, PUT to replace, PATCH to change part, DELETE to remove after permission. Without that contract two apps cannot understand each other.",
-      exampleAr: "فتح صفحة الدرس GET. تسجيل واجب جديد POST.",
+      exampleAr: "فتح صفحة الدرس جلب. تسجيل واجب جديد إرسال.",
       exampleEn: "Opening a lesson page is GET. Submitting new homework is POST.",
     },
     {
       termAr: "بروتوكول ويب آمن",
       termEn: "HTTPS",
       bodyAr:
-        "HTTPS هو HTTP فوق قناة مشفّرة (TLS). العنوان والمتصفح يظهروا قفل. من غير HTTPS كلمة المرور والدرجة ممكن تتقرأ على الشبكة العامة. أي بوابة درجات أو حضور لازم HTTPS.",
+        "بروتوكول الويب الآمن هو نفس الطلب والاستجابة فوق قناة مشفّرة. العنوان والمتصفح يظهروا قفل. من غير القفل كلمة المرور والدرجة ممكن تتقرأ على الشبكة العامة. أي بوابة درجات أو حضور لازم تكون مشفّرة.",
       bodyEn:
         "HTTPS is HTTP over an encrypted TLS channel. The address bar shows a lock. Without HTTPS a password or a mark can be read on a public network. Any marks or attendance portal must use HTTPS.",
-      exampleAr: "ادخل https:// للمدرسة؛ لو المتصفح حذّر إن الشهادة بايظة، متكتبش كلمة السر.",
+      exampleAr: "ادخل موقع المدرسة بالقفل ظاهر؛ لو المتصفح حذّر إن الشهادة بايظة، متكتبش كلمة السر.",
       exampleEn: "Use https:// for the school site; if the browser warns the certificate is broken, do not type the password.",
     },
     {
@@ -412,17 +412,17 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
         "الواجهة البرمجية اتفاق بين برنامجين: إيه العنوان، إيه الطريقة، وإيه شكل البيانات. التطبيق مش محتاج يعرف تفاصيل قاعدة البيانات، بس العقد. وثّق الردود والأخطاء عشان الفريق الثاني يبني عليها.",
       bodyEn:
         "An API is a contract between two programs: which URL, which method, and which data shape. The app does not need the database internals, only the contract. Document replies and errors so the other team can build on them.",
-      exampleAr: "تطبيق الحضور يطلب /api/attendance ويرجع قائمة JSON.",
+      exampleAr: "تطبيق الحضور يطلب قائمة الحضور من الواجهة البرمجية ويرجع نص بيانات منظّم.",
       exampleEn: "The attendance app calls /api/attendance and gets a JSON list.",
     },
     {
       termAr: "موارد ونص بيانات",
       termEn: "REST / JSON",
       bodyAr:
-        "REST نمط شائع: كل مورد له عنوان، والطرق تتصرف عليه. JSON نص بيانات منظّم سهل للمتصفح والخادم. رمز الحالة جزء من العقد: 200 نجاح، 404 المورد مش على العنوان، 500 الخادم فشل. ملفات الجلسة (كوكيز) تحفظ تسجيل الدخول بعد الطلب.",
+        "نمط شائع: كل مورد له عنوان، والطرق تتصرف عليه. نص البيانات المنظّم سهل للمتصفح والخادم. رمز الحالة جزء من العقد: 200 نجاح، 404 المورد مش على العنوان، 500 الخادم فشل. ملفات الجلسة تحفظ تسجيل الدخول بعد الطلب.",
       bodyEn:
         "REST is a common style: each resource has a URL, and methods act on it. JSON is structured text both browser and server can read. Status codes are part of the contract: 200 success, 404 not at that address, 500 the server failed. Cookies keep a login alive across requests.",
-      exampleAr: "GET /students/12 يقرأ طالب. 404 يعني مفيش طالب بالرقم ده.",
+      exampleAr: "جلب سجل الطالب رقم 12 يقرأ الطالب. 404 يعني مفيش طالب بالرقم ده.",
       exampleEn: "GET /students/12 reads one student. 404 means no student with that id.",
     },
   ],
@@ -431,17 +431,17 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "هيكل الصفحة",
       termEn: "HTML",
       bodyAr:
-        "HTML يعطي الصفحة معناها: عنوان، فقرة، زر، قائمة، جدول. ابدأ بالعنصر الصحيح، متخلّيش الصفحة كلها مربعات شكل من غير معنى. المعنى الصح يساعد قارئ الشاشة ومحركات البحث والطالب اللي بيتصفح بلوحة المفاتيح.",
+        "هيكل الصفحة يعطي معناها: عنوان، فقرة، زر، قائمة، جدول. ابدأ بالعنصر الصحيح، متخلّيش الصفحة كلها مربعات شكل من غير معنى. المعنى الصح يساعد قارئ الشاشة ومحركات البحث والطالب اللي بيتصفح بلوحة المفاتيح.",
       bodyEn:
         "HTML gives the page its meaning: heading, paragraph, button, list, table. Start with the right element; do not build a page of empty boxes. Correct meaning helps a screen reader, search, and a student who browses with a keyboard.",
-      exampleAr: "عنوان الدرس h1، وزر الإرسال button، مش صورة زر مزيفة.",
+      exampleAr: "عنوان الدرس عنصر عنوان، وزر الإرسال زر حقيقي، مش صورة زر مزيفة.",
       exampleEn: "The lesson title is an h1, and submit is a button, not a fake picture of a button.",
     },
     {
       termAr: "تنسيق الصفحة",
       termEn: "CSS",
       bodyAr:
-        "CSS مسؤول عن المظهر: لون، شبكة، مسافات، وتجاوب الشاشات. التصميم المتجاوب يخدم الموبايل قبل الشاشة العريضة أحيانًا. الاتساق أهم من المفاجأة: نفس مكان القائمة ونفس لون الزر الرئيسي.",
+        "تنسيق الصفحة مسؤول عن المظهر: لون، شبكة، مسافات، وتجاوب الشاشات. التصميم المتجاوب يخدم الموبايل قبل الشاشة العريضة أحيانًا. الاتساق أهم من المفاجأة: نفس مكان القائمة ونفس لون الزر الرئيسي.",
       bodyEn:
         "CSS controls look: colour, grid, spacing, and how the page fits screens. Responsive design often serves the phone before the wide monitor. Consistency beats surprise: same menu place, same primary button colour.",
       exampleAr: "الزر الرئيسي كحلي في كل الصفحات، مش لون عشوائي كل مرة.",
@@ -451,7 +451,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "لغة التفاعل",
       termEn: "JavaScript",
       bodyAr:
-        "JavaScript تضيف السلوك بعد التحميل: التحقق من النموذج، فتح قائمة، تحديث جزء من الصفحة من غير إعادة تحميل كاملة. متستخدمهاش بديلًا عن المعنى في HTML، ومتحطش فيها مفتاح سري.",
+        "لغة التفاعل تضيف السلوك بعد التحميل: التحقق من النموذج، فتح قائمة، تحديث جزء من الصفحة من غير إعادة تحميل كاملة. متستخدمهاش بديلًا عن معنى الهيكل، ومتحطش فيها مفتاح سري.",
       bodyEn:
         "JavaScript adds behaviour after load: checking a form, opening a menu, updating part of the page without a full reload. Do not use it as a substitute for HTML meaning, and do not put a secret key in it.",
       exampleAr: "صندوق البحث يفلتر أسماء الطلاب وأنت بتكتب.",
@@ -525,7 +525,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "واجهة المستخدم",
       termEn: "UI",
       bodyAr:
-        "واجهة المستخدم العناصر المرئية اللي المستخدم يلمسها: أزرار، قوائم، حقول. UI جزء من UX. واجهة جميلة من غير رحلة واضحة تفضل فاشلة. الاتساق: نفس مكان القائمة ونفس لون الزر الرئيسي.",
+        "واجهة المستخدم العناصر المرئية اللي المستخدم يلمسها: أزرار، قوائم، حقول. الواجهة جزء من تجربة المستخدم. واجهة جميلة من غير رحلة واضحة تفضل فاشلة. الاتساق: نفس مكان القائمة ونفس لون الزر الرئيسي.",
       bodyEn:
         "UI is the visible controls the user touches: buttons, menus, fields. UI is part of UX. A pretty interface with a confusing journey still fails. Keep consistency: same menu place, same primary colour.",
       exampleAr: "زر الحفظ دايمًا أسفل النموذج بنفس اللون.",
@@ -735,7 +735,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "واجهة برمجة",
       termEn: "API",
       bodyAr:
-        "واجهة البرمجة هنا طريقة منظّمة تجيب بيانات محدّثة من المصدر: تطلب، يردّ بنص منظّم. الملف المحمّل مرة ممكن يقديم. الـ API يديك شريحة حية لو المصدر لسه بيحدّث.",
+        "واجهة البرمجة هنا طريقة منظّمة تجيب بيانات محدّثة من المصدر: تطلب، يردّ بنص منظّم. الملف المحمّل مرة ممكن يقديم. الواجهة البرمجية تديك شريحة حية لو المصدر لسه بيحدّث.",
       bodyEn:
         "Here an API is a structured way to fetch fresh data from a source: you request, it replies with structured text. A file downloaded once can go stale. An API gives a live slice if the source still updates.",
       exampleAr: "تطبيق الطقس في الإذاعة المدرسية يسحب درجة الحرارة كل صباح من واجهة الرصد.",

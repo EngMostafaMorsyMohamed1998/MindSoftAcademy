@@ -6,8 +6,13 @@ import { ChapterMindMap } from "@/components/chapter-mind-map";
 import type { ChapterGame } from "@/lib/games";
 import { getChapter } from "@/lib/curriculum";
 import { buildMapRounds, mindMapForChapter } from "@/lib/mind-maps";
+import { bookletSafe } from "@/lib/booklet-lang";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
+
+function gameText(locale: Locale, arabic: string, english: string) {
+  return bookletSafe(locale, locale === "ar" ? arabic : english);
+}
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -93,7 +98,7 @@ function SortPlay({
 
   return (
     <div className="mt-6 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-      <p className="text-sm text-foreground/70">{locale === "ar" ? data.introAr : data.introEn}</p>
+      <p className="text-sm text-foreground/70">{gameText(locale, data.introAr, data.introEn)}</p>
       <ol className="mt-4 space-y-2">
         {order.map((id, index) => {
           const item = data.items.find((entry) => entry.id === id);
@@ -101,7 +106,7 @@ function SortPlay({
           return (
             <li key={id} className="flex items-center gap-2 rounded-xl bg-primary/5 px-3 py-2">
               <span className="w-6 text-sm font-bold">{index + 1}</span>
-              <span className="flex-1 text-sm">{locale === "ar" ? item.labelAr : item.labelEn}</span>
+              <span className="flex-1 text-sm">{gameText(locale, item.labelAr, item.labelEn)}</span>
               <button type="button" className="text-xs" onClick={() => move(index, -1)}>
                 ↑
               </button>
@@ -120,7 +125,7 @@ function SortPlay({
           onDone(correct, data.items.length);
         }}
       >
-        OK
+        {locale === "ar" ? "تم" : "Done"}
       </button>
     </div>
   );
@@ -143,12 +148,12 @@ function MatchPlay({
 
   return (
     <div className="mt-6 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-      <p className="text-sm text-foreground/70">{locale === "ar" ? data.introAr : data.introEn}</p>
+      <p className="text-sm text-foreground/70">{gameText(locale, data.introAr, data.introEn)}</p>
       <div className="mt-4 space-y-3">
         {data.pairs.map((pair) => (
           <label key={pair.id} className="grid gap-2 sm:grid-cols-2">
             <span className="rounded-xl bg-primary/8 px-3 py-2 text-sm font-medium">
-              {locale === "ar" ? pair.leftAr : pair.leftEn}
+              {gameText(locale, pair.leftAr, pair.leftEn)}
             </span>
             <select
               className="h-11 rounded-xl border border-primary/15 px-3 text-sm"
@@ -163,7 +168,7 @@ function MatchPlay({
                 if (!other) return null;
                 return (
                   <option key={id} value={id}>
-                    {locale === "ar" ? other.rightAr : other.rightEn}
+                    {gameText(locale, other.rightAr, other.rightEn)}
                   </option>
                 );
               })}
@@ -179,7 +184,7 @@ function MatchPlay({
           onDone(correct, data.pairs.length);
         }}
       >
-        OK
+        {locale === "ar" ? "تم" : "Done"}
       </button>
     </div>
   );
@@ -200,7 +205,7 @@ function SpotPlay({
 
   return (
     <div className="mt-6 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-      <p className="text-sm text-foreground/70">{locale === "ar" ? data.introAr : data.introEn}</p>
+      <p className="text-sm text-foreground/70">{gameText(locale, data.introAr, data.introEn)}</p>
       <ul className="mt-4 space-y-2">
         {data.cards.map((card) => {
           const flagged = marks[card.id] === true;
@@ -213,7 +218,7 @@ function SpotPlay({
                   flagged ? "bg-red-50 ring-red-400" : "bg-white ring-primary/10"
                 }`}
               >
-                {locale === "ar" ? card.textAr : card.textEn}
+                {gameText(locale, card.textAr, card.textEn)}
               </button>
             </li>
           );
@@ -227,7 +232,7 @@ function SpotPlay({
           onDone(correct, data.cards.length);
         }}
       >
-        OK
+        {locale === "ar" ? "تم" : "Done"}
       </button>
     </div>
   );
@@ -248,13 +253,15 @@ function PickPlay({
   if (!data) return null;
   const round = data.rounds[index];
   if (!round) return null;
-  const choices = locale === "ar" ? round.choicesAr : round.choicesEn;
+  const choices = (locale === "ar" ? round.choicesAr : round.choicesEn).map((choice) =>
+    bookletSafe(locale, choice),
+  );
 
   return (
     <div className="mt-6 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-      <p className="text-sm text-foreground/70">{locale === "ar" ? data.introAr : data.introEn}</p>
+      <p className="text-sm text-foreground/70">{gameText(locale, data.introAr, data.introEn)}</p>
       <p className="mt-4 text-lg font-semibold">
-        {locale === "ar" ? round.promptAr : round.promptEn}
+        {gameText(locale, round.promptAr, round.promptEn)}
       </p>
       <div className="mt-4 grid gap-2">
         {choices.map((choice, choiceIndex) => (
@@ -298,11 +305,13 @@ function MapPlay({
   if (!data || !root || !chapter) return null;
   const round = rounds[index];
   if (!round) return null;
-  const choices = locale === "ar" ? round.choicesAr : round.choicesEn;
+  const choices = (locale === "ar" ? round.choicesAr : round.choicesEn).map((choice) =>
+    bookletSafe(locale, choice),
+  );
 
   return (
     <div className="mt-6 space-y-4">
-      <p className="text-sm text-foreground/70">{locale === "ar" ? data.introAr : data.introEn}</p>
+      <p className="text-sm text-foreground/70">{gameText(locale, data.introAr, data.introEn)}</p>
       <ChapterMindMap
         locale={locale}
         root={root}
@@ -312,7 +321,7 @@ function MapPlay({
       />
       <div className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
         <p className="text-sm font-semibold">{t(locale, "mindMapMissing")}</p>
-        <p className="mt-2 text-sm leading-relaxed">{locale === "ar" ? round.promptAr : round.promptEn}</p>
+        <p className="mt-2 text-sm leading-relaxed">{gameText(locale, round.promptAr, round.promptEn)}</p>
         <div className="mt-4 grid gap-2">
           {choices.map((choice, choiceIndex) => (
             <button

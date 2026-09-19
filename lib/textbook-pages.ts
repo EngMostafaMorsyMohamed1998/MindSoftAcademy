@@ -65,7 +65,7 @@ const PAGE_1_1: TextbookPage = {
   pageNo: 5,
   questionAr: "كيف تطورت تكنولوجيا المعلومات عبر مراحلها الرئيسية، وكيف غيّرت كل مرحلة المجتمع؟",
   questionEn: "How did IT grow through its main stages, and how did each stage change society?",
-  sectionAr: "تاريخ تكنولوجيا المعلومات (IT)",
+  sectionAr: "تاريخ تكنولوجيا المعلومات",
   sectionEn: "A short history of IT",
   introAr: "الجدول يلخص المحطات الرئيسية: من حاسوب يملأ غرفة، إلى خدمات سحابية تصل للهاتف. بعد الجدول شرح كامل لقانون مور والسحابة والطرفية والواقع المعزز والافتراضي.",
   introEn: "The table sums up the main stops: from a room-sized computer to cloud services on a phone. After the table comes a full explanation of Moore's Law, cloud, edge, AR and VR.",
@@ -76,7 +76,7 @@ const PAGE_1_1: TextbookPage = {
     "قانون مور: عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين — التعريف عن الكثافة مش عن حجم الصندوق.",
     "الحوسبة السحابية تقدّم التخزين والبرامج كخدمة عبر الإنترنت.",
     "الحوسبة الطرفية تعالج البيانات على الجهاز لما التأخير خطر.",
-    "AR يضيف طبقة رقمية على الواقع؛ VR يستبدله بعالم محاكى.",
+    "الواقع المعزز يضيف طبقة رقمية على الواقع؛ الافتراضي يستبدله بعالم محاكى.",
   ],
   pointsEn: [
     "Moore's Law: transistors on a chip roughly double every two years — density, not box size.",
@@ -91,7 +91,7 @@ const PAGE_1_1: TextbookPage = {
     {
       cellsAr: [
         "الأربعينيات–الخمسينيات",
-        "ظهور الحاسوب الإلكتروني، ومنه ENIAC، باستخدام الأنابيب المفرغة.",
+        "ظهور الحاسوب الإلكتروني، ومنه إينياك، باستخدام الأنابيب المفرغة.",
         "استخدام أساسًا للأغراض العسكرية والحسابات العلمية.",
       ],
       cellsEn: [
@@ -99,13 +99,13 @@ const PAGE_1_1: TextbookPage = {
         "Electronic computers appear, including ENIAC, using vacuum tubes.",
         "Used mainly for military and scientific calculation.",
       ],
-      exampleAr: "مثال: استخدمت القوات العسكرية حاسب ENIAC لإجراء حسابات معقدة، مما أظهر أهمية الحاسوب في العمل العلمي والعسكري قبل أن يصل إلى البيوت.",
+      exampleAr: "مثال: استخدمت القوات العسكرية حاسب إينياك لإجراء حسابات معقدة، مما أظهر أهمية الحاسوب في العمل العلمي والعسكري قبل أن يصل إلى البيوت.",
       exampleEn: "Example: Armies used machines such as ENIAC for hard calculations, so computers mattered in labs and defence long before homes had one.",
     },
     {
       cellsAr: [
         "الثمانينيات",
-        "انتشار الحاسوب الشخصي (PC).",
+        "انتشار الحاسوب الشخصي.",
         "بداية استخدام الأفراد والمؤسسات للحاسوب في العمل والتعليم بدل الطرق التقليدية.",
       ],
       cellsEn: [

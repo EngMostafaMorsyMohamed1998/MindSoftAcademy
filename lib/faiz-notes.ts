@@ -59,7 +59,7 @@ export const FAIZ_NOTES: FaizUnitNote[] = [
           "مثال يومي: مقترح فيديوهات حسب مشاهداتك. في الصناعة: فرز العيوب أو توقع العطل قبل ما يحصل.",
           "التحيز في البيانات يظلم فئة من الناس. الخصوصية: متجمعش ومتنشرش بيانات شخصية من غير حاجة وموافقة.",
           "المساعد الذكي ممكن يهلوس: شكل الإجابة صح وهي غلط. راجع من الكتاب قبل ما تسلّم.",
-          "الصورة المزيفة (Deepfake) خطرها إنها تبدو حقيقية وقد تخدع الناس.",
+          "الصورة المزيفة خطرها إنها تبدو حقيقية وقد تخدع الناس.",
         ],
         bodyEn: [
           "Everyday example: video suggestions from what you watched. In industry: spotting defects or predicting a fault.",
@@ -94,7 +94,7 @@ export const FAIZ_NOTES: FaizUnitNote[] = [
           "التشفير يجعل الرسالة غير مفهومة لمن لا يملك المفتاح.",
           "المصادقة تجاوب: هل أنت حقًا من تدّعي؟ كلمة مرور قوية: طويلة ومتنوعة ومش مستخدمة في موقع تاني.",
           "المصادقة بعاملين: شيء تعرفه + شيء تملكه أو أنت عليه. متكتبش باسورد الصف في جروب عام.",
-          "التوقيع الرقمي يتأكد أن الرسالة من صاحبها وما اتعدّلتش. HTTPS يشفر الخط بين المتصفح والخادم.",
+          "التوقيع الرقمي يتأكد أن الرسالة من صاحبها وما اتعدّلتش. بروتوكول الويب الآمن يشفر الخط بين المتصفح والخادم.",
         ],
         bodyEn: [
           "Encryption makes a message unreadable to anyone without the key.",
@@ -156,9 +156,9 @@ export const FAIZ_NOTES: FaizUnitNote[] = [
         headingAr: "الطلب والصفحة",
         headingEn: "Requests and the page",
         bodyAr: [
-          "HTTP بروتوكول تواصل بين المتصفح والخادم. GET يجلب بيانات من غير تغيير مقصود. POST يرسل بيانات عشان الخادم ينشئ أو يعالج.",
-          "HTML بنية الصفحة: عناوين وفقرات وروابط. CSS الشكل: ألوان وخطوط وتنسيق. JavaScript يخلي الصفحة تتفاعل بعد التحميل.",
-          "API طريقة متفق عليها تطلب بيها بيانات أو خدمة من نظام تاني.",
+          "بروتوكول الويب تواصل بين المتصفح والخادم. الجلب يجلب بيانات من غير تغيير مقصود. الإرسال يرسل بيانات عشان الخادم ينشئ أو يعالج.",
+          "هيكل الصفحة: عناوين وفقرات وروابط. تنسيق الصفحة: ألوان وخطوط ومظهر. لغة التفاعل تخلي الصفحة تتفاعل بعد التحميل.",
+          "الواجهة البرمجية طريقة متفق عليها تطلب بيها بيانات أو خدمة من نظام تاني.",
         ],
         bodyEn: [
           "HTTP is the browser–server protocol. GET fetches data without intending to change the server. POST sends data so the server can create or process something.",
@@ -168,16 +168,16 @@ export const FAIZ_NOTES: FaizUnitNote[] = [
       },
     ],
     termsAr: [
-      { term: "GET", meaning: "طلب جلب صفحة أو بيانات." },
-      { term: "POST", meaning: "طلب إرسال بيانات للمعالجة أو الإنشاء." },
-      { term: "API", meaning: "اتفاق لطلب خدمة أو بيانات من نظام آخر." },
+      { term: "الجلب", meaning: "طلب قراءة صفحة أو بيانات." },
+      { term: "الإرسال", meaning: "طلب إرسال بيانات للمعالجة أو الإنشاء." },
+      { term: "واجهة برمجية", meaning: "اتفاق لطلب خدمة أو بيانات من نظام آخر." },
     ],
     termsEn: [
       { term: "GET", meaning: "A request that fetches a page or data." },
       { term: "POST", meaning: "A request that sends data to create or process." },
       { term: "API", meaning: "An agreed way to ask another system for a service or data." },
     ],
-    takeawayAr: "المتصفح يعرض، والخادم يقرر ويحفظ، والطلب GET أو POST له شغل مختلف.",
+    takeawayAr: "المتصفح يعرض، والخادم يقرر ويحفظ، والجلب غير الإرسال.",
     takeawayEn: "The browser shows, the server decides and stores, and GET is not the same job as POST.",
   },
   {
@@ -203,7 +203,7 @@ export const FAIZ_NOTES: FaizUnitNote[] = [
         headingAr: "الصور والفيديو والنص",
         headingEn: "Images, video, and text",
         bodyAr: [
-          "JPEG مناسب للصور الفوتوغرافية. PNG مفيد لما تحتاج شفافية وحواف أوضح للرسوم.",
+          "الصورة المضغوطة مناسبة للصور الفوتوغرافية. الصورة الشفافة مفيدة لما تحتاج شفافية وحواف أوضح للرسوم.",
           "الفيديو يحتاج ضغط مناسب عشان التحميل ما يثقلش والجودة تفضل مقبولة. النص مناسب لما المعلومة محتاجة دقة ومراجعة ورجوع سريع.",
           "اختيار الرسم البياني يعتمد على السؤال: مقارنة، جزء من كل، ولا تغيّر عبر الزمن.",
         ],

@@ -10,17 +10,29 @@ const AR_SWAPS: [RegExp, string][] = [
   [/\bAPIs?\b/g, "واجهة برمجية"],
   [/\bHTTPS\b/g, "بروتوكول ويب آمن"],
   [/\bHTTP\b/g, "بروتوكول الويب"],
-  [/\bGET\b/g, "طلب قراءة"],
-  [/\bPOST\b/g, "طلب إرسال"],
-  [/\bPUT\b/g, "طلب استبدال"],
-  [/\bPATCH\b/g, "طلب تعديل جزئي"],
-  [/\bDELETE\b/g, "طلب حذف"],
+  [/\bGET\b/g, "الجلب"],
+  [/\bPOST\b/g, "الإرسال"],
+  [/\bPUT\b/g, "الاستبدال الكامل"],
+  [/\bPATCH\b/g, "التعديل الجزئي"],
+  [/\bDELETE\b/g, "الحذف"],
   [/\bREST\b/g, "موارد بعنوان"],
   [/\bJSON\b/g, "نص بيانات منظم"],
+  [/\bTLS\b/g, "قناة مشفّرة"],
+  [/\bPDF\b/g, "ملف مطبوع"],
   [/\bVPN\b/g, "شبكة خاصة افتراضية"],
   [/\b2FA\b/g, "تحقق بخطوتين"],
   [/JPEGs?/gi, "صورة مضغوطة"],
   [/PNGs?/gi, "صورة شفافة"],
+  [/\bWAV\b/g, "تسجيل غير مضغوط"],
+  [/\bdiv\b/gi, "مربع شكل"],
+  [/\bspan\b/gi, "نص بلا معنى"],
+  [/\bSTEM\b/g, "العلوم والهندسة"],
+  [/Excel/gi, "جدول إلكتروني"],
+  [/\bhttp\b/g, "بروتوكول الويب"],
+  [/type=hidden/g, "الحقل المخفي"],
+  [/IMG_\d+/g, "اسم الملف الخام"],
+  [/\bHash\b/gi, "تجزئة"],
+  [/\bAGI\b/g, "ذكاء عام"],
   [/\bLLMs?\b/g, "نموذج لغة كبير"],
   [/\bUX\b/g, "تجربة المستخدم"],
   [/\bUI\b/g, "واجهة المستخدم"],
@@ -136,7 +148,8 @@ export function termArt(term: string, meaning = ""): string {
   if (onMeaning(/تعلم عميق|deep learning|neural|عصبون/)) return "neural";
   if (onMeaning(/تعلم آلي|machine learning|supervised/)) return "ml";
   if (onMeaning(/ترانزستور|transistor|قانون مور|moore's law/)) return "lab";
-  if (onMeaning(/تشفير|encrypt|مفتاح خاص|password/)) return "lock";
+  if (onTerm(/تجزئة|\bhash/)) return "lock";
+  if (onMeaning(/تشفير|encrypt|مفتاح خاص|password|تجزئة|\bhash/)) return "lock";
   if (onMeaning(/جدار حماية|firewall/)) return "firewall";
   if (onMeaning(/سحاب|cloud service/)) return "cloud";
   if (onMeaning(/متصفح|browser|frontend|html, css/)) return "web";

@@ -129,20 +129,20 @@ export const EXTRA_HOMEWORK: ExtraHomework[] = [
   tf("2-3-x3", "2-3", "2", "بعد التعافي نسأل: ما الذي فشل في التصميم؟", "After recovery we ask: what failed in the design?", true),
   tf("2-3-x4", "2-3", "2", "إخفاء الحادث يوفّر الوقت ويقلل الضرر.", "Hiding an incident saves time and shrinks the damage.", false),
 
-  mcq("3-1-x1", "3-1", "3", "أين نضع مفتاح واجهة برمجة سري؟", "Where should a secret API key live?", ["داخل جافاسكربت الصفحة", "على الخادم بعيدًا عن المتصفح", "في تعليق HTML", "في اسم الصف"], ["Inside page JavaScript", "On the server, away from the browser", "In an HTML comment", "In the class name"], 1),
-  mcq("3-1-x2", "3-1", "3", "ما دور المتصفح في نموذج العميل والخادم؟", "In client–server, what does the browser do?", ["يحفظ كل الدرجات سرًا على القرص الداخلي للمدرسة فقط", "يطلب، والخادم يرد ويقرر", "يمنع أي قاعدة بيانات", "يستبدل HTTPS"], ["Stores every grade only on the school internal disk", "Asks, and the server replies and decides", "Forbids any database", "Replaces HTTPS"], 1),
+  mcq("3-1-x1", "3-1", "3", "أين نضع مفتاح واجهة برمجة سري؟", "Where should a secret API key live?", ["داخل لغة تفاعل الصفحة", "على الخادم بعيدًا عن المتصفح", "في تعليق هيكل الصفحة", "في اسم الصف"], ["Inside page JavaScript", "On the server, away from the browser", "In an HTML comment", "In the class name"], 1),
+  mcq("3-1-x2", "3-1", "3", "ما دور المتصفح في نموذج العميل والخادم؟", "In client–server, what does the browser do?", ["يحفظ كل الدرجات سرًا على القرص الداخلي للمدرسة فقط", "يطلب، والخادم يرد ويقرر", "يمنع أي قاعدة بيانات", "يستبدل بروتوكول الويب الآمن"], ["Stores every grade only on the school internal disk", "Asks, and the server replies and decides", "Forbids any database", "Replaces HTTPS"], 1),
   tf("3-1-x3", "3-1", "3", "فصل الواجهة عن الخادم يسهّل أن يعمل فريقان معًا.", "Splitting frontend and backend makes it easier for two teams to work.", true),
   tf("3-1-x4", "3-1", "3", "قاعدة البيانات جزء مما يراه المستخدم في المتصفح مباشرة.", "The database is what the user sees directly in the browser.", false),
 
   mcq("3-2-x1", "3-2", "3", "ماذا يعني رمز 404؟", "What does status 404 mean?", ["نجاح كامل", "المورد غير موجود", "الخادم انهار", "الطلب يحتاج كلمة مرور فقط"], ["Full success", "The resource was not found", "The server crashed", "The request only needs a password"], 1),
-  mcq("3-2-x2", "3-2", "3", "لماذا نفضّل HTTPS على HTTP؟", "Why prefer HTTPS over HTTP?", ["لأنه أقصر في الكتابة", "لأن القناة مشفّرة", "لأنه يلغي الحاجة لكلمة مرور", "لأنه يمنع قواعد البيانات"], ["Because it is shorter to type", "Because the channel is encrypted", "Because it removes the need for a password", "Because it bans databases"], 1),
-  tf("3-2-x3", "3-2", "3", "GET للقراءة وPOST للإنشاء من الطرق الشائعة.", "GET to read and POST to create are common methods.", true),
+  mcq("3-2-x2", "3-2", "3", "لماذا نفضّل بروتوكول الويب الآمن على بروتوكول الويب العادي؟", "Why prefer HTTPS over HTTP?", ["لأنه أقصر في الكتابة", "لأن القناة مشفّرة", "لأنه يلغي الحاجة لكلمة مرور", "لأنه يمنع قواعد البيانات"], ["Because it is shorter to type", "Because the channel is encrypted", "Because it removes the need for a password", "Because it bans databases"], 1),
+  tf("3-2-x3", "3-2", "3", "الجلب للقراءة والإرسال للإنشاء من الطرق الشائعة.", "GET to read and POST to create are common methods.", true),
   tf("3-2-x4", "3-2", "3", "رمز 200 يعني أن الخادم لم يجد الصفحة.", "Status 200 means the server did not find the page.", false),
 
-  mcq("3-3-x1", "3-3", "3", "ماذا يعطي HTML في الصفحة؟", "What does HTML give on a page?", ["الألوان فقط", "الهيكل والمعنى", "كلمة مرور الخادم", "ضغط الفيديو"], ["Colours only", "Structure and meaning", "The server password", "Video compression"], 1),
+  mcq("3-3-x1", "3-3", "3", "ماذا يعطي هيكل الصفحة؟", "What does HTML give on a page?", ["الألوان فقط", "الهيكل والمعنى", "كلمة مرور الخادم", "ضغط الفيديو"], ["Colours only", "Structure and meaning", "The server password", "Video compression"], 1),
   mcq("3-3-x2", "3-3", "3", "ما اختبار الإتاحة البسيط؟", "What is a simple accessibility test?", ["استخدام الفأرة فقط", "تجربة الصفحة بلوحة المفاتيح", "حذف العناوين", "تكبير الصور من غير نص بديل"], ["Use the mouse only", "Try the page with a keyboard", "Delete the headings", "Enlarge images with no alt text"], 1),
-  tf("3-3-x3", "3-3", "3", "CSS مسؤول عن المظهر والتجاوب.", "CSS is responsible for look and responsiveness.", true),
-  tf("3-3-x4", "3-3", "3", "الأفضل أن تكون كل عناصر الصفحة <div> بلا معنى.", "It is best if every element is a meaningless <div>.", false),
+  tf("3-3-x3", "3-3", "3", "تنسيق الصفحة مسؤول عن المظهر والتجاوب.", "CSS is responsible for look and responsiveness.", true),
+  tf("3-3-x4", "3-3", "3", "الأفضل أن تكون كل عناصر الصفحة مربعات شكل بلا معنى.", "It is best if every element is a meaningless box with no meaning.", false),
 
   mcq("4-1-x1", "4-1", "4", "ماذا تفعل صورة ضخمة غير مضغوطة على شبكة ضعيفة؟", "What does a huge uncompressed image do on a weak network?", ["لا تغيّر شيئًا", "تبطئ فتح الصفحة", "تحسّن الإتاحة تلقائيًا", "تغني عن النص البديل"], ["Changes nothing", "Slows the page", "Automatically improves accessibility", "Replaces alt text"], 1),
   mcq("4-1-x2", "4-1", "4", "ما دور النص البديل للصورة؟", "What is the job of alt text for an image?", ["زينة اختيارية", "واجب لمن يستخدم قارئ الشاشة", "بديل عن ضغط الملف", "عنوان الموقع فقط"], ["Optional decoration", "A duty for someone using a screen reader", "A substitute for compression", "Only the site title"], 1),
@@ -152,7 +152,7 @@ export const EXTRA_HOMEWORK: ExtraHomework[] = [
   mcq("4-2-x1", "4-2", "4", "تجربة المستخدم تهتم بماذا؟", "What does UX care about?", ["لون الشعار فقط", "هل يصل المستخدم لهدفه بسهولة", "سرعة المعالج في المعمل", "عدد صفحات الكتاب"], ["Logo colour only", "Whether the user reaches the goal easily", "CPU speed in the lab", "How many book pages there are"], 1),
   mcq("4-2-x2", "4-2", "4", "ما أفضل اختبار سريع لوضوح الموقع؟", "What is a fast test of site clarity?", ["راقب زميلًا صامتًا أين يتوه", "غيّر الألوان كل دقيقة", "اخفِ الزر الرئيسي", "أزل العناوين"], ["Watch a silent classmate and see where they get lost", "Change colours every minute", "Hide the main button", "Remove headings"], 0),
   tf("4-2-x3", "4-2", "4", "الاتساق في مكان القائمة أهم من مفاجأة شكل جديد كل صفحة.", "A consistent menu place beats a surprise layout on every page.", true),
-  tf("4-2-x4", "4-2", "4", "واجهة المستخدم UI هي سهولة الرحلة، وتجربة المستخدم UX هي شكل الزر فقط.", "UI is the journey ease, and UX is only the button look.", false),
+  tf("4-2-x4", "4-2", "4", "واجهة المستخدم هي سهولة الرحلة، وتجربة المستخدم هي شكل الزر فقط.", "UI is the journey ease, and UX is only the button look.", false),
 
   mcq("4-3-x1", "4-3", "4", "ماذا يعني اختبار أ/ب؟", "What does an A/B test mean?", ["نختار الأجمل بالذوق فقط", "نقارن نسختين ونقيس أيهما أفضل", "نحذف الموقع أسبوعًا", "نعتمد أول رسم نراه"], ["We pick the prettier one by taste only", "We compare two versions and measure which works", "We take the site down for a week", "We trust the first chart we see"], 1),
   mcq("4-3-x2", "4-3", "4", "ما معيار تقييم موقع تسجيل الحضور؟", "What is a good measure for an attendance site?", ["ذوق المصمم وحده", "زمن إتمام المهمة وعدد الأخطاء", "عدد الخطوط الغريبة", "حجم الشعار"], ["The designer's taste alone", "Task time and number of errors", "How many fancy fonts it uses", "Logo size"], 1),
@@ -160,7 +160,7 @@ export const EXTRA_HOMEWORK: ExtraHomework[] = [
   tf("4-3-x4", "4-3", "4", "التقييم انطباع عابر ولا يحتاج قياسًا.", "Evaluation is a passing impression and needs no measurement.", false),
 
   mcq("4-4-x1", "4-4", "4", "لماذا نغيّر شيئًا واحدًا في كل دورة تحسين؟", "Why change one thing per improvement cycle?", ["حتى لا نعرف السبب", "حتى نعرف أي تغيير صنع الفرق", "حتى نطيل المشروع بلا هدف", "حتى نلغي الاختبار"], ["So we never know the cause", "So we know which change made the difference", "So the project lasts with no goal", "So we can skip testing"], 1),
-  mcq("4-4-x2", "4-4", "4", "ما النموذج الأولي؟", "What is a prototype?", ["النسخة النهائية الغالية", "نسخة رخيصة سريعة للاختبار", "ملف PDF للكتاب", "جدار الحماية"], ["The expensive final version", "A cheap, fast version used to test", "The book PDF", "The firewall"], 1),
+  mcq("4-4-x2", "4-4", "4", "ما النموذج الأولي؟", "What is a prototype?", ["النسخة النهائية الغالية", "نسخة رخيصة سريعة للاختبار", "ملف الكتاب الرسمي", "جدار الحماية"], ["The expensive final version", "A cheap, fast version used to test", "The official book file", "The firewall"], 1),
   tf("4-4-x3", "4-4", "4", "وثّق القرار: لماذا نقلنا الزر؟ أي دليل؟", "Record the decision: why did we move the button? What evidence?", true),
   tf("4-4-x4", "4-4", "4", "الموقع يُنشر مرة ثم لا يُراجع أين يغادر الزائر.", "A site is published once and nobody checks where visitors leave.", false),
 

@@ -200,7 +200,7 @@ export const CHAPTER_2_FACTS: BankFact[] = [
     id: "2-1-f14",
     lessonId: "2-1",
     chapterId: "2",
-    sceneAr: "معمل STEM في أكتوبر يفتح أجهزة التصميم ببصمة الطالب بعد كلمة مرور الصف.",
+    sceneAr: "معمل العلوم والهندسة في أكتوبر يفتح أجهزة التصميم ببصمة الطالب بعد كلمة مرور الصف.",
     sceneEn: "A STEM lab in 6th of October unlocks design PCs with a student fingerprint after the class password.",
     claimAr: "أبقِ البصمة عاملًا ثالثًا: شيء أنت عليه فوق المعرفة والامتلاك.",
     claimEn: "Keep the fingerprint as a third factor: something you are on top of knowledge and possession.",

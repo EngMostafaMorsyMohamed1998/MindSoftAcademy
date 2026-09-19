@@ -288,7 +288,7 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
         ],
         2,
       ),
-      tf("2-t1", "التجزئة (Hash) عملية يمكن عكسها بسهولة لاسترجاع كلمة المرور.", "A hash is easily reversed to recover the password.", false),
+      tf("2-t1", "التجزئة عملية يمكن عكسها بسهولة لاسترجاع كلمة المرور.", "A hash is easily reversed to recover the password.", false),
       tf("2-t2", "الشبكة الخاصة الافتراضية تنشئ نفقًا مشفّرًا عبر شبكة عامة.", "A VPN creates an encrypted tunnel across a public network.", true),
       tf("2-t3", "تقسيم الشبكة يساعد على منع انتشار الاختراق.", "Network segmentation helps stop a breach from spreading.", true),
       tf("2-t4", "إدارة المخاطر تعني تجاهل كل خطر لأنه نادر.", "Risk management means ignoring every risk because it is rare.", false),
@@ -348,7 +348,7 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
         [
           "حفظ كلمات المرور في قاعدة بيانات الخادم",
           "ما يراه المستخدم ويتفاعل معه في المتصفح",
-          "تشغيل الموجّه في غرفة السيرفر فقط",
+          "تشغيل الموجّه في غرفة الخادم فقط",
           "تشفير القرص الصلب للمدرسة",
         ],
         [
@@ -361,19 +361,19 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "3-m2",
-        "ما طريقة HTTP المناسبة لقراءة قائمة من غير تغييرها؟",
+        "ما طريقة بروتوكول الويب المناسبة لقراءة قائمة من غير تغييرها؟",
         "Which HTTP method is best to read a list without changing it?",
-        ["POST", "DELETE", "GET", "PUT"],
+        ["إرسال", "حذف", "جلب", "استبدال كامل"],
         ["POST", "DELETE", "GET", "PUT"],
         2,
       ),
       mcq(
         "3-m3",
-        "ماذا يعني HTTPS؟",
+        "ماذا يعني بروتوكول الويب الآمن؟",
         "What does HTTPS mean?",
         [
-          "HTTP أسرع بلا أمان",
-          "HTTP فوق قناة مشفّرة",
+          "بروتوكول ويب أسرع بلا أمان",
+          "بروتوكول الويب فوق قناة مشفّرة",
           "بروتوكول بريد فقط",
           "لغة تنسيق الصفحات",
         ],
@@ -392,7 +392,7 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
         [
           "لأن المتصفح مكشوف لأي زائر",
           "لأن جافاسكربت لا تعمل في الهاتف",
-          "لأن HTML يمنع الأرقام",
+          "لأن هيكل الصفحة يمنع الأرقام",
           "لأن الخادم لا يفهم المفاتيح",
         ],
         [
@@ -405,7 +405,7 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       tf("3-t1", "قاعدة البيانات جزء من طبقة البيانات الدائمة.", "The database belongs to the persistent data layer.", true),
       tf("3-t2", "رمز الحالة 404 يعني أن الخادم وجد المورد بنجاح.", "Status 404 means the server found the resource successfully.", false),
-      tf("3-t3", "HTML يعطي المعنى والهيكل، وCSS يعطي المظهر.", "HTML gives meaning and structure; CSS gives appearance.", true),
+      tf("3-t3", "هيكل الصفحة يعطي المعنى، وتنسيق الصفحة يعطي المظهر.", "HTML gives meaning and structure; CSS gives appearance.", true),
       tf("3-t4", "إتاحة الوصول تعني تجاهل لوحة المفاتيح وقارئ الشاشة.", "Accessibility means ignoring the keyboard and screen readers.", false),
       mcq(
         "3-m5",
@@ -417,7 +417,7 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "3-m6",
-        "ما ترتيب أدوار HTML ثم CSS ثم جافاسكربت؟",
+        "ما ترتيب أدوار هيكل الصفحة ثم تنسيقها ثم لغة التفاعل؟",
         "In order, what are the jobs of HTML, then CSS, then JavaScript?",
         [
           "مظهر، هيكل، سلوك",
@@ -433,8 +433,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
         ],
         1,
       ),
-      tf("3-t5", "HTTPS هو HTTP فوق قناة مشفّرة.", "HTTPS is HTTP over an encrypted channel.", true),
-      tf("3-t6", "الكوكيز قد تحفظ حالة تسجيل الدخول بين الطلبات.", "Cookies can keep a login alive across requests.", true),
+      tf("3-t5", "بروتوكول الويب الآمن هو بروتوكول الويب فوق قناة مشفّرة.", "HTTPS is HTTP over an encrypted channel.", true),
+      tf("3-t6", "ملفات الجلسة قد تحفظ حالة تسجيل الدخول بين الطلبات.", "Cookies can keep a login alive across requests.", true),
     ],
     essays: [
       essay(
@@ -446,7 +446,7 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       essay(
         "3-e2",
-        "اشرح الفرق بين HTTP وHTTPS، ومتى ترفض إدخال كلمة مرور في صفحة غير مشفّرة. اذكر دور رمز الحالة في تشخيص عطل.",
+        "اشرح الفرق بين بروتوكول الويب وبروتوكول الويب الآمن، ومتى ترفض إدخال كلمة مرور في صفحة غير مشفّرة. اذكر دور رمز الحالة في تشخيص عطل.",
         "Explain HTTP versus HTTPS, when you refuse to type a password on an unencrypted page, and how a status code helps diagnose a fault.",
         "المصطلح: بروتوكول ويب آمن.\nالسبب: بروتوكول الويب العادي مكشوف. الآمن يشفّر الطريق بشهادة الموقع. لو مفيش قفل متعملش كلمة مرور.\nالمثال: 404 الصفحة مش موجودة، 500 الخادم وقع؛ الرمز يساعد التشخيص.",
         "Term: secure web protocol.\nReason: plain web traffic is visible. The secure version encrypts the path with a site certificate. If there is no lock, do not type a password.\nExample: 404 means the page is missing; 500 means the server failed; the code helps diagnosis.",
@@ -559,12 +559,12 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
         1,
       ),
       tf("4-t5", "النموذج الأولي نسخة رخيصة سريعة تُختبر قبل البناء الكامل.", "A prototype is a cheap, fast version tested before full build.", true),
-      tf("4-t6", "UX هي شكل الزر فقط، وUI هي رحلة المستخدم كلها.", "UX is only the button look, and UI is the whole user journey.", false),
+      tf("4-t6", "تجربة المستخدم هي شكل الزر فقط، وواجهة المستخدم هي رحلة المستخدم كلها.", "UX is only the button look, and UI is the whole user journey.", false),
     ],
     essays: [
       essay(
         "4-e1",
-        "موقع تسجيل حصص يعرض زر «حضور» بلون باهت في أسفل صفحة مزدحمة. انتقد التصميم من زاوية UX واقترح تحسينين قابلين للقياس.",
+        "موقع تسجيل حصص يعرض زر «حضور» بلون باهت في أسفل صفحة مزدحمة. انتقد التصميم من زاوية تجربة المستخدم واقترح تحسينين قابلين للقياس.",
         "An attendance site hides a faint «Present» button at the bottom of a crowded page. Critique the UX and propose two measurable improvements.",
         "المصطلح: تجربة المستخدم.\nالسبب: الزر الباهت تحت الصفحة المزدحمة يخفي المهمة. حسّن التسلسل البصري وقلّل النقرات.\nالمثال: قيس زمن تسجيل الحضور قبل وبعد ما الزر يبقى واضح فوق.",
         "Term: user experience.\nReason: a faint button at the bottom of a crowded page hides the task. Improve visual order and cut clicks.\nExample: measure attendance time before and after the button is large and near the top.",

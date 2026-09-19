@@ -188,14 +188,14 @@ export function telegramStartText(locale: "ar" | "en"): string {
   if (locale === "en") {
     return "Send the student phone number only (example: 01012345678).\nReports and the PDF arrive here after each exam.";
   }
-  return "ابعت رقم تليفون الطالب بس (مثال: 01012345678).\nالتقرير والـ PDF هيوصلك هنا بعد كل امتحان.";
+  return "ابعت رقم تليفون الطالب بس (مثال: 01012345678).\nالتقرير والملف هيوصلك هنا بعد كل امتحان.";
 }
 
 export function telegramLinkedText(name: string, phone: string, locale: "ar" | "en"): string {
   if (locale === "en") {
     return `Linked to ${name}\nPhone: ${phone}\nExam results and weekly PDF reports will arrive here.\nStop: /stop`;
   }
-  return `اتربطت بالطالب: ${name}\nالرقم: ${phone}\nهتوصلك نتيجة كل امتحان وتقرير PDF هنا.\nوقف الإرسال: /stop`;
+  return `اتربطت بالطالب: ${name}\nالرقم: ${phone}\nهتوصلك نتيجة كل امتحان وتقرير الملف هنا.\nوقف الإرسال: /stop`;
 }
 
 export function telegramUnknownPhoneText(locale: "ar" | "en"): string {

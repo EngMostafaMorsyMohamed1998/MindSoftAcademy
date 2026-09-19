@@ -14,7 +14,7 @@ import {
   buildArenaRounds,
   type ArenaRound,
 } from "@/lib/arena";
-import { bookletLetters, bookletOptions } from "@/lib/booklet-pack";
+import { bookletLetters, bookletOptions, bookletPrompt } from "@/lib/booklet-pack";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 import { newAttemptSeed } from "@/lib/shuffle";
@@ -282,8 +282,8 @@ function QuestionBoard({
   return (
     <div className="arena-play" dir={ar ? "rtl" : "ltr"}>
       <div className="arena-sign">
-        <p className="arena-gate-title">{ar ? round.titleAr : round.titleEn}</p>
-        <p className="arena-ask">{ar ? round.promptAr : round.promptEn}</p>
+        <p className="arena-gate-title">{bookletPrompt(locale, round.titleAr, round.titleEn)}</p>
+        <p className="arena-ask">{bookletPrompt(locale, round.promptAr, round.promptEn)}</p>
       </div>
       <div className="arena-lanes">
         {options.map((option, index) => {
