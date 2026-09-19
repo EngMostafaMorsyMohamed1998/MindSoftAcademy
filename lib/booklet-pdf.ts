@@ -53,6 +53,7 @@ type EssayBlock = { kind: "essay"; n: number; prompt: string };
 type FigureBlock = { kind: "figure"; id: string; color: string; title: string };
 type MapBlock = { kind: "map"; root: MindNode; color: string; accent: string };
 type SceneBlock = { kind: "scene"; color: string; term: string; scene: string; art: string };
+type ScenesBlock = { kind: "scenes"; color: string; items: { term: string; scene: string; art: string }[] };
 type AskBlock = { kind: "ask"; text: string };
 type PhotoBlock = { kind: "photo"; src?: string; art: string; title: string; intro: string };
 type TableBlock = { kind: "table"; headers: string[]; rows: { cells: string[]; example?: string }[] };
@@ -70,6 +71,7 @@ type Block =
   | FigureBlock
   | MapBlock
   | SceneBlock
+  | ScenesBlock
   | AskBlock
   | PhotoBlock
   | TableBlock
@@ -299,39 +301,122 @@ function drawFigure(
   return h + 10;
 }
 
+function wrapFit(ctx: SKRSContext2D, text: string, maxWidth: number, maxLines: number): string[] {
+  const lines = wrap(ctx, text, maxWidth);
+  if (lines.length <= maxLines) return lines.length ? lines : [""];
+  const kept = lines.slice(0, maxLines);
+  let last = kept[maxLines - 1] ?? "";
+  while (last.length > 1 && ctx.measureText(`${last}…`).width > maxWidth) {
+    last = last.slice(0, -1).trimEnd();
+  }
+  kept[maxLines - 1] = `${last}…`;
+  return kept;
+}
+
+function paintClipped(
+  ctx: SKRSContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  align: "left" | "right" | "center",
+) {
+  ctx.save();
+  const left = align === "right" ? x - maxWidth : align === "center" ? x - maxWidth / 2 : x;
+  ctx.beginPath();
+  ctx.rect(left, y - 2, maxWidth, 22);
+  ctx.clip();
+  paintText(ctx, text, x, y, align);
+  ctx.restore();
+}
+
+function mapCard(
+  ctx: SKRSContext2D,
+  branch: MindNode,
+  colW: number,
+  ar: boolean,
+): { titleLines: string[]; leaves: { label: string }[]; h: number } {
+  ctx.font = `12px ${FONT_NAME}`;
+  const titleLines = wrapFit(
+    ctx,
+    bookletSafe(ar ? "ar" : "en", ar ? branch.labelAr : branch.labelEn),
+    colW - 20,
+    2,
+  );
+  const leaves = branch.children.slice(0, 3).map((leaf) => ({
+    label: bookletSafe(ar ? "ar" : "en", ar ? leaf.labelAr : leaf.labelEn),
+  }));
+  return { titleLines, leaves, h: 14 + titleLines.length * 15 + 8 + leaves.length * 20 + 10 };
+}
+
+function mapHeight(ctx: SKRSContext2D, root: MindNode, w: number, ar: boolean): number {
+  ctx.font = `14px ${FONT_NAME}`;
+  const title = bookletSafe(ar ? "ar" : "en", ar ? root.labelAr : root.labelEn);
+  const titleH = Math.max(32, wrapFit(ctx, title, w - 24, 2).length * 18 + 12);
+  const colW = (w - 12) / 2;
+  const cards = root.children.slice(0, 4).map((branch) => mapCard(ctx, branch, colW, ar));
+  let used = titleH + 12;
+  for (let row = 0; row < 2; row += 1) {
+    const pair = cards.slice(row * 2, row * 2 + 2);
+    if (!pair.length) break;
+    used += Math.max(...pair.map((card) => card.h)) + 12;
+  }
+  return used;
+}
+
 function drawMap(ctx: SKRSContext2D, root: MindNode, color: string, accent: string, x: number, y: number, w: number, ar: boolean): number {
   const title = bookletSafe(ar ? "ar" : "en", ar ? root.labelAr : root.labelEn);
-  boxLabel(ctx, title, x, y, w, 32, color, 14);
-  const colW = (w - 12) / 2;
-  let maxH = 44;
-  root.children.slice(0, 4).forEach((branch, index) => {
-    const bx = x + (index % 2) * (colW + 12);
-    const by = y + 42 + Math.floor(index / 2) * 92;
-    roundRect(ctx, bx, by, colW, 84, 12, fade(color, 0.08));
-    ctx.fillStyle = color;
-    ctx.font = `13px ${FONT_NAME}`;
-    paintText(
-      ctx,
-      bookletSafe(ar ? "ar" : "en", ar ? branch.labelAr : branch.labelEn),
-      ar ? bx + colW - 10 : bx + 10,
-      by + 8,
-      ar ? "right" : "left",
-    );
-    branch.children.slice(0, 3).forEach((leaf, leafIndex) => {
-      roundRect(ctx, bx + 8, by + 28 + leafIndex * 17, colW - 16, 15, 7, accent);
-      ctx.fillStyle = "#071c45";
-      ctx.font = `12px ${FONT_NAME}`;
-      paintText(
-        ctx,
-        bookletSafe(ar ? "ar" : "en", ar ? leaf.labelAr : leaf.labelEn),
-        ar ? bx + colW - 16 : bx + 12,
-        by + 29 + leafIndex * 17,
-        ar ? "right" : "left",
-      );
-    });
-    maxH = Math.max(maxH, by + 92 - y);
+  ctx.font = `14px ${FONT_NAME}`;
+  const titleLines = wrapFit(ctx, title, w - 24, 2);
+  const titleH = Math.max(32, titleLines.length * 18 + 12);
+  roundRect(ctx, x, y, w, titleH, 10, color);
+  ctx.fillStyle = "#ffffff";
+  titleLines.forEach((line, index) => {
+    paintText(ctx, line, x + w / 2, y + 6 + index * 18, "center");
   });
-  return maxH + 8;
+  const gap = 12;
+  const colW = (w - gap) / 2;
+  const cards = root.children.slice(0, 4).map((branch) => mapCard(ctx, branch, colW, ar));
+  let used = titleH + 12;
+  for (let row = 0; row < 2; row += 1) {
+    const pair = cards.slice(row * 2, row * 2 + 2);
+    if (!pair.length) break;
+    const rowH = Math.max(...pair.map((card) => card.h));
+    pair.forEach((card, col) => {
+      const bx = ar ? x + w - (col + 1) * colW - col * gap : x + col * (colW + gap);
+      const by = y + used;
+      roundRect(ctx, bx, by, colW, rowH, 12, fade(color, 0.08));
+      ctx.fillStyle = color;
+      ctx.font = `12px ${FONT_NAME}`;
+      card.titleLines.forEach((line, lineIndex) => {
+        paintClipped(
+          ctx,
+          line,
+          ar ? bx + colW - 10 : bx + 10,
+          by + 8 + lineIndex * 15,
+          colW - 20,
+          ar ? "right" : "left",
+        );
+      });
+      const leafTop = by + 10 + card.titleLines.length * 15 + 6;
+      card.leaves.forEach((leaf, leafIndex) => {
+        const ly = leafTop + leafIndex * 20;
+        roundRect(ctx, bx + 8, ly, colW - 16, 17, 7, accent);
+        ctx.fillStyle = "#071c45";
+        ctx.font = `11px ${FONT_NAME}`;
+        paintClipped(
+          ctx,
+          wrapFit(ctx, leaf.label, colW - 28, 1)[0] ?? leaf.label,
+          ar ? bx + colW - 16 : bx + 14,
+          ly + 2,
+          colW - 28,
+          ar ? "right" : "left",
+        );
+      });
+    });
+    used += rowH + gap;
+  }
+  return used;
 }
 
 function drawBanner(ctx: SKRSContext2D, text: string, color: string, x: number, y: number, w: number, ar: boolean): number {
@@ -804,7 +889,7 @@ function drawTerms(
     const item = block.items[index]!;
     ctx.font = `14px ${FONT_NAME}`;
     const meaningLines = wrap(ctx, item.meaning, colW - icon - 20);
-    const h = Math.max(68, 18 + meaningLines.length * 16 + 16);
+    const h = Math.max(68, 18 + meaningLines.length * 18 + 16);
     const cx = x + (ar ? (col === 0 ? colW + gap : 0) : col * (colW + gap));
     const cy = y + used;
     roundRect(ctx, cx, cy, colW, h, 12, "#f4f7fb");
@@ -1013,26 +1098,94 @@ function drawTakeaway(ctx: SKRSContext2D, text: string, x: number, y: number, w:
   return h + 14;
 }
 
-function drawScene(ctx: SKRSContext2D, block: SceneBlock, x: number, y: number, w: number, ar: boolean): number {
-  const h = 110;
-  const img = 86;
-  roundRect(ctx, x, y, w, h, 14, "#ffffff");
+function sceneCardHeight(ctx: SKRSContext2D, scene: string, cardW: number): number {
+  ctx.font = `12px ${FONT_NAME}`;
+  const lines = wrap(ctx, scene, cardW - 16).slice(0, 3);
+  return 88 + 22 + lines.length * 15 + 16;
+}
+
+function drawSceneCard(
+  ctx: SKRSContext2D,
+  item: { term: string; scene: string; art: string },
+  color: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  ar: boolean,
+) {
+  roundRect(ctx, x, y, w, h, 10, "#ffffff");
   ctx.strokeStyle = "#d6deea";
-  ctx.lineWidth = 1.2;
   ctx.strokeRect(x, y, w, h);
-  const imgX = ar ? x + w - img - 10 : x + 10;
-  drawLessonArt(ctx, block.art, imgX, y + 12, img, img, ar);
-  const align = ar ? "right" : "left";
-  const tx = ar ? x + w - img - 22 : x + img + 22;
-  ctx.fillStyle = block.color;
-  ctx.font = `14px ${FONT_NAME}`;
-  paintText(ctx, block.term, tx, y + 16, align);
-  ctx.fillStyle = "#111827";
+  drawLessonArt(ctx, item.art, x + 8, y + 8, w - 16, 72, ar);
+  ctx.fillStyle = color;
   ctx.font = `13px ${FONT_NAME}`;
-  const lines = wrap(ctx, block.scene, w - img - 40);
-  lines.slice(0, 4).forEach((line, index) => {
-    paintText(ctx, line, tx, y + 40 + index * 16, align);
-  });
+  paintText(ctx, item.term, ar ? x + w - 10 : x + 10, y + 86, ar ? "right" : "left");
+  ctx.fillStyle = "#334155";
+  ctx.font = `12px ${FONT_NAME}`;
+  wrap(ctx, item.scene, w - 16)
+    .slice(0, 3)
+    .forEach((line, index) => {
+      paintText(ctx, line, ar ? x + w - 10 : x + 10, y + 106 + index * 15, ar ? "right" : "left");
+    });
+}
+
+function drawScenesGrid(
+  ctx: SKRSContext2D,
+  items: { term: string; scene: string; art: string }[],
+  color: string,
+  x: number,
+  y: number,
+  w: number,
+  ar: boolean,
+  from: number,
+  limit: number,
+): { h: number; next: number } {
+  const gap = 10;
+  const cols = 2;
+  const cardW = (w - gap) / cols;
+  let used = 0;
+  let index = from;
+  while (index < items.length && index < from + limit) {
+    const rowItems = items.slice(index, Math.min(index + cols, from + limit, items.length));
+    const rowH = Math.max(...rowItems.map((item) => sceneCardHeight(ctx, item.scene, cardW)));
+    rowItems.forEach((item, col) => {
+      const cx = ar ? x + w - (col + 1) * cardW - col * gap : x + col * (cardW + gap);
+      drawSceneCard(ctx, item, color, cx, y + used, cardW, rowH, ar);
+    });
+    used += rowH + gap;
+    index += rowItems.length;
+  }
+  return { h: used, next: index };
+}
+
+function explainHeight(ctx: SKRSContext2D, block: ExplainBlock, w: number, ar: boolean): number {
+  const icon = 52;
+  ctx.font = `14px ${FONT_NAME}`;
+  const bodyLines = wrap(ctx, block.body, w - icon - 28);
+  const exampleLines = block.example ? wrap(ctx, `${ar ? "مثال:" : "Example:"} ${block.example}`, w - 20) : [];
+  return Math.max(72, 28 + bodyLines.length * 18 + (exampleLines.length ? exampleLines.length * 18 + 22 : 8)) + 10;
+}
+
+function tableSliceHeight(
+  ctx: SKRSContext2D,
+  block: TableBlock,
+  w: number,
+  from: number,
+  count: number,
+  withHeader: boolean,
+): number {
+  const widths = colWidths(block.headers.length, w);
+  let h = withHeader ? 30 : 0;
+  for (let i = 0; i < count; i += 1) {
+    const row = block.rows[from + i];
+    if (!row) break;
+    h += tableRowHeight(ctx, row.cells, widths);
+    if (row.example) {
+      ctx.font = `14px ${FONT_NAME}`;
+      h += wrap(ctx, row.example, w - 16).length * 19 + 14;
+    }
+  }
   return h + 8;
 }
 
@@ -1103,11 +1256,15 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
   }
   if (pack.scenes.length) {
     blocks.push({ kind: "section", text: ar ? "مواقف من الحياة" : "Real-life scenes" });
-    for (const scene of pack.scenes) {
-      const term = bookletSafe(locale, ar ? scene.termAr : scene.termEn);
-      const text = bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn);
-      blocks.push({ kind: "scene", color: chapter.color, term, scene: text, art: sceneArt(term, text) });
-    }
+    blocks.push({
+      kind: "scenes",
+      color: chapter.color,
+      items: pack.scenes.map((scene) => {
+        const term = bookletSafe(locale, ar ? scene.termAr : scene.termEn);
+        const text = bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn);
+        return { term, scene: text, art: sceneArt(term, text) };
+      }),
+    });
   }
   for (const note of LESSON_NOTES.filter((row) => row.chapterId === chapter.id)) {
     const page = textbookPageFor(note.id);
@@ -1492,7 +1649,22 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       continue;
     }
     if (block.kind === "section") {
-      if (need(40, y)) {
+      const next = blocks[blocks.indexOf(block) + 1];
+      let needed = 40;
+      if (next?.kind === "explain") needed += explainHeight(ctx, next, maxWidth, ar);
+      else if (next?.kind === "scenes") {
+        const cardW = (maxWidth - 10) / 2;
+        needed += sceneCardHeight(ctx, next.items[0]?.scene ?? "", cardW) + 20;
+      } else if (next?.kind === "table") {
+        needed += tableSliceHeight(ctx, next, maxWidth, 0, Math.min(2, next.rows.length), true);
+      } else if (next?.kind === "terms") {
+        needed += 90;
+      } else if (next?.kind === "question") {
+        needed += questionLines(ctx, next, maxWidth).h + 14;
+      } else {
+        needed += 48;
+      }
+      if (need(needed, y)) {
         await flush();
         reset();
         y = margin;
@@ -1531,7 +1703,7 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       continue;
     }
     if (block.kind === "map") {
-      const h = 230;
+      const h = mapHeight(ctx, block.root, maxWidth, ar);
       if (need(h, y)) {
         await flush();
         reset();
@@ -1562,7 +1734,7 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
     if (block.kind === "points") {
       ctx.font = `14px ${FONT_NAME}`;
       const h = block.items.reduce((sum, item) => sum + wrap(ctx, item, maxWidth).length * 20 + 8, 16);
-      if (need(Math.min(h, 80), y)) {
+      if (need(h, y)) {
         await flush();
         reset();
         y = margin;
@@ -1591,9 +1763,8 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       continue;
     }
     if (block.kind === "explain") {
-      ctx.font = `14px ${FONT_NAME}`;
-      const h = wrap(ctx, block.body, maxWidth - 80).length * 18 + (block.example ? wrap(ctx, block.example, maxWidth - 20).length * 18 + 40 : 20) + 40;
-      if (need(Math.min(h, 120), y)) {
+      const h = explainHeight(ctx, block, maxWidth, ar);
+      if (need(h, y)) {
         await flush();
         reset();
         y = margin;
@@ -1602,9 +1773,21 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       continue;
     }
     if (block.kind === "terms") {
+      const gap = 10;
+      const colW = (maxWidth - gap) / 2;
+      const icon = 52;
       let from = 0;
       while (from < block.items.length) {
-        if (need(80, y)) {
+        const pair = block.items.slice(from, from + 2);
+        ctx.font = `14px ${FONT_NAME}`;
+        const rowH =
+          Math.max(
+            ...pair.map((item) => {
+              const meaningLines = wrap(ctx, item.meaning, colW - icon - 20);
+              return Math.max(68, 18 + meaningLines.length * 18 + 16);
+            }),
+          ) + gap;
+        if (need(rowH, y)) {
           await flush();
           reset();
           y = margin;
@@ -1616,33 +1799,77 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       continue;
     }
     if (block.kind === "table") {
+      const firstChunk = tableSliceHeight(ctx, block, maxWidth, 0, Math.min(2, block.rows.length), true);
+      if (need(firstChunk, y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
       let from = 0;
-      let header = true;
       while (from < block.rows.length) {
-        const row = block.rows[from]!;
-        ctx.font = `14px ${FONT_NAME}`;
-        const widths = colWidths(block.headers.length, maxWidth);
-        const exampleH = row.example ? wrap(ctx, row.example, maxWidth - 16).length * 19 + 14 : 0;
-        const h = (header ? 30 : 0) + tableRowHeight(ctx, row.cells, widths) + exampleH + 10;
-        if (need(h, y)) {
-          await flush();
-          reset();
-          y = margin;
-          header = true;
+        const header = from === 0 || y === margin;
+        let take = 0;
+        while (from + take < block.rows.length) {
+          const nextH = tableSliceHeight(ctx, block, maxWidth, from, take + 1, header);
+          if (y + nextH > PAGE_H - margin - foot && take > 0) break;
+          if (y + nextH > PAGE_H - margin - foot && take === 0) {
+            if (y === margin) {
+              take = 1;
+              break;
+            }
+            await flush();
+            reset();
+            y = margin;
+            break;
+          }
+          take += 1;
         }
-        const drawn = drawTable(ctx, block, margin, y, maxWidth, ar, header, from, 1);
+        if (!take) continue;
+        const drawn = drawTable(ctx, block, margin, y, maxWidth, ar, header, from, take);
         y += drawn.h;
-        header = false;
         from = drawn.next;
       }
       continue;
     }
-    if (need(96, y)) {
-      await flush();
-      reset();
-      y = margin;
+    if (block.kind === "scenes") {
+      const gap = 10;
+      const cardW = (maxWidth - gap) / 2;
+      if (need(sceneCardHeight(ctx, block.items[0]?.scene ?? "", cardW) + 20, y)) {
+        await flush();
+        reset();
+        y = margin;
+      }
+      let from = 0;
+      while (from < block.items.length) {
+        let take = 0;
+        while (from + take < block.items.length) {
+          const next = block.items.slice(from, from + take + 2);
+          const rows = Math.ceil(next.length / 2);
+          let rowH = 0;
+          for (let r = 0; r < rows; r += 1) {
+            const pair = next.slice(r * 2, r * 2 + 2);
+            rowH += Math.max(...pair.map((item) => sceneCardHeight(ctx, item.scene, cardW))) + gap;
+          }
+          if (y + rowH > PAGE_H - margin - foot && take > 0) break;
+          if (y + rowH > PAGE_H - margin - foot && take === 0) {
+            if (y === margin) {
+              take = Math.min(2, block.items.length - from);
+              break;
+            }
+            await flush();
+            reset();
+            y = margin;
+            break;
+          }
+          take = Math.min(block.items.length - from, take + 2);
+        }
+        if (!take) continue;
+        const drawn = drawScenesGrid(ctx, block.items, block.color, margin, y, maxWidth, ar, from, take);
+        y += drawn.h;
+        from = drawn.next;
+      }
+      continue;
     }
-    y += drawScene(ctx, block, margin, y, maxWidth, ar);
   }
   await flush();
   return pdf.save();

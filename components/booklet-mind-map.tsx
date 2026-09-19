@@ -23,7 +23,7 @@ export function BookletMindMap({
       <div className="grid gap-3 sm:grid-cols-2">
         {root.children.map((branch) => (
           <div key={branch.id} className="rounded-2xl p-3" style={{ background: `${color}10` }}>
-            <p className="ink-brand text-base font-extrabold" style={{ color }}>
+            <p className="ink-brand text-base font-extrabold leading-6 break-words" style={{ color }}>
               {bookletSafe(locale, ar ? branch.labelAr : branch.labelEn)}
             </p>
             <ul className="mt-2 space-y-1.5">
