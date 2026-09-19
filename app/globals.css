@@ -52,12 +52,11 @@ body {
 }
 
 html[lang="en"],
-html[lang="en"] body,
-html[lang="en"] .font-sans,
-html[lang="en"] .booklet-paper,
-html[lang="en"] nav,
-html[lang="en"] aside {
+html[lang="en"] *,
+[lang="en"],
+[lang="en"] * {
   font-family: Arial, Helvetica, ui-sans-serif, sans-serif !important;
+  word-spacing: 0.08em;
 }
 
 html[lang="en"] .font-serif,

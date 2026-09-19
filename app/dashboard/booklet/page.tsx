@@ -9,7 +9,7 @@ export default async function BookletPage() {
   const locale = await getLocale();
 
   return (
-    <div className="booklet-paper mx-auto w-full max-w-5xl">
+    <div className="booklet-paper mx-auto w-full max-w-5xl" lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
       <div className="no-print mb-5">
         <h1 className="font-serif text-3xl">{t(locale, "bookletTitle")}</h1>
         <p className="mt-2 text-sm text-foreground/65">{t(locale, "bookletLead")}</p>

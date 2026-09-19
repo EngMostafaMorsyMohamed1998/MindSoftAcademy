@@ -192,9 +192,11 @@ export function withShuffledOptions(
   seed: number,
 ): HomeworkQuestion {
   if (question.kind === "tf") return question;
+  let mix = seed + 17;
+  for (const ch of question.id) mix = (mix * 33 + ch.charCodeAt(0)) >>> 0;
   const order = shuffled(
     question.optionsAr.map((_, index) => index),
-    seed + question.id.length,
+    mix,
   );
   return {
     ...question,

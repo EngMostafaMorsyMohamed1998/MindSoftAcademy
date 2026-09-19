@@ -3,7 +3,7 @@ import { CHAPTERS, getChapter, getLesson, type Chapter, type ChapterId } from "@
 import { FAIZ_UNITS } from "@/lib/faiz";
 import { FAIZ_ESSAYS, FAIZ_OBJECTIVES } from "@/lib/faiz-exam";
 import { FAIZ_NOTES, type FaizUnitNote } from "@/lib/faiz-notes";
-import { questionsForChapter, questionsForLesson, type HomeworkQuestion } from "@/lib/homework-bank";
+import { questionsForChapter, questionsForLesson, withShuffledOptions, type HomeworkQuestion } from "@/lib/homework-bank";
 import { LESSON_NOTES } from "@/lib/lessons";
 import { analysisForChapter, BANK_FACTS } from "@/lib/question-bank";
 import type { AnalysisPrompt, BankFact } from "@/lib/question-bank/types";
@@ -109,26 +109,44 @@ export function bookletOptions(locale: Locale, optionsAr: string[], optionsEn: s
   return rows;
 }
 
-function asMcq(question: HomeworkQuestion): BookletMcq {
+function mixMcq(row: BookletMcq): BookletMcq {
+  const count = Math.min(row.optionsAr.length, row.optionsEn.length);
+  if (count < 2) return row;
+  let seed = 4401;
+  for (const ch of row.id) seed = (seed * 33 + ch.charCodeAt(0)) >>> 0;
+  const order = shuffled(
+    Array.from({ length: count }, (_, index) => index),
+    seed,
+  );
   return {
-    id: question.id,
-    promptAr: question.promptAr,
-    promptEn: question.promptEn,
-    optionsAr: question.optionsAr,
-    optionsEn: question.optionsEn,
-    correctIndex: question.correctIndex,
+    ...row,
+    optionsAr: order.map((index) => row.optionsAr[index]!),
+    optionsEn: order.map((index) => row.optionsEn[index]!),
+    correctIndex: order.indexOf(row.correctIndex),
   };
 }
 
+function asMcq(question: HomeworkQuestion): BookletMcq {
+  const next = withShuffledOptions(question, 811);
+  return mixMcq({
+    id: next.id,
+    promptAr: next.promptAr,
+    promptEn: next.promptEn,
+    optionsAr: next.optionsAr,
+    optionsEn: next.optionsEn,
+    correctIndex: next.correctIndex,
+  });
+}
+
 function objectiveAsMcq(question: ObjectiveQuestion): BookletMcq {
-  return {
+  return mixMcq({
     id: question.id,
     promptAr: question.promptAr,
     promptEn: question.promptEn,
     optionsAr: [...(question.optionsAr ?? [])],
     optionsEn: [...(question.optionsEn ?? [])],
     correctIndex: question.correctIndex,
-  };
+  });
 }
 
 export function bookletAnswerMark(locale: Locale, index: number): string {
@@ -179,9 +197,25 @@ function chapterMcqPool(chapterId: ChapterId): BookletMcq[] {
 
 export const BOOKLET_LESSON_DRILLS = 6;
 
+function parkAnswer(row: BookletMcq, dest: number): BookletMcq {
+  const count = Math.min(row.optionsAr.length, row.optionsEn.length);
+  if (count < 2) return row;
+  const target = dest % count;
+  const shift = (row.correctIndex - target + count) % count;
+  if (shift === 0) return row;
+  return {
+    ...row,
+    optionsAr: row.optionsAr.map((_, index) => row.optionsAr[(index + shift) % count]!),
+    optionsEn: row.optionsEn.map((_, index) => row.optionsEn[(index + shift) % count]!),
+    correctIndex: target,
+  };
+}
+
 export function bookletLessonPractice(lessonId: string): BookletMcq[] {
   const chapterSeed = Number(lessonId.split("-")[0] ?? "1") * 31;
-  return shuffled(questionsForLesson(lessonId).filter(usableMcq), 2027 + chapterSeed + lessonId.length).slice(0, BOOKLET_LESSON_DRILLS).map(asMcq);
+  return shuffled(questionsForLesson(lessonId).filter(usableMcq), 2027 + chapterSeed + lessonId.length)
+    .slice(0, BOOKLET_LESSON_DRILLS)
+    .map((row, index) => parkAnswer(asMcq(row), index % 4));
 }
 
 function chapterLessonIds(chapterId: ChapterId): string[] {
