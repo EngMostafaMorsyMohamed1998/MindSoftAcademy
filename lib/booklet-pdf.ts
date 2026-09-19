@@ -79,7 +79,12 @@ type Block =
   | TakeawayBlock
   | BreakBlock;
 
+function hasArabic(text: string): boolean {
+  return /[\u0600-\u06FF]/.test(text);
+}
+
 function wrap(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
+  ctx.direction = hasArabic(text) ? "rtl" : "ltr";
   const words = text.replace(/\s+/g, " ").trim().split(" ");
   if (!words[0]) return [""];
   const lines: string[] = [];
@@ -103,7 +108,7 @@ function paintText(
   y: number,
   align: "left" | "right" | "center",
 ) {
-  ctx.direction = "ltr";
+  ctx.direction = hasArabic(text) || align === "right" ? "rtl" : "ltr";
   ctx.textAlign = align;
   ctx.textBaseline = "top";
   ctx.fillText(text, x, y);
@@ -1184,32 +1189,124 @@ function pushEssayGuides(
   });
 }
 
+function clipKeyPrompt(text: string): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  return clean.length > 36 ? `${clean.slice(0, 35)}…` : clean;
+}
+
 function pushAnswerKey(
   blocks: Block[],
   locale: Locale,
-  rows: { title: string; answers: { index: number }[] }[],
+  rows: {
+    title: string;
+    answers: { index: number; promptAr: string; promptEn: string; choiceAr: string; choiceEn: string }[];
+  }[],
 ) {
   const ar = locale === "ar";
   blocks.push({ kind: "banner", text: ar ? "مفتاح الإجابة" : "Answer key", color: "#0c2d6b" });
   for (const block of rows) {
-    blocks.push({
-      kind: "text",
-      text: `${block.title}: ${block.answers.map((row, index) => `${index + 1}-${bookletAnswerMark(locale, row.index)}`).join("  ")}`,
-      size: 14,
-      gap: 12,
-    });
+    blocks.push({ kind: "section", text: block.title });
+    for (const [index, row] of block.answers.entries()) {
+      const choice = bookletSafe(locale, ar ? row.choiceAr : row.choiceEn);
+      const prompt = clipKeyPrompt(bookletSafe(locale, ar ? row.promptAr : row.promptEn));
+      blocks.push({
+        kind: "text",
+        text: `${index + 1}-${bookletAnswerMark(locale, row.index)}  ${choice}  —  ${prompt}`,
+        size: 14,
+        gap: 8,
+      });
+    }
   }
+}
+
+function coverCopy(locale: Locale, scope: BookletScope) {
+  const ar = locale === "ar";
+  if (scope === "faiz") {
+    return {
+      kicker: ar ? "كتاب الفائز" : "Al-Faiz",
+      title: ar ? "ملزمة كتاب الفائز" : "Al-Faiz booklet",
+      color: "#0c2d6b",
+    };
+  }
+  const chapter = getChapter(scope);
+  return {
+    kicker: ar ? `الفصل ${scope}` : `Chapter ${scope}`,
+    title: chapter ? (ar ? chapter.titleAr : chapter.titleEn) : "",
+    color: chapter?.color ?? "#0c2d6b",
+  };
+}
+
+function drawCoverPage(ctx: SKRSContext2D, locale: Locale, scope: BookletScope) {
+  const ar = locale === "ar";
+  const copy = coverCopy(locale, scope);
+  ctx.fillStyle = copy.color;
+  ctx.fillRect(0, 0, PAGE_W, PAGE_H);
+  ctx.fillStyle = "#d4a017";
+  ctx.fillRect(0, 0, PAGE_W, 12);
+  ctx.fillRect(0, PAGE_H - 12, PAGE_W, 12);
+
+  const cardX = 36;
+  const cardY = 148;
+  const cardW = PAGE_W - 72;
+  const cardH = 540;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 12, "#ffffff");
+
+  const cx = PAGE_W / 2;
+  ctx.fillStyle = copy.color;
+  ctx.font = `16px ${FONT_NAME}`;
+  paintText(ctx, ar ? BRAND.nameAr : BRAND.nameEn, cx, cardY + 28, "center");
+
+  ctx.fillStyle = "#b45309";
+  ctx.font = `15px ${FONT_NAME}`;
+  paintText(ctx, copy.kicker, cx, cardY + 64, "center");
+
+  ctx.fillStyle = "#0c2d6b";
+  ctx.font = `28px ${FONT_NAME}`;
+  paintText(ctx, ar ? "ملزمة الطالب" : "Student booklet", cx, cardY + 96, "center");
+
+  ctx.fillStyle = "#111827";
+  ctx.font = `20px ${FONT_NAME}`;
+  const titleLines = wrap(ctx, copy.title, cardW - 56);
+  titleLines.forEach((line, index) => {
+    paintText(ctx, line, cx, cardY + 148 + index * 28, "center");
+  });
+
+  const afterTitle = cardY + 148 + titleLines.length * 28 + 18;
+  ctx.fillStyle = "#374151";
+  ctx.font = `15px ${FONT_NAME}`;
+  paintText(ctx, ar ? BRAND.subjectAr : BRAND.subjectEn, cx, afterTitle, "center");
+  paintText(ctx, ar ? BRAND.gradeAr : BRAND.gradeEn, cx, afterTitle + 24, "center");
+
+  ctx.fillStyle = "#111827";
+  ctx.font = `18px ${FONT_NAME}`;
+  paintText(ctx, ar ? BRAND.teacherAr : BRAND.teacherEn, cx, afterTitle + 66, "center");
+  ctx.fillStyle = "#0c2d6b";
+  ctx.font = `16px ${FONT_NAME}`;
+  paintText(ctx, BRAND.phone, cx, afterTitle + 92, "center");
+  ctx.fillStyle = "#374151";
+  ctx.font = `14px ${FONT_NAME}`;
+  paintText(ctx, `${BRAND.year}  ·  2Bac`, cx, afterTitle + 116, "center");
+
+  const fields = ar ? ["المجموعة", "رقم التليفون", "الاسم"] : ["Name", "Phone", "Group"];
+  const fieldY = cardY + cardH - 96;
+  const fieldW = (cardW - 56) / 3;
+  fields.forEach((label, index) => {
+    const fx = cardX + 28 + index * (fieldW + 8);
+    ctx.fillStyle = "#6b7280";
+    ctx.font = `13px ${FONT_NAME}`;
+    paintText(ctx, label, ar ? fx + fieldW : fx, fieldY, ar ? "right" : "left");
+    ctx.strokeStyle = "#0c2d6b";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(fx, fieldY + 34);
+    ctx.lineTo(fx + fieldW, fieldY + 34);
+    ctx.stroke();
+  });
 }
 
 function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
   const ar = locale === "ar";
-  const blocks: Block[] = [
-    { kind: "banner", text: ar ? BRAND.nameAr : BRAND.nameEn, color: "#0c2d6b" },
-    { kind: "text", text: ar ? "ملزمة الطالب — البرمجة والذكاء الاصطناعي" : "Student booklet — Programming and Artificial Intelligence", size: 22, gap: 12 },
-    { kind: "text", text: ar ? BRAND.teacherAr : BRAND.teacherEn, size: 16, gap: 8 },
-    { kind: "text", text: BRAND.phone, size: 16, gap: 8 },
-    { kind: "text", text: "2026–2027", size: 14, gap: 14 },
-  ];
+  const blocks: Block[] = [];
 
   if (scope === "faiz") {
     blocks.push({ kind: "text", text: ar ? "ملزمة كتاب الفائز" : "Al-Faiz booklet", size: 16, gap: 16 });
@@ -1266,7 +1363,10 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
     blocks.push({ kind: "essay", n: index + 1, prompt: bookletPrompt(locale, essay.promptAr, essay.promptEn) });
   });
   pushAnswerKey(blocks, locale, [
-    { title: ar ? "تدريبات الفصل" : "Chapter practice", answers: pack.answers },
+    ...pack.answerGroups.map((group) => ({
+      title: ar ? group.titleAr : group.titleEn,
+      answers: group.answers,
+    })),
     { title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers },
   ]);
   pushEssayGuides(blocks, locale, ar ? "مقالي التدريبات" : "Practice essays", pack.essays);
@@ -1337,6 +1437,12 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       images.set(block.src, await loadImage(path.join(process.cwd(), "public", block.src.replace(/^\//, ""))));
     }
   }
+
+  reset();
+  drawCoverPage(ctx, locale, scope);
+  const coverPage = pdf.addPage([PAGE_W, PAGE_H]);
+  const coverImage = await pdf.embedJpg(canvas.toBuffer("image/jpeg", 96));
+  coverPage.drawImage(coverImage, { x: 0, y: 0, width: PAGE_W, height: PAGE_H });
 
   reset();
   let y = margin;

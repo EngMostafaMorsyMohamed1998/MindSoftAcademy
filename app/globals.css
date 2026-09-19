@@ -226,37 +226,41 @@ body {
   background: #f8fafc;
 }
 
+.booklet-cover {
+  overflow: hidden;
+}
+
+.booklet-cover-band {
+  background: #0c2d6b;
+}
+
 @media print {
   @page {
     size: A4;
-    margin: 10mm 9mm 16mm;
-    @bottom-left {
-      content: "01153464345";
-      font-size: 9pt;
-      color: #52525b;
-    }
-    @bottom-center {
-      content: counter(page);
-      font-size: 10pt;
-      color: #52525b;
-    }
-    @bottom-right {
-      content: "البكالوريا";
-      font-size: 9pt;
-      color: #059669;
-    }
+    margin: 12mm 11mm 16mm;
   }
 
-  header,
+  html,
+  body {
+    background: white !important;
+    color: #111827 !important;
+  }
+
   nav,
   aside,
   .no-print {
     display: none !important;
   }
 
-  body {
-    background: white;
-    color: #111;
+  .dashboard-shell,
+  .dashboard-main,
+  .dashboard-page {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
   }
 
   .dark .booklet-paper,
@@ -290,14 +294,34 @@ body {
     background: #fff;
   }
 
-  .print-sheet {
+  .print-sheet,
+  .booklet-paper {
     box-shadow: none !important;
     border: none !important;
     background: white !important;
+    max-width: none !important;
+  }
+
+  .booklet-cover {
+    break-after: page;
+    break-inside: avoid;
+    min-height: 265mm;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .booklet-cover-band,
+  .textbook-head,
+  .textbook-table th {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .print-break {
-    break-after: page;
+    break-before: page;
   }
 
   .print-keep,
@@ -308,8 +332,8 @@ body {
   }
 
   .booklet-q {
-    padding: 16px !important;
-    margin-bottom: 16px !important;
+    padding: 14px !important;
+    margin-bottom: 12px !important;
     border: 1px solid #d5deea !important;
     background: #f7f9fc !important;
   }
@@ -319,12 +343,13 @@ body {
   }
 
   .booklet-section {
-    margin-top: 1.4rem;
+    margin-top: 1.1rem;
   }
 
   .textbook-sheet {
-    break-after: page;
+    break-inside: auto;
     box-shadow: none !important;
+    border-radius: 0 !important;
   }
 
   .textbook-ask,
@@ -334,13 +359,20 @@ body {
     break-inside: avoid;
   }
 
+  .textbook-figure,
+  .textbook-ask,
+  .textbook-takeaway {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
   .textbook-table {
-    font-size: 14px !important;
+    font-size: 13px !important;
   }
 
   .booklet-paper {
-    font-size: 15px;
-    line-height: 1.75;
+    font-size: 14px;
+    line-height: 1.7;
   }
 
   .booklet-pane.hidden {

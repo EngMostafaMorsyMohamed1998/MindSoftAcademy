@@ -1,4 +1,5 @@
 import { CircleHelp } from "lucide-react";
+import { AiNestDiagram } from "@/components/ai-nest-diagram";
 import { TextbookArt } from "@/components/textbook-art";
 import { bookletSafe, termArt } from "@/lib/booklet-lang";
 import { BRAND } from "@/lib/brand";
@@ -10,9 +11,10 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
   const headers = ar ? page.headersAr : page.headersEn;
   const points = ar ? page.pointsAr : page.pointsEn;
   const colCount = headers.length;
+  const nest = page.art === "nest";
 
   return (
-    <article className="textbook-sheet mb-8 overflow-hidden rounded-sm bg-white ring-1 ring-slate-300">
+    <article className="textbook-sheet mb-8 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
       <header className="textbook-head flex items-center justify-between gap-3 bg-[#0c2d6b] px-5 py-3.5 text-white">
         <span className="text-base font-extrabold">
           {ar ? "الدرس" : "Lesson"} {page.id}
@@ -21,56 +23,68 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
       </header>
 
       <div className="px-5 py-6 sm:px-7">
-        <p className="textbook-ask rounded-sm border-2 border-amber-300 bg-[#fff6d6] px-4 py-4 text-lg font-bold leading-9 text-[#111827]">
-          <span className="textbook-ask-mark" aria-hidden="true">
-            <CircleHelp className="size-6" strokeWidth={2.4} />
+        <p className="textbook-ask flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-lg font-bold leading-9 text-[#111827]">
+          <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-amber-300 bg-amber-100 text-amber-700">
+            <CircleHelp className="size-4" strokeWidth={2.6} />
           </span>
-          <span className="text-[#92400e]">{ar ? "السؤال الرئيسي:" : "Main question:"}</span>{" "}
-          {bookletSafe(locale, ar ? page.questionAr : page.questionEn)}
+          <span>
+            <span className="text-[#92400e]">{ar ? "السؤال الرئيسي:" : "Main question:"}</span>{" "}
+            {bookletSafe(locale, ar ? page.questionAr : page.questionEn)}
+          </span>
         </p>
 
-        <div className="textbook-figure mt-6 grid items-start gap-5 sm:grid-cols-[220px_minmax(0,1fr)]">
-          <figure className="overflow-hidden rounded-sm bg-zinc-100 ring-1 ring-slate-300">
-            {page.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
-            ) : (
-              <div className="aspect-[4/3] w-full">
-                <TextbookArt art={page.art} locale={locale} />
-              </div>
-            )}
-          </figure>
-          <div>
-            <h4 className="text-xl font-extrabold text-[#0c2d6b]">
-              <span className="me-2 inline-flex size-7 items-center justify-center rounded-full bg-[#0c2d6b] text-xs text-white">
-                1
-              </span>
-              {bookletSafe(locale, ar ? page.sectionAr : page.sectionEn)}
-            </h4>
-            <p className="mt-3 text-base font-semibold leading-8 text-[#111827]">{bookletSafe(locale, ar ? page.introAr : page.introEn)}</p>
-            {points.length ? (
-              <ol className="mt-4 list-decimal space-y-2 ps-6 text-base font-semibold leading-8 text-[#111827]">
-                {points.map((point) => (
-                  <li key={point}>{bookletSafe(locale, point)}</li>
-                ))}
-              </ol>
-            ) : null}
+        <div className="textbook-figure mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+          <h4 className="flex items-center gap-3 text-xl font-extrabold text-[#0c2d6b]">
+            <span className="inline-flex size-7 items-center justify-center rounded-full bg-[#0c2d6b] text-xs text-white">
+              1
+            </span>
+            {bookletSafe(locale, ar ? page.sectionAr : page.sectionEn)}
+          </h4>
+          <div className={`mt-5 grid items-center gap-6 ${nest ? "lg:grid-cols-12" : "sm:grid-cols-[220px_minmax(0,1fr)]"}`}>
+            <figure
+              className={
+                nest
+                  ? "flex items-center justify-center rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-100 lg:col-span-5"
+                  : "overflow-hidden rounded-2xl bg-zinc-100 ring-1 ring-slate-200"
+              }
+            >
+              {page.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
+              ) : nest ? (
+                <AiNestDiagram locale={locale} />
+              ) : (
+                <div className="aspect-[4/3] w-full">
+                  <TextbookArt art={page.art} locale={locale} />
+                </div>
+              )}
+            </figure>
+            <div className={nest ? "lg:col-span-7" : undefined}>
+              <p className="text-base font-semibold leading-8 text-[#111827]">{bookletSafe(locale, ar ? page.introAr : page.introEn)}</p>
+              {points.length ? (
+                <ol className="mt-4 list-decimal space-y-3 ps-6 text-base font-semibold leading-8 text-[#111827]">
+                  {points.map((point) => (
+                    <li key={point}>{bookletSafe(locale, point)}</li>
+                  ))}
+                </ol>
+              ) : null}
+            </div>
           </div>
         </div>
 
         {page.headersAr[0] === "المصطلح" || page.headersEn[0] === "Term" ? (
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {page.rows.map((row, index) => {
               const term = bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""));
               const meaning = bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""));
               return (
-                <div key={`${page.id}-term-${index}`} className="flex gap-3 rounded-xl bg-[#eef3fb] p-4 ring-1 ring-slate-300">
-                  <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-white">
+                <div key={`${page.id}-term-${index}`} className="flex gap-4 rounded-2xl bg-[#eef3f9] p-4 ring-1 ring-slate-200">
+                  <div className="size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-100">
                     <TextbookArt art={termArt(term, meaning)} locale={locale} compact />
                   </div>
                   <div className="min-w-0">
                     <p className="text-base font-extrabold text-[#0c2d6b]">{term}</p>
-                    <p className="mt-1 text-base font-semibold leading-7 text-[#111827]">{meaning}</p>
+                    <p className="mt-1 text-sm font-semibold leading-7 text-[#334155]">{meaning}</p>
                   </div>
                 </div>
               );
@@ -118,18 +132,21 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
         )}
 
         {page.explains.length ? (
-          <div className="mt-6 space-y-4">
+          <div className="mt-8 space-y-4">
             <h4 className="text-xl font-extrabold text-[#0c2d6b]">
-              {ar ? "شرح المصطلحات — اقرأ قبل التدريبات" : "Term explanations — read before the drills"}
+              {ar ? "شرح المصطلحات" : "Term explanations"}
+              <span className="ms-2 text-base font-semibold text-slate-400">
+                {ar ? "— اقرأ قبل التدريبات" : "— read before the drills"}
+              </span>
             </h4>
             {page.explains.map((item) => {
               const title = bookletSafe(locale, ar ? item.termAr : item.termEn);
               const body = bookletSafe(locale, ar ? item.bodyAr : item.bodyEn);
               const example = bookletSafe(locale, ar ? item.exampleAr : item.exampleEn);
               return (
-                <article key={`${page.id}-${item.termEn}`} className="rounded-xl bg-[#eef3fb] p-5 ring-1 ring-slate-300">
-                  <div className="flex gap-3">
-                    <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-white">
+                <article key={`${page.id}-${item.termEn}`} className="rounded-2xl bg-[#eef3f9] p-5 ring-1 ring-slate-200">
+                  <div className="flex gap-4">
+                    <div className="size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-100">
                       <TextbookArt art={termArt(title, body)} locale={locale} compact />
                     </div>
                     <div className="min-w-0">
@@ -138,7 +155,7 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
                     </div>
                   </div>
                   {example ? (
-                    <p className="mt-3 rounded-sm bg-[#fff4cc] px-3 py-2 text-base font-semibold leading-7 text-[#111827] ring-1 ring-amber-300">
+                    <p className="mt-3 rounded-xl bg-[#fff4cc] px-3 py-2 text-base font-semibold leading-7 text-[#111827] ring-1 ring-amber-200">
                       <strong>{ar ? "مثال:" : "Example:"}</strong> {example}
                     </p>
                   ) : null}
@@ -148,7 +165,7 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
           </div>
         ) : null}
 
-        <p className="textbook-takeaway mt-6 rounded-sm bg-[#fff4cc] px-4 py-4 text-base font-bold leading-8 text-[#111827] ring-1 ring-amber-300">
+        <p className="textbook-takeaway mt-6 rounded-2xl bg-[#fff4cc] px-4 py-4 text-base font-bold leading-8 text-[#111827] ring-1 ring-amber-200">
           <strong>{ar ? "الخلاصة:" : "Takeaway:"}</strong> {bookletSafe(locale, ar ? page.takeawayAr : page.takeawayEn)}
         </p>
       </div>

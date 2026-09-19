@@ -73,7 +73,7 @@ export function DashboardNav({
 
   return (
     <div className="contents">
-      <aside className="fixed inset-y-0 start-0 z-40 hidden w-64 flex-col border-e border-white/10 bg-primary-dark text-white md:flex">
+      <aside className="no-print fixed inset-y-0 start-0 z-40 hidden w-64 flex-col border-e border-white/10 bg-primary-dark text-white md:flex">
         <div className="flex h-16 items-center px-4">
           <BrandMark locale={locale} href="/dashboard" light />
         </div>
@@ -132,7 +132,7 @@ export function DashboardNav({
         </div>
       </aside>
 
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b-2 border-accent bg-nav px-4 text-nav-fg shadow-md md:hidden">
+      <header className="no-print sticky top-0 z-40 flex h-16 items-center justify-between border-b-2 border-accent bg-nav px-4 text-nav-fg shadow-md md:hidden">
         <BrandMark locale={locale} href="/dashboard" />
         <div className="flex items-center gap-1.5">
           <ThemeToggle
@@ -146,7 +146,7 @@ export function DashboardNav({
         </div>
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-accent bg-nav px-1 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-nav-fg md:hidden">
+      <nav className="no-print fixed inset-x-0 bottom-0 z-40 border-t-2 border-accent bg-nav px-1 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-nav-fg md:hidden">
         <ul className="grid grid-cols-4 gap-0.5">
           {mobileItems(locale).map((item) => {
             const Icon = item.icon;

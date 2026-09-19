@@ -37,6 +37,16 @@ export type BookletEssay = {
 export type BookletAnswer = {
   id: string;
   index: number;
+  promptAr: string;
+  promptEn: string;
+  choiceAr: string;
+  choiceEn: string;
+};
+
+export type BookletAnswerGroup = {
+  titleAr: string;
+  titleEn: string;
+  answers: BookletAnswer[];
 };
 
 export type BookletChapterPack = {
@@ -45,6 +55,7 @@ export type BookletChapterPack = {
   essays: BookletEssay[];
   scenes: BankFact[];
   answers: BookletAnswer[];
+  answerGroups: BookletAnswerGroup[];
 };
 
 export type BookletHomeworkPack = {
@@ -87,46 +98,26 @@ export function bookletOptions(locale: Locale, optionsAr: string[], optionsEn: s
   return rows;
 }
 
-function shuffleBookletMcq(question: BookletMcq): BookletMcq {
-  const count = Math.min(4, Math.max(question.optionsAr.length, question.optionsEn.length));
-  if (count < 2) return question;
-  let seed = 2027;
-  for (let i = 0; i < question.id.length; i += 1) {
-    seed = (seed + question.id.charCodeAt(i) * (i + 3)) >>> 0;
-  }
-  const order = shuffled(
-    Array.from({ length: count }, (_, index) => index),
-    seed,
-  );
-  const next = order.indexOf(question.correctIndex);
-  return {
-    ...question,
-    optionsAr: order.map((index) => question.optionsAr[index] ?? ""),
-    optionsEn: order.map((index) => question.optionsEn[index] ?? ""),
-    correctIndex: next >= 0 ? next : 0,
-  };
-}
-
 function asMcq(question: HomeworkQuestion): BookletMcq {
-  return shuffleBookletMcq({
+  return {
     id: question.id,
     promptAr: question.promptAr,
     promptEn: question.promptEn,
     optionsAr: question.optionsAr,
     optionsEn: question.optionsEn,
     correctIndex: question.correctIndex,
-  });
+  };
 }
 
 function objectiveAsMcq(question: ObjectiveQuestion): BookletMcq {
-  return shuffleBookletMcq({
+  return {
     id: question.id,
     promptAr: question.promptAr,
     promptEn: question.promptEn,
     optionsAr: [...(question.optionsAr ?? [])],
     optionsEn: [...(question.optionsEn ?? [])],
     correctIndex: question.correctIndex,
-  });
+  };
 }
 
 export function bookletAnswerMark(locale: Locale, index: number): string {
@@ -154,7 +145,14 @@ function essayAsEssay(row: EssayQuestion): BookletEssay {
 }
 
 function withAnswers(rows: BookletMcq[]): BookletAnswer[] {
-  return rows.map((row) => ({ id: row.id, index: row.correctIndex }));
+  return rows.map((row) => ({
+    id: row.id,
+    index: row.correctIndex,
+    promptAr: row.promptAr,
+    promptEn: row.promptEn,
+    choiceAr: row.optionsAr[row.correctIndex] ?? "",
+    choiceEn: row.optionsEn[row.correctIndex] ?? "",
+  }));
 }
 
 function usableMcq(row: HomeworkQuestion): boolean {
@@ -180,7 +178,11 @@ function chapterLessonIds(chapterId: ChapterId): string[] {
 }
 
 export function bookletChapterPack(chapter: Chapter): BookletChapterPack {
-  const practice = chapterLessonIds(chapter.id).flatMap((id) => bookletLessonPractice(id));
+  const lessonDrills = chapterLessonIds(chapter.id).map((id) => ({
+    id,
+    practice: bookletLessonPractice(id),
+  }));
+  const practice = lessonDrills.flatMap((row) => row.practice);
   const essays = analysisForChapter(chapter.id).slice(0, BOOKLET_CHAPTER_ESSAYS).map(analysisAsEssay);
   const scenes = shuffled(
     BANK_FACTS.filter((row) => row.chapterId === chapter.id),
@@ -192,6 +194,11 @@ export function bookletChapterPack(chapter: Chapter): BookletChapterPack {
     essays,
     scenes,
     answers: withAnswers(practice),
+    answerGroups: lessonDrills.map((row) => ({
+      titleAr: `تدريبات الدرس ${row.id}`,
+      titleEn: `Lesson ${row.id} practice`,
+      answers: withAnswers(row.practice),
+    })),
   };
 }
 

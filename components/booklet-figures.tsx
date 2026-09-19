@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { AiNestDiagram } from "@/components/ai-nest-diagram";
 import type { Locale } from "@/lib/locale";
 
 function Frame({
@@ -117,27 +118,10 @@ export function BookletFigure({
   }
 
   if (id === "ai-nest") {
-    const rings = ar
-      ? ["ذكاء اصطناعي", "تعلم آلي", "تعلم عميق", "توليدي"]
-      : ["AI", "Machine learning", "Deep learning", "Generative"];
     return (
       <Frame locale={locale} color={color} titleAr="شكل 2 — درجات الذكاء" titleEn="Fig 2 — AI nest" captionAr="توليدي جزء من العميق، والعميق جزء من الآلي، والآلي جزء من الذكاء الاصطناعي." captionEn="Generative sits inside deep learning, inside machine learning, inside AI.">
-        <div className="space-y-1.5">
-          {rings.map((ring, index) => (
-            <div
-              key={ring}
-              className="rounded-2xl px-3 py-2 text-center text-xs font-semibold text-white"
-              style={{
-                background: color,
-                opacity: 1 - index * 0.12,
-                marginInline: `${index * 12}px`,
-                unicodeBidi: "isolate",
-              }}
-              dir={rtl}
-            >
-              {ring}
-            </div>
-          ))}
+        <div className="rounded-2xl bg-slate-50 p-4">
+          <AiNestDiagram locale={locale} />
         </div>
       </Frame>
     );

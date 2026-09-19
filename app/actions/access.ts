@@ -73,7 +73,9 @@ export async function activateAccess(
   try {
     const record = await redeemCode({ name, phone, code });
     await bindStudentDevice(record.id);
-    await setLocale(parseTrack(record.track));
+    if (!(await isTeacher())) {
+      await setLocale(parseTrack(record.track));
+    }
     await setStudentCookie({
       ...record,
       exams: await listExamChapterIds(record.id),
