@@ -471,6 +471,24 @@ function draw(art: string, ar: boolean, compact: boolean) {
       </>
     );
   }
+  if (art === "mask") {
+    return (
+      <>
+        <circle cx="118" cy="88" r="36" fill="#0c2d6b" />
+        <circle cx="106" cy="80" r="6" fill="#fde68a" />
+        <circle cx="130" cy="80" r="6" fill="#fde68a" />
+        <rect x="102" y="100" width="32" height="7" rx="3" fill="#c4a35a" />
+        <rect x="90" y="132" width="56" height="36" rx="12" fill="#1d4ed8" />
+        <Move className={move ? "art-pulse" : undefined}>
+          <rect x="176" y="52" width="108" height="96" rx="12" fill="#fff" stroke="#7f1d1d" strokeWidth="4" />
+          <circle cx="210" cy="86" r="16" fill="#94a3b8" />
+          <rect x="190" y="110" width="80" height="8" rx="3" fill="#cbd5e1" />
+          <rect x="190" y="124" width="56" height="8" rx="3" fill="#e2e8f0" />
+          <path d="M248 60 l18 18 M266 60 l-18 18" stroke="#7f1d1d" strokeWidth="5" />
+        </Move>
+      </>
+    );
+  }
   if (art === "fake") {
     return (
       <>

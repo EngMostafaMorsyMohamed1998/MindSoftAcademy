@@ -103,6 +103,7 @@ export function termArt(term: string, meaning = ""): string {
   if (onTerm(/توصية|recommend/)) return "rec";
   if (onTerm(/صيانة|maintenance/)) return "maintain";
   if (onTerm(/^ai$|الذكاء الاصطناعي|ذكاء اصطناعي/)) return "ai";
+  if (onTerm(/انتحال|impersonat|منتحل|مدعي/)) return "mask";
   if (onTerm(/تصيد|phish|حادث|\bincident\b|احتواء|containment|مخاطر|risk management|خطة استجابة|استجابة|response plan/)) {
     return "incident";
   }

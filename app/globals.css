@@ -276,14 +276,41 @@ body {
 }
 
 .concept-card {
+  position: relative;
+  isolation: isolate;
   border: 1px solid rgb(226 232 240 / 0.9);
   transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out, border-color 0.25s ease-in-out, background-color 0.25s ease-in-out;
+}
+
+.concept-card .art-bob,
+.concept-card .art-pulse,
+.concept-card .art-sparkle,
+.concept-card .art-tilt,
+.concept-card .art-glow,
+.concept-card .art-dash {
+  animation-play-state: paused;
 }
 
 .concept-card:hover {
   transform: translateY(-4px);
   border-color: #60a5fa;
   box-shadow: 0 12px 28px rgb(15 23 42 / 0.08);
+  z-index: 2;
+}
+
+.concept-card:hover .art-bob,
+.concept-card:hover .art-pulse,
+.concept-card:hover .art-sparkle,
+.concept-card:hover .art-tilt,
+.concept-card:hover .art-glow,
+.concept-card:hover .art-dash,
+.concept-card.is-active .art-bob,
+.concept-card.is-active .art-pulse,
+.concept-card.is-active .art-sparkle,
+.concept-card.is-active .art-tilt,
+.concept-card.is-active .art-glow,
+.concept-card.is-active .art-dash {
+  animation-play-state: running;
 }
 
 .concept-card.is-active {

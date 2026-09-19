@@ -42,6 +42,8 @@ const EXPECTED: Record<string, string> = {
   الهلوسة: "incident",
   Deepfake: "fake",
   "التزييف العميق": "fake",
+  Impersonation: "mask",
+  "انتحال الهوية": "mask",
   Encryption: "lock",
   التشفير: "lock",
   Firewall: "firewall",
@@ -145,7 +147,15 @@ const pairs: [string, string][] = [
   ["Privacy", "Transparency"],
   ["Accountability", "Transparency"],
   ["Bias", "Privacy"],
+  ["Impersonation", "Encryption"],
+  ["Impersonation", "Incident"],
+  ["Impersonation", "Symmetric encryption"],
 ];
+
+if (termArt("Impersonation", "An encrypted message claims to be from the class tutor") !== "mask") {
+  console.error("Impersonation scene still uses the lock picture");
+  failed += 1;
+}
 for (const [left, right] of pairs) {
   const a = termArt(left);
   const b = termArt(right);

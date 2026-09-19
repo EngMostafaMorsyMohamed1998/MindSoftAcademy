@@ -85,6 +85,20 @@ function hasArabic(text: string): boolean {
   return /[\u0600-\u06FF]/.test(text);
 }
 
+function fontPx(ctx: SKRSContext2D): number {
+  const match = /(\d+(?:\.\d+)?)px/.exec(ctx.font);
+  return match ? Number(match[1]) : 14;
+}
+
+function textWidth(ctx: SKRSContext2D, text: string): number {
+  const measured = ctx.measureText(text).width;
+  if (hasArabic(text)) return measured;
+  const size = fontPx(ctx);
+  const letters = text.replace(/\s/g, "").length;
+  const spaces = Math.max(0, text.length - letters);
+  return Math.max(measured, letters * size * 0.52 + spaces * size * 0.28);
+}
+
 function wrap(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
   ctx.direction = hasArabic(text) ? "rtl" : "ltr";
   const words = text.replace(/\s+/g, " ").trim().split(" ");
@@ -93,7 +107,7 @@ function wrap(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
   let current = words[0]!;
   for (const word of words.slice(1)) {
     const next = `${current} ${word}`;
-    if (ctx.measureText(next).width <= maxWidth) current = next;
+    if (textWidth(ctx, next) <= maxWidth) current = next;
     else {
       lines.push(current);
       current = word;
@@ -113,7 +127,13 @@ function paintText(
   ctx.direction = hasArabic(text) || align === "right" ? "rtl" : "ltr";
   ctx.textAlign = align;
   ctx.textBaseline = "top";
+  if (!hasArabic(text) && "letterSpacing" in ctx) {
+    (ctx as SKRSContext2D & { letterSpacing: string }).letterSpacing = "0.4px";
+  }
   ctx.fillText(text, x, y);
+  if ("letterSpacing" in ctx) {
+    (ctx as SKRSContext2D & { letterSpacing: string }).letterSpacing = "0px";
+  }
 }
 
 function roundRect(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number, fill: string) {
@@ -306,7 +326,7 @@ function wrapFit(ctx: SKRSContext2D, text: string, maxWidth: number, maxLines: n
   if (lines.length <= maxLines) return lines.length ? lines : [""];
   const kept = lines.slice(0, maxLines);
   let last = kept[maxLines - 1] ?? "";
-  while (last.length > 1 && ctx.measureText(`${last}…`).width > maxWidth) {
+  while (last.length > 1 && textWidth(ctx, `${last}…`) > maxWidth) {
     last = last.slice(0, -1).trimEnd();
   }
   kept[maxLines - 1] = `${last}…`;
@@ -805,6 +825,21 @@ function drawLessonArt(
     ctx.fillRect(x + 14, y + 22, w * 0.22, h * 0.22);
     ctx.fillStyle = "#7f1d1d";
     ctx.fillRect(x + w - 14 - w * 0.22, y + 22, w * 0.22, h * 0.22);
+    return;
+  }
+  if (art === "mask") {
+    fillCircle(ctx, x + w * 0.32, y + h * 0.38, Math.max(10, w * 0.12), "#0c2d6b");
+    roundRect(ctx, x + w * 0.2, y + h * 0.58, w * 0.24, h * 0.22, 6, "#1d4ed8");
+    roundRect(ctx, x + w * 0.52, y + h * 0.22, w * 0.36, h * 0.52, 8, "#ffffff");
+    ctx.strokeStyle = "#7f1d1d";
+    ctx.lineWidth = Math.max(2, w * 0.03);
+    ctx.strokeRect(x + w * 0.52, y + h * 0.22, w * 0.36, h * 0.52);
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.78, y + h * 0.26);
+    ctx.lineTo(x + w * 0.86, y + h * 0.38);
+    ctx.moveTo(x + w * 0.86, y + h * 0.26);
+    ctx.lineTo(x + w * 0.78, y + h * 0.38);
+    ctx.stroke();
     return;
   }
   if (art === "incident" || art === "phish" || art === "fake") {
