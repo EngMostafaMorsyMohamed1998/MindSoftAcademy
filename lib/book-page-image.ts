@@ -2,27 +2,17 @@ import { createHash } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { createCanvas } from "@napi-rs/canvas";
-import { CHAPTERS, getLesson } from "@/lib/curriculum";
+import { getLesson } from "@/lib/curriculum";
+import { lessonPdfPages } from "@/lib/book-pages";
 import type { Locale } from "@/lib/locale";
 import { BOOKS, FAIZ_BOOK } from "@/lib/library";
+
+export { lessonPdfPages };
 
 const cache = new Map<string, Buffer>();
 
 function ministryFile(locale: Locale, part: 1 | 2): string {
   return `programming-ai-${locale}-part${part}.pdf`;
-}
-
-export function lessonPdfPages(lessonId: string): number[] {
-  const lesson = getLesson(lessonId);
-  if (!lesson) return [];
-  const chapter = CHAPTERS.find((item) => item.id === lesson.chapterId);
-  const index = chapter?.lessons.findIndex((item) => item.id === lessonId) ?? -1;
-  const next = index >= 0 ? chapter?.lessons[index + 1] : undefined;
-  const start = lesson.pdfPage;
-  const end = next && next.part === lesson.part ? next.pdfPage - 1 : start + 4;
-  const pages: number[] = [];
-  for (let page = start; page <= Math.max(start, end); page += 1) pages.push(page);
-  return pages;
 }
 
 async function pdfBytes(fileName: string, remote: string): Promise<Buffer> {
@@ -70,8 +60,16 @@ async function sourceForLesson(locale: Locale, lessonId: string): Promise<{ file
 }
 
 export async function renderBookPage(locale: Locale, lessonId: string, offset = 0): Promise<Buffer | null> {
+  try {
+    return await rasterBookPage(locale, lessonId, offset);
+  } catch {
+    return null;
+  }
+}
+
+async function rasterBookPage(locale: Locale, lessonId: string, offset = 0): Promise<Buffer | null> {
   const source = await sourceForLesson(locale, lessonId);
-  if (!source || !source.pages.length) return null;
+  if (!source || !source.pages.length || !source.remote) return null;
   const pageNo = source.pages[Math.min(offset, source.pages.length - 1)] ?? source.pages[0]!;
   const key = `${source.file}:${pageNo}`;
   const disk = path.join("/tmp", "mindsoft-book-pages", `${createHash("sha1").update(key).digest("hex")}.png`);

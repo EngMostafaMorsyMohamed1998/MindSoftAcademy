@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { CircleHelp } from "lucide-react";
 import { AiNestDiagram } from "@/components/ai-nest-diagram";
+import { BookPagePhoto } from "@/components/book-page-photo";
 import { TextbookArt } from "@/components/textbook-art";
 import { artFor, bookletSafe, lessonArtMap } from "@/lib/booklet-lang";
+import { lessonBookView } from "@/lib/book-pages";
 import { BRAND } from "@/lib/brand";
 import type { TextbookPage } from "@/lib/textbook-pages";
 import type { Locale } from "@/lib/locale";
@@ -57,7 +59,7 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
             </span>
             {bookletSafe(locale, ar ? page.sectionAr : page.sectionEn)}
           </h4>
-          <div className={`mt-5 grid items-center gap-6 ${nest ? "lg:grid-cols-12" : "sm:grid-cols-[220px_minmax(0,1fr)]"}`}>
+          <div className={`mt-5 grid items-start gap-6 ${nest ? "lg:grid-cols-12" : ""}`}>
             <figure
               className={
                 nest
@@ -72,14 +74,17 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
                   onSelect={(term) => setPicked(`explain:${term}`)}
                 />
               ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={page.photo ?? `/api/book-page?lesson=${page.id}&lang=${locale}`}
+                <BookPagePhoto
+                  locale={locale}
+                  lessonId={page.id}
                   alt={ar ? page.sectionAr : page.sectionEn}
-                  className="aspect-[3/4] w-full bg-white object-contain"
+                  className="h-[min(72vh,40rem)] w-full bg-white"
                 />
               )}
             </figure>
+            {!nest ? (
+              <BookPageCaption locale={locale} lessonId={page.id} />
+            ) : null}
             <div className={nest ? "lg:col-span-7" : undefined}>
               <p className="text-base font-semibold leading-8 text-[#111827]">{bookletSafe(locale, ar ? page.introAr : page.introEn)}</p>
               {points.length ? (
@@ -210,6 +215,20 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
         <span className="text-base font-extrabold text-[#111827]">{page.pageNo}</span>
       </footer>
     </article>
+  );
+}
+
+function BookPageCaption({ locale, lessonId }: { locale: Locale; lessonId: string }) {
+  const ar = locale === "ar";
+  const view = lessonBookView(locale, lessonId);
+  if (!view) return null;
+  return (
+    <p className="-mt-3 text-sm font-semibold text-[#0c2d6b]">
+      <a href={view.courseHref} className="hover:underline">
+        {ar ? "افتح صفحة الكتاب" : "Open the book page"} {ar ? "ص." : "p."}
+        {view.printed}
+      </a>
+    </p>
   );
 }
 

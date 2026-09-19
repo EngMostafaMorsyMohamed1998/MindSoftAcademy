@@ -15,7 +15,12 @@ export async function GET(request: Request) {
   if (!getLesson(lessonId)) return NextResponse.json({ error: "lesson" }, { status: 400 });
   const locale: Locale = url.searchParams.get("lang") === "en" ? "en" : "ar";
   const offset = Math.max(0, Number(url.searchParams.get("offset") ?? "0") || 0);
-  const png = await renderBookPage(locale, lessonId, offset);
+  let png: Buffer | null = null;
+  try {
+    png = await renderBookPage(locale, lessonId, offset);
+  } catch {
+    png = null;
+  }
   if (!png) return NextResponse.json({ error: "page" }, { status: 404 });
   return new NextResponse(new Uint8Array(png), {
     headers: {

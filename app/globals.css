@@ -53,12 +53,18 @@ body {
 
 html[lang="en"],
 html[lang="en"] body,
-html[lang="en"] .font-sans {
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif !important;
+html[lang="en"] .font-sans,
+html[lang="en"] .booklet-paper,
+html[lang="en"] nav,
+html[lang="en"] aside {
+  font-family: Arial, Helvetica, ui-sans-serif, sans-serif !important;
 }
 
-html[lang="en"] .font-serif {
-  font-family: var(--font-newsreader), ui-serif, Georgia, serif !important;
+html[lang="en"] .font-serif,
+html[lang="en"] h1,
+html[lang="en"] h2,
+html[lang="en"] h3 {
+  font-family: Georgia, "Times New Roman", ui-serif, serif !important;
 }
 
 .dark .bg-white {
