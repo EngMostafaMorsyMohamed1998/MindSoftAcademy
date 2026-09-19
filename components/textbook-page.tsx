@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { CircleHelp } from "lucide-react";
 import { AiNestDiagram } from "@/components/ai-nest-diagram";
 import { TextbookArt } from "@/components/textbook-art";
@@ -8,6 +11,7 @@ import type { Locale } from "@/lib/locale";
 
 export function TextbookLesson({ locale, page }: { locale: Locale; page: TextbookPage }) {
   const ar = locale === "ar";
+  const [picked, setPicked] = useState<string | null>(null);
   const headers = ar ? page.headersAr : page.headersEn;
   const points = ar ? page.pointsAr : page.pointsEn;
   const colCount = headers.length;
@@ -52,7 +56,7 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
               ) : nest ? (
-                <AiNestDiagram locale={locale} />
+                <AiNestDiagram locale={locale} selected={picked} onSelect={setPicked} />
               ) : (
                 <div className="aspect-[4/3] w-full">
                   <TextbookArt art={page.art} locale={locale} />
@@ -78,7 +82,11 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
               const term = bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""));
               const meaning = bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""));
               return (
-                <div key={`${page.id}-term-${index}`} className="flex gap-4 rounded-2xl bg-[#eef3f9] p-4 ring-1 ring-slate-200">
+                <div
+                  key={`${page.id}-term-${index}`}
+                  className={`concept-card flex cursor-pointer gap-4 rounded-2xl bg-[#eef3f9] p-4 ${picked === termArt(term, meaning) ? "is-active" : ""}`}
+                  onClick={() => setPicked(termArt(term, meaning))}
+                >
                   <div className="size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-100">
                     <TextbookArt art={termArt(term, meaning)} locale={locale} compact />
                   </div>
@@ -144,7 +152,11 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
               const body = bookletSafe(locale, ar ? item.bodyAr : item.bodyEn);
               const example = bookletSafe(locale, ar ? item.exampleAr : item.exampleEn);
               return (
-                <article key={`${page.id}-${item.termEn}`} className="rounded-2xl bg-[#eef3f9] p-5 ring-1 ring-slate-200">
+                <article
+                  key={`${page.id}-${item.termEn}`}
+                  className={`concept-card exp-fade cursor-pointer rounded-2xl bg-[#eef3f9] p-5 ${picked === termArt(title, body) ? "is-active" : ""}`}
+                  onClick={() => setPicked(termArt(title, body))}
+                >
                   <div className="flex gap-4">
                     <div className="size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-100">
                       <TextbookArt art={termArt(title, body)} locale={locale} compact />

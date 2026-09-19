@@ -219,12 +219,12 @@ function ChapterBlock({ locale, pack }: { locale: Locale; pack: BookletChapterPa
         </PrintSection>
       ) : null}
 
-      {notes.map((note) => {
+      {notes.map((note, noteIndex) => {
         const page = textbookPageFor(note.id);
         if (!page) return null;
         const drills = bookletLessonPractice(note.id);
         return (
-          <div key={note.id} className="print-break">
+          <div key={note.id} className={noteIndex === 0 ? undefined : "print-break"}>
             <TextbookLesson locale={locale} page={page} />
             {drills.length ? (
               <PrintSection title={ar ? `تدريبات الدرس ${page.id}` : `Lesson ${page.id} practice`}>
@@ -262,24 +262,24 @@ export function BookletCover({
 }) {
   const ar = locale === "ar";
   return (
-    <section className="booklet-cover mb-6 rounded-xl bg-white ring-1 ring-slate-300">
-      <div className="booklet-cover-band px-7 py-8 text-white sm:px-10 sm:py-12" style={{ background: color }}>
+    <section className="booklet-cover mb-6 overflow-hidden rounded-xl bg-white ring-1 ring-slate-300" style={{ background: color }}>
+      <div className="booklet-cover-band px-7 py-8 text-white sm:px-10 sm:py-10" style={{ background: color }}>
         <p className="text-sm font-extrabold tracking-[0.18em] text-white/80">{brand}</p>
-        <p className="mt-8 text-sm font-extrabold uppercase tracking-wide text-[#f5d78a]">{kicker}</p>
-        <h2 className="mt-3 font-serif text-4xl leading-tight text-white sm:text-5xl">
+        <p className="mt-5 text-sm font-extrabold uppercase tracking-wide text-[#f5d78a]">{kicker}</p>
+        <h2 className="mt-2 font-serif text-4xl leading-tight text-white sm:text-5xl">
           {ar ? "ملزمة الطالب" : "Student booklet"}
         </h2>
-        <p className="mt-4 max-w-2xl text-2xl font-extrabold leading-10 text-white">{title}</p>
-        <p className="mt-6 text-lg font-bold text-white/90">{ar ? BRAND.subjectAr : BRAND.subjectEn}</p>
+        <p className="mt-3 max-w-2xl text-2xl font-extrabold leading-10 text-white">{title}</p>
+        <p className="mt-4 text-lg font-bold text-white/90">{ar ? BRAND.subjectAr : BRAND.subjectEn}</p>
         <p className="mt-1 text-base font-semibold text-white/75">{ar ? BRAND.gradeAr : BRAND.gradeEn}</p>
       </div>
-      <div className="px-7 py-7 sm:px-10 sm:py-8">
+      <div className="booklet-cover-card mx-4 mb-4 rounded-xl bg-white px-6 py-6 sm:mx-6 sm:mb-6 sm:px-8">
         <p className="text-xl font-extrabold text-[#111827]">{teacher}</p>
         <p className="mt-1 text-lg font-extrabold tracking-wide text-primary" dir="ltr">
           {BRAND.phone}
         </p>
         <p className="mt-1 text-base font-semibold text-[#374151]">{BRAND.year} · 2Bac</p>
-        <div className="mt-6 grid gap-5 sm:grid-cols-3">
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
           <Field label={ar ? "الاسم" : "Name"} />
           <Field label={ar ? "رقم التليفون" : "Phone"} />
           <Field label={ar ? "المجموعة" : "Group"} />

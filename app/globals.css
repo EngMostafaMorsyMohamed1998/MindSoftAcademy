@@ -161,9 +161,154 @@ body {
   animation: robot-float 4.6s ease-in-out infinite;
 }
 
+@keyframes art-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes art-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.62;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes art-sparkle {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(16deg) scale(1.14);
+  }
+}
+
+@keyframes art-dash {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+@keyframes art-tilt {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+
+@keyframes art-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.25);
+  }
+}
+
+.art-bob,
+.art-pulse,
+.art-sparkle,
+.art-tilt,
+.art-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.art-bob {
+  animation: art-bob 2.8s ease-in-out infinite;
+}
+
+.art-pulse {
+  animation: art-pulse 1.6s ease-in-out infinite;
+}
+
+.art-sparkle {
+  animation: art-sparkle 1.8s ease-in-out infinite;
+}
+
+.art-dash {
+  stroke-dasharray: 7 7;
+  animation: art-dash 1s linear infinite;
+}
+
+.art-tilt {
+  animation: art-tilt 2.4s ease-in-out infinite;
+}
+
+.art-glow {
+  animation: art-glow 2s ease-in-out infinite;
+}
+
+.art-delay-1 {
+  animation-delay: 0.2s;
+}
+
+.art-delay-2 {
+  animation-delay: 0.45s;
+}
+
+.art-delay-3 {
+  animation-delay: 0.7s;
+}
+
+.nested-layer {
+  transition: transform 0.25s ease-in-out, filter 0.25s ease-in-out, box-shadow 0.25s ease-in-out;
+  cursor: pointer;
+}
+
+.nested-layer:hover {
+  transform: scale(1.03);
+  filter: brightness(1.08);
+}
+
+.concept-card {
+  border: 1px solid rgb(226 232 240 / 0.9);
+  transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out, border-color 0.25s ease-in-out, background-color 0.25s ease-in-out;
+}
+
+.concept-card:hover {
+  transform: translateY(-4px);
+  border-color: #60a5fa;
+  box-shadow: 0 12px 28px rgb(15 23 42 / 0.08);
+}
+
+.concept-card.is-active {
+  background: #fff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px #3b82f6, 0 10px 22px rgb(37 99 235 / 0.12);
+}
+
+.exp-fade {
+  transition: opacity 0.2s ease-in-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .robot-float {
-    animation: none;
+  .robot-float,
+  .art-bob,
+  .art-pulse,
+  .art-sparkle,
+  .art-dash,
+  .art-tilt,
+  .art-glow,
+  .nested-layer,
+  .concept-card {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
 
@@ -304,8 +449,6 @@ body {
 
   .booklet-cover {
     break-after: page;
-    break-inside: avoid;
-    min-height: 265mm;
     margin: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
@@ -314,10 +457,25 @@ body {
   }
 
   .booklet-cover-band,
+  .booklet-scene-art,
   .textbook-head,
   .textbook-table th {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+  }
+
+  .art-bob,
+  .art-pulse,
+  .art-sparkle,
+  .art-dash,
+  .art-tilt,
+  .art-glow,
+  .nested-layer,
+  .concept-card {
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
   }
 
   .print-break {

@@ -559,6 +559,27 @@ function drawLessonArt(
     ctx.fillRect(x + 16, y + 62, w * 0.4, 6);
     return;
   }
+  if (art === "arvr") {
+    roundRect(ctx, x + 8, y + h * 0.28, w * 0.4, h * 0.44, 10, "#111827");
+    roundRect(ctx, x + w * 0.14, y + h * 0.36, w * 0.1, h * 0.2, 4, "#60a5fa");
+    roundRect(ctx, x + w * 0.28, y + h * 0.36, w * 0.1, h * 0.2, 4, "#60a5fa");
+    roundRect(ctx, x + w * 0.58, y + h * 0.22, w * 0.34, h * 0.58, 10, "#0c2d6b");
+    roundRect(ctx, x + w * 0.64, y + h * 0.3, w * 0.22, h * 0.32, 6, "#93c5fd");
+    return;
+  }
+  if (art === "edge") {
+    roundRect(ctx, x + 8, y + h * 0.48, w * 0.42, h * 0.28, 8, "#0c2d6b");
+    fillCircle(ctx, x + w * 0.16, y + h * 0.8, Math.max(4, w * 0.05), "#111827");
+    fillCircle(ctx, x + w * 0.36, y + h * 0.8, Math.max(4, w * 0.05), "#111827");
+    ctx.fillStyle = "#94a3b8";
+    ctx.beginPath();
+    ctx.ellipse(x + w * 0.78, y + h * 0.3, w * 0.14, h * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    strokeLine(ctx, x + w * 0.52, y + h * 0.48, x + w * 0.68, y + h * 0.36, "#cbd5e1", 3);
+    strokeLine(ctx, x + w * 0.72, y + h * 0.2, x + w * 0.86, y + h * 0.4, "#7f1d1d", 4);
+    strokeLine(ctx, x + w * 0.86, y + h * 0.2, x + w * 0.72, y + h * 0.4, "#7f1d1d", 4);
+    return;
+  }
   if (art === "cloud") {
     ctx.fillStyle = "#0c2d6b";
     ctx.beginPath();
@@ -978,47 +999,30 @@ function drawTakeaway(ctx: SKRSContext2D, text: string, x: number, y: number, w:
 }
 
 function drawScene(ctx: SKRSContext2D, block: SceneBlock, x: number, y: number, w: number, ar: boolean): number {
-  const h = 88;
-  roundRect(ctx, x, y, w, h, 14, fade(block.color, 0.08));
-  ctx.fillStyle = block.color;
-  if (block.art === "lock") {
-    roundRect(ctx, x + 18, y + 38, 36, 28, 6, block.color);
-    ctx.strokeStyle = block.color;
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.arc(x + 36, y + 36, 12, Math.PI, 0);
-    ctx.stroke();
-  } else if (block.art === "cloud") {
-    ctx.beginPath();
-    ctx.ellipse(x + 40, y + 48, 28, 16, 0, 0, Math.PI * 2);
-    ctx.fill();
-  } else if (block.art === "phone") {
-    roundRect(ctx, x + 24, y + 16, 28, 56, 6, block.color);
-  } else {
-    roundRect(ctx, x + 16, y + 28, 48, 34, 6, block.color);
-    ctx.fillStyle = "#e5e7eb";
-    ctx.fillRect(x + 22, y + 34, 36, 18);
-  }
+  const h = 110;
+  const img = 86;
+  roundRect(ctx, x, y, w, h, 14, "#ffffff");
+  ctx.strokeStyle = "#d6deea";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(x, y, w, h);
+  const imgX = ar ? x + w - img - 10 : x + 10;
+  drawLessonArt(ctx, block.art, imgX, y + 12, img, img, ar);
   const align = ar ? "right" : "left";
-  const tx = ar ? x + w - 14 : x + 78;
+  const tx = ar ? x + w - img - 22 : x + img + 22;
   ctx.fillStyle = block.color;
   ctx.font = `14px ${FONT_NAME}`;
-  paintText(ctx, block.term, tx, y + 12, align);
+  paintText(ctx, block.term, tx, y + 16, align);
   ctx.fillStyle = "#111827";
   ctx.font = `13px ${FONT_NAME}`;
-  const lines = wrap(ctx, block.scene, w - 96);
-  lines.slice(0, 3).forEach((line, index) => {
-    paintText(ctx, line, tx, y + 34 + index * 17, align);
+  const lines = wrap(ctx, block.scene, w - img - 40);
+  lines.slice(0, 4).forEach((line, index) => {
+    paintText(ctx, line, tx, y + 40 + index * 16, align);
   });
   return h + 8;
 }
 
 function sceneArt(term: string, scene: string): string {
-  const hay = `${term} ${scene}`;
-  if (/سحاب|cloud/.test(hay)) return "cloud";
-  if (/تشفير|مرور|تصيد|جدار/.test(hay)) return "lock";
-  if (/هاتف|واتس|محمول/.test(hay)) return "phone";
-  return "lab";
+  return termArt(term, scene);
 }
 
 function figureTitle(id: string, ar: boolean): string {

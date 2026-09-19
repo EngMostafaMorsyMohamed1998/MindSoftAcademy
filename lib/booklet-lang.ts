@@ -110,8 +110,10 @@ export function termArt(term: string, meaning = ""): string {
   if (onTerm(/عينه|عيّنة|مجتمع|\bsample\b|population|أولية|ثانوية|primary|secondary|تحيز عينة|تحيز العينة|sampling bias/)) {
     return "sample";
   }
+  if (onTerm(/واقع معزز|واقع افتراضي|معزز|افتراضي|augmented|\bvr\b|virtual reality|\bar\s*\/\s*vr\b/)) return "arvr";
   if (onTerm(/أخلاق|تحيز|ethic|\bbias\b|شفاف|transpar|مساءل|accountab/)) return "ethics";
-  if (onTerm(/سحاب|\bcloud\b|طرفية|\bedge\b/)) return "cloud";
+  if (onTerm(/طرفية|\bedge\b/)) return "edge";
+  if (onTerm(/سحاب|\bcloud\b/)) return "cloud";
   if (onTerm(/وسائط|ضغط ملفات|ضغط الملفات|نص بديل|multimedia|compress|alt text|دقة|quality vs|جودة مقابل/)) {
     return "media";
   }
@@ -151,6 +153,8 @@ export function termArt(term: string, meaning = ""): string {
   if (onTerm(/تجزئة|\bhash/)) return "lock";
   if (onMeaning(/تشفير|encrypt|مفتاح خاص|password|تجزئة|\bhash/)) return "lock";
   if (onMeaning(/جدار حماية|firewall/)) return "firewall";
+  if (onMeaning(/واقع معزز|واقع افتراضي|augmented|virtual reality/)) return "arvr";
+  if (onMeaning(/طرفية|edge computing/)) return "edge";
   if (onMeaning(/سحاب|cloud service/)) return "cloud";
   if (onMeaning(/متصفح|browser|frontend|html, css/)) return "web";
   return "note";

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { AiNestDiagram } from "@/components/ai-nest-diagram";
+import { TextbookArt } from "@/components/textbook-art";
+import { termArt } from "@/lib/booklet-lang";
 import type { Locale } from "@/lib/locale";
 
 function Frame({
@@ -61,14 +63,6 @@ function Arrow({ flip }: { flip?: boolean }) {
     <span className="px-1 text-sm font-bold text-foreground/40" aria-hidden>
       {flip ? "←" : "→"}
     </span>
-  );
-}
-
-function Draw({ children, tall }: { children: ReactNode; tall?: boolean }) {
-  return (
-    <svg viewBox="0 0 220 90" className={tall ? "h-28 w-full" : "h-24 w-full"} aria-hidden>
-      {children}
-    </svg>
   );
 }
 
@@ -461,115 +455,6 @@ export const CHAPTER_FIGURES: Record<string, string[]> = {
   f4: ["media", "ux", "charts"],
 };
 
-type SceneKind = "lab" | "cloud" | "phone" | "lock" | "factory" | "browser" | "table" | "class";
-
-function sceneKind(term: string, scene: string): SceneKind {
-  const hay = `${term} ${scene}`.toLowerCase();
-  if (/سحاب|cloud|رابط|مجلد/.test(hay)) return "cloud";
-  if (/تشفير|مفتاح|encrypt|password|مرور|مصادق|تصيد|phishing|جدار|firewall/.test(hay)) return "lock";
-  if (/مصنع|صناع|عيوب|factory|فرز/.test(hay)) return "factory";
-  if (/متصفح|ويب|html|css|http|واجهة|صفحة|موقع|browser/.test(hay)) return "browser";
-  if (/جدول|بيانات|عينه|عيّنة|تنظيف|api|استطلاع|data/.test(hay)) return "table";
-  if (/هاتف|واتس|جروب|محمول|phone|whatsapp/.test(hay)) return "phone";
-  if (/حصة|طالب|صف|معلم|معمل|حاسوب|مور|شريحة|lab|moore/.test(hay)) return "lab";
-  return "class";
-}
-
-function SceneArt({ kind, color }: { kind: SceneKind; color: string }) {
-  if (kind === "cloud") {
-    return (
-      <Draw>
-        <rect width="220" height="90" fill={`${color}14`} />
-        <ellipse cx="110" cy="48" rx="48" ry="22" fill={color} />
-        <ellipse cx="86" cy="50" rx="22" ry="16" fill={color} />
-        <ellipse cx="136" cy="50" rx="20" ry="15" fill={color} />
-        <rect x="78" y="50" width="64" height="18" fill={color} />
-        <rect x="98" y="68" width="24" height="8" rx="2" fill="#111827" />
-      </Draw>
-    );
-  }
-  if (kind === "lock") {
-    return (
-      <Draw>
-        <rect width="220" height="90" fill={`${color}14`} />
-        <rect x="88" y="40" width="44" height="34" rx="6" fill={color} />
-        <path d="M96 40 v-10 a14 14 0 0 1 28 0 v10" fill="none" stroke={color} strokeWidth="6" />
-        <circle cx="110" cy="56" r="5" fill="#fff" />
-        <rect x="108" y="56" width="4" height="10" fill="#fff" />
-      </Draw>
-    );
-  }
-  if (kind === "factory") {
-    return (
-      <Draw>
-        <rect width="220" height="90" fill={`${color}14`} />
-        <rect x="40" y="48" width="90" height="28" fill={color} />
-        <polygon points="40,48 70,30 100,48" fill={color} />
-        <rect x="136" y="36" width="18" height="40" fill="#111827" />
-        <rect x="160" y="24" width="18" height="52" fill="#111827" />
-        <circle cx="70" cy="62" r="6" fill="#fff" />
-        <circle cx="94" cy="62" r="6" fill="#fff" />
-      </Draw>
-    );
-  }
-  if (kind === "browser") {
-    return (
-      <Draw>
-        <rect width="220" height="90" fill={`${color}14`} />
-        <rect x="36" y="18" width="148" height="54" rx="8" fill={color} />
-        <rect x="44" y="26" width="132" height="10" rx="4" fill="#fff" opacity="0.35" />
-        <rect x="44" y="42" width="80" height="22" rx="4" fill="#fff" />
-        <rect x="130" y="42" width="46" height="22" rx="4" fill="#111827" />
-      </Draw>
-    );
-  }
-  if (kind === "table") {
-    return (
-      <Draw>
-        <rect width="220" height="90" fill={`${color}14`} />
-        <rect x="40" y="20" width="140" height="52" rx="6" fill="#fff" stroke={color} strokeWidth="3" />
-        <line x1="40" y1="36" x2="180" y2="36" stroke={color} strokeWidth="2" />
-        <line x1="90" y1="20" x2="90" y2="72" stroke={color} strokeWidth="2" />
-        <line x1="140" y1="20" x2="140" y2="72" stroke={color} strokeWidth="2" />
-        <rect x="48" y="42" width="30" height="6" rx="2" fill={color} />
-        <rect x="98" y="54" width="30" height="6" rx="2" fill={color} />
-      </Draw>
-    );
-  }
-  if (kind === "phone") {
-    return (
-      <Draw>
-        <rect width="220" height="90" fill={`${color}14`} />
-        <rect x="88" y="10" width="44" height="70" rx="8" fill={color} />
-        <rect x="94" y="20" width="32" height="44" rx="3" fill="#fff" />
-        <circle cx="110" cy="72" r="3" fill="#fff" />
-      </Draw>
-    );
-  }
-  if (kind === "lab") {
-    return (
-      <Draw>
-        <rect width="220" height="90" fill={`${color}14`} />
-        <rect x="48" y="28" width="70" height="42" rx="6" fill={color} />
-        <rect x="56" y="36" width="54" height="26" fill="#e5e7eb" />
-        <rect x="70" y="70" width="26" height="6" fill="#111827" />
-        <rect x="138" y="34" width="36" height="36" rx="18" fill={color} />
-        <circle cx="156" cy="46" r="7" fill="#fff" />
-        <rect x="146" y="54" width="20" height="12" rx="6" fill="#fff" />
-      </Draw>
-    );
-  }
-  return (
-    <Draw>
-      <rect width="220" height="90" fill={`${color}14`} />
-      <rect x="50" y="40" width="120" height="28" rx="6" fill={color} />
-      <rect x="70" y="22" width="18" height="18" rx="9" fill={color} />
-      <rect x="101" y="22" width="18" height="18" rx="9" fill={color} />
-      <rect x="132" y="22" width="18" height="18" rx="9" fill={color} />
-    </Draw>
-  );
-}
-
 export function SceneCard({
   locale,
   color,
@@ -581,15 +466,17 @@ export function SceneCard({
   scene: string;
   term: string;
 }) {
-  const kind = sceneKind(term, scene);
+  const art = termArt(term, scene);
   return (
-    <article className="overflow-hidden rounded-3xl bg-white ring-1 ring-primary/10">
-      <SceneArt kind={kind} color={color} />
-      <div className="px-3 pb-3">
-        <p className="ink-brand text-[11px] font-semibold" style={{ color }}>
+    <article className="concept-card overflow-hidden rounded-2xl bg-white">
+      <div className="booklet-scene-art aspect-[5/3] bg-slate-50">
+        <TextbookArt art={art} locale={locale} />
+      </div>
+      <div className="px-3 py-3">
+        <p className="text-sm font-extrabold" style={{ color }}>
           {term}
         </p>
-        <p className="mt-1 text-[11px] leading-relaxed text-foreground/70">{scene}</p>
+        <p className="mt-1 text-xs font-semibold leading-6 text-[#334155]">{scene}</p>
       </div>
     </article>
   );
