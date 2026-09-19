@@ -41,13 +41,13 @@ export const FAIZ_NOTES: FaizUnitNote[] = [
         headingEn: "AI and learning",
         bodyAr: [
           "الذكاء الاصطناعي: قدرة الآلة على أداء مهام تحتاج عادة ذكاءً بشريًا.",
-          "العلاقة: ذكاء اصطناعي ⊃ تعلم آلي ⊃ تعلم عميق ⊃ ذكاء توليدي.",
+          "العلاقة: ذكاء اصطناعي ثم تعلم آلي ثم تعلم عميق ثم ذكاء توليدي.",
           "التعلم الآلي يتعلم نمطًا من أمثلة وبيانات. التعلم العميق طبقات كثيرة من العصبونات. التوليدي ينتج نصًا أو صورة أو صوتًا جديدًا.",
           "بيانات التدريب لو منحازة، النموذج يكرر الانحياز. مجموعة الاختبار لازم تكون بيانات ما شافهاش النموذج وهو بيتدرّب.",
         ],
         bodyEn: [
           "AI is a machine’s ability to do tasks that usually need human intelligence.",
-          "Nested fields: AI ⊃ machine learning ⊃ deep learning ⊃ generative AI.",
+          "Nested fields: AI, then machine learning, then deep learning, then generative AI.",
           "Machine learning learns a pattern from examples. Deep learning uses many neuron layers. Generative AI creates new text, images, or audio.",
           "Biased training data repeats the bias. The test set must be data the model did not see while training.",
         ],

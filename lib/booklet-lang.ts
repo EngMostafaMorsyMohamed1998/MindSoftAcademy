@@ -54,8 +54,15 @@ export function bookletLine(locale: Locale, arabic: string, english: string): st
   return cleanEnglish(english || arabic);
 }
 
+function readableMarks(text: string): string {
+  return text
+    .replace(/[⊃⊂⊆⊇]/g, ">")
+    .replace(/[→←⇒▸►➔➜]/g, ">")
+    .replace(/\s*>\s*/g, " > ");
+}
+
 export function cleanArabic(text: string): string {
-  let next = text;
+  let next = readableMarks(text);
   for (const [pattern, swap] of AR_SWAPS) next = next.replace(pattern, swap);
   next = next
     .replace(LATIN_WORD, "")
@@ -68,7 +75,7 @@ export function cleanArabic(text: string): string {
 }
 
 export function cleanEnglish(text: string): string {
-  return text
+  return readableMarks(text)
     .replace(/[\u0600-\u06FF]+/g, "")
     .replace(/[^\S\n]{2,}/g, " ")
     .replace(/\n{3,}/g, "\n\n")

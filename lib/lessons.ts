@@ -58,12 +58,12 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "Generative AI", meaning: "Creates new text, images, or audio using deep learning." },
     ],
     bodyAr: [
-      "العلاقة متداخلة: ذكاء اصطناعي ⊃ تعلم آلي ⊃ تعلم عميق ⊃ ذكاء توليدي.",
+      "العلاقة متداخلة: ذكاء اصطناعي ثم تعلم آلي ثم تعلم عميق ثم ذكاء توليدي.",
       "فلتر الرسائل المزعجة وتوصية المنتجات تعلم آلي؛ توليد صورة من جملة ذكاء توليدي.",
       "الهلوسة: النص يبدو صحيحًا وهو خطأ. لا تضع مخرجات النموذج في تقرير مدرسي دون مراجعة.",
     ],
     bodyEn: [
-      "Nested fields: AI ⊃ machine learning ⊃ deep learning ⊃ generative AI.",
+      "Nested fields: AI, then machine learning, then deep learning, then generative AI.",
       "A spam filter is machine learning; an image generated from a sentence is generative AI.",
       "Hallucinations sound right and are wrong. Never paste model output into school work unreviewed.",
     ],
