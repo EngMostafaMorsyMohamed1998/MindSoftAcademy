@@ -195,7 +195,7 @@ function chapterMcqPool(chapterId: ChapterId): BookletMcq[] {
   ).map(asMcq);
 }
 
-export const BOOKLET_LESSON_DRILLS = 6;
+export const BOOKLET_LESSON_DRILLS = 30;
 
 function parkAnswer(row: BookletMcq, dest: number): BookletMcq {
   const count = Math.min(row.optionsAr.length, row.optionsEn.length);
@@ -213,9 +213,16 @@ function parkAnswer(row: BookletMcq, dest: number): BookletMcq {
 
 export function bookletLessonPractice(lessonId: string): BookletMcq[] {
   const chapterSeed = Number(lessonId.split("-")[0] ?? "1") * 31;
-  return shuffled(questionsForLesson(lessonId).filter(usableMcq), 2027 + chapterSeed + lessonId.length)
-    .slice(0, BOOKLET_LESSON_DRILLS)
-    .map((row, index) => parkAnswer(asMcq(row), index % 4));
+  const own = shuffled(questionsForLesson(lessonId).filter(usableMcq), 2027 + chapterSeed + lessonId.length);
+  const seen = new Set(own.map((row) => row.id));
+  const chapterId = own[0]?.chapterId ?? getLesson(lessonId)?.chapterId;
+  const extra = chapterId
+    ? shuffled(
+        questionsForChapter(chapterId).filter((row) => usableMcq(row) && !seen.has(row.id)),
+        4401 + chapterSeed,
+      )
+    : [];
+  return [...own, ...extra].slice(0, BOOKLET_LESSON_DRILLS).map((row, index) => parkAnswer(asMcq(row), index % 4));
 }
 
 function chapterLessonIds(chapterId: ChapterId): string[] {

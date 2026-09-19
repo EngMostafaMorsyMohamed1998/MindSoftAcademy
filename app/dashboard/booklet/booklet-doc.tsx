@@ -225,7 +225,9 @@ function ChapterBlock({ locale, pack }: { locale: Locale; pack: BookletChapterPa
             {drills.length ? (
               <PrintSection title={ar ? `تدريبات الدرس ${page.id}` : `Lesson ${page.id} practice`}>
                 <p className="text-base font-semibold text-[#374151]">
-                  {ar ? "ظلّل الاختيار. الإجابات في آخر الملزمة." : "Mark a choice. Answers are at the end of this booklet."}
+                  {ar
+                    ? "30 سؤال اختيار من متعدد. ظلّل الاختيار. الإجابات في آخر الملزمة."
+                    : "30 multiple-choice questions. Mark a choice. Answers are at the end of this booklet."}
                 </p>
                 <McqBlock locale={locale} rows={drills} />
               </PrintSection>
@@ -347,7 +349,9 @@ export function BookletLessonPane({ locale, lessonId }: { locale: Locale; lesson
       {drills.length ? (
         <PrintSection title={ar ? `تدريبات الدرس ${page.id}` : `Lesson ${page.id} practice`}>
           <p className="text-base font-semibold text-[#374151]">
-            {ar ? "ظلّل الاختيار. الإجابات في آخر الملزمة." : "Mark a choice. Answers are at the end of this booklet."}
+            {ar
+              ? "30 سؤال اختيار من متعدد. ظلّل الاختيار. الإجابات في آخر الملزمة."
+              : "30 multiple-choice questions. Mark a choice. Answers are at the end of this booklet."}
           </p>
           <McqBlock locale={locale} rows={drills} />
         </PrintSection>

@@ -1,6 +1,9 @@
 import { EXTRA_HOMEWORK } from "@/lib/homework-extra";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { ChapterId } from "@/lib/curriculum";
+import { explainsForLesson } from "@/lib/lesson-explains";
+import { BANK_FACTS } from "@/lib/question-bank";
+import { expandFactsToHomework } from "@/lib/question-bank/expand";
 import { shuffled } from "@/lib/shuffle";
 
 export type HomeworkKind = "mcq" | "tf";
@@ -21,7 +24,13 @@ export const LESSON_HOMEWORK_SIZE = 15;
 export const MAKEUP_HOMEWORK_SIZE = 5;
 
 function pushQuestion(bank: HomeworkQuestion[], question: HomeworkQuestion) {
+  if (bank.some((row) => row.id === question.id)) return;
   bank.push(question);
+}
+
+function firstClause(text: string): string {
+  const cut = text.split(/(?<=[.!?؟])\s+/)[0]?.trim() ?? text.trim();
+  return cut;
 }
 
 function otherTerms(
@@ -131,6 +140,42 @@ function buildBank(): HomeworkQuestion[] {
 
   for (const extra of EXTRA_HOMEWORK) {
     pushQuestion(bank, extra);
+  }
+
+  for (const row of expandFactsToHomework(BANK_FACTS)) {
+    pushQuestion(bank, row);
+  }
+
+  for (const note of LESSON_NOTES) {
+    const explains = explainsForLesson(note.id);
+    explains.forEach((item, index) => {
+      const others = explains.filter((_, other) => other !== index);
+      if (others.length >= 3) {
+        const pick = others.slice(0, 3);
+        pushQuestion(bank, {
+          id: `${note.id}-ex-mean-${index}`,
+          lessonId: note.id,
+          chapterId: note.chapterId,
+          kind: "mcq",
+          promptAr: `ما المعنى الصحيح لـ «${item.termAr}»؟`,
+          promptEn: `What is the correct meaning of “${item.termEn}”?`,
+          optionsAr: [firstClause(item.bodyAr), ...pick.map((row) => firstClause(row.bodyAr))],
+          optionsEn: [firstClause(item.bodyEn), ...pick.map((row) => firstClause(row.bodyEn))],
+          correctIndex: 0,
+        });
+        pushQuestion(bank, {
+          id: `${note.id}-ex-term-${index}`,
+          lessonId: note.id,
+          chapterId: note.chapterId,
+          kind: "mcq",
+          promptAr: `أي مصطلح يناسب هذا المثال: «${item.exampleAr}»؟`,
+          promptEn: `Which term matches this example: “${item.exampleEn}”?`,
+          optionsAr: [item.termAr, ...pick.map((row) => row.termAr)],
+          optionsEn: [item.termEn, ...pick.map((row) => row.termEn)],
+          correctIndex: 0,
+        });
+      }
+    });
   }
 
   return bank;
