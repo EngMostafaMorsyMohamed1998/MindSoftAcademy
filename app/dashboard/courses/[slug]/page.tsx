@@ -14,14 +14,16 @@ export async function generateMetadata({
 }: PageProps<"/dashboard/courses/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const book = getBook(slug);
+  const locale = await getLocale();
 
   if (!book) {
-    return { title: "Book not found — Lumina" };
+    return { title: "MindSoft Academy" };
   }
 
+  const title = locale === "ar" ? book.title : book.titleEn;
   return {
-    title: `${book.titleEn} — Lumina`,
-    description: `${book.title} · Egyptian Baccalaureate textbook.`,
+    title: `${title} — MindSoft Academy`,
+    description: `${book.title} · ${book.titleEn}`,
   };
 }
 
@@ -46,8 +48,9 @@ export default async function CourseBookPage({
   return (
     <BookViewer
       book={book}
+      locale={locale}
       backHref={workbook ? "/dashboard/faiz" : "/dashboard/courses"}
-      backLabel={workbook ? t(locale, "navFaiz") : t(locale, "navBook")}
+      backLabel={workbook ? t(locale, "navFaiz") : t(locale, "libraryBack")}
       page={Number.isFinite(page) && page > 0 ? page : undefined}
     />
   );

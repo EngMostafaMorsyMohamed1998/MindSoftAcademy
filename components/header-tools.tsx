@@ -19,7 +19,7 @@ export function HeaderTools({
 
   return (
     <div className="flex items-center gap-2">
-      <ThemeToggle theme={theme} className={cls} />
+      <ThemeToggle theme={theme} locale={locale} className={cls} />
       <LanguageToggle locale={locale} className={`${cls} w-auto gap-1.5 px-3 text-xs font-semibold`} />
     </div>
   );

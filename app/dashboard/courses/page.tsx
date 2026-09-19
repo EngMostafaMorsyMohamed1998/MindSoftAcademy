@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { FAIZ_BOOK, SUBJECT, booksForTrack } from "@/lib/library";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
-
-export const metadata: Metadata = {
-  title: "الكتاب الوزاري",
-};
 
 export default async function CoursesPage() {
   const locale = await getLocale();

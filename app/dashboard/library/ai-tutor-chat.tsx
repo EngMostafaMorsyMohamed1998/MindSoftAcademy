@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { LoaderCircle, Send, Sparkles } from "lucide-react";
 import type { Book } from "@/lib/library";
 import { SUBJECT } from "@/lib/library";
+import { t } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 
 type ChatMessage = {
   id: string;
@@ -28,19 +30,23 @@ function newId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function errorFromResponse(status: number, body: { error?: string; code?: string }) {
+function errorFromResponse(
+  locale: Locale,
+  status: number,
+  body: { error?: string; code?: string },
+) {
   if (body.error) return body.error;
-  if (status === 429) {
-    return "جرّب بعد دقيقة.";
-  }
-  return "حصل خطأ. اسأل تاني بجملة أقصر.";
+  if (status === 429) return t(locale, "tutorWait");
+  return t(locale, "tutorError");
 }
 
 export function AiTutorChat({
   book,
+  locale,
   currentTopic,
 }: {
   book: Book;
+  locale: Locale;
   currentTopic?: string;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -49,8 +55,8 @@ export function AiTutorChat({
   const [error, setError] = useState<string | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
-  const ar = book.language !== "en";
-  const chips = ar ? SUGGESTIONS.ar : SUGGESTIONS.en;
+  const bookAr = book.language !== "en";
+  const chips = bookAr ? SUGGESTIONS.ar : SUGGESTIONS.en;
   const bookContext = [
     `${SUBJECT.title} / ${SUBJECT.titleEn}`,
     `${book.title} / ${book.titleEn}`,
@@ -98,7 +104,7 @@ export function AiTutorChat({
       };
 
       if (!response.ok || !body.reply) {
-        setError(errorFromResponse(response.status, body));
+        setError(errorFromResponse(locale, response.status, body));
         return;
       }
 
@@ -107,7 +113,7 @@ export function AiTutorChat({
         { id: newId(), role: "assistant", content: body.reply! },
       ]);
     } catch {
-      setError("تعذّر الاتصال بالمعلم الذكي. تحقق من الشبكة ثم أعد المحاولة.");
+      setError(t(locale, "tutorOffline"));
     } finally {
       setPending(false);
     }
@@ -118,13 +124,13 @@ export function AiTutorChat({
       <header className="border-b border-primary/8 px-4 py-3">
         <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-primary uppercase">
           <Sparkles className="size-3.5" aria-hidden="true" />
-          {ar ? "المعلم الذكي" : "AI Tutor"}
+          {t(locale, "tutorTitle")}
         </p>
         <h2 className="mt-1 text-sm font-semibold text-primary-dark">
-          {ar ? "اسأل عن الدرس" : "Ask about the lesson"}
+          {t(locale, "tutorAsk")}
         </h2>
         <p className="mt-1 text-xs leading-relaxed text-foreground/55">
-          بيرد من منهج الكتاب جوّه المنصة.
+          {t(locale, "tutorLead")}
         </p>
       </header>
 
@@ -134,7 +140,7 @@ export function AiTutorChat({
       >
         {messages.length === 0 && !pending ? (
           <div className="rounded-2xl bg-primary/5 px-3 py-3 text-sm leading-relaxed text-foreground/70">
-            مرحباً — اسأل عن تعريف، مثال، أو ملخص سريع من «{book.title}».
+            {t(locale, "tutorHello")}
           </div>
         ) : null}
 
@@ -154,7 +160,7 @@ export function AiTutorChat({
         {pending ? (
           <p className="inline-flex items-center gap-2 text-xs text-primary/70">
             <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
-            المعلم يكتب…
+            {t(locale, "tutorWriting")}
           </p>
         ) : null}
       </div>
@@ -190,7 +196,7 @@ export function AiTutorChat({
         }}
       >
         <label htmlFor="tutor-message" className="sr-only">
-          {ar ? "اسأل المعلم الذكي" : "Ask the AI tutor"}
+          {t(locale, "tutorAsk")}
         </label>
         <textarea
           id="tutor-message"
@@ -204,7 +210,7 @@ export function AiTutorChat({
               void sendMessage(draft);
             }
           }}
-          placeholder={ar ? "اسأل سؤال عن الدرس…" : "Ask a question about this lesson…"}
+          placeholder={t(locale, "tutorPlaceholder")}
           className="min-h-11 flex-1 resize-none rounded-2xl border border-primary/15 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 disabled:opacity-60"
         />
         <button
@@ -213,7 +219,7 @@ export function AiTutorChat({
           className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-muted disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Send className="size-4" aria-hidden="true" />
-          <span className="sr-only">{ar ? "إرسال" : "Send"}</span>
+          <span className="sr-only">{t(locale, "tutorSend")}</span>
         </button>
       </form>
     </aside>

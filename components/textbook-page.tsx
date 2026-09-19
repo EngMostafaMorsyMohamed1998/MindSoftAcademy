@@ -16,11 +16,14 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
   const points = ar ? page.pointsAr : page.pointsEn;
   const colCount = headers.length;
   const nest = page.art === "nest";
+  const termTable = page.headersAr[0] === "المصطلح" || page.headersEn[0] === "Term";
   const artMap = lessonArtMap([
-    ...page.rows.map((row) => ({
-      term: ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""),
-      meaning: ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""),
-    })),
+    ...(termTable
+      ? page.rows.map((row) => ({
+          term: ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""),
+          meaning: ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""),
+        }))
+      : []),
     ...page.explains.map((item) => ({
       term: ar ? item.termAr : item.termEn,
       meaning: ar ? item.bodyAr : item.bodyEn,
@@ -90,7 +93,7 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
           </div>
         </div>
 
-        {page.headersAr[0] === "المصطلح" || page.headersEn[0] === "Term" ? (
+        {termTable ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {page.rows.map((row, index) => {
               const term = bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""));

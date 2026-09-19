@@ -74,7 +74,12 @@ export default async function DashboardLayout({
 
   return (
     <div className="dashboard-shell flex min-h-full flex-1 flex-col bg-background md:flex-row">
-      <DashboardNav initialUser={user} locale={locale} theme={theme} />
+      <DashboardNav
+        initialUser={user}
+        locale={locale}
+        theme={theme}
+        track={record?.track === "en" ? "en" : "ar"}
+      />
       <div className="dashboard-main flex min-w-0 flex-1 flex-col md:ps-64">
         {announcement?.active ? (
           <p className="no-print bg-accent px-4 py-2 text-center text-sm font-semibold text-primary-dark">

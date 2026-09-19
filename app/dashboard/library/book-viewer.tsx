@@ -2,19 +2,24 @@ import Link from "next/link";
 import { ArrowLeft, Download, ExternalLink } from "lucide-react";
 import type { Book } from "@/lib/library";
 import { bookSrc } from "@/lib/library";
+import { t } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 import { AiTutorChat } from "./ai-tutor-chat";
 
 export function BookViewer({
   book,
+  locale,
   backHref,
   backLabel,
   page,
 }: {
   book: Book;
+  locale: Locale;
   backHref: string;
   backLabel: string;
   page?: number;
 }) {
+  const ar = locale === "ar";
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -26,8 +31,8 @@ export function BookViewer({
           {backLabel}
         </Link>
         <span className="inline-flex items-center rounded-full bg-primary/8 px-2.5 py-1 text-xs font-medium text-primary">
-          {book.kind === "workbook" ? "Al-Faiz" : "Official copy"} ·{" "}
-          {book.language === "ar" ? "العربية" : "English"} · Part {book.part}
+          {book.kind === "workbook" ? t(locale, "navFaiz") : t(locale, "officialCopy")} ·{" "}
+          {book.language === "ar" ? "العربية" : "English"} · {t(locale, "bookPart")} {book.part}
         </span>
       </div>
 
@@ -35,12 +40,12 @@ export function BookViewer({
         <div>
           <h1
             className="font-serif text-2xl tracking-tight sm:text-3xl"
-            dir="rtl"
+            dir={book.language === "ar" ? "rtl" : "ltr"}
           >
-            {book.title}
+            {ar ? book.title : book.titleEn}
           </h1>
           <p className="mt-1 text-sm text-foreground/60">
-            {book.titleEn} · {book.sizeMb} MB
+            {book.sizeMb} MB
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -50,7 +55,7 @@ export function BookViewer({
             className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-muted"
           >
             <Download className="size-4" aria-hidden="true" />
-            Download PDF
+            {t(locale, "downloadPdf")}
           </a>
           {book.kind === "workbook" ? null : (
             <a
@@ -59,7 +64,7 @@ export function BookViewer({
               rel="noopener noreferrer"
               className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-primary/15 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
             >
-              Official copy
+              {t(locale, "officialCopy")}
               <ExternalLink className="size-3.5" aria-hidden="true" />
             </a>
           )}
@@ -74,13 +79,10 @@ export function BookViewer({
             className="h-[75vh] w-full min-h-125 bg-white"
           />
         </div>
-        <AiTutorChat book={book} />
+        <AiTutorChat book={book} locale={locale} />
       </div>
 
-      <p className="mt-4 text-xs text-foreground/50">
-        If the viewer stays blank, your browser may block inline PDFs — use
-        Download or the official copy instead.
-      </p>
+      <p className="mt-4 text-xs text-foreground/50">{t(locale, "bookViewerBlank")}</p>
     </div>
   );
 }

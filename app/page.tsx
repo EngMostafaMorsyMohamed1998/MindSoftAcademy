@@ -122,7 +122,7 @@ export default async function Page() {
                 <ul className="mt-4 space-y-1.5 text-sm text-white/75">
                   <li>{locale === "ar" ? BRAND.subjectAr : BRAND.subjectEn}</li>
                   <li>{locale === "ar" ? BRAND.trackAr : BRAND.trackEn}</li>
-                  <li>7 {locale === "ar" ? "فصول" : "chapters"} · 23 {t(locale, "lessons")}</li>
+                  <li>7 {locale === "ar" ? "فصول" : "chapters"} · 23 {locale === "ar" ? "درسًا" : "lessons"}</li>
                 </ul>
               </article>
             </div>

@@ -118,7 +118,7 @@ export function HomeworkPlayer({
             }}
             className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white"
           >
-            {t(locale, "retryExam")}
+            {t(locale, "retryHomework")}
           </button>
         )}
       </div>
@@ -204,7 +204,7 @@ export function HomeworkPlayer({
         onClick={() => void finish()}
         className="inline-flex h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-white disabled:opacity-70"
       >
-        {t(locale, "submitExam")}
+        {t(locale, "submitHomework")}
       </button>
     </div>
   );

@@ -134,7 +134,7 @@ export default async function ChapterPage({
                     href={`/dashboard/courses/${book.slug}?page=${lesson.pdfPage}`}
                     className="text-xs font-semibold text-primary"
                   >
-                    {t(locale, "openBook")} p.{lesson.bookPage}
+                    {t(locale, "openBook")} {t(locale, "bookPageShort")}{lesson.bookPage}
                   </Link>
                 ) : null}
               </div>

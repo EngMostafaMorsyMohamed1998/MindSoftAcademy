@@ -93,7 +93,7 @@ export function ReviewPlayer({
         }}
         className="inline-flex h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-white disabled:opacity-70"
       >
-        {t(locale, "submitExam")}
+        {t(locale, "submitReview")}
       </button>
     </div>
   );

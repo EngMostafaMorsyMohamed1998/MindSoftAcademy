@@ -161,6 +161,7 @@ export function termArt(term: string, meaning = ""): string {
   if (onTerm(/هيكل صفحة|هيكل الصفحة|\bhtml\b/)) return "html";
   if (onTerm(/بروتوكول ويب آمن|\bhttps\b/)) return "https";
   if (onTerm(/بروتوكول|\bhttp\b|طلب قراءة|طلب إرسال/)) return "http";
+  if (onTerm(/سر أمامي|frontend secret/)) return "secret";
   if (onTerm(/أمامية|frontend/)) return "front";
   if (onTerm(/خلفية|backend/)) return "backend";
   if (onTerm(/عميل|client–server|client-server/)) return "web";
@@ -168,6 +169,8 @@ export function termArt(term: string, meaning = ""): string {
   if (onTerm(/تاريخ تحديث|تاريخ التحديث|update date/)) return "date";
   if (onTerm(/بيانات مفتوحة|open data/)) return "open";
   if (onTerm(/\brest\b|\bjson\b|موارد ونص|موارد/)) return "json";
+  if (onTerm(/مفتاح واجهة|api key/)) return "key";
+  if (onTerm(/عقد واجهة|api contract/)) return "license";
   if (onTerm(/واجهة برمج|واجهة برمجة|\bapis?\b/)) return "api";
   if (onTerm(/بواقي|residual/)) return "residual";
   if (onTerm(/استكمال|extrapola/)) return "extra";
@@ -242,18 +245,41 @@ const ART_FALLBACKS = [
   "ethics",
 ] as const;
 
+function namesMatch(left: string, right: string): boolean {
+  const a = left.trim().toLowerCase();
+  const b = right.trim().toLowerCase();
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.length < 3 || b.length < 3) return false;
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  if (
+    long.startsWith(`${short} `) &&
+    /^(encryption|computing|learning|authentication|hashing)$/.test(long.slice(short.length + 1))
+  ) {
+    return true;
+  }
+  if ((a === "hash" && b === "hashing") || (b === "hash" && a === "hashing")) return true;
+  if ((a === "mfa" && b.includes("factor")) || (b === "mfa" && a.includes("factor"))) return true;
+  if (a.replace(/[^a-z\u0600-\u06FF]/g, "").startsWith("rest") && b.replace(/[^a-z\u0600-\u06FF]/g, "").startsWith("rest")) {
+    return true;
+  }
+  return false;
+}
+
 export function lessonArtMap(entries: { term: string; meaning?: string }[]): Map<string, string> {
-  const used = new Set<string>();
+  const owner = new Map<string, string>();
   const map = new Map<string, string>();
   for (const entry of entries) {
     const key = entry.term.trim().toLowerCase();
     if (!key || map.has(key)) continue;
     let art = termArt(entry.term, entry.meaning);
-    if (used.has(art)) {
-      const next = ART_FALLBACKS.find((name) => !used.has(name));
-      art = next ?? `${art}-${used.size}`;
+    const first = owner.get(art);
+    if (first && !namesMatch(first, key)) {
+      const taken = new Set(owner.keys());
+      const next = ART_FALLBACKS.find((name) => !taken.has(name));
+      art = next ?? `${art}-${map.size}`;
     }
-    used.add(art);
+    if (!owner.has(art)) owner.set(art, key);
     map.set(key, art);
   }
   return map;

@@ -301,11 +301,14 @@ export function BookletLessonPane({ locale, lessonId }: { locale: Locale; lesson
   const page = textbookPageFor(lessonId);
   if (!pack || !page) return null;
   const drills = pack.practice;
+  const termTable = page.headersAr[0] === "المصطلح" || page.headersEn[0] === "Term";
   const sceneArts = lessonArtMap([
-    ...page.rows.map((row) => ({
-      term: ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""),
-      meaning: ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""),
-    })),
+    ...(termTable
+      ? page.rows.map((row) => ({
+          term: ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""),
+          meaning: ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""),
+        }))
+      : []),
     ...page.explains.map((item) => ({
       term: ar ? item.termAr : item.termEn,
       meaning: ar ? item.bodyAr : item.bodyEn,

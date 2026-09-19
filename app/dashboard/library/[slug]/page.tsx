@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BOOKS, bookAllowedForTrack, getBook } from "@/lib/library";
+import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { BookViewer } from "../book-viewer";
 
@@ -13,14 +14,16 @@ export async function generateMetadata({
 }: PageProps<"/dashboard/library/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const book = getBook(slug);
+  const locale = await getLocale();
 
   if (!book) {
-    return { title: "Book not found — Lumina" };
+    return { title: "MindSoft Academy" };
   }
 
+  const title = locale === "ar" ? book.title : book.titleEn;
   return {
-    title: `${book.titleEn} — Lumina`,
-    description: `${book.title} · Egyptian Baccalaureate textbook.`,
+    title: `${title} — MindSoft Academy`,
+    description: `${book.title} · ${book.titleEn}`,
   };
 }
 
@@ -41,8 +44,9 @@ export default async function LibraryBookPage({
   return (
     <BookViewer
       book={book}
+      locale={locale}
       backHref="/dashboard/courses"
-      backLabel="Back to Library"
+      backLabel={t(locale, "libraryBack")}
     />
   );
 }

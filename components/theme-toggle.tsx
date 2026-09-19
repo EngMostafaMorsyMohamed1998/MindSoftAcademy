@@ -3,13 +3,17 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { setTheme } from "@/app/actions/theme";
+import { t } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 import type { Theme } from "@/lib/theme";
 
 export function ThemeToggle({
   theme,
+  locale = "ar",
   className = "",
 }: {
   theme: Theme;
+  locale?: Locale;
   className?: string;
 }) {
   const [current, setCurrent] = useState(theme);
@@ -24,7 +28,7 @@ export function ThemeToggle({
     <button
       type="button"
       className={className}
-      aria-label={next === "dark" ? "Dark mode" : "Light mode"}
+      aria-label={next === "dark" ? t(locale, "themeDark") : t(locale, "themeLight")}
       onClick={async () => {
         setCurrent(next);
         document.documentElement.classList.toggle("dark", next === "dark");

@@ -61,10 +61,12 @@ export function DashboardNav({
   initialUser,
   locale,
   theme,
+  track = "ar",
 }: {
   initialUser: CurrentUser;
   locale: Locale;
   theme: Theme;
+  track?: "ar" | "en";
 }) {
   const pathname = usePathname();
   const user = initialUser;
@@ -100,6 +102,7 @@ export function DashboardNav({
           <div className="grid grid-cols-2 gap-2">
             <ThemeToggle
               theme={theme}
+              locale={locale}
               className="inline-flex items-center justify-center rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
             />
             <LanguageToggle
@@ -108,7 +111,7 @@ export function DashboardNav({
             />
           </div>
           <p className="text-center text-[11px] text-white/45">
-            {t(locale, "trackLabel")}: {t(locale, locale === "en" ? "trackEn" : "trackAr")}
+            {t(locale, "trackLabel")}: {t(locale, track === "en" ? "trackEn" : "trackAr")}
           </p>
           <Link
             href="/dashboard/leaderboard"
@@ -137,6 +140,7 @@ export function DashboardNav({
         <div className="flex items-center gap-1.5">
           <ThemeToggle
             theme={theme}
+            locale={locale}
             className="inline-flex size-9 items-center justify-center rounded-full border-2 border-primary/20 bg-primary text-white dark:border-accent/40 dark:bg-accent dark:text-primary-dark"
           />
           <LanguageToggle

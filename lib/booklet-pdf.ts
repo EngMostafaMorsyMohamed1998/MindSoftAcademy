@@ -94,13 +94,20 @@ function fontPx(ctx: SKRSContext2D): number {
   return match ? Number(match[1]) : 14;
 }
 
+const LATIN_SPACE = 0.34;
+
+function latinChunks(text: string): string[] {
+  return text.split(/(\s+)/).filter((part) => part.length > 0);
+}
+
+function chunkWidth(ctx: SKRSContext2D, part: string): number {
+  if (/^\s+$/.test(part)) return part.length * fontPx(ctx) * LATIN_SPACE;
+  return Math.max(ctx.measureText(part).width, part.replace(/\s/g, "").length * fontPx(ctx) * 0.52);
+}
+
 function textWidth(ctx: SKRSContext2D, text: string): number {
-  const measured = ctx.measureText(text).width;
-  if (hasArabic(text)) return measured;
-  const size = fontPx(ctx);
-  const letters = text.replace(/\s/g, "").length;
-  const spaces = Math.max(0, text.length - letters);
-  return Math.max(measured, letters * size * 0.52 + spaces * size * 0.28);
+  if (hasArabic(text)) return ctx.measureText(text).width;
+  return latinChunks(text).reduce((sum, part) => sum + chunkWidth(ctx, part), 0);
 }
 
 function wrap(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
@@ -128,16 +135,23 @@ function paintText(
   y: number,
   align: "left" | "right" | "center",
 ) {
-  ctx.direction = hasArabic(text) || align === "right" ? "rtl" : "ltr";
-  ctx.textAlign = align;
   ctx.textBaseline = "top";
-  if (!hasArabic(text) && "letterSpacing" in ctx) {
-    (ctx as SKRSContext2D & { letterSpacing: string }).letterSpacing = "0.4px";
+  if (hasArabic(text)) {
+    ctx.direction = "rtl";
+    ctx.textAlign = align;
+    ctx.fillText(text, x, y);
+    return;
   }
-  ctx.fillText(text, x, y);
-  if ("letterSpacing" in ctx) {
-    (ctx as SKRSContext2D & { letterSpacing: string }).letterSpacing = "0px";
-  }
+  ctx.direction = "ltr";
+  const parts = latinChunks(text);
+  const widths = parts.map((part) => chunkWidth(ctx, part));
+  const total = widths.reduce((sum, width) => sum + width, 0);
+  let cursor = align === "center" ? x - total / 2 : align === "right" ? x - total : x;
+  ctx.textAlign = "left";
+  parts.forEach((part, index) => {
+    if (!/^\s+$/.test(part)) ctx.fillText(part, cursor, y);
+    cursor += widths[index] ?? 0;
+  });
 }
 
 function roundRect(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number, fill: string) {
@@ -1450,10 +1464,12 @@ function pushLesson(blocks: Block[], pack: BookletLessonPack, locale: Locale) {
   if (points.length) blocks.push({ kind: "points", items: points });
   const termTable = page.headersAr[0] === "المصطلح" || page.headersEn[0] === "Term";
   const pageArts = lessonArtMap([
-    ...page.rows.map((row) => ({
-      term: bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? "")),
-      meaning: bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? "")),
-    })),
+    ...(termTable
+      ? page.rows.map((row) => ({
+          term: bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? "")),
+          meaning: bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? "")),
+        }))
+      : []),
     ...page.explains.map((item) => ({
       term: bookletSafe(locale, ar ? item.termAr : item.termEn),
       meaning: bookletSafe(locale, ar ? item.bodyAr : item.bodyEn),

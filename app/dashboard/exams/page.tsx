@@ -19,7 +19,7 @@ export default async function ExamsIndexPage() {
   return (
     <div className="mx-auto w-full max-w-4xl">
       <h1 className="font-serif text-3xl">{t(locale, "navExams")}</h1>
-      <p className="mt-2 text-sm text-foreground/65">{t(locale, "examWindowHint")}</p>
+      <p className="mt-2 text-sm text-foreground/65">{t(locale, "examStudentLead")}</p>
       <ul className="mt-6 space-y-3">
         {locale === "ar" && examWindowOpen(examWindow, FAIZ_PAPER_ID) ? (
           <li>
@@ -51,9 +51,13 @@ export default async function ExamsIndexPage() {
         ) : null}
         {CHAPTERS.map((chapter) => {
           const open = examWindowOpen(examWindow, chapter.id);
-          const ready =
-            isChapterUnlocked(completed, chapter.id, unlocks) &&
-            chapterHomeworkDone(chapter.id, homework);
+          const unlocked = isChapterUnlocked(completed, chapter.id, unlocks);
+          const homeworkDone = chapterHomeworkDone(chapter.id, homework);
+          const lockHint = !unlocked
+            ? t(locale, "chapterLockedHint")
+            : !homeworkDone
+              ? t(locale, "homeworkLockedExam")
+              : t(locale, "examWindowClosed");
           return (
             <li key={chapter.id}>
               {open ? (
@@ -80,7 +84,7 @@ export default async function ExamsIndexPage() {
                       {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
                     </span>
                     <span className="text-xs text-foreground/50">
-                      {ready ? t(locale, "examWindowClosed") : t(locale, "chapterLockedHint")}
+                      {lockHint}
                     </span>
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm font-semibold text-foreground/45">

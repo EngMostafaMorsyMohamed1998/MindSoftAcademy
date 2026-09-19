@@ -43,6 +43,7 @@ export default async function DashboardHomePage() {
   const { level } = levelFromPoints(user.points);
   const ranks = buildClassRanks(codes, { requireUsed: false });
   const mine = rankForStudent(ranks, user.id);
+  const track = codes.find((row) => row.id === user.id)?.track === "en" ? "en" : "ar";
   const open = openMakeups(makeups, user.id);
   const week = buildWeekStars({
     attendance: attendance.filter((row) => row.studentId === user.id),
@@ -71,7 +72,7 @@ export default async function DashboardHomePage() {
           <p className="text-sm text-white/60">{t(locale, "welcome")}</p>
           <h1 className="mt-1 font-serif text-3xl sm:text-4xl">{firstName}</h1>
           <p className="mt-2 text-sm text-white/70">{t(locale, "dashboardHint")}</p>
-          <p className="mt-2 text-xs text-accent">{t(locale, locale === "en" ? "trackEn" : "trackAr")} · {t(locale, "trackLocked")}</p>
+          <p className="mt-2 text-xs text-accent">{t(locale, track === "en" ? "trackEn" : "trackAr")} · {t(locale, "trackLocked")}</p>
           <p className="mt-4 text-sm">
             <span dir="ltr">
               {user.points} {t(locale, "points")} · L{level}
