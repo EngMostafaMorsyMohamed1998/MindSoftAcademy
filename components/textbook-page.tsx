@@ -4,7 +4,7 @@ import { useState } from "react";
 import { CircleHelp } from "lucide-react";
 import { AiNestDiagram } from "@/components/ai-nest-diagram";
 import { TextbookArt } from "@/components/textbook-art";
-import { bookletSafe, termArt } from "@/lib/booklet-lang";
+import { artFor, bookletSafe, lessonArtMap } from "@/lib/booklet-lang";
 import { BRAND } from "@/lib/brand";
 import type { TextbookPage } from "@/lib/textbook-pages";
 import type { Locale } from "@/lib/locale";
@@ -16,6 +16,16 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
   const points = ar ? page.pointsAr : page.pointsEn;
   const colCount = headers.length;
   const nest = page.art === "nest";
+  const artMap = lessonArtMap([
+    ...page.rows.map((row) => ({
+      term: ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""),
+      meaning: ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""),
+    })),
+    ...page.explains.map((item) => ({
+      term: ar ? item.termAr : item.termEn,
+      meaning: ar ? item.bodyAr : item.bodyEn,
+    })),
+  ]);
 
   return (
     <article className="textbook-sheet mb-8 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
@@ -93,7 +103,7 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
                   onClick={() => setPicked(termKey)}
                 >
                   <div className="size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-100">
-                    <TextbookArt art={termArt(term, meaning)} locale={locale} compact />
+                    <TextbookArt art={artFor(artMap, term, meaning)} locale={locale} compact />
                   </div>
                   <div className="min-w-0">
                     <p className="text-base font-extrabold text-[#0c2d6b]">{term}</p>
@@ -164,7 +174,7 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
                 >
                   <div className="flex gap-4">
                     <div className="size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-100">
-                      <TextbookArt art={termArt(title, body)} locale={locale} compact />
+                      <TextbookArt art={artFor(artMap, title, body)} locale={locale} compact />
                     </div>
                     <div className="min-w-0">
                       <p className="text-lg font-extrabold text-[#0c2d6b]">{title}</p>

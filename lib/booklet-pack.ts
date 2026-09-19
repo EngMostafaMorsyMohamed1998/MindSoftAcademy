@@ -1,5 +1,5 @@
 import { bookletSafe, hasArabic } from "@/lib/booklet-lang";
-import { CHAPTERS, isChapterId, type Chapter, type ChapterId } from "@/lib/curriculum";
+import { CHAPTERS, getChapter, getLesson, type Chapter, type ChapterId } from "@/lib/curriculum";
 import { FAIZ_UNITS } from "@/lib/faiz";
 import { FAIZ_ESSAYS, FAIZ_OBJECTIVES } from "@/lib/faiz-exam";
 import { FAIZ_NOTES, type FaizUnitNote } from "@/lib/faiz-notes";
@@ -14,6 +14,7 @@ import type { EssayQuestion, ObjectiveQuestion } from "@/lib/exams";
 export const BOOKLET_PRACTICE = 24;
 export const BOOKLET_CHAPTER_ESSAYS = 3;
 export const BOOKLET_SCENES = 6;
+export const BOOKLET_LESSON_SCENES = 4;
 export const BOOKLET_HOMEWORK_PER_CHAPTER = 8;
 export const BOOKLET_HOMEWORK_ESSAYS = 2;
 
@@ -56,6 +57,16 @@ export type BookletChapterPack = {
   scenes: BankFact[];
   answers: BookletAnswer[];
   answerGroups: BookletAnswerGroup[];
+};
+
+export type BookletLessonPack = {
+  lessonId: string;
+  chapter: Chapter;
+  titleAr: string;
+  titleEn: string;
+  practice: BookletMcq[];
+  scenes: BankFact[];
+  answers: BookletAnswer[];
 };
 
 export type BookletHomeworkPack = {
@@ -216,10 +227,67 @@ export function bookletChapterPack(chapter: Chapter): BookletChapterPack {
   };
 }
 
-export type BookletScope = ChapterId | "faiz";
+export type BookletScope = string;
+
+export function homeworkChapterId(value: string): ChapterId | null {
+  const match = /^hw-([1-7])$/.exec(value);
+  return match ? (match[1] as ChapterId) : null;
+}
+
+export function faizUnitId(value: string): "f1" | "f2" | "f3" | "f4" | null {
+  return /^f[1-4]$/.test(value) ? (value as "f1" | "f2" | "f3" | "f4") : null;
+}
 
 export function isBookletScope(value: string | null | undefined): value is BookletScope {
-  return value === "faiz" || (typeof value === "string" && isChapterId(value));
+  if (!value) return false;
+  if (value === "faiz" || value === "faiz-hw") return true;
+  if (homeworkChapterId(value) || faizUnitId(value)) return true;
+  return Boolean(getLesson(value));
+}
+
+function termNamesMatch(left: string, right: string): boolean {
+  const a = left.trim().toLowerCase();
+  const b = right.trim().toLowerCase();
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.length < 3 || b.length < 3) return false;
+  if (a.startsWith(`${b} `) || b.startsWith(`${a} `)) return true;
+  if ((a === "hash" && b === "hashing") || (b === "hash" && a === "hashing")) return true;
+  if ((a === "mfa" && b.includes("factor")) || (b === "mfa" && a.includes("factor"))) return true;
+  return false;
+}
+
+export function bookletLessonScenes(lessonId: string, take = BOOKLET_LESSON_SCENES): BankFact[] {
+  const note = LESSON_NOTES.find((row) => row.id === lessonId);
+  if (!note) return [];
+  const terms = note.termsEn.map((term) => term.term.trim());
+  const matched = BANK_FACTS.filter(
+    (row) =>
+      row.chapterId === note.chapterId &&
+      terms.some((term) => termNamesMatch(term, row.termEn) || termNamesMatch(term, row.termAr)),
+  );
+  return uniqueTermScenes(matched, take, 440 + lessonId.length * 17);
+}
+
+export function bookletFaizPack(unitId: string): BookletFaizPack | undefined {
+  return bookletFaizPacks().find((pack) => pack.note.id === unitId);
+}
+
+export function bookletLessonPack(lessonId: string): BookletLessonPack | null {
+  const note = LESSON_NOTES.find((row) => row.id === lessonId);
+  const lesson = getLesson(lessonId);
+  const chapter = note ? getChapter(note.chapterId) : undefined;
+  if (!note || !lesson || !chapter) return null;
+  const practice = bookletLessonPractice(lessonId);
+  return {
+    lessonId,
+    chapter,
+    titleAr: lesson.titleAr,
+    titleEn: lesson.titleEn,
+    practice,
+    scenes: bookletLessonScenes(lessonId),
+    answers: withAnswers(practice),
+  };
 }
 
 export function bookletHomeworkForChapter(chapter: Chapter): BookletHomeworkPack {

@@ -11,11 +11,18 @@ type ChatMessage = {
   content: string;
 };
 
-const SUGGESTIONS = [
-  { label: "Explain this lesson", prompt: "اشرح لي الفكرة الأساسية في هذا الدرس بأسلوب بسيط." },
-  { label: "Summarize", prompt: "لخّص هذا الجزء من الكتاب في نقاط قصيرة." },
-  { label: "Quiz me", prompt: "اختبرني بسؤالين قصيرين من منهج هذا الكتاب." },
-];
+const SUGGESTIONS = {
+  ar: [
+    { label: "اشرح الدرس", prompt: "اشرح لي الفكرة الأساسية في هذا الدرس بأسلوب بسيط." },
+    { label: "لخّص", prompt: "لخّص هذا الجزء من الكتاب في نقاط قصيرة." },
+    { label: "اختبرني", prompt: "اختبرني بسؤالين قصيرين من منهج هذا الكتاب." },
+  ],
+  en: [
+    { label: "Explain this lesson", prompt: "Explain the main idea of this lesson in simple words." },
+    { label: "Summarize", prompt: "Summarize this part of the book in short points." },
+    { label: "Quiz me", prompt: "Quiz me with two short questions from this book." },
+  ],
+} as const;
 
 function newId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -42,6 +49,8 @@ export function AiTutorChat({
   const [error, setError] = useState<string | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
+  const ar = book.language !== "en";
+  const chips = ar ? SUGGESTIONS.ar : SUGGESTIONS.en;
   const bookContext = [
     `${SUBJECT.title} / ${SUBJECT.titleEn}`,
     `${book.title} / ${book.titleEn}`,
@@ -109,10 +118,10 @@ export function AiTutorChat({
       <header className="border-b border-primary/8 px-4 py-3">
         <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-primary uppercase">
           <Sparkles className="size-3.5" aria-hidden="true" />
-          AI Tutor
+          {ar ? "المعلم الذكي" : "AI Tutor"}
         </p>
         <h2 className="mt-1 text-sm font-semibold text-primary-dark">
-          اسأل عن الدرس
+          {ar ? "اسأل عن الدرس" : "Ask about the lesson"}
         </h2>
         <p className="mt-1 text-xs leading-relaxed text-foreground/55">
           بيرد من منهج الكتاب جوّه المنصة.
@@ -160,7 +169,7 @@ export function AiTutorChat({
       ) : null}
 
       <div className="flex flex-wrap gap-1.5 border-t border-primary/8 px-3 py-2">
-        {SUGGESTIONS.map((item) => (
+        {chips.map((item) => (
           <button
             key={item.label}
             type="button"
@@ -181,7 +190,7 @@ export function AiTutorChat({
         }}
       >
         <label htmlFor="tutor-message" className="sr-only">
-          Ask the AI tutor
+          {ar ? "اسأل المعلم الذكي" : "Ask the AI tutor"}
         </label>
         <textarea
           id="tutor-message"
@@ -195,7 +204,7 @@ export function AiTutorChat({
               void sendMessage(draft);
             }
           }}
-          placeholder="Ask a question about this lesson…"
+          placeholder={ar ? "اسأل سؤال عن الدرس…" : "Ask a question about this lesson…"}
           className="min-h-11 flex-1 resize-none rounded-2xl border border-primary/15 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 disabled:opacity-60"
         />
         <button
@@ -204,7 +213,7 @@ export function AiTutorChat({
           className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-muted disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Send className="size-4" aria-hidden="true" />
-          <span className="sr-only">Send</span>
+          <span className="sr-only">{ar ? "إرسال" : "Send"}</span>
         </button>
       </form>
     </aside>

@@ -460,17 +460,19 @@ export function SceneCard({
   color,
   scene,
   term,
+  art,
 }: {
   locale: Locale;
   color: string;
   scene: string;
   term: string;
+  art?: string;
 }) {
-  const art = termArt(term, scene);
+  const picture = art ?? termArt(term, scene);
   return (
     <article className="concept-card overflow-hidden rounded-2xl bg-white">
       <div className="booklet-scene-art aspect-[5/3] bg-slate-50">
-        <TextbookArt art={art} locale={locale} />
+        <TextbookArt art={picture} locale={locale} />
       </div>
       <div className="px-3 py-3">
         <p className="text-sm font-extrabold" style={{ color }}>

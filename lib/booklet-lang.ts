@@ -92,63 +92,98 @@ export function termArt(term: string, meaning = ""): string {
 
   if (onTerm(/تزييف|deepfake/)) return "fake";
   if (onTerm(/هلوسة|hallucin/)) return "incident";
-  if (onTerm(/توليدي|generative|\bllms?\b|نموذج لغة|توكن|\btoken\b|توجيه|\bprompt/)) return "llm";
-  if (onTerm(/تعلم عميق|عميق|deep learning|عصب|neuron|neural|\bweight\b|وزن|طبقة|\blayer\b|صندوق|black box/)) {
-    return "neural";
-  }
-  if (onTerm(/تعلم آلي|machine learning|بإشراف|بلا إشراف|supervised|unsupervised|تعزيز|reinforcement|تصنيف|classif|تدريب|\btrain\b/)) {
-    return "ml";
-  }
+  if (onTerm(/توكن|\btoken\b/)) return "token";
+  if (onTerm(/توجيه|\bprompt/)) return "prompt";
+  if (onTerm(/توليدي|generative|\bllms?\b|نموذج لغة/)) return "llm";
+  if (onTerm(/صندوق|black box/)) return "box";
+  if (onTerm(/وزن|\bweight\b/)) return "weight";
+  if (onTerm(/طبقة|\blayer\b/)) return "layer";
+  if (onTerm(/عصب|neuron|artificial neuron/)) return "neuron";
+  if (onTerm(/تعلم عميق|عميق|deep learning|neural/)) return "neural";
+  if (onTerm(/بلا إشراف|unsupervised/)) return "unsupervised";
+  if (onTerm(/بإشراف|supervised/)) return "supervised";
+  if (onTerm(/تدريب|\btrain\b|train \/ test|train\/test/)) return "split";
+  if (onTerm(/تصنيف|classif/)) return "classif";
+  if (onTerm(/تعلم آلي|machine learning|تعزيز|reinforcement/)) return "ml";
   if (onTerm(/ضيق|narrow/)) return "narrow";
   if (onTerm(/توصية|recommend/)) return "rec";
   if (onTerm(/صيانة|maintenance/)) return "maintain";
   if (onTerm(/^ai$|الذكاء الاصطناعي|ذكاء اصطناعي/)) return "ai";
   if (onTerm(/انتحال|impersonat|منتحل|مدعي/)) return "mask";
-  if (onTerm(/تصيد|phish|حادث|\bincident\b|احتواء|containment|مخاطر|risk management|خطة استجابة|استجابة|response plan/)) {
-    return "incident";
-  }
-  if (onTerm(/تشفير|مفتاح|مصادق|encrypt|cipher|password|symmetric|asymmetric|\bmfa\b|auth|خصوصية|privacy|\bvpn\b|شبكة خاصة/)) {
-    return "lock";
-  }
-  if (onTerm(/جدار|firewall|تقسيم|segment|صلاحية|privilege/)) return "firewall";
-  if (onTerm(/عينه|عيّنة|مجتمع|\bsample\b|population|أولية|ثانوية|primary|secondary|تحيز عينة|تحيز العينة|sampling bias/)) {
-    return "sample";
-  }
+  if (onTerm(/شهادة رقمية|شهادة رقم|digital certificate|\bcertificate\b/)) return "cert";
+  if (onTerm(/غير متماثل|asymmetric|مفتاح عام|مفتاح خاص|public key|private key/)) return "asymmetric";
+  if (onTerm(/حفظ الأدلة|حفظ الدليل|preserving evidence|\bevidence\b/)) return "preserve";
+  if (onTerm(/احتواء|containment/)) return "contain";
+  if (onTerm(/مخاطر|risk management|\brisk\b/)) return "risk";
+  if (onTerm(/خطة استجابة|response plan|خطة الاستجابة/)) return "plan";
+  if (onTerm(/تصيد|phish|حادث|\bincident\b/)) return "incident";
+  if (onTerm(/تجزئة|\bhash/)) return "hash";
+  if (onTerm(/متعددة العوامل|متعددة عوامل|multi-factor|\bmfa\b/)) return "mfa";
+  if (onTerm(/مصادق|authentication|\bauth\b/)) return "auth";
+  if (onTerm(/متماثل|symmetric/)) return "symmetric";
+  if (onTerm(/شبكة خاصة|\bvpn\b/)) return "vpn";
+  if (onTerm(/تقسيم|segment/)) return "segment";
+  if (onTerm(/صلاحية|privilege|أقل صلاحية|least privilege/)) return "privilege";
+  if (onTerm(/تشفير|encrypt|cipher|password|خصوصية|privacy/)) return "lock";
+  if (onTerm(/جدار|firewall/)) return "firewall";
+  if (onTerm(/تحيز عينة|تحيز العينة|sampling bias/)) return "bias-sample";
+  if (onTerm(/ثانوية|secondary/)) return "secondary";
+  if (onTerm(/أولية|primary data|^primary$/)) return "primary";
+  if (onTerm(/عينه|عيّنة|مجتمع|\bsample\b|population/)) return "sample";
   if (onTerm(/واقع معزز|واقع افتراضي|معزز|افتراضي|augmented|\bvr\b|virtual reality|\bar\s*\/\s*vr\b/)) return "arvr";
   if (onTerm(/شفاف|transpar/)) return "glass";
   if (onTerm(/مساءل|accountab/)) return "account";
   if (onTerm(/أخلاق|تحيز|ethic|\bbias\b/)) return "ethics";
   if (onTerm(/طرفية|\bedge\b/)) return "edge";
   if (onTerm(/سحاب|\bcloud\b/)) return "cloud";
-  if (onTerm(/وسائط|ضغط ملفات|ضغط الملفات|نص بديل|multimedia|compress|alt text|دقة|quality vs|جودة مقابل/)) {
-    return "media";
-  }
+  if (onTerm(/ضغط ملفات|ضغط الملفات|compress/)) return "compress";
+  if (onTerm(/نص بديل|alt text/)) return "alt";
+  if (onTerm(/دقة|quality vs|جودة مقابل/)) return "quality";
+  if (onTerm(/وسائط|multimedia/)) return "media";
   if (onTerm(/صفّان|صفان|\bduplicate\b/)) return "clean";
   if (onTerm(/تكرار/) && onMeaning(/صف|نسخ|duplicate|error/)) return "clean";
-  if (
-    onTerm(
-      /تجربة مستخدم|تجربة المستخدم|\bux\b|واجهة مستخدم|واجهة المستخدم|\bui\b|تسلسل|hierarchy|نقر|usability|قابلية|أ\/ب|a\/b|رضا|satisfaction|أولي|prototype|خروج|drop-off|زمن مهمة|زمن المهمة|task time|iteration|تكرار|دليل قرار|دليل القرار|decision|click count/,
-    )
-  ) {
-    return "ux";
-  }
-  if (onTerm(/هيكل صفحة|هيكل الصفحة|\bhtml\b|تنسيق صفحة|تنسيق الصفحة|\bcss\b|لغة تفاعل|لغة التفاعل|javascript|إتاحة|accessib/)) {
-    return "html";
-  }
-  if (onTerm(/بروتوكول|\bhttps?\b|طلب قراءة|طلب إرسال/)) return "http";
-  if (onTerm(/أمامية|خلفية|frontend|backend|عميل|client–server|client-server/)) return "web";
-  if (onTerm(/واجهة برمج|واجهة برمجة|\bapis?\b|بيانات مفتوحة|open data|ترخيص|licence|تاريخ تحديث|تاريخ التحديث|update date|\brest\b|\bjson\b|موارد/)) {
-    return "api";
-  }
-  if (onTerm(/انحدار|بواقي|residual|regress|استكمال|extrapola|تفسيري|explanatory/)) return "regress";
-  if (
-    onTerm(
-      /أعمدة|دائرة|خط زمني|bar chart|line chart|\bpie\b|إحصاء|descriptive|inference|استدلال|فرضية|hypothesis|ثقة|confidence|\bsource\b|مصدر/,
-    )
-  ) {
-    return "chart";
-  }
-  if (onTerm(/مفقود|شاذ|outlier|missing|تطبيع|تقييس|normali|standardis|\bduplicate\b/)) return "clean";
+  if (onTerm(/^تكرار$|iteration/)) return "loop";
+  if (onTerm(/واجهة مستخدم|واجهة المستخدم|\bui\b/)) return "ui";
+  if (onTerm(/تسلسل|hierarchy/)) return "hierarchy";
+  if (onTerm(/نقر|click count/)) return "clicks";
+  if (onTerm(/أ\/ب|a\/b/)) return "ab";
+  if (onTerm(/زمن مهمة|زمن المهمة|task time/)) return "clock";
+  if (onTerm(/رضا|satisfaction/)) return "smile";
+  if (onTerm(/أولي|prototype/)) return "proto";
+  if (onTerm(/خروج|drop-off/)) return "drop";
+  if (onTerm(/دليل قرار|دليل القرار|decision/)) return "decide";
+  if (onTerm(/iteration|تكرار تحسين|تحسين تكراري/)) return "loop";
+  if (onTerm(/قابلية|usability/)) return "use";
+  if (onTerm(/تجربة مستخدم|تجربة المستخدم|\bux\b/)) return "ux";
+  if (onTerm(/تنسيق صفحة|تنسيق الصفحة|\bcss\b/)) return "css";
+  if (onTerm(/لغة تفاعل|لغة التفاعل|javascript/)) return "js";
+  if (onTerm(/إتاحة|accessib/)) return "a11y";
+  if (onTerm(/هيكل صفحة|هيكل الصفحة|\bhtml\b/)) return "html";
+  if (onTerm(/بروتوكول ويب آمن|\bhttps\b/)) return "https";
+  if (onTerm(/بروتوكول|\bhttp\b|طلب قراءة|طلب إرسال/)) return "http";
+  if (onTerm(/أمامية|frontend/)) return "front";
+  if (onTerm(/خلفية|backend/)) return "backend";
+  if (onTerm(/عميل|client–server|client-server/)) return "web";
+  if (onTerm(/ترخيص|licence|license/)) return "license";
+  if (onTerm(/تاريخ تحديث|تاريخ التحديث|update date/)) return "date";
+  if (onTerm(/بيانات مفتوحة|open data/)) return "open";
+  if (onTerm(/\brest\b|\bjson\b|موارد ونص|موارد/)) return "json";
+  if (onTerm(/واجهة برمج|واجهة برمجة|\bapis?\b/)) return "api";
+  if (onTerm(/بواقي|residual/)) return "residual";
+  if (onTerm(/استكمال|extrapola/)) return "extra";
+  if (onTerm(/تفسيري|explanatory/)) return "explan";
+  if (onTerm(/انحدار|regress/)) return "regress";
+  if (onTerm(/أعمدة|bar chart/)) return "bar";
+  if (onTerm(/خط زمني|line chart/)) return "line";
+  if (onTerm(/دائرة|\bpie\b/)) return "pie";
+  if (onTerm(/مصدر|\bsource\b/)) return "source";
+  if (onTerm(/فرضية|hypothesis/)) return "hypo";
+  if (onTerm(/ثقة|confidence/)) return "conf";
+  if (onTerm(/استدلال|inference/)) return "infer";
+  if (onTerm(/إحصاء|descriptive/)) return "chart";
+  if (onTerm(/مفقود|missing/)) return "missing";
+  if (onTerm(/شاذ|outlier/)) return "outlier";
+  if (onTerm(/تطبيع|تقييس|normali|standardis/)) return "scale";
   if (onTerm(/جدول|بيانات|\bdata\b|\bdatabase\b|قاعدة بيانات|csv/)) return "data";
   if (onTerm(/مور|moore|حاسوب|مختبر|\blab\b|computer|transistor/)) return "lab";
 
@@ -157,12 +192,73 @@ export function termArt(term: string, meaning = ""): string {
   if (onMeaning(/تعلم عميق|deep learning|neural|عصبون/)) return "neural";
   if (onMeaning(/تعلم آلي|machine learning|supervised/)) return "ml";
   if (onMeaning(/ترانزستور|transistor|قانون مور|moore's law/)) return "lab";
-  if (onTerm(/تجزئة|\bhash/)) return "lock";
-  if (onMeaning(/تشفير|encrypt|مفتاح خاص|password|تجزئة|\bhash/)) return "lock";
+  if (onMeaning(/تجزئة|\bhash/)) return "hash";
+  if (onMeaning(/تشفير|encrypt|مفتاح خاص|password/)) return "lock";
   if (onMeaning(/جدار حماية|firewall/)) return "firewall";
   if (onMeaning(/واقع معزز|واقع افتراضي|augmented|virtual reality/)) return "arvr";
   if (onMeaning(/طرفية|edge computing/)) return "edge";
   if (onMeaning(/سحاب|cloud service/)) return "cloud";
   if (onMeaning(/متصفح|browser|frontend|html, css/)) return "web";
   return "note";
+}
+
+const ART_FALLBACKS = [
+  "note",
+  "lab",
+  "data",
+  "chart",
+  "web",
+  "cloud",
+  "edge",
+  "lock",
+  "firewall",
+  "ml",
+  "neural",
+  "llm",
+  "ux",
+  "html",
+  "media",
+  "sample",
+  "api",
+  "regress",
+  "clean",
+  "incident",
+  "arvr",
+  "mask",
+  "asymmetric",
+  "cert",
+  "preserve",
+  "hash",
+  "mfa",
+  "auth",
+  "vpn",
+  "css",
+  "js",
+  "https",
+  "token",
+  "prompt",
+  "glass",
+  "account",
+  "ethics",
+] as const;
+
+export function lessonArtMap(entries: { term: string; meaning?: string }[]): Map<string, string> {
+  const used = new Set<string>();
+  const map = new Map<string, string>();
+  for (const entry of entries) {
+    const key = entry.term.trim().toLowerCase();
+    if (!key || map.has(key)) continue;
+    let art = termArt(entry.term, entry.meaning);
+    if (used.has(art)) {
+      const next = ART_FALLBACKS.find((name) => !used.has(name));
+      art = next ?? `${art}-${used.size}`;
+    }
+    used.add(art);
+    map.set(key, art);
+  }
+  return map;
+}
+
+export function artFor(map: Map<string, string>, term: string, meaning = ""): string {
+  return map.get(term.trim().toLowerCase()) ?? termArt(term, meaning);
 }

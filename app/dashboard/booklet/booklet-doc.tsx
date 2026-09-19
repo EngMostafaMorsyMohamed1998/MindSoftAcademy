@@ -2,12 +2,13 @@ import type { ReactNode } from "react";
 import { BookletFigure, CHAPTER_FIGURES, SceneCard } from "@/components/booklet-figures";
 import { BookletMindMap } from "@/components/booklet-mind-map";
 import { TextbookLesson } from "@/components/textbook-page";
-import { bookletSafe } from "@/lib/booklet-lang";
+import { artFor, bookletSafe, lessonArtMap } from "@/lib/booklet-lang";
 import { BRAND } from "@/lib/brand";
 import {
   bookletAnswerMark,
   bookletChapterPack,
   bookletHomeworkForChapter,
+  bookletLessonPack,
   bookletLessonPractice,
   bookletLetters,
   bookletOptions,
@@ -278,7 +279,7 @@ export function BookletCover({
         <p className="mt-1 text-lg font-extrabold tracking-wide text-primary" dir="ltr">
           {BRAND.phone}
         </p>
-        <p className="mt-1 text-base font-semibold text-[#374151]">{BRAND.year} · 2Bac</p>
+        <p className="mt-1 text-base font-semibold text-[#374151]">{BRAND.year}</p>
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
           <Field label={ar ? "الاسم" : "Name"} />
           <Field label={ar ? "رقم التليفون" : "Phone"} />
@@ -286,11 +287,182 @@ export function BookletCover({
         </div>
         <p className="mt-6 text-base font-semibold leading-8 text-[#111827]">
           {ar
-            ? "خريطة، رسوم، شرح الدروس، تدريبات، واجب الحصة، ومفتاح الإجابة في الآخر."
-            : "Mind map, figures, lesson notes, practice, class homework, and the answer key at the end."}
+            ? "شرح الدرس، مواقف من الحياة، تدريبات، ومفتاح الإجابة في الآخر."
+            : "The lesson, real-life scenes, practice, and the answer key at the end."}
         </p>
       </div>
     </section>
+  );
+}
+
+export function BookletLessonPane({ locale, lessonId }: { locale: Locale; lessonId: string }) {
+  const ar = locale === "ar";
+  const pack = bookletLessonPack(lessonId);
+  const page = textbookPageFor(lessonId);
+  if (!pack || !page) return null;
+  const drills = pack.practice;
+  const sceneArts = lessonArtMap([
+    ...page.rows.map((row) => ({
+      term: ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""),
+      meaning: ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""),
+    })),
+    ...page.explains.map((item) => ({
+      term: ar ? item.termAr : item.termEn,
+      meaning: ar ? item.bodyAr : item.bodyEn,
+    })),
+    ...pack.scenes.map((scene) => ({
+      term: ar ? scene.termAr : scene.termEn,
+      meaning: ar ? scene.sceneAr : scene.sceneEn,
+    })),
+  ]);
+  return (
+    <div className="booklet-paper print-sheet rounded-xl bg-white p-5 ring-1 ring-slate-300 sm:p-8">
+      <BookletCover
+        locale={locale}
+        teacher={ar ? BRAND.teacherAr : BRAND.teacherEn}
+        brand={ar ? BRAND.nameAr : BRAND.nameEn}
+        kicker={ar ? `الفصل ${pack.chapter.id} · الدرس ${lessonId}` : `Chapter ${pack.chapter.id} · Lesson ${lessonId}`}
+        title={ar ? pack.titleAr : pack.titleEn}
+        color={pack.chapter.color}
+      />
+      <TextbookLesson locale={locale} page={page} />
+      {pack.scenes.length ? (
+        <PrintSection title={ar ? "مواقف من الحياة" : "Real-life scenes"}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {pack.scenes.map((scene) => {
+              const term = bookletSafe(locale, ar ? scene.termAr : scene.termEn);
+              const text = bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn);
+              return (
+                <SceneCard
+                  key={scene.id}
+                  locale={locale}
+                  color={pack.chapter.color}
+                  term={term}
+                  scene={text}
+                  art={artFor(sceneArts, term, text)}
+                />
+              );
+            })}
+          </div>
+        </PrintSection>
+      ) : null}
+      {drills.length ? (
+        <PrintSection title={ar ? `تدريبات الدرس ${page.id}` : `Lesson ${page.id} practice`}>
+          <p className="text-base font-semibold text-[#374151]">
+            {ar ? "ظلّل الاختيار. الإجابات في آخر الملزمة." : "Mark a choice. Answers are at the end of this booklet."}
+          </p>
+          <McqBlock locale={locale} rows={drills} />
+        </PrintSection>
+      ) : null}
+      <section className="mt-8 rounded-xl bg-primary/5 p-6">
+        <h4 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h4>
+        <AnswerKeyList
+          locale={locale}
+          title={ar ? `تدريبات الدرس ${lessonId}` : `Lesson ${lessonId} practice`}
+          answers={pack.answers}
+        />
+      </section>
+    </div>
+  );
+}
+
+export function BookletHomeworkPane({ locale, chapterId }: { locale: Locale; chapterId: ChapterId }) {
+  const ar = locale === "ar";
+  const chapter = getChapter(chapterId);
+  if (!chapter) return null;
+  const pack = bookletHomeworkForChapter(chapter);
+  return (
+    <div className="booklet-paper print-sheet rounded-xl bg-white p-5 ring-1 ring-slate-300 sm:p-8">
+      <BookletCover
+        locale={locale}
+        teacher={ar ? BRAND.teacherAr : BRAND.teacherEn}
+        brand={ar ? BRAND.nameAr : BRAND.nameEn}
+        kicker={ar ? `الفصل ${chapter.id}` : `Chapter ${chapter.id}`}
+        title={ar ? pack.titleAr : pack.titleEn}
+        color={chapter.color}
+      />
+      <HomeworkBlock locale={locale} pack={pack} />
+      <section className="mt-8 rounded-xl bg-primary/5 p-6">
+        <h4 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h4>
+        <AnswerKeyList locale={locale} title={ar ? pack.titleAr : pack.titleEn} answers={pack.answers} />
+        <EssayAnswers locale={locale} title={ar ? "مقالي الواجب" : "Homework essays"} rows={pack.essays} />
+      </section>
+    </div>
+  );
+}
+
+export function BookletFaizUnitPane({ locale, unitId }: { locale: Locale; unitId: string }) {
+  const ar = locale === "ar";
+  const pack = buildBookletDocument().faiz.find((row) => row.note.id === unitId);
+  if (!pack) return null;
+  const map = mindMapForFaiz(pack.note.id);
+  const figures = CHAPTER_FIGURES[pack.note.id] ?? [];
+  const color =
+    pack.note.id === "f2" ? "#7f1d1d" : pack.note.id === "f3" ? "#134e4a" : pack.note.id === "f4" ? "#4a1942" : "#0c2d6b";
+  const accent =
+    pack.note.id === "f2" ? "#f59e0b" : pack.note.id === "f3" ? "#2dd4bf" : pack.note.id === "f4" ? "#e879f9" : "#c4a35a";
+  return (
+    <div className="booklet-paper print-sheet rounded-xl bg-white p-5 ring-1 ring-slate-300 sm:p-8">
+      <BookletCover
+        locale={locale}
+        teacher={ar ? BRAND.teacherAr : BRAND.teacherEn}
+        brand={ar ? BRAND.nameAr : BRAND.nameEn}
+        kicker={ar ? "كتاب الفائز" : "Al-Faiz"}
+        title={ar ? pack.note.titleAr : pack.note.titleEn}
+        color={color}
+      />
+      {map ? (
+        <div className="mt-4">
+          <BookletMindMap locale={locale} root={map} color={color} accent={accent} />
+        </div>
+      ) : null}
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {figures.map((id) => (
+          <BookletFigure key={`${pack.note.id}-${id}`} id={id} locale={locale} color={color} />
+        ))}
+      </div>
+      <div className="mt-4 space-y-3">
+        {pack.note.sections.map((section) => (
+          <div key={section.headingAr} className="rounded-xl bg-primary/5 p-5">
+            <p className="text-lg font-extrabold text-[#0c2d6b]">{bookletSafe(locale, ar ? section.headingAr : section.headingEn)}</p>
+            {(ar ? section.bodyAr : section.bodyEn).map((line) => (
+              <p key={line} className="mt-3 text-base font-semibold leading-8 text-[#111827]">
+                {bookletSafe(locale, line)}
+              </p>
+            ))}
+          </div>
+        ))}
+      </div>
+      <h5 className="mt-5 text-lg font-semibold">{ar ? "أسئلة الوحدة" : "Unit questions"}</h5>
+      <McqBlock locale={locale} rows={pack.practice} />
+      <section className="mt-8 rounded-xl bg-primary/5 p-6">
+        <h4 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h4>
+        <AnswerKeyList locale={locale} title={ar ? pack.note.titleAr : pack.note.titleEn} answers={pack.answers} />
+      </section>
+    </div>
+  );
+}
+
+export function BookletFaizHomeworkPane({ locale }: { locale: Locale }) {
+  const ar = locale === "ar";
+  const pack = buildBookletDocument().faizHomework;
+  return (
+    <div className="booklet-paper print-sheet rounded-xl bg-white p-5 ring-1 ring-slate-300 sm:p-8">
+      <BookletCover
+        locale={locale}
+        teacher={ar ? BRAND.teacherAr : BRAND.teacherEn}
+        brand={ar ? BRAND.nameAr : BRAND.nameEn}
+        kicker={ar ? "كتاب الفائز" : "Al-Faiz"}
+        title={ar ? pack.titleAr : pack.titleEn}
+        color="#92400e"
+      />
+      <HomeworkBlock locale={locale} pack={pack} />
+      <section className="mt-8 rounded-xl bg-primary/5 p-6">
+        <h4 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h4>
+        <AnswerKeyList locale={locale} title={ar ? pack.titleAr : pack.titleEn} answers={pack.answers} />
+        <EssayAnswers locale={locale} title={ar ? "مقالي واجب الفائز" : "Al-Faiz essays"} rows={pack.essays} />
+      </section>
+    </div>
   );
 }
 

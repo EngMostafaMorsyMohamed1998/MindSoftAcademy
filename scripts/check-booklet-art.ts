@@ -1,6 +1,5 @@
-import { termArt } from "../lib/booklet-lang";
-import { bookletChapterPack } from "../lib/booklet-pack";
-import { CHAPTERS } from "../lib/curriculum";
+import { lessonArtMap, termArt } from "../lib/booklet-lang";
+import { bookletLessonPack, bookletLessonScenes } from "../lib/booklet-pack";
 import { explainsForLesson } from "../lib/lesson-explains";
 import { LESSON_NOTES } from "../lib/lessons";
 import { CHAPTER_1_FACTS } from "../lib/question-bank/chapter-1";
@@ -44,6 +43,10 @@ const EXPECTED: Record<string, string> = {
   "التزييف العميق": "fake",
   Impersonation: "mask",
   "انتحال الهوية": "mask",
+  Asymmetric: "asymmetric",
+  "غير متماثل": "asymmetric",
+  "Digital certificate": "cert",
+  "شهادة رقمية": "cert",
   Encryption: "lock",
   التشفير: "lock",
   Firewall: "firewall",
@@ -118,21 +121,26 @@ if (!termQuestion) {
   }
 }
 
-for (const chapter of CHAPTERS) {
-  const pack = bookletChapterPack(chapter);
-  const terms = pack.scenes.map((scene) => scene.termEn);
-  if (pack.scenes.length !== 6) {
-    console.error(`chapter ${chapter.id} has ${pack.scenes.length} scenes, expected 6`);
+for (const note of LESSON_NOTES) {
+  if (!bookletLessonPack(note.id)) {
+    console.error(`missing lesson pack ${note.id}`);
     failed += 1;
   }
+  const scenes = bookletLessonScenes(note.id);
+  const terms = scenes.map((scene) => scene.termEn);
   if (new Set(terms).size !== terms.length) {
-    console.error(`chapter ${chapter.id} repeats a scene term: ${terms.join(", ")}`);
+    console.error(`lesson ${note.id} repeats a scene term: ${terms.join(", ")}`);
+    failed += 1;
+  }
+  if (note.id === "2-1" && scenes.length < 4) {
+    console.error(`lesson 2-1 has ${scenes.length} scenes: ${terms.join(", ")}`);
     failed += 1;
   }
 }
 
-for (const note of LESSON_NOTES.filter((item) => item.chapterId === "1")) {
-  const arts = note.termsEn.map((term) => `${term.term}:${termArt(term.term, term.meaning)}`);
+for (const note of LESSON_NOTES) {
+  const map = lessonArtMap(note.termsEn.map((term) => ({ term: term.term, meaning: term.meaning })));
+  const arts = note.termsEn.map((term) => `${term.term}:${map.get(term.term.trim().toLowerCase())}`);
   const kinds = arts.map((row) => row.split(":")[1]);
   if (new Set(kinds).size !== kinds.length) {
     console.error(`${note.id} shares a picture on the same page: ${arts.join(" | ")}`);
@@ -150,6 +158,8 @@ const pairs: [string, string][] = [
   ["Impersonation", "Encryption"],
   ["Impersonation", "Incident"],
   ["Impersonation", "Symmetric encryption"],
+  ["Symmetric encryption", "Asymmetric encryption"],
+  ["Digital certificate", "Impersonation"],
 ];
 
 if (termArt("Impersonation", "An encrypted message claims to be from the class tutor") !== "mask") {

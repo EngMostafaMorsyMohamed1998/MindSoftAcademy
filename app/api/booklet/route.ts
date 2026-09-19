@@ -15,8 +15,8 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const locale = await getLocale();
   const scope = url.searchParams.get("chapter");
-  if (!isBookletScope(scope) || (scope === "faiz" && locale === "en")) {
-    return NextResponse.json({ error: "اختر فصل الملزمة" }, { status: 400 });
+  if (!isBookletScope(scope) || ((scope === "faiz" || scope.startsWith("f")) && locale === "en")) {
+    return NextResponse.json({ error: "اختر درس الملزمة" }, { status: 400 });
   }
   const pdf = await buildBookletPdf(locale, scope);
   return new NextResponse(Buffer.from(pdf), {

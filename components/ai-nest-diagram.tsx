@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import type { Locale } from "@/lib/locale";
 
 export type NestKey = "ai" | "ml" | "dl" | "genai";
@@ -10,6 +10,13 @@ const NEST_TO_TERM: Record<NestKey, string> = {
   ml: "Machine learning",
   dl: "Deep learning",
   genai: "Generative AI",
+};
+
+const NEST_PARENT: Record<NestKey, NestKey | null> = {
+  ai: null,
+  ml: "ai",
+  dl: "ml",
+  genai: "dl",
 };
 
 export function AiNestDiagram({
@@ -22,32 +29,49 @@ export function AiNestDiagram({
   onSelect?: (term: string) => void;
 }) {
   const ar = locale === "ar";
+  const [hovered, setHovered] = useState<NestKey | null>(null);
   const pick = (key: NestKey) => (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
     onSelect?.(NEST_TO_TERM[key]);
   };
-  const active = (key: NestKey) => (selected === NEST_TO_TERM[key] ? " ring-2 ring-white shadow-lg" : "");
+  const enter = (key: NestKey) => (event: MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+    setHovered(key);
+  };
+  const leave = (key: NestKey) => () => {
+    setHovered(NEST_PARENT[key]);
+  };
+  const ring = (key: NestKey) =>
+    `${hovered === key ? " is-hovered" : ""}${selected === NEST_TO_TERM[key] ? " ring-2 ring-white shadow-lg" : ""}`;
 
   return (
     <div className="flex w-full flex-col items-center">
       <div
-        className={`nested-layer w-full max-w-[17rem] rounded-2xl bg-[#1e3a8a] p-4 text-center text-white shadow-md${active("ai")}`}
+        className={`nested-layer w-full max-w-[17rem] rounded-2xl bg-[#1e3a8a] p-4 text-center text-white shadow-md${ring("ai")}`}
         onClick={pick("ai")}
+        onMouseEnter={enter("ai")}
+        onMouseLeave={leave("ai")}
       >
         <p className="text-xs font-extrabold tracking-wide text-blue-200">{ar ? "ذكاء اصطناعي" : "AI"}</p>
         <div
-          className={`nested-layer mt-3 rounded-xl bg-[#2563eb] p-3.5${active("ml")}`}
+          className={`nested-layer mt-3 rounded-xl bg-[#2563eb] p-3.5${ring("ml")}`}
           onClick={pick("ml")}
+          onMouseEnter={enter("ml")}
+          onMouseLeave={leave("ml")}
         >
           <p className="text-xs font-bold text-blue-50">{ar ? "تعلم آلي" : "Machine learning"}</p>
           <div
-            className={`nested-layer mt-2.5 rounded-lg bg-[#3b82f6] p-2.5${active("dl")}`}
+            className={`nested-layer mt-2.5 rounded-lg bg-[#3b82f6] p-2.5${ring("dl")}`}
             onClick={pick("dl")}
+            onMouseEnter={enter("dl")}
+            onMouseLeave={leave("dl")}
           >
             <p className="text-xs font-semibold text-white">{ar ? "تعلم عميق" : "Deep learning"}</p>
             <div
-              className={`nested-layer mt-2 rounded-md bg-[#f59e0b] px-2 py-2 text-xs font-extrabold text-slate-900${active("genai")}`}
+              className={`nested-layer mt-2 rounded-md bg-[#f59e0b] px-2 py-2 text-xs font-extrabold text-slate-900${ring("genai")}`}
               onClick={pick("genai")}
+              onMouseEnter={enter("genai")}
+              onMouseLeave={leave("genai")}
             >
               {ar ? "توليدي" : "Generative"}
             </div>

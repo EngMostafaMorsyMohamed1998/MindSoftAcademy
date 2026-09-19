@@ -37,6 +37,63 @@ export function TextbookArt({ art, locale, compact }: { art: string; locale: Loc
   );
 }
 
+function stampHue(art: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < art.length; index += 1) {
+    hash = Math.imul(hash ^ art.charCodeAt(index), 16777619);
+  }
+  return hash >>> 0;
+}
+
+function Stamp({ art }: { art: string }) {
+  const hash = stampHue(art);
+  const colors = ["#0c2d6b", "#1d4ed8", "#7f1d1d", "#c4a35a", "#0f766e", "#7c3aed", "#b45309", "#334155"];
+  const color = colors[hash % colors.length]!;
+  const shape = hash % 5;
+  if (shape === 0) {
+    return (
+      <>
+        <circle cx="160" cy="88" r="46" fill={color} />
+        <rect x="118" y="142" width="84" height="22" rx="8" fill="#111827" />
+      </>
+    );
+  }
+  if (shape === 1) {
+    return (
+      <>
+        <polygon points="160,36 236,160 84,160" fill={color} />
+        <circle cx="160" cy="118" r="14" fill="#fde68a" />
+      </>
+    );
+  }
+  if (shape === 2) {
+    return (
+      <>
+        <rect x="48" y="52" width="56" height="96" rx="10" fill={color} />
+        <rect x="132" y="40" width="56" height="108" rx="10" fill="#1d4ed8" />
+        <rect x="216" y="64" width="56" height="84" rx="10" fill="#c4a35a" />
+      </>
+    );
+  }
+  if (shape === 3) {
+    return (
+      <>
+        <rect x="108" y="88" width="104" height="64" rx="12" fill={color} />
+        <path d="M124 88 A36 36 0 0 1 196 88" fill="none" stroke="#111827" strokeWidth="10" />
+        <circle cx="160" cy="118" r="8" fill="#fde68a" />
+      </>
+    );
+  }
+  return (
+    <>
+      <rect x="70" y="36" width="180" height="128" rx="14" fill="#ffffff" stroke={color} strokeWidth="8" />
+      <rect x="92" y="58" width="110" height="12" rx="6" fill={color} />
+      <rect x="92" y="86" width="136" height="10" rx="5" fill="#94a3b8" />
+      <rect x="92" y="112" width="88" height="10" rx="5" fill="#cbd5e1" />
+    </>
+  );
+}
+
 function draw(art: string, ar: boolean, compact: boolean) {
   const move = compact ? undefined : true;
   if (art === "nest") {
@@ -471,6 +528,56 @@ function draw(art: string, ar: boolean, compact: boolean) {
       </>
     );
   }
+  if (art === "asymmetric") {
+    return (
+      <>
+        <Move className={move ? "art-bob" : undefined}>
+          <path d="M92 78 v-14 a18 18 0 0 1 36 0 v14" fill="none" stroke="#0c2d6b" strokeWidth="8" />
+          <rect x="80" y="78" width="60" height="44" rx="8" fill="#c4a35a" />
+          <circle cx="110" cy="96" r="6" fill="#111827" />
+        </Move>
+        <Move className={move ? "art-pulse" : undefined}>
+          <path d="M196 78 v-14 a18 18 0 0 1 36 0 v14" fill="none" stroke="#7f1d1d" strokeWidth="8" />
+          <rect x="184" y="78" width="60" height="44" rx="8" fill="#1d4ed8" />
+          <circle cx="214" cy="96" r="6" fill="#fde68a" />
+        </Move>
+        {compact ? null : (
+          <>
+            <Label x={110} y={148} text={ar ? "خاص" : "Private"} fill="#0c2d6b" />
+            <Label x={214} y={148} text={ar ? "عام" : "Public"} fill="#0c2d6b" />
+          </>
+        )}
+      </>
+    );
+  }
+  if (art === "cert") {
+    return (
+      <>
+        <rect x="88" y="28" width="144" height="144" rx="10" fill="#fff" stroke="#0c2d6b" strokeWidth="5" />
+        <rect x="108" y="52" width="104" height="10" rx="4" fill="#0c2d6b" />
+        <rect x="108" y="74" width="80" height="8" rx="3" fill="#94a3b8" />
+        <rect x="108" y="92" width="96" height="8" rx="3" fill="#cbd5e1" />
+        <Move className={move ? "art-pulse" : undefined}>
+          <circle cx="160" cy="136" r="22" fill="#c4a35a" />
+          <path d="M150 136 l8 8 16 -16" fill="none" stroke="#fff" strokeWidth="5" />
+        </Move>
+      </>
+    );
+  }
+  if (art === "preserve") {
+    return (
+      <>
+        <rect x="70" y="36" width="180" height="128" rx="12" fill="#0c2d6b" />
+        <rect x="92" y="56" width="136" height="16" rx="4" fill="#93c5fd" />
+        <rect x="92" y="84" width="100" height="10" rx="3" fill="#c4a35a" />
+        <rect x="92" y="106" width="120" height="10" rx="3" fill="#64748b" />
+        <Move className={move ? "art-bob" : undefined}>
+          <rect x="210" y="88" width="54" height="70" rx="8" fill="#7f1d1d" />
+          <path d="M224 88 v-12 a13 13 0 0 1 26 0 v12" fill="none" stroke="#111827" strokeWidth="6" />
+        </Move>
+      </>
+    );
+  }
   if (art === "mask") {
     return (
       <>
@@ -584,12 +691,100 @@ function draw(art: string, ar: boolean, compact: boolean) {
       </>
     );
   }
-  return (
-    <>
-      <rect x="70" y="40" width="180" height="120" rx="10" fill="#fff" stroke="#0c2d6b" strokeWidth="5" />
-      <rect x="88" y="58" width="144" height="12" rx="6" fill="#0c2d6b" />
-      <rect x="88" y="84" width="110" height="10" rx="5" fill="#94a3b8" />
-      <rect x="88" y="108" width="128" height="10" rx="5" fill="#cbd5e1" />
-    </>
-  );
+  if (art === "hash") {
+    return (
+      <>
+        <rect x="56" y="44" width="208" height="112" rx="12" fill="#111827" />
+        <text x="160" y="118" textAnchor="middle" fill="#fde68a" fontSize="42" fontWeight="800" fontFamily="ui-monospace, monospace">
+          #
+        </text>
+      </>
+    );
+  }
+  if (art === "mfa") {
+    return (
+      <>
+        <rect x="48" y="50" width="100" height="100" rx="16" fill="#0c2d6b" />
+        <circle cx="98" cy="88" r="14" fill="#fde68a" />
+        <rect x="176" y="58" width="96" height="22" rx="6" fill="#1d4ed8" />
+        <rect x="176" y="90" width="96" height="22" rx="6" fill="#c4a35a" />
+        <rect x="176" y="122" width="96" height="22" rx="6" fill="#16a34a" />
+      </>
+    );
+  }
+  if (art === "auth") {
+    return (
+      <>
+        <circle cx="118" cy="78" r="36" fill="#0c2d6b" />
+        <rect x="86" y="118" width="64" height="40" rx="12" fill="#1d4ed8" />
+        <rect x="176" y="70" width="88" height="64" rx="10" fill="#16a34a" />
+        <path d="M198 104 l16 16 l28 -28" fill="none" stroke="#ffffff" strokeWidth="8" />
+      </>
+    );
+  }
+  if (art === "vpn") {
+    return (
+      <>
+        <rect x="36" y="70" width="88" height="64" rx="12" fill="#0c2d6b" />
+        <rect x="196" y="70" width="88" height="64" rx="12" fill="#1d4ed8" />
+        <rect x="118" y="90" width="84" height="24" rx="8" fill="#c4a35a" />
+      </>
+    );
+  }
+  if (art === "css") {
+    return (
+      <>
+        <rect x="48" y="36" width="224" height="128" rx="12" fill="#ffffff" />
+        <rect x="48" y="36" width="224" height="28" fill="#7c3aed" />
+        <rect x="68" y="84" width="80" height="14" rx="4" fill="#c4b5fd" />
+        <rect x="68" y="110" width="140" height="14" rx="4" fill="#ddd6fe" />
+        <rect x="200" y="84" width="48" height="48" rx="8" fill="#7c3aed" />
+      </>
+    );
+  }
+  if (art === "js") {
+    return (
+      <>
+        <rect x="70" y="40" width="180" height="120" rx="16" fill="#f59e0b" />
+        <text x="160" y="122" textAnchor="middle" fill="#111827" fontSize="48" fontWeight="800" fontFamily="ui-sans-serif, system-ui">
+          JS
+        </text>
+      </>
+    );
+  }
+  if (art === "https") {
+    return (
+      <>
+        <rect x="48" y="44" width="224" height="112" rx="12" fill="#ffffff" />
+        <rect x="48" y="44" width="224" height="28" fill="#16a34a" />
+        <circle cx="72" cy="58" r="5" fill="#fde68a" />
+        <rect x="108" y="92" width="140" height="12" rx="4" fill="#bbf7d0" />
+        <rect x="108" y="116" width="96" height="12" rx="4" fill="#86efac" />
+        <rect x="68" y="88" width="28" height="40" rx="6" fill="#166534" />
+      </>
+    );
+  }
+  if (art === "note") {
+    return (
+      <>
+        <rect x="78" y="32" width="164" height="136" rx="10" fill="#ffffff" stroke="#0c2d6b" strokeWidth="5" />
+        <rect x="96" y="54" width="128" height="10" rx="5" fill="#0c2d6b" />
+        <rect x="96" y="80" width="110" height="8" rx="4" fill="#94a3b8" />
+        <rect x="96" y="104" width="120" height="8" rx="4" fill="#cbd5e1" />
+        <rect x="96" y="128" width="86" height="8" rx="4" fill="#e2e8f0" />
+      </>
+    );
+  }
+  if (art === "symmetric") {
+    return (
+      <>
+        <rect x="48" y="88" width="88" height="52" rx="10" fill="#0c2d6b" />
+        <rect x="184" y="88" width="88" height="52" rx="10" fill="#0c2d6b" />
+        <path d="M80 88 A28 28 0 0 1 136 88" fill="none" stroke="#111827" strokeWidth="8" />
+        <path d="M216 88 A28 28 0 0 1 272 88" fill="none" stroke="#111827" strokeWidth="8" />
+        <rect x="136" y="104" width="48" height="12" rx="6" fill="#c4a35a" />
+      </>
+    );
+  }
+  return <Stamp art={art} />;
 }

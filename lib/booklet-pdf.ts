@@ -3,24 +3,28 @@ import { createCanvas, GlobalFonts, loadImage, type Image, type SKRSContext2D } 
 import { PDFDocument } from "pdf-lib";
 import { BRAND } from "@/lib/brand";
 import { CHAPTER_FIGURES } from "@/components/booklet-figures";
-import { bookletSafe, termArt } from "@/lib/booklet-lang";
+import { artFor, bookletSafe, lessonArtMap } from "@/lib/booklet-lang";
 import {
   bookletAnswerMark,
-  bookletChapterPack,
   bookletFaizHomework,
+  bookletFaizPack,
   bookletFaizPacks,
   bookletHomeworkForChapter,
-  bookletLessonPractice,
+  bookletLessonPack,
   bookletLetters,
   bookletOptions,
   bookletPrompt,
-  type BookletChapterPack,
+  faizUnitId,
+  homeworkChapterId,
+  type BookletFaizPack,
+  type BookletHomeworkPack,
+  type BookletLessonPack,
+  type BookletMcq,
   type BookletScope,
 } from "@/lib/booklet-pack";
 import { getChapter } from "@/lib/curriculum";
-import { LESSON_NOTES } from "@/lib/lessons";
 import type { Locale } from "@/lib/locale";
-import { mindMapForChapter, mindMapForFaiz, type MindNode } from "@/lib/mind-maps";
+import { mindMapForFaiz, type MindNode } from "@/lib/mind-maps";
 import { textbookPageFor } from "@/lib/textbook-pages";
 
 const FONT_NAME = "NotoNaskh";
@@ -439,20 +443,40 @@ function drawMap(ctx: SKRSContext2D, root: MindNode, color: string, accent: stri
   return used;
 }
 
+function bannerSize(ctx: SKRSContext2D, text: string, w: number) {
+  ctx.font = `20px ${FONT_NAME}`;
+  const lines = wrap(ctx, text, w - 32);
+  const h = Math.max(46, lines.length * 24 + 18);
+  return { lines, h, gap: h + 14 };
+}
+
+function sectionSize(ctx: SKRSContext2D, text: string, w: number) {
+  ctx.font = `15px ${FONT_NAME}`;
+  const lines = wrap(ctx, text, w - 28);
+  const h = Math.max(32, lines.length * 18 + 14);
+  return { lines, h, gap: h + 12 };
+}
+
 function drawBanner(ctx: SKRSContext2D, text: string, color: string, x: number, y: number, w: number, ar: boolean): number {
-  roundRect(ctx, x, y, w, 46, 8, color);
+  const { lines, h, gap } = bannerSize(ctx, text, w);
+  roundRect(ctx, x, y, w, h, 8, color);
   ctx.fillStyle = "#ffffff";
   ctx.font = `20px ${FONT_NAME}`;
-  paintText(ctx, text, ar ? x + w - 16 : x + 16, y + 12, ar ? "right" : "left");
-  return 60;
+  lines.forEach((line, index) => {
+    paintText(ctx, line, ar ? x + w - 16 : x + 16, y + 10 + index * 24, ar ? "right" : "left");
+  });
+  return gap;
 }
 
 function drawSection(ctx: SKRSContext2D, text: string, x: number, y: number, w: number, ar: boolean): number {
-  roundRect(ctx, x, y, w, 32, 6, "#0c2d6b");
+  const { lines, h, gap } = sectionSize(ctx, text, w);
+  roundRect(ctx, x, y, w, h, 6, "#0c2d6b");
   ctx.fillStyle = "#ffffff";
   ctx.font = `15px ${FONT_NAME}`;
-  paintText(ctx, text, ar ? x + w - 14 : x + 14, y + 8, ar ? "right" : "left");
-  return 44;
+  lines.forEach((line, index) => {
+    paintText(ctx, line, ar ? x + w - 14 : x + 14, y + 8 + index * 18, ar ? "right" : "left");
+  });
+  return gap;
 }
 
 function questionLines(ctx: SKRSContext2D, block: QuestionBlock, w: number) {
@@ -827,6 +851,40 @@ function drawLessonArt(
     ctx.fillRect(x + w - 14 - w * 0.22, y + 22, w * 0.22, h * 0.22);
     return;
   }
+  if (art === "asymmetric") {
+    ctx.fillStyle = "#c4a35a";
+    ctx.fillRect(x + w * 0.12, y + h * 0.46, w * 0.3, h * 0.28);
+    ctx.fillStyle = "#1d4ed8";
+    ctx.fillRect(x + w * 0.58, y + h * 0.46, w * 0.3, h * 0.28);
+    ctx.strokeStyle = "#0c2d6b";
+    ctx.lineWidth = Math.max(3, w * 0.04);
+    ctx.beginPath();
+    ctx.arc(x + w * 0.27, y + h * 0.46, w * 0.08, Math.PI, 0);
+    ctx.stroke();
+    ctx.strokeStyle = "#7f1d1d";
+    ctx.beginPath();
+    ctx.arc(x + w * 0.73, y + h * 0.46, w * 0.08, Math.PI, 0);
+    ctx.stroke();
+    return;
+  }
+  if (art === "cert") {
+    roundRect(ctx, x + w * 0.22, y + 10, w * 0.56, h - 20, 8, "#ffffff");
+    ctx.strokeStyle = "#0c2d6b";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x + w * 0.22, y + 10, w * 0.56, h - 20);
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x + w * 0.3, y + h * 0.22, w * 0.4, 6);
+    fillCircle(ctx, cx, y + h * 0.68, Math.max(7, w * 0.08), "#c4a35a");
+    return;
+  }
+  if (art === "preserve") {
+    roundRect(ctx, x + 10, y + 12, w - 20, h - 24, 8, "#0c2d6b");
+    ctx.fillStyle = "#c4a35a";
+    ctx.fillRect(x + 18, y + h * 0.28, w * 0.4, 8);
+    ctx.fillStyle = "#7f1d1d";
+    ctx.fillRect(x + w * 0.62, y + h * 0.42, w * 0.22, h * 0.32);
+    return;
+  }
   if (art === "mask") {
     fillCircle(ctx, x + w * 0.32, y + h * 0.38, Math.max(10, w * 0.12), "#0c2d6b");
     roundRect(ctx, x + w * 0.2, y + h * 0.58, w * 0.24, h * 0.22, 6, "#1d4ed8");
@@ -882,25 +940,117 @@ function drawLessonArt(
     ctx.fillRect(x + w * 0.56, y + 34, w * 0.24, 8);
     return;
   }
-  [0.08, 0.24, 0.4, 0.56, 0.72].forEach((px, index) => {
-    ctx.fillStyle = index % 2 ? "#1e293b" : "#334155";
-    ctx.fillRect(x + w * px, y + 12 + (index % 2) * 6, w * 0.12, h - 36);
-  });
-  ctx.fillStyle = "#94a3b8";
-  ctx.fillRect(x, y + h - 14, w, 14);
+  if (art === "hash") {
+    roundRect(ctx, x + 10, y + 12, w - 20, h - 24, 8, "#111827");
+    ctx.fillStyle = "#fde68a";
+    ctx.font = `${Math.max(16, w * 0.28)}px ${FONT_NAME}`;
+    paintText(ctx, "#", cx, cy - 10, "center");
+    return;
+  }
+  if (art === "mfa") {
+    roundRect(ctx, x + 8, y + 16, w * 0.32, h * 0.64, 8, "#0c2d6b");
+    [0.18, 0.4, 0.62].forEach((py, index) => {
+      roundRect(ctx, x + w * 0.48, y + h * py, w * 0.42, h * 0.16, 5, ["#1d4ed8", "#c4a35a", "#16a34a"][index]!);
+    });
+    return;
+  }
+  if (art === "auth") {
+    fillCircle(ctx, x + w * 0.32, y + h * 0.36, Math.max(8, w * 0.1), "#0c2d6b");
+    roundRect(ctx, x + w * 0.2, y + h * 0.5, w * 0.24, h * 0.28, 8, "#1d4ed8");
+    roundRect(ctx, x + w * 0.56, y + h * 0.32, w * 0.3, h * 0.36, 8, "#16a34a");
+    return;
+  }
+  if (art === "vpn") {
+    roundRect(ctx, x + 8, y + h * 0.32, w * 0.28, h * 0.36, 8, "#0c2d6b");
+    roundRect(ctx, x + w * 0.64, y + h * 0.32, w * 0.28, h * 0.36, 8, "#1d4ed8");
+    roundRect(ctx, x + w * 0.34, y + h * 0.42, w * 0.32, h * 0.16, 6, "#c4a35a");
+    return;
+  }
+  if (art === "css") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + 8, y + 10, w - 16, h - 20);
+    ctx.fillStyle = "#7c3aed";
+    ctx.fillRect(x + 8, y + 10, w - 16, 16);
+    ctx.fillRect(x + w * 0.62, y + h * 0.42, w * 0.22, h * 0.28);
+    return;
+  }
+  if (art === "js") {
+    roundRect(ctx, x + 12, y + 12, w - 24, h - 24, 10, "#f59e0b");
+    return;
+  }
+  if (art === "https") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + 8, y + 10, w - 16, h - 20);
+    ctx.fillStyle = "#16a34a";
+    ctx.fillRect(x + 8, y + 10, w - 16, 16);
+    roundRect(ctx, x + 14, y + h * 0.42, w * 0.16, h * 0.32, 5, "#166534");
+    return;
+  }
+  if (art === "symmetric") {
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x + w * 0.12, y + h * 0.48, w * 0.28, h * 0.28);
+    ctx.fillRect(x + w * 0.6, y + h * 0.48, w * 0.28, h * 0.28);
+    ctx.strokeStyle = "#111827";
+    ctx.lineWidth = Math.max(3, w * 0.04);
+    ctx.beginPath();
+    ctx.arc(x + w * 0.26, y + h * 0.48, w * 0.08, Math.PI, 0);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + w * 0.74, y + h * 0.48, w * 0.08, Math.PI, 0);
+    ctx.stroke();
+    return;
+  }
+  if (art === "note") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + 10, y + 10, w - 20, h - 20);
+    ctx.strokeStyle = "#0c2d6b";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x + 10, y + 10, w - 20, h - 20);
+    ctx.fillStyle = "#0c2d6b";
+    ctx.fillRect(x + 16, y + 18, w * 0.5, 6);
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillRect(x + 16, y + 32, w * 0.42, 5);
+    return;
+  }
+  const stampColors = ["#0c2d6b", "#1d4ed8", "#7f1d1d", "#c4a35a", "#0f766e", "#7c3aed", "#b45309", "#334155"];
+  let hash = 2166136261;
+  for (let index = 0; index < art.length; index += 1) {
+    hash = Math.imul(hash ^ art.charCodeAt(index), 16777619);
+  }
+  const color = stampColors[(hash >>> 0) % stampColors.length]!;
+  const shape = (hash >>> 0) % 4;
+  if (shape === 0) {
+    fillCircle(ctx, cx, cy, Math.max(10, w * 0.22), color);
+    return;
+  }
+  if (shape === 1) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(cx, y + 10);
+    ctx.lineTo(x + w - 10, y + h - 12);
+    ctx.lineTo(x + 10, y + h - 12);
+    ctx.closePath();
+    ctx.fill();
+    return;
+  }
+  if (shape === 2) {
+    roundRect(ctx, x + 10, y + h * 0.28, w * 0.24, h * 0.48, 6, color);
+    roundRect(ctx, x + w * 0.38, y + h * 0.18, w * 0.24, h * 0.64, 6, "#1d4ed8");
+    roundRect(ctx, x + w * 0.66, y + h * 0.3, w * 0.24, h * 0.4, 6, "#c4a35a");
+    return;
+  }
+  ctx.fillStyle = color;
+  ctx.fillRect(x + w * 0.28, y + h * 0.48, w * 0.44, h * 0.3);
+  ctx.strokeStyle = "#111827";
+  ctx.lineWidth = Math.max(3, w * 0.05);
+  ctx.beginPath();
+  ctx.arc(cx, y + h * 0.48, w * 0.14, Math.PI, 0);
+  ctx.stroke();
 }
 
 function drawTermIcon(ctx: SKRSContext2D, art: string, x: number, y: number, size: number, color: string, ar = true) {
-  const mapped =
-    art === "phish" || art === "fake"
-      ? "incident"
-      : art === "sample" || art === "api"
-        ? "data"
-        : art === "note"
-          ? "lab"
-          : art;
   roundRect(ctx, x, y, size, size, 10, fade(color, 0.14));
-  drawLessonArt(ctx, mapped, x + 6, y + 6, size - 12, size - 12, ar);
+  drawLessonArt(ctx, art, x + 6, y + 6, size - 12, size - 12, ar);
 }
 
 function drawTerms(
@@ -976,10 +1126,17 @@ async function drawPhoto(
   paintText(ctx, `1  ${block.title}`, ar ? textX + textW : textX, y, ar ? "right" : "left");
   ctx.fillStyle = "#111827";
   ctx.font = `14px ${FONT_NAME}`;
-  wrap(ctx, block.intro, textW).slice(0, 5).forEach((line, index) => {
+  const introLines = wrap(ctx, block.intro, textW);
+  introLines.forEach((line, index) => {
     paintText(ctx, line, ar ? textX + textW : textX, y + 30 + index * 20, ar ? "right" : "left");
   });
-  return imgH + 16;
+  return Math.max(imgH, 30 + introLines.length * 20) + 16;
+}
+
+function photoHeight(ctx: SKRSContext2D, block: PhotoBlock, w: number): number {
+  const textW = w - 168 - 14;
+  ctx.font = `14px ${FONT_NAME}`;
+  return Math.max(126, 30 + wrap(ctx, block.intro, textW).length * 20) + 16;
 }
 
 function colWidths(count: number, w: number): number[] {
@@ -1135,7 +1292,7 @@ function drawTakeaway(ctx: SKRSContext2D, text: string, x: number, y: number, w:
 
 function sceneCardHeight(ctx: SKRSContext2D, scene: string, cardW: number): number {
   ctx.font = `12px ${FONT_NAME}`;
-  const lines = wrap(ctx, scene, cardW - 16).slice(0, 3);
+  const lines = wrap(ctx, scene, cardW - 16);
   return 88 + 22 + lines.length * 15 + 16;
 }
 
@@ -1158,11 +1315,9 @@ function drawSceneCard(
   paintText(ctx, item.term, ar ? x + w - 10 : x + 10, y + 86, ar ? "right" : "left");
   ctx.fillStyle = "#334155";
   ctx.font = `12px ${FONT_NAME}`;
-  wrap(ctx, item.scene, w - 16)
-    .slice(0, 3)
-    .forEach((line, index) => {
-      paintText(ctx, line, ar ? x + w - 10 : x + 10, y + 106 + index * 15, ar ? "right" : "left");
-    });
+  wrap(ctx, item.scene, w - 16).forEach((line, index) => {
+    paintText(ctx, line, ar ? x + w - 10 : x + 10, y + 106 + index * 15, ar ? "right" : "left");
+  });
 }
 
 function drawScenesGrid(
@@ -1224,10 +1379,6 @@ function tableSliceHeight(
   return h + 8;
 }
 
-function sceneArt(term: string, scene: string): string {
-  return termArt(term, scene);
-}
-
 function figureTitle(id: string, ar: boolean): string {
   const titles: Record<string, [string, string]> = {
     "it-timeline": ["شكل — خط زمن التقنية", "Figure — IT timeline"],
@@ -1255,7 +1406,7 @@ function figureTitle(id: string, ar: boolean): string {
   return ar ? pair[0] : pair[1];
 }
 
-function pushQuestions(blocks: Block[], locale: Locale, rows: BookletChapterPack["practice"], start = 1) {
+function pushQuestions(blocks: Block[], locale: Locale, rows: BookletMcq[], start = 1) {
   const letters = bookletLetters(locale);
   rows.forEach((question, index) => {
     blocks.push({
@@ -1268,27 +1419,89 @@ function pushQuestions(blocks: Block[], locale: Locale, rows: BookletChapterPack
   });
 }
 
-function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) {
+function pushLesson(blocks: Block[], pack: BookletLessonPack, locale: Locale) {
   const ar = locale === "ar";
   const chapter = pack.chapter;
+  const page = textbookPageFor(pack.lessonId);
+  if (!page) return;
   blocks.push({
     kind: "banner",
-    text: `${chapter.id}. ${ar ? chapter.titleAr : chapter.titleEn}`,
+    text: bookletSafe(locale, `${ar ? "الدرس" : "Lesson"} ${page.id}  ${ar ? page.titleAr : page.titleEn}`),
     color: chapter.color,
   });
-  blocks.push({ kind: "text", text: bookletSafe(locale, ar ? chapter.blurbAr : chapter.blurbEn), size: 15, gap: 16 });
-  const map = mindMapForChapter(chapter.id);
-  if (map) {
-    blocks.push({ kind: "section", text: ar ? "الخريطة الذهنية" : "Mind map" });
-    blocks.push({ kind: "map", root: map, color: chapter.color, accent: chapter.accent });
+  blocks.push({
+    kind: "text",
+    text: bookletSafe(locale, `${ar ? "الفصل" : "Chapter"} ${chapter.id} — ${ar ? chapter.titleAr : chapter.titleEn}`),
+    size: 14,
+    gap: 12,
+  });
+  blocks.push({
+    kind: "ask",
+    text: bookletSafe(locale, `${ar ? "السؤال الرئيسي:" : "Main question:"} ${ar ? page.questionAr : page.questionEn}`),
+  });
+  blocks.push({
+    kind: "photo",
+    src: page.photo,
+    art: page.art,
+    title: bookletSafe(locale, ar ? page.sectionAr : page.sectionEn),
+    intro: bookletSafe(locale, ar ? page.introAr : page.introEn),
+  });
+  const points = (ar ? page.pointsAr : page.pointsEn).map((item) => bookletSafe(locale, item));
+  if (points.length) blocks.push({ kind: "points", items: points });
+  const termTable = page.headersAr[0] === "المصطلح" || page.headersEn[0] === "Term";
+  const pageArts = lessonArtMap([
+    ...page.rows.map((row) => ({
+      term: bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? "")),
+      meaning: bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? "")),
+    })),
+    ...page.explains.map((item) => ({
+      term: bookletSafe(locale, ar ? item.termAr : item.termEn),
+      meaning: bookletSafe(locale, ar ? item.bodyAr : item.bodyEn),
+    })),
+    ...pack.scenes.map((scene) => ({
+      term: bookletSafe(locale, ar ? scene.termAr : scene.termEn),
+      meaning: bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn),
+    })),
+  ]);
+  if (termTable) {
+    blocks.push({
+      kind: "terms",
+      color: chapter.color,
+      items: page.rows.map((row) => {
+        const term = bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""));
+        const meaning = bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""));
+        return { term, meaning, art: artFor(pageArts, term, meaning) };
+      }),
+    });
+  } else {
+    blocks.push({
+      kind: "table",
+      headers: (ar ? page.headersAr : page.headersEn).map((header) => bookletSafe(locale, header)),
+      rows: page.rows.map((row) => ({
+        cells: (ar ? [...row.cellsAr] : [...row.cellsEn]).map((cell) => bookletSafe(locale, cell)),
+        example: row.exampleAr || row.exampleEn ? bookletSafe(locale, (ar ? row.exampleAr : row.exampleEn) ?? "") : undefined,
+      })),
+    });
   }
-  const figures = CHAPTER_FIGURES[chapter.id] ?? [];
-  if (figures.length) {
-    blocks.push({ kind: "section", text: ar ? "الرسوم والأشكال" : "Figures" });
-    for (const id of figures) {
-      blocks.push({ kind: "figure", id, color: chapter.color, title: figureTitle(id, ar) });
+  if (page.explains.length) {
+    blocks.push({ kind: "section", text: ar ? "شرح المصطلحات — اقرأ قبل التدريبات" : "Term explanations — read before the drills" });
+    for (const item of page.explains) {
+      const title = bookletSafe(locale, ar ? item.termAr : item.termEn);
+      const body = bookletSafe(locale, ar ? item.bodyAr : item.bodyEn);
+      blocks.push({
+        kind: "explain",
+        title,
+        body,
+        example: bookletSafe(locale, ar ? item.exampleAr : item.exampleEn),
+        art: artFor(pageArts, title, body),
+        color: chapter.color,
+      });
     }
   }
+  blocks.push({
+    kind: "takeaway",
+    text: bookletSafe(locale, `${ar ? "الخلاصة:" : "Takeaway:"} ${ar ? page.takeawayAr : page.takeawayEn}`),
+  });
   if (pack.scenes.length) {
     blocks.push({ kind: "section", text: ar ? "مواقف من الحياة" : "Real-life scenes" });
     blocks.push({
@@ -1297,86 +1510,14 @@ function pushChapter(blocks: Block[], pack: BookletChapterPack, locale: Locale) 
       items: pack.scenes.map((scene) => {
         const term = bookletSafe(locale, ar ? scene.termAr : scene.termEn);
         const text = bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn);
-        return { term, scene: text, art: sceneArt(term, text) };
+        return { term, scene: text, art: artFor(pageArts, term, text) };
       }),
     });
   }
-  for (const note of LESSON_NOTES.filter((row) => row.chapterId === chapter.id)) {
-    const page = textbookPageFor(note.id);
-    if (!page) continue;
-    const drills = bookletLessonPractice(note.id);
-    blocks.push({ kind: "break" });
-    blocks.push({
-      kind: "banner",
-      text: bookletSafe(locale, `${ar ? "الدرس" : "Lesson"} ${page.id}  ${ar ? page.titleAr : page.titleEn}`),
-      color: chapter.color,
-    });
-    blocks.push({
-      kind: "ask",
-      text: bookletSafe(locale, `${ar ? "السؤال الرئيسي:" : "Main question:"} ${ar ? page.questionAr : page.questionEn}`),
-    });
-    blocks.push({
-      kind: "photo",
-      src: page.photo,
-      art: page.art,
-      title: bookletSafe(locale, ar ? page.sectionAr : page.sectionEn),
-      intro: bookletSafe(locale, ar ? page.introAr : page.introEn),
-    });
-    const points = (ar ? page.pointsAr : page.pointsEn).map((item) => bookletSafe(locale, item));
-    if (points.length) blocks.push({ kind: "points", items: points });
-    const termTable = page.headersAr[0] === "المصطلح" || page.headersEn[0] === "Term";
-    if (termTable) {
-      blocks.push({
-        kind: "terms",
-        color: chapter.color,
-        items: page.rows.map((row) => {
-          const term = bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""));
-          const meaning = bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""));
-          return { term, meaning, art: termArt(term, meaning) };
-        }),
-      });
-    } else {
-      blocks.push({
-        kind: "table",
-        headers: (ar ? page.headersAr : page.headersEn).map((header) => bookletSafe(locale, header)),
-        rows: page.rows.map((row) => ({
-          cells: (ar ? [...row.cellsAr] : [...row.cellsEn]).map((cell) => bookletSafe(locale, cell)),
-          example: row.exampleAr || row.exampleEn ? bookletSafe(locale, (ar ? row.exampleAr : row.exampleEn) ?? "") : undefined,
-        })),
-      });
-    }
-    if (page.explains.length) {
-      blocks.push({ kind: "section", text: ar ? "شرح المصطلحات — اقرأ قبل التدريبات" : "Term explanations — read before the drills" });
-      for (const item of page.explains) {
-        const title = bookletSafe(locale, ar ? item.termAr : item.termEn);
-        const body = bookletSafe(locale, ar ? item.bodyAr : item.bodyEn);
-        blocks.push({
-          kind: "explain",
-          title,
-          body,
-          example: bookletSafe(locale, ar ? item.exampleAr : item.exampleEn),
-          art: termArt(title, body),
-          color: chapter.color,
-        });
-      }
-    }
-    blocks.push({
-      kind: "takeaway",
-      text: bookletSafe(locale, `${ar ? "الخلاصة:" : "Takeaway:"} ${ar ? page.takeawayAr : page.takeawayEn}`),
-    });
-    if (drills.length) {
-      blocks.push({ kind: "section", text: ar ? `تدريبات الدرس ${page.id}` : `Lesson ${page.id} practice` });
-      pushQuestions(blocks, locale, drills);
-    }
+  if (pack.practice.length) {
+    blocks.push({ kind: "section", text: ar ? `تدريبات الدرس ${page.id}` : `Lesson ${page.id} practice` });
+    pushQuestions(blocks, locale, pack.practice);
   }
-  blocks.push({ kind: "section", text: ar ? "حلّل واكتب" : "Analyse and write" });
-  pack.essays.forEach((essay, index) => {
-    blocks.push({
-      kind: "essay",
-      n: index + 1,
-      prompt: bookletPrompt(locale, essay.promptAr, essay.promptEn),
-    });
-  });
 }
 
 function pushEssayGuides(
@@ -1430,6 +1571,16 @@ function pushAnswerKey(
   }
 }
 
+function faizColors(id: string) {
+  return id === "f2"
+    ? { color: "#7f1d1d", accent: "#f59e0b" }
+    : id === "f3"
+      ? { color: "#134e4a", accent: "#2dd4bf" }
+      : id === "f4"
+        ? { color: "#4a1942", accent: "#e879f9" }
+        : { color: "#0c2d6b", accent: "#c4a35a" };
+}
+
 function coverCopy(locale: Locale, scope: BookletScope) {
   const ar = locale === "ar";
   if (scope === "faiz") {
@@ -1439,11 +1590,42 @@ function coverCopy(locale: Locale, scope: BookletScope) {
       color: "#0c2d6b",
     };
   }
-  const chapter = getChapter(scope);
+  if (scope === "faiz-hw") {
+    const homework = bookletFaizHomework();
+    return {
+      kicker: ar ? "كتاب الفائز" : "Al-Faiz",
+      title: ar ? homework.titleAr : homework.titleEn,
+      color: "#92400e",
+    };
+  }
+  const unit = faizUnitId(scope);
+  if (unit) {
+    const pack = bookletFaizPack(unit);
+    const { color } = faizColors(unit);
+    return {
+      kicker: ar ? "كتاب الفائز" : "Al-Faiz",
+      title: pack ? (ar ? pack.note.titleAr : pack.note.titleEn) : unit,
+      color,
+    };
+  }
+  const homeworkId = homeworkChapterId(scope);
+  if (homeworkId) {
+    const chapter = getChapter(homeworkId);
+    const pack = chapter ? bookletHomeworkForChapter(chapter) : null;
+    return {
+      kicker: ar ? `الفصل ${homeworkId}` : `Chapter ${homeworkId}`,
+      title: pack ? (ar ? pack.titleAr : pack.titleEn) : "",
+      color: chapter?.color ?? "#0c2d6b",
+    };
+  }
+  const pack = bookletLessonPack(scope);
+  if (!pack) {
+    return { kicker: ar ? `الفصل ${scope}` : `Chapter ${scope}`, title: "", color: "#0c2d6b" };
+  }
   return {
-    kicker: ar ? `الفصل ${scope}` : `Chapter ${scope}`,
-    title: chapter ? (ar ? chapter.titleAr : chapter.titleEn) : "",
-    color: chapter?.color ?? "#0c2d6b",
+    kicker: ar ? `الفصل ${pack.chapter.id} · الدرس ${scope}` : `Chapter ${pack.chapter.id} · Lesson ${scope}`,
+    title: ar ? pack.titleAr : pack.titleEn,
+    color: pack.chapter.color,
   };
 }
 
@@ -1496,7 +1678,7 @@ function drawCoverPage(ctx: SKRSContext2D, locale: Locale, scope: BookletScope) 
   paintText(ctx, BRAND.phone, cx, afterTitle + 92, "center");
   ctx.fillStyle = "#374151";
   ctx.font = `14px ${FONT_NAME}`;
-  paintText(ctx, `${BRAND.year}  ·  2Bac`, cx, afterTitle + 116, "center");
+  paintText(ctx, BRAND.year, cx, afterTitle + 116, "center");
 
   const fields = ar ? ["المجموعة", "رقم التليفون", "الاسم"] : ["Name", "Phone", "Group"];
   const fieldY = cardY + cardH - 96;
@@ -1515,9 +1697,64 @@ function drawCoverPage(ctx: SKRSContext2D, locale: Locale, scope: BookletScope) 
   });
 }
 
+function pushFaizUnit(blocks: Block[], pack: BookletFaizPack, locale: Locale) {
+  const ar = locale === "ar";
+  const { color, accent } = faizColors(pack.note.id);
+  blocks.push({ kind: "banner", text: ar ? pack.note.titleAr : pack.note.titleEn, color });
+  const map = mindMapForFaiz(pack.note.id);
+  if (map) blocks.push({ kind: "map", root: map, color, accent });
+  for (const id of CHAPTER_FIGURES[pack.note.id] ?? []) {
+    blocks.push({ kind: "figure", id, color, title: figureTitle(id, ar) });
+  }
+  for (const section of pack.note.sections) {
+    blocks.push({ kind: "section", text: ar ? section.headingAr : section.headingEn });
+    for (const body of ar ? section.bodyAr : section.bodyEn) {
+      blocks.push({ kind: "text", text: `• ${bookletSafe(locale, body)}`, size: 14, gap: 10 });
+    }
+  }
+  pushQuestions(blocks, locale, pack.practice);
+}
+
+function pushHomeworkBlocks(blocks: Block[], pack: BookletHomeworkPack, locale: Locale) {
+  const ar = locale === "ar";
+  blocks.push({ kind: "banner", text: ar ? pack.titleAr : pack.titleEn, color: "#92400e" });
+  pushQuestions(blocks, locale, pack.mcq);
+  pack.essays.forEach((essay, index) => {
+    blocks.push({ kind: "essay", n: index + 1, prompt: bookletPrompt(locale, essay.promptAr, essay.promptEn) });
+  });
+}
+
 function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
   const ar = locale === "ar";
   const blocks: Block[] = [];
+
+  if (scope === "faiz-hw") {
+    const homework = bookletFaizHomework();
+    pushHomeworkBlocks(blocks, homework, locale);
+    pushAnswerKey(blocks, locale, [{ title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers }]);
+    pushEssayGuides(blocks, locale, ar ? "مقالي واجب الفائز" : "Al-Faiz essays", homework.essays);
+    return blocks;
+  }
+
+  const unit = faizUnitId(scope);
+  if (unit) {
+    const pack = bookletFaizPack(unit);
+    if (!pack) return blocks;
+    pushFaizUnit(blocks, pack, locale);
+    pushAnswerKey(blocks, locale, [{ title: ar ? pack.note.titleAr : pack.note.titleEn, answers: pack.answers }]);
+    return blocks;
+  }
+
+  const homeworkId = homeworkChapterId(scope);
+  if (homeworkId) {
+    const chapter = getChapter(homeworkId);
+    if (!chapter) return blocks;
+    const pack = bookletHomeworkForChapter(chapter);
+    pushHomeworkBlocks(blocks, pack, locale);
+    pushAnswerKey(blocks, locale, [{ title: ar ? pack.titleAr : pack.titleEn, answers: pack.answers }]);
+    pushEssayGuides(blocks, locale, ar ? "مقالي الواجب" : "Homework essays", pack.essays);
+    return blocks;
+  }
 
   if (scope === "faiz") {
     blocks.push({ kind: "text", text: ar ? "ملزمة كتاب الفائز" : "Al-Faiz booklet", size: 16, gap: 16 });
@@ -1557,31 +1794,23 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
     return blocks;
   }
 
-  const chapter = getChapter(scope);
-  if (!chapter) return blocks;
-  const pack = bookletChapterPack(chapter);
-  const homework = bookletHomeworkForChapter(chapter);
+  const pack = bookletLessonPack(scope);
+  if (!pack) return blocks;
   blocks.push({
     kind: "text",
-    text: ar ? `ملزمة الفصل ${chapter.id} — ${chapter.titleAr}` : `Chapter ${chapter.id} booklet — ${chapter.titleEn}`,
+    text: ar
+      ? `ملزمة الدرس ${pack.lessonId} — ${pack.titleAr}`
+      : `Lesson ${pack.lessonId} booklet — ${pack.titleEn}`,
     size: 16,
     gap: 16,
   });
-  pushChapter(blocks, pack, locale);
-  blocks.push({ kind: "banner", text: ar ? homework.titleAr : homework.titleEn, color: "#92400e" });
-  pushQuestions(blocks, locale, homework.mcq);
-  homework.essays.forEach((essay, index) => {
-    blocks.push({ kind: "essay", n: index + 1, prompt: bookletPrompt(locale, essay.promptAr, essay.promptEn) });
-  });
+  pushLesson(blocks, pack, locale);
   pushAnswerKey(blocks, locale, [
-    ...pack.answerGroups.map((group) => ({
-      title: ar ? group.titleAr : group.titleEn,
-      answers: group.answers,
-    })),
-    { title: ar ? homework.titleAr : homework.titleEn, answers: homework.answers },
+    {
+      title: ar ? `تدريبات الدرس ${pack.lessonId}` : `Lesson ${pack.lessonId} practice`,
+      answers: pack.answers,
+    },
   ]);
-  pushEssayGuides(blocks, locale, ar ? "مقالي التدريبات" : "Practice essays", pack.essays);
-  pushEssayGuides(blocks, locale, ar ? "مقالي الواجب" : "Homework essays", homework.essays);
   return blocks;
 }
 
@@ -1675,7 +1904,8 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       continue;
     }
     if (block.kind === "banner") {
-      if (need(54, y)) {
+      const needed = bannerSize(ctx, block.text, maxWidth).gap;
+      if (need(needed, y)) {
         await flush();
         reset();
         y = margin;
@@ -1685,7 +1915,7 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
     }
     if (block.kind === "section") {
       const next = blocks[blocks.indexOf(block) + 1];
-      let needed = 40;
+      let needed = sectionSize(ctx, block.text, maxWidth).gap;
       if (next?.kind === "explain") needed += explainHeight(ctx, next, maxWidth, ar);
       else if (next?.kind === "scenes") {
         const cardW = (maxWidth - 10) / 2;
@@ -1696,6 +1926,10 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
         needed += 90;
       } else if (next?.kind === "question") {
         needed += questionLines(ctx, next, maxWidth).h + 14;
+      } else if (next?.kind === "figure") {
+        needed += 180;
+      } else if (next?.kind === "map") {
+        needed += mapHeight(ctx, next.root, maxWidth, ar);
       } else {
         needed += 48;
       }
@@ -1789,7 +2023,7 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
       continue;
     }
     if (block.kind === "photo") {
-      if (need(150, y)) {
+      if (need(photoHeight(ctx, block, maxWidth), y)) {
         await flush();
         reset();
         y = margin;
@@ -1912,5 +2146,14 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
 
 export function bookletFileName(locale: Locale, scope: BookletScope): string {
   if (scope === "faiz") return locale === "ar" ? "ملزمة-الفائز-MindSoft-2027.pdf" : "MindSoft-faiz-2027.pdf";
-  return locale === "ar" ? `ملزمة-الفصل-${scope}-MindSoft-2027.pdf` : `MindSoft-chapter-${scope}-2027.pdf`;
+  if (scope === "faiz-hw") return locale === "ar" ? "ملزمة-واجب-الفائز-MindSoft-2027.pdf" : "MindSoft-faiz-homework-2027.pdf";
+  if (faizUnitId(scope)) {
+    return locale === "ar" ? `ملزمة-الفائز-${scope}-MindSoft-2027.pdf` : `MindSoft-faiz-${scope}-2027.pdf`;
+  }
+  if (homeworkChapterId(scope)) {
+    return locale === "ar"
+      ? `ملزمة-واجب-الفصل-${homeworkChapterId(scope)}-MindSoft-2027.pdf`
+      : `MindSoft-homework-${homeworkChapterId(scope)}-2027.pdf`;
+  }
+  return locale === "ar" ? `ملزمة-الدرس-${scope}-MindSoft-2027.pdf` : `MindSoft-lesson-${scope}-2027.pdf`;
 }

@@ -1,14 +1,21 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Download } from "lucide-react";
 import type { Locale } from "@/lib/locale";
 
-export type BookletTab = {
+export type BookletLessonTab = {
   id: string;
   labelAr: string;
   labelEn: string;
   body: ReactNode;
+};
+
+export type BookletGroup = {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+  lessons: BookletLessonTab[];
 };
 
 export function BookletViewer({
@@ -16,36 +23,50 @@ export function BookletViewer({
   printLabel,
   downloadLabel,
   downloadingLabel,
-  tabs,
+  groups,
 }: {
   locale: Locale;
   printLabel: string;
   downloadLabel: string;
   downloadingLabel: string;
-  tabs: BookletTab[];
+  groups: BookletGroup[];
 }) {
-  const [active, setActive] = useState(tabs[0]?.id ?? "p1");
-  const [busy, setBusy] = useState(false);
+  const [groupId, setGroupId] = useState(groups[0]?.id ?? "");
+  const group = useMemo(() => groups.find((item) => item.id === groupId) ?? groups[0], [groups, groupId]);
+  const [lessonId, setLessonId] = useState(group?.lessons[0]?.id ?? "");
+  const lessons = group?.lessons ?? [];
+  const activeId = lessons.some((item) => item.id === lessonId) ? lessonId : (lessons[0]?.id ?? "");
   const ar = locale === "ar";
+  const [busy, setBusy] = useState(false);
 
   async function download() {
-    if (busy) return;
+    if (busy || !activeId) return;
     setBusy(true);
     try {
-      const response = await fetch(`/api/booklet?lang=${locale}&chapter=${active}`);
+      const response = await fetch(`/api/booklet?lang=${locale}&chapter=${activeId}`);
       if (!response.ok) throw new Error("download");
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download =
-        active === "faiz"
+        activeId === "faiz" || activeId === "faiz-hw"
           ? ar
-            ? "ملزمة-الفائز-MindSoft-2027.pdf"
+            ? activeId === "faiz-hw"
+              ? "ملزمة-واجب-الفائز-MindSoft-2027.pdf"
+              : "ملزمة-الفائز-MindSoft-2027.pdf"
             : "MindSoft-faiz-2027.pdf"
-          : ar
-            ? `ملزمة-الفصل-${active}-MindSoft-2027.pdf`
-            : `MindSoft-chapter-${active}-2027.pdf`;
+          : activeId.startsWith("hw-")
+            ? ar
+              ? `ملزمة-واجب-الفصل-${activeId.slice(3)}-MindSoft-2027.pdf`
+              : `MindSoft-homework-${activeId.slice(3)}-2027.pdf`
+            : activeId.startsWith("f")
+              ? ar
+                ? `ملزمة-الفائز-${activeId}-MindSoft-2027.pdf`
+                : `MindSoft-faiz-${activeId}-2027.pdf`
+              : ar
+                ? `ملزمة-الدرس-${activeId}-MindSoft-2027.pdf`
+                : `MindSoft-lesson-${activeId}-2027.pdf`;
       document.body.append(link);
       link.click();
       link.remove();
@@ -59,45 +80,69 @@ export function BookletViewer({
 
   return (
     <div>
-      <div className="booklet-tabs no-print mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          {tabs.map((tab) => {
-            const on = tab.id === active;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActive(tab.id)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                  on ? "bg-primary text-white" : "bg-white text-primary ring-1 ring-primary/15"
-                }`}
-              >
-                {ar ? tab.labelAr : tab.labelEn}
-              </button>
-            );
-          })}
+      <div className="booklet-tabs no-print mb-5 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
+            {groups.map((item) => {
+              const on = item.id === group?.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setGroupId(item.id);
+                    setLessonId(item.lessons[0]?.id ?? "");
+                  }}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                    on ? "bg-primary text-white" : "bg-white text-primary ring-1 ring-primary/15"
+                  }`}
+                >
+                  {ar ? item.labelAr : item.labelEn}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void download()}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-primary-dark disabled:opacity-60"
+            >
+              <Download className="size-4" />
+              {busy ? downloadingLabel : downloadLabel}
+            </button>
+            <button
+              type="button"
+              className="h-11 rounded-full bg-primary px-5 text-sm font-semibold text-white"
+              onClick={() => window.print()}
+            >
+              {printLabel}
+            </button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void download()}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-primary-dark disabled:opacity-60"
-          >
-            <Download className="size-4" />
-            {busy ? downloadingLabel : downloadLabel}
-          </button>
-          <button
-            type="button"
-            className="h-11 rounded-full bg-primary px-5 text-sm font-semibold text-white"
-            onClick={() => window.print()}
-          >
-            {printLabel}
-          </button>
-        </div>
+        {lessons.length > 1 ? (
+          <div className="flex flex-wrap gap-2">
+            {lessons.map((item) => {
+              const on = item.id === activeId;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setLessonId(item.id)}
+                  className={`rounded-full px-3 py-1.5 text-sm font-semibold ${
+                    on ? "bg-accent text-primary-dark" : "bg-white text-primary ring-1 ring-primary/15"
+                  }`}
+                >
+                  {ar ? item.labelAr : item.labelEn}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
-      {tabs.map((tab) => (
-        <div key={tab.id} className={tab.id === active ? "booklet-pane" : "booklet-pane hidden"}>
+      {groups.flatMap((item) => item.lessons).map((tab) => (
+        <div key={tab.id} className={tab.id === activeId ? "booklet-pane" : "booklet-pane hidden"}>
           {tab.body}
         </div>
       ))}

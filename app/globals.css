@@ -270,7 +270,7 @@ body {
   cursor: pointer;
 }
 
-.nested-layer:hover {
+.nested-layer.is-hovered {
   transform: scale(1.03);
   filter: brightness(1.08);
 }
