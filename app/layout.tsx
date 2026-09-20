@@ -23,7 +23,7 @@ const newsreader = Newsreader({
 
 const cairo = Cairo({
   variable: "--font-cairo",
-  subsets: ["arabic", "latin"],
+  subsets: ["arabic"],
   weight: ["400", "600", "700", "800"],
 });
 
@@ -41,7 +41,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang={locale}
       dir={localeDir(locale)}
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${cairo.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${locale === "ar" ? cairo.variable : ""} h-full antialiased ${locale === "en" ? "en" : ""} ${theme === "dark" ? "dark" : ""}`}
     >
       <body
         suppressHydrationWarning

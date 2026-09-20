@@ -31,8 +31,6 @@ export async function getLocale(): Promise<Locale> {
     const picked = store.get(TEACHER_LANG_COOKIE)?.value;
     return isLocale(picked) ? picked : "ar";
   }
-  const picked = store.get(LANG_COOKIE)?.value;
-  if (isLocale(picked)) return picked;
   if (area === "student") {
     try {
       const { getStudentSession } = await import("@/lib/student-session");
@@ -42,7 +40,8 @@ export async function getLocale(): Promise<Locale> {
       // cookies() is unavailable outside a request
     }
   }
-  return "ar";
+  const picked = store.get(LANG_COOKIE)?.value;
+  return isLocale(picked) ? picked : "ar";
 }
 
 export function localeDir(locale: Locale): "rtl" | "ltr" {
