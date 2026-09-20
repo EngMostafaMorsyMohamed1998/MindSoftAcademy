@@ -176,13 +176,16 @@ function buildBank(): HomeworkQuestion[] {
   for (const note of LESSON_NOTES) {
     const explains = explainsForLesson(note.id);
     explains.forEach((item, index) => {
+      const clauseAr = firstClause(item.bodyAr);
+      const clauseEn = firstClause(item.bodyEn);
+      if (!/[.!?؟]$/.test(clauseAr) && clauseAr.length < 24) return;
       pushQuestion(bank, {
         id: `${note.id}-ex-tf-${index}`,
         lessonId: note.id,
         chapterId: note.chapterId,
         kind: "tf",
-        promptAr: `هل صحيح أن «${item.termAr}» يعني: ${firstClause(item.bodyAr)}؟`,
-        promptEn: `Is it true that “${item.termEn}” means: ${firstClause(item.bodyEn)}?`,
+        promptAr: `هل صحيح أن «${item.termAr}» يعني: ${clauseAr}؟`,
+        promptEn: `Is it true that “${item.termEn}” means: ${clauseEn}?`,
         optionsAr: ["صح", "غلط"],
         optionsEn: ["True", "False"],
         correctIndex: 0,

@@ -15,6 +15,8 @@ const EXPECTED: Record<string, string> = {
   "التعلم العميق": "neural",
   "Generative AI": "llm",
   "الذكاء التوليدي": "llm",
+  Hallucination: "incident",
+  الهلوسة: "incident",
   "Moore's Law": "lab",
   "قانون مور": "lab",
   "Electronic computer": "lab",

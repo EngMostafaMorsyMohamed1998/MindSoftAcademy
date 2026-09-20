@@ -266,7 +266,7 @@ function PickPlay({
       <div className="mt-4 grid gap-2">
         {choices.map((choice, choiceIndex) => (
           <button
-            key={choice}
+            key={`${choiceIndex}-${choice}`}
             type="button"
             className="rounded-xl bg-primary/8 px-3 py-3 text-start text-sm font-medium"
             onClick={() => {

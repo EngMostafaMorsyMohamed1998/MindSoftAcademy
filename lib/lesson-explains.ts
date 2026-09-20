@@ -209,9 +209,9 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "الهلوسة",
       termEn: "Hallucination",
       bodyAr:
-        "هلوسة النموذج معناها إنه يطلع جملة تبدو صحيحة ومتماسكة، وهي خطأ أو مالهاش سند. ده مش كذب بشري؛ النموذج بيحسب أرجح تكملة لغوية. عشان كده مينفعش تلزق رده في تقرير أو واجب من غير مراجعة كتاب أو مصدر موثوق.",
+        "هلوسة النموذج معناها إنه يطلع جملة تبدو صحيحة ومتماسكة، وهي خطأ أو مالهاش سند. ده مش كذب بشري؛ النموذج بيحسب أرجح تكملة لغوية. راجع المعنى من الكتاب قبل ما تعتمد الجملة.",
       bodyEn:
-        "A hallucination is fluent, well-shaped text that is false or ungrounded. It is not a human lie; the model scores the next likely words. That is why you must not paste a reply into a report or homework without checking a book or a trusted source.",
+        "A hallucination is fluent, well-shaped text that is false or ungrounded. It is not a human lie; the model scores the next likely words. Check the meaning in the book before you trust the sentence.",
       exampleAr: "النموذج اخترع اسم عالم وقانون وهمي في إجابة تبدو أكاديمية.",
       exampleEn: "The model invents a scientist and a fake law in an answer that sounds academic.",
     },

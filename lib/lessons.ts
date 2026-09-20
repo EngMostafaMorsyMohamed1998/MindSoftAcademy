@@ -72,12 +72,14 @@ export const LESSON_NOTES: LessonNote[] = [
       { term: "التعلم الآلي", meaning: "يتعلم أنماطًا من البيانات للتنبؤ والحكم." },
       { term: "التعلم العميق", meaning: "تعلم آلي متقدم يستخدم شبكات عصبية وبيانات ضخمة." },
       { term: "الذكاء التوليدي", meaning: "ينتج نصًا أو صورة أو صوتًا جديدًا اعتمادًا على التعلم العميق." },
+      { term: "الهلوسة", meaning: "نص يبدو صحيحًا وهو خطأ." },
     ],
     termsEn: [
       { term: "Artificial Intelligence (AI)", meaning: "The technology that enables computers to perform tasks that normally require human intelligence." },
       { term: "Machine learning", meaning: "Learns patterns from data to predict and judge." },
       { term: "Deep learning", meaning: "Advanced ML that uses neural networks and large-scale data." },
       { term: "Generative AI", meaning: "Creates new text, images, or audio using deep learning." },
+      { term: "Hallucination", meaning: "Text that sounds right and is still wrong." },
     ],
     bodyAr: [
       "العلاقة متداخلة: ذكاء اصطناعي ثم تعلم آلي ثم تعلم عميق ثم ذكاء توليدي.",

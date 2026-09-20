@@ -73,8 +73,8 @@ function readableMarks(text: string): string {
 export function cleanArabic(text: string): string {
   let next = readableMarks(text);
   for (const [pattern, swap] of AR_SWAPS) next = next.replace(pattern, swap);
+  if (!hasArabic(next)) next = next.replace(LATIN_WORD, "");
   next = next
-    .replace(LATIN_WORD, "")
     .replace(/\(\s*\)/g, "")
     .replace(/[^\S\n]{2,}/g, " ")
     .replace(/\n{3,}/g, "\n\n")
@@ -134,7 +134,7 @@ export function termArt(term: string, meaning = ""): string {
   if (onTerm(/إينياك|eniac|أنابيب|vacuum|حاسوب إلكتروني|electronic computer/)) return "lab";
   if (onTerm(/حاسوب شخصي|personal computer/)) return "lab";
   if (onTerm(/هواتف ذكية|smartphone|آيفون|iphone/)) return "arvr";
-  if (onTerm(/إنترنت|ويب|internet|the web/)) return "web";
+  if (onTerm(/إنترنت والويب|internet and the web/)) return "web";
   if (onTerm(/مراحل|stages of it|تحول اجتماعي/)) return "lab";
   if (onTerm(/^ai$|artificial intelligence|الذكاء الاصطناعي|ذكاء اصطناعي/)) return "ai";
   if (onTerm(/انتحال|impersonat|منتحل|مدعي/)) return "mask";

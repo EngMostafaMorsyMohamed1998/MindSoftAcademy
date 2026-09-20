@@ -98,7 +98,7 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
             {page.rows.map((row, index) => {
               const term = bookletSafe(locale, ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""));
               const meaning = bookletSafe(locale, ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""));
-              const termKey = `term:${row.cellsEn[0] ?? term}`;
+              const termKey = `explain:${(row.cellsEn[0] ?? term).trim()}`;
               return (
                 <div
                   key={`${page.id}-term-${index}`}
