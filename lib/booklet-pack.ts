@@ -219,7 +219,7 @@ function parkAnswer(row: BookletMcq, dest: number): BookletMcq {
 function syllabusMcq(row: HomeworkQuestion): boolean {
   return (
     usableMcq(row) &&
-    (row.id.includes("-mcq-") || row.id.includes("-body-mcq-") || row.id.includes("-ex-mean-")) &&
+    (row.id.includes("-mcq-") || row.id.includes("-ex-mean-")) &&
     !row.id.includes("-ex-term-")
   );
 }

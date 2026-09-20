@@ -147,21 +147,6 @@ function buildBank(): HomeworkQuestion[] {
         optionsEn: ["True", "False"],
         correctIndex: 0,
       });
-      const otherAr = note.bodyAr.filter((_, otherIndex) => otherIndex !== index);
-      const otherEn = note.bodyEn.filter((_, otherIndex) => otherIndex !== index);
-      if (otherAr.length >= 3) {
-        pushQuestion(bank, {
-          id: `${note.id}-body-mcq-${index}`,
-          lessonId: note.id,
-          chapterId: note.chapterId,
-          kind: "mcq",
-          promptAr: "أي جملة من المنهج تصف هذا الدرس وصفًا صحيحًا؟",
-          promptEn: "Which syllabus sentence correctly describes this lesson?",
-          optionsAr: [line, ...otherAr.slice(0, 3)],
-          optionsEn: [en, ...otherEn.slice(0, 3)],
-          correctIndex: 0,
-        });
-      }
     });
   }
 
@@ -217,9 +202,7 @@ export function questionsForChapter(chapterId: ChapterId): HomeworkQuestion[] {
 function isCurriculumMcq(question: HomeworkQuestion): boolean {
   return (
     question.kind === "mcq" &&
-    (question.id.includes("-mcq-") ||
-      question.id.includes("-body-mcq-") ||
-      question.id.includes("-ex-mean-")) &&
+    (question.id.includes("-mcq-") || question.id.includes("-ex-mean-")) &&
     !question.id.includes("-ex-term-")
   );
 }
