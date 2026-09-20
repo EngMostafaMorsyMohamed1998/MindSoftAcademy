@@ -100,48 +100,14 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       exampleEn: "An app names landmarks while you walk. A headset trains a chemistry lab without hazardous chemicals.",
     },
     {
-      termAr: "شبكات التواصل الاجتماعي",
-      termEn: "SNS",
+      termAr: "التحولات الاجتماعية الناتجة عن تكنولوجيا المعلومات",
+      termEn: "Social changes resulting from information technology",
       bodyAr:
-        "شبكات التواصل الاجتماعي خدمات تربط المستخدمين لينشروا المعلومات ويشاركوها. فعّالة جدًا في نشر الخبر بسرعة.",
+        "1) شبكات التواصل الاجتماعي: خدمات تربط المستخدمين لينشروا المعلومات ويشاركوها. فعّالة جدًا في نشر الخبر بسرعة.\n2) التجارة الإلكترونية: بيع وشراء السلع والخدمات عبر الإنترنت، مثل التسوق الإلكتروني. ليست الشراء النقدي من محل فعلي.\n3) العمل عن بُعد: أسلوب يؤدي فيه الموظف العمل من البيت أو مكان بعيد باستخدام الإنترنت.\n4) التعلّم عبر الإنترنت: حصص ومواد دراسية تصل عبر الإنترنت بدل الحضور فقط في الفصل.\n5) الدفع بلا نقد: نظام يدفع فيه المستخدم بمال إلكتروني أو بطاقة أو رمز استجابة سريعة من غير كاش.",
       bodyEn:
-        "SNS (Social Networking Service) lets users connect, post, and share information. It is highly effective at spreading information rapidly.",
-      exampleAr: "خبر ينتشر في دقائق عبر المنصة.",
-      exampleEn: "A post can spread across a platform in minutes.",
-    },
-    {
-      termAr: "التجارة الإلكترونية",
-      termEn: "E-commerce",
-      bodyAr:
-        "التجارة الإلكترونية بيع وشراء السلع والخدمات عبر الإنترنت، مثل التسوق الإلكتروني. ليست الشراء النقدي من محل فعلي.",
-      bodyEn:
-        "E-commerce (EC) is buying and selling goods and services through the Internet, such as online shops. It is not paying cash in a physical store.",
-      exampleAr: "طلب من متجر على الإنترنت يصل للبيت.",
-      exampleEn: "An order from an online shop arrives at home.",
-    },
-    {
-      termAr: "العمل عن بُعد",
-      termEn: "Remote work",
-      bodyAr: "العمل عن بُعد أسلوب يؤدي فيه الموظف العمل من البيت أو مكان بعيد باستخدام الإنترنت.",
-      bodyEn: "Remote work is a working style in which the job is done from home or another place using the Internet.",
-      exampleAr: "موظف يسلّم التقرير من البيت.",
-      exampleEn: "A staff member sends the report from home.",
-    },
-    {
-      termAr: "التعلّم عبر الإنترنت",
-      termEn: "Online learning",
-      bodyAr: "التعلّم عبر الإنترنت حصص ومواد دراسية تصل عبر الإنترنت بدل الحضور فقط في الفصل.",
-      bodyEn: "Online learning delivers classes and study materials over the Internet.",
-      exampleAr: "حصة تُفتح من البيت.",
-      exampleEn: "A lesson opens from home.",
-    },
-    {
-      termAr: "الدفع بلا نقد",
-      termEn: "Cashless payment",
-      bodyAr: "الدفع بلا نقد نظام يدفع فيه المستخدم بمال إلكتروني أو بطاقة أو رمز استجابة سريعة من غير كاش.",
-      bodyEn: "Cashless payment uses electronic money, cards, or QR codes, without cash.",
-      exampleAr: "دفع الحساب بالبطاقة أو برمز على الموبايل.",
-      exampleEn: "Pay the bill with a card or a phone QR code.",
+        "1) SNS: services that let users connect, post, and share information. Highly effective at spreading information rapidly.\n2) E-commerce (EC): buying and selling goods and services through the Internet, such as online shops. It is not paying cash in a physical store.\n3) Remote work: the job is done from home or another place using the Internet.\n4) Online learning: classes and study materials delivered over the Internet.\n5) Cashless payment: electronic money, cards, or QR codes, without cash.",
+      exampleAr: "طلب من متجر يصل للبيت، موظف يسلّم التقرير من البيت، حصة تُفتح من البيت، ودفع بالبطاقة أو برمز.",
+      exampleEn: "An online order arrives at home, a report is sent from home, a lesson opens from home, and a bill is paid by card or QR code.",
     },
     {
       termAr: "القيادة الذاتية",
@@ -1137,6 +1103,27 @@ const EXPLAIN_BUNDLES: { titleAr: string; titleEn: string; termEns: string[] }[]
     termEns: ["SNS", "E-commerce", "Remote work", "Online learning", "Cashless payment"],
   },
 ];
+
+const SOCIAL_TERMS_EN = new Set(["SNS", "E-commerce", "Remote work", "Online learning", "Cashless payment"]);
+const SOCIAL_TERMS_AR = new Set([
+  "شبكات التواصل الاجتماعي",
+  "التجارة الإلكترونية",
+  "العمل عن بُعد",
+  "التعلّم عبر الإنترنت",
+  "الدفع بلا نقد",
+]);
+
+export function explainCoversTerm(items: LessonExplain[], termEn: string, termAr: string): boolean {
+  if (items.some((item) => item.termEn === termEn || item.termAr === termAr)) return true;
+  if (SOCIAL_TERMS_EN.has(termEn) || SOCIAL_TERMS_AR.has(termAr)) {
+    return items.some(
+      (item) =>
+        item.termEn === "Social changes resulting from information technology" ||
+        item.termAr === "التحولات الاجتماعية الناتجة عن تكنولوجيا المعلومات",
+    );
+  }
+  return false;
+}
 
 export function bundleExplains(items: LessonExplain[]): ExplainBundle[] {
   const lookup = new Map(EXPLAIN_BUNDLES.flatMap((bundle) => bundle.termEns.map((term) => [term, bundle])));

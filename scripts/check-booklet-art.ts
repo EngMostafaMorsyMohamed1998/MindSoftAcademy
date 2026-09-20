@@ -1,6 +1,6 @@
 import { lessonArtMap, termArt } from "../lib/booklet-lang";
 import { bookletLessonPack, bookletLessonScenes } from "../lib/booklet-pack";
-import { explainsForLesson } from "../lib/lesson-explains";
+import { explainCoversTerm, explainsForLesson } from "../lib/lesson-explains";
 import { LESSON_NOTES } from "../lib/lessons";
 import { CHAPTER_1_FACTS } from "../lib/question-bank/chapter-1";
 import { expandFactsToHomework } from "../lib/question-bank/expand";
@@ -100,13 +100,15 @@ for (const note of LESSON_NOTES) {
   });
   const explains = explainsForLesson(note.id);
   for (const term of note.termsAr) {
-    if (!explains.some((item) => item.termAr === term.term)) {
+    const en = note.termsEn[note.termsAr.indexOf(term)]?.term ?? "";
+    if (!explainCoversTerm(explains, en, term.term)) {
       console.error(`${note.id}: missing explanation for ${term.term}`);
       failed += 1;
     }
   }
   for (const term of note.termsEn) {
-    if (!explains.some((item) => item.termEn === term.term)) {
+    const ar = note.termsAr[note.termsEn.indexOf(term)]?.term ?? "";
+    if (!explainCoversTerm(explains, term.term, ar)) {
       console.error(`${note.id}: missing explanation for ${term.term}`);
       failed += 1;
     }

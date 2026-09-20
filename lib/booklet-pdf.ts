@@ -114,20 +114,23 @@ function textWidth(ctx: SKRSContext2D, text: string): number {
 function wrap(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
   applyFace(ctx, text);
   ctx.direction = hasArabic(text) ? "rtl" : "ltr";
-  const words = text.replace(/\s+/g, " ").trim().split(" ");
-  if (!words[0]) return [""];
+  const paragraphs = text.replace(/\r/g, "").split("\n").map((row) => row.replace(/[^\S\n]+/g, " ").trim()).filter(Boolean);
+  if (!paragraphs.length) return [""];
   const lines: string[] = [];
-  let current = words[0]!;
-  for (const word of words.slice(1)) {
-    const next = `${current} ${word}`;
-    if (textWidth(ctx, next) <= maxWidth) current = next;
-    else {
-      lines.push(current);
-      current = word;
+  for (const paragraph of paragraphs) {
+    const words = paragraph.split(" ");
+    let current = words[0] ?? "";
+    for (const word of words.slice(1)) {
+      const next = `${current} ${word}`;
+      if (textWidth(ctx, next) <= maxWidth) current = next;
+      else {
+        lines.push(current);
+        current = word;
+      }
     }
+    if (current) lines.push(current);
   }
-  lines.push(current);
-  return lines;
+  return lines.length ? lines : [""];
 }
 
 function paintText(

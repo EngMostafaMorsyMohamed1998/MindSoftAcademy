@@ -197,7 +197,7 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
                           compact
                         />
                       </div>
-                      <p className="min-w-0 text-base font-semibold leading-8 text-[#111827]">
+                      <p className="min-w-0 whitespace-pre-line text-base font-semibold leading-8 text-[#111827]">
                         {bookletSafe(locale, ar ? lead.bodyAr : lead.bodyEn)}
                       </p>
                     </div>

@@ -73,16 +73,12 @@ const PAGE_1_1: TextbookPage = {
   headersAr: ["الفترة الزمنية", "التقنيات والأحداث الرئيسية", "التأثير على المجتمع"],
   headersEn: ["Period", "Key technologies and events", "Effect on society"],
   pointsAr: [
-    "شبكات التواصل: تربط المستخدمين لنشر المعلومات بسرعة.",
-    "التجارة الإلكترونية: بيع وشراء عبر الإنترنت، لا شراء نقدي من محل فقط.",
-    "العمل عن بُعد والتعلّم عبر الإنترنت والدفع بلا نقد.",
+    "خمس تحولات اجتماعية: شبكات التواصل، التجارة الإلكترونية، العمل عن بُعد، التعلّم عبر الإنترنت، والدفع بلا نقد.",
     "القيادة الذاتية تحتاج حوسبة طرفية لأن تأخير جزء من الثانية خطر.",
     "قانون مور: عدد الترانزستورات يتضاعف تقريبًا كل سنتين، واقترب من حد فيزيائي؛ لذلك تظهر المعالجة المتوازية والبت الكمومي.",
   ],
   pointsEn: [
-    "SNS: services that let users connect and share information rapidly.",
-    "E-commerce: buying and selling through the Internet, not cash at a physical shop.",
-    "Remote work, online learning, and cashless payment (cards, QR codes).",
+    "Five social changes: SNS, e-commerce, remote work, online learning, and cashless payment.",
     "Autonomous driving needs edge computing because a 0.1 second delay can cause an accident.",
     "Moore's Law: transistors roughly double every two years and are near a physical limit, so parallel cores and qubits appear.",
   ],
