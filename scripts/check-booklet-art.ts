@@ -7,6 +7,7 @@ import { expandFactsToHomework } from "../lib/question-bank/expand";
 
 const EXPECTED: Record<string, string> = {
   AI: "ai",
+  "Artificial Intelligence (AI)": "ai",
   "الذكاء الاصطناعي": "ai",
   "Machine learning": "ml",
   "التعلم الآلي": "ml",

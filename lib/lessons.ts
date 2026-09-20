@@ -46,13 +46,13 @@ export const LESSON_NOTES: LessonNote[] = [
     id: "1-2",
     chapterId: "1",
     termsAr: [
-      { term: "الذكاء الاصطناعي", meaning: "تقنيات تحاكي سلوكًا ذكيًا: تعلّم، استدلال، حكم." },
+      { term: "الذكاء الاصطناعي", meaning: "التقنية التي تمكّن الحواسيب من أداء مهام تحتاج عادةً إلى ذكاء بشري." },
       { term: "التعلم الآلي", meaning: "يتعلم أنماطًا من البيانات للتنبؤ والحكم." },
       { term: "التعلم العميق", meaning: "تعلم آلي متقدم يستخدم شبكات عصبية وبيانات ضخمة." },
       { term: "الذكاء التوليدي", meaning: "ينتج نصًا أو صورة أو صوتًا جديدًا اعتمادًا على التعلم العميق." },
     ],
     termsEn: [
-      { term: "AI", meaning: "Technologies that reproduce intelligent human behaviour on a computer." },
+      { term: "Artificial Intelligence (AI)", meaning: "The technology that enables computers to perform tasks that normally require human intelligence." },
       { term: "Machine learning", meaning: "Learns patterns from data to predict and judge." },
       { term: "Deep learning", meaning: "Advanced ML that uses neural networks and large-scale data." },
       { term: "Generative AI", meaning: "Creates new text, images, or audio using deep learning." },

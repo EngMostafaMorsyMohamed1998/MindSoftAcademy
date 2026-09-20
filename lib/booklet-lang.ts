@@ -118,7 +118,7 @@ export function termArt(term: string, meaning = ""): string {
   if (onTerm(/ضيق|narrow/)) return "narrow";
   if (onTerm(/توصية|recommend/)) return "rec";
   if (onTerm(/صيانة|maintenance/)) return "maintain";
-  if (onTerm(/^ai$|الذكاء الاصطناعي|ذكاء اصطناعي/)) return "ai";
+  if (onTerm(/^ai$|artificial intelligence|الذكاء الاصطناعي|ذكاء اصطناعي/)) return "ai";
   if (onTerm(/انتحال|impersonat|منتحل|مدعي/)) return "mask";
   if (onTerm(/شهادة رقمية|شهادة رقم|digital certificate|\bcertificate\b/)) return "cert";
   if (onTerm(/غير متماثل|asymmetric|مفتاح عام|مفتاح خاص|public key|private key/)) return "asymmetric";

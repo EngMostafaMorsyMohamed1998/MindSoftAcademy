@@ -63,11 +63,11 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
   "1-2": [
     {
       termAr: "الذكاء الاصطناعي",
-      termEn: "AI",
+      termEn: "Artificial Intelligence (AI)",
       bodyAr:
-        "الذكاء الاصطناعي مجال يصنع أنظمة تحاكي سلوكًا نعتبره ذكيًا عند الإنسان: يتعلم من أمثلة، يستدل، ويحكم. مش شرط يكون واعي أو يفهم زي المدرس. هو برامج وأجهزة تتدرّب أو تُضبط عشان تخرج قرارًا أو توقعًا. الذكاء الاصطناعي هو المظلة الكبيرة اللي تحتها التعلم الآلي والتعلم العميق والذكاء التوليدي.",
+        "الذكاء الاصطناعي هو التقنية التي تمكّن الحواسيب من أداء مهام تحتاج عادةً إلى ذكاء بشري. يتعلم من أمثلة، يستدل، ويحكم. مش شرط يكون واعي أو يفهم زي المدرس. هو برامج وأجهزة تتدرّب أو تُضبط عشان تخرج قرارًا أو توقعًا. الذكاء الاصطناعي هو المظلة الكبيرة اللي تحتها التعلم الآلي والتعلم العميق والذكاء التوليدي.",
       bodyEn:
-        "Artificial intelligence is the field that builds systems that copy behaviour we call intelligent in humans: they learn from examples, reason, and judge. They do not have to be conscious or understand like a teacher. They are programs trained or tuned to output a decision or a prediction. AI is the wide umbrella; machine learning, deep learning, and generative AI sit under it.",
+        "Artificial Intelligence (AI) is the technology that enables computers to perform tasks that normally require human intelligence. It can learn from examples, reason, and judge. It does not have to be conscious or understand like a teacher. These are programs trained or tuned to output a decision or a prediction. AI is the wide umbrella; machine learning, deep learning, and generative AI sit under it.",
       exampleAr: "برنامج يفرّق صورة قطة عن كلب بعد ما شاف آلاف الصور.",
       exampleEn: "A program that tells a cat from a dog after seeing thousands of pictures.",
     },
