@@ -29,13 +29,13 @@ export const LESSON_NOTES: LessonNote[] = [
     ],
     bodyAr: [
       "مرت تقنية المعلومات بمراحل: حواسيب الغرف (الأربعينيات–الستينيات) ثم الحاسوب الشخصي ثم الإنترنت ثم الهواتف ثم السحابة والذكاء الاصطناعي كخدمة.",
-      "قانون مور ملاحظة من 1965: عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين. التعريف عن كثافة الشريحة لا عن حجم الصندوق. اليوم اقترب التصغير من حد فيزيائي فتظهر المعالجة المتوازية والحوسبة الكمومية.",
+      "قانون مور ملاحظة من 1965: عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين. اليوم اقترب التصغير من حد فيزيائي فتظهر المعالجة المتوازية والحوسبة الكمومية.",
       "الحوسبة السحابية تقدّم التخزين والبرامج كخدمة عبر الإنترنت. الحوسبة الطرفية تعالج البيانات على الجهاز عندما يكون التأخير خطرًا، كما في القيادة الذاتية.",
       "الواقع المعزز يضيف طبقة رقمية على العالم الحقيقي. الواقع الافتراضي يستبدله بعالم محاكى. كل مرحلة من التقنية غيّرت المجتمع: البريد، العمل عن بُعد، التعلّم عبر الإنترنت، والدفع بلا نقد.",
     ],
     bodyEn: [
       "IT moved in stages: room-sized computers, personal computers, the Internet, smartphones, then cloud and AI as a service.",
-      "Moore's Law is a 1965 observation: transistors on a chip roughly double every two years. The definition is chip density, not box size. Shrinking is near a physical limit, so parallel cores and quantum computing appear.",
+      "Moore's Law is a 1965 observation: transistors on a chip roughly double every two years. Shrinking is near a physical limit, so parallel cores and quantum computing appear.",
       "Cloud computing delivers storage and software as a service over the Internet. Edge computing processes data on the device when delay is dangerous, as in self-driving cars.",
       "AR overlays the real world; VR replaces it with a simulated space. Each IT stage changed society: email, remote work, online learning, and cashless payment.",
     ],

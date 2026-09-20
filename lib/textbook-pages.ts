@@ -73,13 +73,13 @@ const PAGE_1_1: TextbookPage = {
   headersAr: ["الفترة الزمنية", "التقنيات والأحداث الرئيسية", "التأثير على المجتمع"],
   headersEn: ["Period", "Key technologies and events", "Effect on society"],
   pointsAr: [
-    "قانون مور: عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين — التعريف عن الكثافة مش عن حجم الصندوق.",
+    "قانون مور: عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين.",
     "الحوسبة السحابية تقدّم التخزين والبرامج كخدمة عبر الإنترنت.",
     "الحوسبة الطرفية تعالج البيانات على الجهاز لما التأخير خطر.",
     "الواقع المعزز يضيف طبقة رقمية على الواقع؛ الافتراضي يستبدله بعالم محاكى.",
   ],
   pointsEn: [
-    "Moore's Law: transistors on a chip roughly double every two years — density, not box size.",
+    "Moore's Law: transistors on a chip roughly double every two years.",
     "Cloud computing delivers storage and software as a service over the Internet.",
     "Edge computing processes data on the device when delay is dangerous.",
     "AR overlays the real world; VR replaces it with a simulated space.",

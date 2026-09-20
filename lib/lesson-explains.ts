@@ -13,11 +13,11 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "قانون مور",
       termEn: "Moore's Law",
       bodyAr:
-        "قانون مور ملاحظة قالها جوردون مور سنة 1965، مش قانون فيزيائي ولا قرار وزاري. يقول إن عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين. الترانزستور مفتاح إلكتروني صغير؛ كل ما زاد عدده على نفس المساحة، الجهاز يبقى أسرع وأقدر على الحساب. التعريف عن الكثافة على الشريحة، مش عن حجم الصندوق. نتيجة التضاعف عبر العقود: أجهزة أصغر وأرخص ووصلت من غرفة كاملة إلى جيب الطالب. اليوم التصغير اقترب من حد فيزيائي، عشان كده ظهرت أفكار زي المعالجة المتوازية (أنوية كتير تشتغل مع بعض) والحوسبة الكمومية.",
+        "قانون مور ملاحظة قالها جوردون مور سنة 1965، مش قانون فيزيائي ولا قرار وزاري. يقول إن عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين. الترانزستور مفتاح إلكتروني صغير؛ كل ما زاد عدده على نفس المساحة، الجهاز يبقى أسرع وأقدر على الحساب. نتيجة التضاعف عبر العقود: أجهزة أصغر وأرخص ووصلت من غرفة كاملة إلى جيب الطالب. اليوم التصغير اقترب من حد فيزيائي، عشان كده ظهرت أفكار زي المعالجة المتوازية (أنوية كتير تشتغل مع بعض) والحوسبة الكمومية.",
       bodyEn:
-        "Moore's Law is an observation Gordon Moore made in 1965 — not a physics law and not a ministry order. It says the number of transistors on a chip roughly doubles about every two years. A transistor is a tiny electronic switch; more of them on the same area make a machine faster. The definition is chip density, not the size of the box. Across decades that doubling made computers smaller and cheaper, from a whole room to a student's pocket. Shrinking is now near a physical limit, so new paths appear: parallel cores and quantum computing.",
-      exampleAr: "معمل المدرسة اشترى لابتوب جديد أصغر من جهاز الستينيات. السبب مش إن الصندوق اتصغّر وخلاص، السبب إن الشريحة فيها ترانزستورات أكثر بكتير.",
-      exampleEn: "The school lab bought a laptop smaller than a 1960s machine. The reason is not the box alone; the chip now holds far more transistors.",
+        "Moore's Law is an observation Gordon Moore made in 1965 — not a physics law and not a ministry order. It says the number of transistors on a chip roughly doubles about every two years. A transistor is a tiny electronic switch; more of them on the same area make a machine faster. Across decades that doubling made computers smaller and cheaper, from a whole room to a student's pocket. Shrinking is now near a physical limit, so new paths appear: parallel cores and quantum computing.",
+      exampleAr: "معمل المدرسة اشترى لابتوب جديد أصغر من جهاز الستينيات لأن الشريحة فيها ترانزستورات أكثر بكتير.",
+      exampleEn: "The school lab bought a laptop smaller than a 1960s machine because the chip now holds far more transistors.",
     },
     {
       termAr: "الحوسبة السحابية",
