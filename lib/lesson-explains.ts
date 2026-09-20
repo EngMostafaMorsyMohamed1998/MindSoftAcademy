@@ -10,6 +10,56 @@ export type LessonExplain = {
 const EXPLAINS: Record<string, LessonExplain[]> = {
   "1-1": [
     {
+      termAr: "مراحل تطور تقنية المعلومات",
+      termEn: "Stages of IT",
+      bodyAr:
+        "تقنية المعلومات اتطورت على مراحل مش قفزة واحدة: حواسيب الغرف بالأنابيب المفرغة (الأربعينيات–الستينيات) للحساب العسكري والعلمي، بعدين الحاسوب الشخصي في الثمانينيات دخل المكتب والفصل، بعدين الإنترنت والويب في التسعينيات فتحوا البريد والبحث العالمي، بعدين الهواتف الذكية خلّت الشبكة في الجيب، وبعدين السحابة والذكاء الاصطناعي كخدمة. كل مرحلة غيّرت المجتمع: شغل عن بُعد، تعلّم أونلاين، تجارة ودفع من غير كاش.",
+      bodyEn:
+        "IT grew in stages, not one jump: room-sized vacuum-tube machines for military and scientific work, then the personal computer in offices and classrooms, then the Internet and the web for email and global search, then smartphones that put the network in a pocket, then cloud and AI as a service. Each stage changed society: remote work, online learning, e-commerce, and cashless payment.",
+      exampleAr: "جدك كان يحجز تذكرة من مكتب. أنت بتحجز من الموبايل لأن المرحلة اتغيّرت.",
+      exampleEn: "A grandparent booked a ticket at a desk. You book on a phone because the stage changed.",
+    },
+    {
+      termAr: "الحاسوب الإلكتروني",
+      termEn: "Electronic computer",
+      bodyAr:
+        "الحاسوب الإلكتروني ظهر في الأربعينيات–الخمسينيات باستخدام الأنابيب المفرغة. أشهر مثال إينياك. كان يملأ غرفة ويُستخدم أساسًا للحساب العسكري والعلمي، قبل ما يوصل البيوت أو الفصول.",
+      bodyEn:
+        "The electronic computer appeared in the 1940s–1950s using vacuum tubes. ENIAC is the well-known example. It filled a room and was used mainly for military and scientific calculation, long before homes or classrooms had one.",
+      exampleAr: "القوات استخدمت إينياك لحسابات معقدة قبل انتشار الحاسوب في العمل اليومي.",
+      exampleEn: "Armies used ENIAC for hard calculations before computers entered daily work.",
+    },
+    {
+      termAr: "الحاسوب الشخصي",
+      termEn: "Personal computer",
+      bodyAr:
+        "الحاسوب الشخصي انتشر في الثمانينيات. بقى على مكتب الفرد والمؤسسة، ودخل العمل والتعليم بدل الملفات الورقية والطرق التقليدية.",
+      bodyEn:
+        "The personal computer spread in the 1980s. It sat on a desk at home and at work, and it entered offices and classrooms in place of paper files and older methods.",
+      exampleAr: "مكتب المدرسة حط جهازًا على المكتب بدل الدفاتر فقط.",
+      exampleEn: "A school office put a PC on the desk instead of relying on paper files alone.",
+    },
+    {
+      termAr: "الإنترنت والويب",
+      termEn: "Internet and the web",
+      bodyAr:
+        "في التسعينيات أُتيح الإنترنت للاستخدام التجاري وظهر الويب. بقى الوصول للمعلومات عالميًا، وانتشر البريد الإلكتروني بين الدول أسرع من الورق والفاكس.",
+      bodyEn:
+        "In the 1990s the Internet opened to business and the web appeared. Access to information became worldwide, and email moved knowledge across countries faster than paper or fax.",
+      exampleAr: "الطالب يبحث ويرسل رسالة إلكترونية بدل ما يستنى خطابًا.",
+      exampleEn: "A student searches and sends email instead of waiting for a letter.",
+    },
+    {
+      termAr: "الهواتف الذكية",
+      termEn: "Smartphones",
+      bodyAr:
+        "الهواتف الذكية ظهرت في العقد الأول من الألفية، ومنها آيفون وغيره. خلّت الإنترنت في الجيب وغيّرت طريقة الحصول على الأخبار والخدمات اليومية.",
+      bodyEn:
+        "Smartphones appeared in the 2000s, including the iPhone and others. They put the Internet in a pocket and changed how daily news and services arrived.",
+      exampleAr: "تصفح الإنترنت والتطبيقات من الموبايل في أي مكان.",
+      exampleEn: "Browse the web and apps from a phone anywhere.",
+    },
+    {
       termAr: "قانون مور",
       termEn: "Moore's Law",
       bodyAr:
@@ -48,16 +98,6 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
         "Augmented reality (AR) adds a digital layer on the real world: the camera still sees the street, and the app draws an arrow, a name, or a fact on top. Virtual reality (VR) replaces the real world with a simulated space: a headset covers the eyes and takes you elsewhere. A common mistake is treating them as the same thing. AR helps navigation and on-the-spot learning. VR helps training when the real experience is dangerous or expensive.",
       exampleAr: "تطبيق يوري أسماء المعالم وأنت ماشي في الشارع. نظارة تدريب على معمل كيمياء من غير مواد خطرة.",
       exampleEn: "An app names landmarks while you walk. A headset trains a chemistry lab without hazardous chemicals.",
-    },
-    {
-      termAr: "مراحل تطور تقنية المعلومات",
-      termEn: "Stages of IT",
-      bodyAr:
-        "تقنية المعلومات اتطورت على مراحل مش قفزة واحدة: حواسيب الغرف بالأنابيب المفرغة (الأربعينيات–الستينيات) للحساب العسكري والعلمي، بعدين الحاسوب الشخصي في الثمانينيات دخل المكتب والفصل، بعدين الإنترنت والويب في التسعينيات فتحوا البريد والبحث العالمي، بعدين الهواتف الذكية خلّت الشبكة في الجيب، وبعدين السحابة والذكاء الاصطناعي كخدمة. كل مرحلة غيّرت المجتمع: شغل عن بُعد، تعلّم أونلاين، تجارة ودفع من غير كاش.",
-      bodyEn:
-        "IT grew in stages, not one jump: room-sized vacuum-tube machines for military and scientific work, then the personal computer in offices and classrooms, then the Internet and the web for email and global search, then smartphones that put the network in a pocket, then cloud and AI as a service. Each stage changed society: remote work, online learning, e-commerce, and cashless payment.",
-      exampleAr: "جدك كان يحجز تذكرة من مكتب. أنت بتحجز من الموبايل لأن المرحلة اتغيّرت.",
-      exampleEn: "A grandparent booked a ticket at a desk. You book on a phone because the stage changed.",
     },
   ],
   "1-2": [

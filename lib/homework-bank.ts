@@ -2,6 +2,7 @@ import { LESSON_NOTES } from "@/lib/lessons";
 import type { ChapterId } from "@/lib/curriculum";
 import { explainsForLesson } from "@/lib/lesson-explains";
 import { shuffled } from "@/lib/shuffle";
+import { textbookPageFor } from "@/lib/textbook-pages";
 
 export type HomeworkKind = "mcq" | "tf";
 
@@ -122,6 +123,37 @@ function buildBank(): HomeworkQuestion[] {
       optionsEn: ["True", "False"],
       correctIndex: 0,
     });
+
+    const page = textbookPageFor(note.id);
+    if (page && (page.headersEn[0] === "Period" || page.headersAr[0] === "الفترة الزمنية") && page.rows.length >= 4) {
+      page.rows.forEach((row, index) => {
+        const others = page.rows.filter((_, other) => other !== index);
+        if (others.length < 3) return;
+        const pick = others.slice(0, 3);
+        pushQuestion(bank, {
+          id: `${note.id}-mcq-${100 + index}`,
+          lessonId: note.id,
+          chapterId: note.chapterId,
+          kind: "mcq",
+          promptAr: `في أي فترة حدث هذا: ${row.cellsAr[1]}؟`,
+          promptEn: `In which period did this happen: ${row.cellsEn[1]}?`,
+          optionsAr: [row.cellsAr[0] ?? "", ...pick.map((item) => item.cellsAr[0] ?? "")],
+          optionsEn: [row.cellsEn[0] ?? "", ...pick.map((item) => item.cellsEn[0] ?? "")],
+          correctIndex: 0,
+        });
+        pushQuestion(bank, {
+          id: `${note.id}-mcq-${200 + index}`,
+          lessonId: note.id,
+          chapterId: note.chapterId,
+          kind: "mcq",
+          promptAr: `ما أثر هذه المرحلة على المجتمع: ${row.cellsAr[1]}؟`,
+          promptEn: `What was the social effect of this stage: ${row.cellsEn[1]}?`,
+          optionsAr: [row.cellsAr[2] ?? "", ...pick.map((item) => item.cellsAr[2] ?? "")],
+          optionsEn: [row.cellsEn[2] ?? "", ...pick.map((item) => item.cellsEn[2] ?? "")],
+          correctIndex: 0,
+        });
+      });
+    }
 
     note.bodyAr.forEach((line, index) => {
       const en = note.bodyEn[index] ?? line;
