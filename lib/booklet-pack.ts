@@ -262,8 +262,8 @@ export function bookletLessonEssays(lessonId: string): BookletEssay[] {
   if (!explains.length) return [];
   return explains.slice(0, BOOKLET_LESSON_ESSAYS).map((item, index) => ({
     id: `${lessonId}-essay-${index}`,
-    promptAr: `اشرح مصطلح «${item.termAr}» كما ورد في المنهج، واذكر أهميته.`,
-    promptEn: `Explain “${item.termEn}” as it appears in the syllabus, and say why it matters.`,
+    promptAr: `اشرح مصطلح «${item.termAr}».`,
+    promptEn: `Explain “${item.termEn}”.`,
     guideAr: item.bodyAr,
     guideEn: item.bodyEn,
   }));
@@ -277,8 +277,8 @@ function syllabusEssaysForChapter(chapterId: ChapterId, offset: number, take: nu
   const rows = chapterLessonIds(chapterId).flatMap((lessonId) =>
     explainsForLesson(lessonId).map((item, index) => ({
       id: `${lessonId}-ch-essay-${index}`,
-      promptAr: `اشرح مصطلح «${item.termAr}» كما ورد في المنهج، واذكر أهميته.`,
-      promptEn: `Explain “${item.termEn}” as it appears in the syllabus, and say why it matters.`,
+      promptAr: `اشرح مصطلح «${item.termAr}».`,
+      promptEn: `Explain “${item.termEn}”.`,
       guideAr: item.bodyAr,
       guideEn: item.bodyEn,
     })),

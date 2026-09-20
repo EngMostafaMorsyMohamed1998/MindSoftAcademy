@@ -5,6 +5,8 @@ import { getLocale } from "@/lib/locale";
 import { CHAPTERS } from "@/lib/curriculum";
 import { FAIZ_UNITS } from "@/lib/faiz";
 
+export const dynamic = "force-dynamic";
+
 export default async function BookletPage() {
   const locale = await getLocale();
 
