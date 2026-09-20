@@ -118,6 +118,13 @@ export function termArt(term: string, meaning = ""): string {
   if (onTerm(/ضيق|narrow/)) return "narrow";
   if (onTerm(/توصية|recommend/)) return "rec";
   if (onTerm(/صيانة|maintenance/)) return "maintain";
+  if (onTerm(/تواصل اجتماعي|\bsns\b|social network/)) return "rec";
+  if (onTerm(/تجارة إلكترونية|e-commerce|\bec\b/)) return "cloud";
+  if (onTerm(/عمل عن|remote work/)) return "life";
+  if (onTerm(/تعلّم عبر|online learning/)) return "life";
+  if (onTerm(/دفع بلا|cashless/)) return "lock";
+  if (onTerm(/قيادة ذات|autonomous/)) return "edge";
+  if (onTerm(/بت كمومي|كيوبت|qubit|classical bit/)) return "lab";
   if (onTerm(/إينياك|eniac|أنابيب|vacuum|حاسوب إلكتروني|electronic computer/)) return "lab";
   if (onTerm(/حاسوب شخصي|personal computer/)) return "lab";
   if (onTerm(/هواتف ذكية|smartphone|آيفون|iphone/)) return "arvr";

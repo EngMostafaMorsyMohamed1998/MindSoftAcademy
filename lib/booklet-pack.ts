@@ -3,6 +3,7 @@ import { CHAPTERS, getChapter, getLesson, type Chapter, type ChapterId } from "@
 import { FAIZ_UNITS } from "@/lib/faiz";
 import { FAIZ_ESSAYS, FAIZ_OBJECTIVES } from "@/lib/faiz-exam";
 import { FAIZ_NOTES, type FaizUnitNote } from "@/lib/faiz-notes";
+import { bookDrillsForLesson, isBookDrill } from "@/lib/book-drills";
 import { questionsForChapter, questionsForLesson, withShuffledOptions, type HomeworkQuestion } from "@/lib/homework-bank";
 import { explainsForLesson } from "@/lib/lesson-explains";
 import { LESSON_NOTES } from "@/lib/lessons";
@@ -129,7 +130,19 @@ function mixMcq(row: BookletMcq): BookletMcq {
   };
 }
 
+function asFixedMcq(question: HomeworkQuestion): BookletMcq {
+  return {
+    id: question.id,
+    promptAr: question.promptAr,
+    promptEn: question.promptEn,
+    optionsAr: [...question.optionsAr],
+    optionsEn: [...question.optionsEn],
+    correctIndex: question.correctIndex,
+  };
+}
+
 function asMcq(question: HomeworkQuestion): BookletMcq {
+  if (isBookDrill(question.id)) return asFixedMcq(question);
   const next = withShuffledOptions(question, 811);
   return mixMcq({
     id: next.id,
@@ -207,32 +220,41 @@ function parkAnswer(row: BookletMcq, dest: number): BookletMcq {
 }
 
 function syllabusMcq(row: HomeworkQuestion): boolean {
-  return usableMcq(row) && /[-]mcq-\d+$/.test(row.id);
+  return usableMcq(row) && (/[-]mcq-\d+$/.test(row.id) || isBookDrill(row.id));
 }
 
 export function bookletLessonPractice(lessonId: string): BookletMcq[] {
+  const official = bookDrillsForLesson(lessonId).filter(usableMcq).map(asFixedMcq);
+  const used = new Set(official.map((row) => row.id));
   const chapterSeed = Number(lessonId.split("-")[0] ?? "1") * 31;
-  return shuffled(questionsForLesson(lessonId).filter(syllabusMcq), 2027 + chapterSeed + lessonId.length)
-    .slice(0, BOOKLET_LESSON_DRILLS)
+  const extra = shuffled(
+    questionsForLesson(lessonId).filter((row) => syllabusMcq(row) && !used.has(row.id)),
+    2027 + chapterSeed + lessonId.length,
+  )
+    .slice(0, Math.max(0, BOOKLET_LESSON_DRILLS - official.length))
     .map((row, index) => parkAnswer(asMcq(row), index % 4));
+  return [...official, ...extra];
 }
 
 function syllabusTf(row: HomeworkQuestion): boolean {
   return (
     row.kind === "tf" &&
     !row.id.includes("-body-tf-") &&
-    (row.id.includes("-tf-") || row.id.includes("-take-tf") || row.id.includes("-ex-tf-"))
+    (isBookDrill(row.id) || row.id.includes("-tf-") || row.id.includes("-take-tf") || row.id.includes("-ex-tf-"))
   );
 }
 
 export function bookletLessonTf(lessonId: string): BookletMcq[] {
+  const official = bookDrillsForLesson(lessonId).filter((row) => row.kind === "tf").map(asFixedMcq);
+  const used = new Set(official.map((row) => row.id));
   const chapterSeed = Number(lessonId.split("-")[0] ?? "1") * 31;
-  return shuffled(
-    questionsForLesson(lessonId).filter(syllabusTf),
+  const extra = shuffled(
+    questionsForLesson(lessonId).filter((row) => syllabusTf(row) && !used.has(row.id)),
     3031 + chapterSeed + lessonId.length,
   )
-    .slice(0, BOOKLET_LESSON_TF)
+    .slice(0, Math.max(0, BOOKLET_LESSON_TF - official.length))
     .map(asMcq);
+  return [...official, ...extra];
 }
 
 export function bookletLessonEssays(lessonId: string): BookletEssay[] {

@@ -99,6 +99,70 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       exampleAr: "تطبيق يوري أسماء المعالم وأنت ماشي في الشارع. نظارة تدريب على معمل كيمياء من غير مواد خطرة.",
       exampleEn: "An app names landmarks while you walk. A headset trains a chemistry lab without hazardous chemicals.",
     },
+    {
+      termAr: "شبكات التواصل الاجتماعي",
+      termEn: "SNS",
+      bodyAr:
+        "شبكات التواصل الاجتماعي خدمات تربط المستخدمين لينشروا المعلومات ويشاركوها. فعّالة جدًا في نشر الخبر بسرعة.",
+      bodyEn:
+        "SNS (Social Networking Service) lets users connect, post, and share information. It is highly effective at spreading information rapidly.",
+      exampleAr: "خبر ينتشر في دقائق عبر المنصة.",
+      exampleEn: "A post can spread across a platform in minutes.",
+    },
+    {
+      termAr: "التجارة الإلكترونية",
+      termEn: "E-commerce",
+      bodyAr:
+        "التجارة الإلكترونية بيع وشراء السلع والخدمات عبر الإنترنت، مثل التسوق الإلكتروني. ليست الشراء النقدي من محل فعلي.",
+      bodyEn:
+        "E-commerce (EC) is buying and selling goods and services through the Internet, such as online shops. It is not paying cash in a physical store.",
+      exampleAr: "طلب من متجر على الإنترنت يصل للبيت.",
+      exampleEn: "An order from an online shop arrives at home.",
+    },
+    {
+      termAr: "العمل عن بُعد",
+      termEn: "Remote work",
+      bodyAr: "العمل عن بُعد أسلوب يؤدي فيه الموظف العمل من البيت أو مكان بعيد باستخدام الإنترنت.",
+      bodyEn: "Remote work is a working style in which the job is done from home or another place using the Internet.",
+      exampleAr: "موظف يسلّم التقرير من البيت.",
+      exampleEn: "A staff member sends the report from home.",
+    },
+    {
+      termAr: "التعلّم عبر الإنترنت",
+      termEn: "Online learning",
+      bodyAr: "التعلّم عبر الإنترنت حصص ومواد دراسية تصل عبر الإنترنت بدل الحضور فقط في الفصل.",
+      bodyEn: "Online learning delivers classes and study materials over the Internet.",
+      exampleAr: "حصة تُفتح من البيت.",
+      exampleEn: "A lesson opens from home.",
+    },
+    {
+      termAr: "الدفع بلا نقد",
+      termEn: "Cashless payment",
+      bodyAr: "الدفع بلا نقد نظام يدفع فيه المستخدم بمال إلكتروني أو بطاقة أو رمز استجابة سريعة من غير كاش.",
+      bodyEn: "Cashless payment uses electronic money, cards, or QR codes, without cash.",
+      exampleAr: "دفع الحساب بالبطاقة أو برمز على الموبايل.",
+      exampleEn: "Pay the bill with a card or a phone QR code.",
+    },
+    {
+      termAr: "القيادة الذاتية",
+      termEn: "Autonomous driving",
+      bodyAr:
+        "القيادة الذاتية تقنية تستخدم الذكاء الاصطناعي لقيادة مركبة من غير تدخل بشري: كاميرات وحساسات تتعرف على المحيط وتقرر. تأخير 0.1 ثانية قد يسبب حادثًا، لذلك تُستخدم الحوسبة الطرفية على المركبة نفسها بدل انتظار السحابة.",
+      bodyEn:
+        "Autonomous driving uses AI to drive a vehicle without a human. Cameras and sensors read the surroundings and decide. A delay of 0.1 seconds can cause an accident, so edge computing runs on the vehicle instead of waiting for the cloud.",
+      exampleAr: "السيارة تقرر الفرامل على الجهاز نفسه.",
+      exampleEn: "The car decides to brake on the vehicle itself.",
+    },
+    {
+      termAr: "البت الكمومي",
+      termEn: "Qubit",
+      bodyAr:
+        "البت التقليدي يحمل حالة واحدة في اللحظة: 0 أو 1. البت الكمومي (الكيوبت) يستخدم التراكب فيمثل 0 و 1 معًا، فيوسّع فضاء الحالات للمعالجة المتوازية. يظهر مع اقتراب قانون مور من الحد الفيزيائي.",
+      bodyEn:
+        "A classical bit holds one state at a time: 0 or 1, never both. A qubit uses superposition and can represent 0 and 1 at once, so many qubits give a much larger state space for parallel processing. It appears as Moore's Law nears a physical limit.",
+      exampleAr: "البت: مفتاح واحد. الكيوبت: سهم على كرة يمثل الحالتين معًا.",
+      exampleEn: "A bit is one switch. A qubit is a point on a sphere that can mix both states.",
+    },
   ],
   "1-2": [
     {

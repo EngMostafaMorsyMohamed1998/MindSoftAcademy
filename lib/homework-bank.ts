@@ -1,3 +1,4 @@
+import { BOOK_DRILLS } from "@/lib/book-drills";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { ChapterId } from "@/lib/curriculum";
 import { explainsForLesson } from "@/lib/lesson-explains";
@@ -47,6 +48,7 @@ function otherTerms(
 
 function buildBank(): HomeworkQuestion[] {
   const bank: HomeworkQuestion[] = [];
+  for (const row of BOOK_DRILLS) pushQuestion(bank, row);
 
   for (const note of LESSON_NOTES) {
     const termsAr = note.termsAr;
@@ -206,7 +208,7 @@ export function questionsForChapter(chapterId: ChapterId): HomeworkQuestion[] {
 }
 
 function isCurriculumMcq(question: HomeworkQuestion): boolean {
-  return question.kind === "mcq" && /[-]mcq-\d+$/.test(question.id);
+  return question.kind === "mcq" && (/[-]mcq-\d+$/.test(question.id) || question.id.includes("-book-"));
 }
 
 export function pickLessonHomework(
@@ -216,8 +218,9 @@ export function pickLessonHomework(
   extras: HomeworkQuestion[] = [],
 ): HomeworkQuestion[] {
   const classQs = extras.filter((question) => question.lessonId === lessonId).slice(0, 2);
-  const want = Math.max(0, size - classQs.length);
-  const pool = questionsForLesson(lessonId);
+  const official = questionsForLesson(lessonId).filter((question) => question.id.includes("-book-"));
+  const want = Math.max(0, size - classQs.length - official.length);
+  const pool = questionsForLesson(lessonId).filter((question) => !question.id.includes("-book-"));
   const preferred = shuffled(pool.filter(isCurriculumMcq), seed);
   const otherMcq = shuffled(
     pool.filter((question) => question.kind === "mcq" && !preferred.includes(question)),
@@ -235,14 +238,14 @@ export function pickLessonHomework(
   if (picked.length < want) {
     picked.push(...otherMcq.slice(0, want - picked.length));
   }
-  return shuffled([...classQs, ...picked.slice(0, want)], seed + 7).slice(0, Math.min(size, classQs.length + want));
+  return [...classQs, ...official, ...shuffled(picked.slice(0, want), seed + 7)].slice(0, size);
 }
 
 export function withShuffledOptions(
   question: HomeworkQuestion,
   seed: number,
 ): HomeworkQuestion {
-  if (question.kind === "tf") return question;
+  if (question.kind === "tf" || question.id.includes("-book-")) return question;
   let mix = seed + 17;
   for (const ch of question.id) mix = (mix * 33 + ch.charCodeAt(0)) >>> 0;
   const order = shuffled(
