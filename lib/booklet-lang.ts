@@ -43,6 +43,9 @@ const AR_SWAPS: [RegExp, string][] = [
   [/\bWi-?Fi\b/gi, "واي فاي"],
   [/ENIAC/gi, "إينياك"],
   [/Al-?Faiz/gi, "الفائز"],
+  [/3D/gi, "مجسّم"],
+  [/\bAR\b/g, "واقع معزز"],
+  [/\bVR\b/g, "واقع افتراضي"],
 ];
 
 export function hasArabic(text: string): boolean {
