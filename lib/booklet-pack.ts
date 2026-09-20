@@ -193,7 +193,7 @@ function usableMcq(row: HomeworkQuestion): boolean {
 
 function chapterMcqPool(chapterId: ChapterId): BookletMcq[] {
   return shuffled(
-    questionsForChapter(chapterId).filter(usableMcq),
+    questionsForChapter(chapterId).filter(syllabusMcq),
     2027 + Number(chapterId) * 31,
   ).map(asMcq);
 }
@@ -231,10 +231,17 @@ export function bookletLessonPractice(lessonId: string): BookletMcq[] {
     .map((row, index) => parkAnswer(asMcq(row), index % 4));
 }
 
+function syllabusTf(row: HomeworkQuestion): boolean {
+  return (
+    row.kind === "tf" &&
+    (row.id.includes("-tf-") || row.id.includes("-body-tf-") || row.id.includes("-take-tf") || row.id.includes("-ex-tf-"))
+  );
+}
+
 export function bookletLessonTf(lessonId: string): BookletMcq[] {
   const chapterSeed = Number(lessonId.split("-")[0] ?? "1") * 31;
   return shuffled(
-    questionsForLesson(lessonId).filter((row) => row.kind === "tf"),
+    questionsForLesson(lessonId).filter(syllabusTf),
     3031 + chapterSeed + lessonId.length,
   )
     .slice(0, BOOKLET_LESSON_TF)

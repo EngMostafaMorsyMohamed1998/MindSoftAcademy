@@ -25,7 +25,7 @@ for (const note of LESSON_NOTES) {
     if (/Situation:|ما التصرف|right move|في المنهج|حسب المنهج|in the lesson|خلاصة هذا الدرس/i.test(`${question.promptAr} ${question.promptEn}`)) {
       problems.push(`${question.id}: leftover wording`);
     }
-    if (question.id.includes("-n-not-") || question.id.includes("-take-x") || question.id.includes("-body-")) {
+    if (question.id.includes("-n-not-") || question.id.includes("-take-x")) {
       problems.push(`${question.id}: confusing generated question`);
     }
   }

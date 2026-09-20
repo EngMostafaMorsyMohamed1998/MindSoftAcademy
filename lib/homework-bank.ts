@@ -1,4 +1,3 @@
-import { EXTRA_HOMEWORK } from "@/lib/homework-extra";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { ChapterId } from "@/lib/curriculum";
 import { explainsForLesson } from "@/lib/lesson-explains";
@@ -166,10 +165,6 @@ function buildBank(): HomeworkQuestion[] {
     });
   }
 
-  for (const extra of EXTRA_HOMEWORK) {
-    if (extra.kind === "tf" || extra.kind === "mcq") pushQuestion(bank, extra);
-  }
-
   for (const note of LESSON_NOTES) {
     const explains = explainsForLesson(note.id);
     explains.forEach((item, index) => {
@@ -206,7 +201,6 @@ function buildBank(): HomeworkQuestion[] {
 }
 
 const BANK = buildBank();
-const EXTRA_IDS = new Set(EXTRA_HOMEWORK.map((row) => row.id));
 
 export function homeworkBankSize(): number {
   return BANK.length;
@@ -223,11 +217,10 @@ export function questionsForChapter(chapterId: ChapterId): HomeworkQuestion[] {
 function isCurriculumMcq(question: HomeworkQuestion): boolean {
   return (
     question.kind === "mcq" &&
-    (EXTRA_IDS.has(question.id) ||
-      question.id.includes("-mcq-") ||
+    (question.id.includes("-mcq-") ||
       question.id.includes("-body-mcq-") ||
-      question.id.includes("-ex-mean-") ||
-      question.id.includes("-x"))
+      question.id.includes("-ex-mean-")) &&
+    !question.id.includes("-ex-term-")
   );
 }
 

@@ -60,12 +60,12 @@ export const LESSON_NOTES: LessonNote[] = [
     bodyAr: [
       "العلاقة متداخلة: ذكاء اصطناعي ثم تعلم آلي ثم تعلم عميق ثم ذكاء توليدي.",
       "فلتر الرسائل المزعجة وتوصية المنتجات تعلم آلي؛ توليد صورة من جملة ذكاء توليدي.",
-      "الهلوسة: النص يبدو صحيحًا وهو خطأ. لا تضع مخرجات النموذج في تقرير مدرسي دون مراجعة.",
+      "الهلوسة: النص يبدو صحيحًا وهو خطأ.",
     ],
     bodyEn: [
       "Nested fields: AI, then machine learning, then deep learning, then generative AI.",
       "A spam filter is machine learning; an image generated from a sentence is generative AI.",
-      "Hallucinations sound right and are wrong. Never paste model output into school work unreviewed.",
+      "Hallucination: the text sounds right and is still wrong.",
     ],
     takeawayAr: "ليست أربع تقنيات منفصلة، بل مجال واحد بدرجات تخصص.",
     takeawayEn: "Not four separate technologies — one field at different depths.",
