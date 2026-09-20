@@ -46,6 +46,12 @@ const AR_SWAPS: [RegExp, string][] = [
   [/3D/gi, "مجسّم"],
   [/\bAR\b/g, "واقع معزز"],
   [/\bVR\b/g, "واقع افتراضي"],
+  [/Machine learning/gi, "التعلم الآلي"],
+  [/Deep learning/gi, "التعلم العميق"],
+  [/Generative AI/gi, "ذكاء توليدي"],
+  [/\bSNS\b/g, "شبكات التواصل"],
+  [/E-?commerce/gi, "تجارة إلكترونية"],
+  [/Moore'?s Law/gi, "قانون مور"],
 ];
 
 export function hasArabic(text: string): boolean {

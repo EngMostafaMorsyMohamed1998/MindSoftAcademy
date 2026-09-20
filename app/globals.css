@@ -560,7 +560,10 @@ html[lang="en"] h3 {
   .textbook-ask,
   .textbook-figure,
   .textbook-takeaway,
-  .textbook-table tr {
+  .textbook-foot,
+  .textbook-table tr,
+  .concept-card,
+  .booklet-section {
     break-inside: avoid;
   }
 

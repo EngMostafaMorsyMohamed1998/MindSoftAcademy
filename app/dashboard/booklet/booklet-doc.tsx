@@ -290,7 +290,7 @@ function LessonDrills({
       {drills.length ? (
         <PrintSection title={ar ? `اختيار من متعدد — الدرس ${lessonId}` : `Multiple choice — lesson ${lessonId}`}>
           <p className="text-base font-semibold text-[#374151]">
-            {ar ? "ظلل الاختيار. الأسئلة من المنهج. الإجابات في آخر الملزمة." : "Mark a choice. Questions follow the syllabus. Answers are at the end."}
+            {ar ? "ظلل الاختيار. الأسئلة من المنهج. المفتاح أسفل الصفحة." : "Mark a choice. Questions follow the syllabus. The key is below on this page."}
           </p>
           <McqBlock locale={locale} rows={drills} />
         </PrintSection>
@@ -306,7 +306,7 @@ function LessonDrills({
       {essays.length ? (
         <PrintSection title={ar ? "أسئلة مقالي" : "Essay questions"}>
           <p className="text-base font-semibold text-[#374151]">
-            {ar ? "اشرح من المنهج. دليل الإجابة في آخر الملزمة." : "Explain from the syllabus. The guide is at the end."}
+            {ar ? "اشرح من المنهج. دليل الإجابة أسفل الصفحة." : "Explain from the syllabus. The guide is below on this page."}
           </p>
           <EssayBlock locale={locale} rows={essays} />
         </PrintSection>
