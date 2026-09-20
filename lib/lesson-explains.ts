@@ -1124,6 +1124,41 @@ export function explainsForLesson(id: string): LessonExplain[] {
   return EXPLAINS[id] ?? [];
 }
 
+export type ExplainBundle = {
+  titleAr: string;
+  titleEn: string;
+  items: LessonExplain[];
+};
+
+const EXPLAIN_BUNDLES: { titleAr: string; titleEn: string; termEns: string[] }[] = [
+  {
+    titleAr: "التحولات الاجتماعية الناتجة عن تكنولوجيا المعلومات",
+    titleEn: "Social changes resulting from information technology",
+    termEns: ["SNS", "E-commerce", "Remote work", "Online learning", "Cashless payment"],
+  },
+];
+
+export function bundleExplains(items: LessonExplain[]): ExplainBundle[] {
+  const lookup = new Map(EXPLAIN_BUNDLES.flatMap((bundle) => bundle.termEns.map((term) => [term, bundle])));
+  const used = new Set<string>();
+  const rows: ExplainBundle[] = [];
+  for (const item of items) {
+    if (used.has(item.termEn)) continue;
+    const bundle = lookup.get(item.termEn);
+    if (bundle) {
+      const grouped = bundle.termEns
+        .map((term) => items.find((row) => row.termEn === term))
+        .filter((row): row is LessonExplain => Boolean(row));
+      grouped.forEach((row) => used.add(row.termEn));
+      rows.push({ titleAr: bundle.titleAr, titleEn: bundle.titleEn, items: grouped });
+    } else {
+      used.add(item.termEn);
+      rows.push({ titleAr: item.termAr, titleEn: item.termEn, items: [item] });
+    }
+  }
+  return rows;
+}
+
 export function allLessonExplains(): { lessonId: string; items: LessonExplain[] }[] {
   return Object.entries(EXPLAINS).map(([lessonId, items]) => ({ lessonId, items }));
 }

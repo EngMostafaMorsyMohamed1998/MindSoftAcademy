@@ -6,6 +6,7 @@ import { AiNestDiagram } from "@/components/ai-nest-diagram";
 import { TextbookArt } from "@/components/textbook-art";
 import { artFor, bookletSafe, lessonArtMap } from "@/lib/booklet-lang";
 import { BRAND } from "@/lib/brand";
+import { bundleExplains } from "@/lib/lesson-explains";
 import type { TextbookPage } from "@/lib/textbook-pages";
 import type { Locale } from "@/lib/locale";
 
@@ -165,28 +166,45 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
                 {ar ? "— اقرأ قبل التدريبات" : "— read before the drills"}
               </span>
             </h4>
-            {page.explains.map((item) => {
-              const title = bookletSafe(locale, ar ? item.termAr : item.termEn);
-              const body = bookletSafe(locale, ar ? item.bodyAr : item.bodyEn);
-              const example = bookletSafe(locale, ar ? item.exampleAr : item.exampleEn);
+            {bundleExplains(page.explains).map((bundle) => {
+              const grouped = bundle.items.length > 1;
+              const title = bookletSafe(locale, ar ? bundle.titleAr : bundle.titleEn);
+              const lead = bundle.items[0];
+              const active = bundle.items.some((item) => picked === `explain:${item.termEn}`);
               return (
                 <article
-                  key={`${page.id}-${item.termEn}`}
-                  className={`concept-card exp-fade cursor-pointer rounded-2xl bg-[#eef3f9] p-5 ${picked === `explain:${item.termEn}` ? "is-active" : ""}`}
-                  onClick={() => setPicked(`explain:${item.termEn}`)}
+                  key={`${page.id}-${bundle.titleEn}`}
+                  className={`concept-card exp-fade cursor-pointer rounded-2xl bg-[#eef3f9] p-5 ${active ? "is-active" : ""}`}
+                  onClick={() => setPicked(`explain:${lead?.termEn ?? bundle.titleEn}`)}
                 >
-                  <div className="flex gap-4">
-                    <div className="size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-100">
-                      <TextbookArt art={artFor(artMap, title, body)} locale={locale} compact />
+                  <p className="text-lg font-extrabold text-[#0c2d6b]">{title}</p>
+                  {grouped ? (
+                    <ol className="mt-3 list-decimal space-y-3 ps-6 text-base font-semibold leading-8 text-[#111827]">
+                      {bundle.items.map((item) => (
+                        <li key={item.termEn}>
+                          <span className="font-extrabold text-[#0c2d6b]">{bookletSafe(locale, ar ? item.termAr : item.termEn)}</span>
+                          {" — "}
+                          {bookletSafe(locale, ar ? item.bodyAr : item.bodyEn)}
+                        </li>
+                      ))}
+                    </ol>
+                  ) : lead ? (
+                    <div className="mt-3 flex gap-4">
+                      <div className="size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-100">
+                        <TextbookArt
+                          art={artFor(artMap, bookletSafe(locale, ar ? lead.termAr : lead.termEn), bookletSafe(locale, ar ? lead.bodyAr : lead.bodyEn))}
+                          locale={locale}
+                          compact
+                        />
+                      </div>
+                      <p className="min-w-0 text-base font-semibold leading-8 text-[#111827]">
+                        {bookletSafe(locale, ar ? lead.bodyAr : lead.bodyEn)}
+                      </p>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-lg font-extrabold text-[#0c2d6b]">{title}</p>
-                      <p className="mt-2 text-base font-semibold leading-8 text-[#111827]">{body}</p>
-                    </div>
-                  </div>
-                  {example ? (
+                  ) : null}
+                  {lead?.exampleAr || lead?.exampleEn ? (
                     <p className="mt-3 rounded-xl bg-[#fff4cc] px-3 py-2 text-base font-semibold leading-7 text-[#111827] ring-1 ring-amber-200">
-                      <strong>{ar ? "مثال:" : "Example:"}</strong> {example}
+                      <strong>{ar ? "مثال:" : "Example:"}</strong> {bookletSafe(locale, ar ? (lead?.exampleAr ?? "") : (lead?.exampleEn ?? ""))}
                     </p>
                   ) : null}
                 </article>

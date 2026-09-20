@@ -26,6 +26,7 @@ import { getChapter } from "@/lib/curriculum";
 import type { Locale } from "@/lib/locale";
 import { mindMapForFaiz, type MindNode } from "@/lib/mind-maps";
 import { textbookPageFor } from "@/lib/textbook-pages";
+import { bundleExplains } from "@/lib/lesson-explains";
 import { renderBookPage } from "@/lib/book-page-image";
 
 const ARABIC_FONT = "NotoNaskh";
@@ -1505,14 +1506,21 @@ function pushLesson(blocks: Block[], pack: BookletLessonPack, locale: Locale) {
   }
   if (page.explains.length) {
     blocks.push({ kind: "section", text: ar ? "شرح المصطلحات — اقرأ قبل التدريبات" : "Term explanations — read before the drills" });
-    for (const item of page.explains) {
-      const title = bookletSafe(locale, ar ? item.termAr : item.termEn);
-      const body = bookletSafe(locale, ar ? item.bodyAr : item.bodyEn);
+    for (const bundle of bundleExplains(page.explains)) {
+      const title = bookletSafe(locale, ar ? bundle.titleAr : bundle.titleEn);
+      const body = bundle.items
+        .map((item, index) => {
+          const name = bookletSafe(locale, ar ? item.termAr : item.termEn);
+          const text = bookletSafe(locale, ar ? item.bodyAr : item.bodyEn);
+          return bundle.items.length > 1 ? `${index + 1}) ${name} — ${text}` : text;
+        })
+        .join("\n");
+      const lead = bundle.items[0];
       blocks.push({
         kind: "explain",
         title,
         body,
-        example: bookletSafe(locale, ar ? item.exampleAr : item.exampleEn),
+        example: lead ? bookletSafe(locale, ar ? lead.exampleAr : lead.exampleEn) : "",
         art: artFor(pageArts, title, body),
         color: chapter.color,
       });
