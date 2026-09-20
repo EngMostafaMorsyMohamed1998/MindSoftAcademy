@@ -4,6 +4,7 @@ import { FAIZ_UNITS } from "@/lib/faiz";
 import { FAIZ_ESSAYS, FAIZ_OBJECTIVES } from "@/lib/faiz-exam";
 import { FAIZ_NOTES, type FaizUnitNote } from "@/lib/faiz-notes";
 import { questionsForChapter, questionsForLesson, withShuffledOptions, type HomeworkQuestion } from "@/lib/homework-bank";
+import { explainsForLesson } from "@/lib/lesson-explains";
 import { LESSON_NOTES } from "@/lib/lessons";
 import { analysisForChapter, BANK_FACTS } from "@/lib/question-bank";
 import type { AnalysisPrompt, BankFact } from "@/lib/question-bank/types";
@@ -65,6 +66,8 @@ export type BookletLessonPack = {
   titleAr: string;
   titleEn: string;
   practice: BookletMcq[];
+  tf: BookletMcq[];
+  essays: BookletEssay[];
   scenes: BankFact[];
   answers: BookletAnswer[];
 };
@@ -195,7 +198,9 @@ function chapterMcqPool(chapterId: ChapterId): BookletMcq[] {
   ).map(asMcq);
 }
 
-export const BOOKLET_LESSON_DRILLS = 30;
+export const BOOKLET_LESSON_DRILLS = 20;
+export const BOOKLET_LESSON_TF = 8;
+export const BOOKLET_LESSON_ESSAYS = 4;
 
 function parkAnswer(row: BookletMcq, dest: number): BookletMcq {
   const count = Math.min(row.optionsAr.length, row.optionsEn.length);
@@ -211,18 +216,41 @@ function parkAnswer(row: BookletMcq, dest: number): BookletMcq {
   };
 }
 
+function syllabusMcq(row: HomeworkQuestion): boolean {
+  return (
+    usableMcq(row) &&
+    (row.id.includes("-mcq-") || row.id.includes("-body-mcq-") || row.id.includes("-ex-mean-")) &&
+    !row.id.includes("-ex-term-")
+  );
+}
+
 export function bookletLessonPractice(lessonId: string): BookletMcq[] {
   const chapterSeed = Number(lessonId.split("-")[0] ?? "1") * 31;
-  const own = shuffled(questionsForLesson(lessonId).filter(usableMcq), 2027 + chapterSeed + lessonId.length);
-  const seen = new Set(own.map((row) => row.id));
-  const chapterId = own[0]?.chapterId ?? getLesson(lessonId)?.chapterId;
-  const extra = chapterId
-    ? shuffled(
-        questionsForChapter(chapterId).filter((row) => usableMcq(row) && !seen.has(row.id)),
-        4401 + chapterSeed,
-      )
-    : [];
-  return [...own, ...extra].slice(0, BOOKLET_LESSON_DRILLS).map((row, index) => parkAnswer(asMcq(row), index % 4));
+  return shuffled(questionsForLesson(lessonId).filter(syllabusMcq), 2027 + chapterSeed + lessonId.length)
+    .slice(0, BOOKLET_LESSON_DRILLS)
+    .map((row, index) => parkAnswer(asMcq(row), index % 4));
+}
+
+export function bookletLessonTf(lessonId: string): BookletMcq[] {
+  const chapterSeed = Number(lessonId.split("-")[0] ?? "1") * 31;
+  return shuffled(
+    questionsForLesson(lessonId).filter((row) => row.kind === "tf"),
+    3031 + chapterSeed + lessonId.length,
+  )
+    .slice(0, BOOKLET_LESSON_TF)
+    .map(asMcq);
+}
+
+export function bookletLessonEssays(lessonId: string): BookletEssay[] {
+  const explains = explainsForLesson(lessonId);
+  if (!explains.length) return [];
+  return explains.slice(0, BOOKLET_LESSON_ESSAYS).map((item, index) => ({
+    id: `${lessonId}-essay-${index}`,
+    promptAr: `اشرح مصطلح «${item.termAr}» كما ورد في المنهج، واذكر أهميته.`,
+    promptEn: `Explain “${item.termEn}” as it appears in the syllabus, and say why it matters.`,
+    guideAr: item.bodyAr,
+    guideEn: item.bodyEn,
+  }));
 }
 
 function chapterLessonIds(chapterId: ChapterId): string[] {
@@ -320,14 +348,18 @@ export function bookletLessonPack(lessonId: string): BookletLessonPack | null {
   const chapter = note ? getChapter(note.chapterId) : undefined;
   if (!note || !lesson || !chapter) return null;
   const practice = bookletLessonPractice(lessonId);
+  const tf = bookletLessonTf(lessonId);
+  const essays = bookletLessonEssays(lessonId);
   return {
     lessonId,
     chapter,
     titleAr: lesson.titleAr,
     titleEn: lesson.titleEn,
     practice,
-    scenes: bookletLessonScenes(lessonId),
-    answers: withAnswers(practice),
+    tf,
+    essays,
+    scenes: [],
+    answers: withAnswers([...practice, ...tf]),
   };
 }
 

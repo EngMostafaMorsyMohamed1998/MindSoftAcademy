@@ -2,8 +2,6 @@ import { EXTRA_HOMEWORK } from "@/lib/homework-extra";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { ChapterId } from "@/lib/curriculum";
 import { explainsForLesson } from "@/lib/lesson-explains";
-import { BANK_FACTS } from "@/lib/question-bank";
-import { expandFactsToHomework } from "@/lib/question-bank/expand";
 import { shuffled } from "@/lib/shuffle";
 
 export type HomeworkKind = "mcq" | "tf";
@@ -136,14 +134,40 @@ function buildBank(): HomeworkQuestion[] {
       optionsEn: ["True", "False"],
       correctIndex: 0,
     });
+
+    note.bodyAr.forEach((line, index) => {
+      const en = note.bodyEn[index] ?? line;
+      pushQuestion(bank, {
+        id: `${note.id}-body-tf-${index}`,
+        lessonId: note.id,
+        chapterId: note.chapterId,
+        kind: "tf",
+        promptAr: `هل هذه الجملة من المنهج صحيحة؟ ${line}`,
+        promptEn: `Is this syllabus sentence true? ${en}`,
+        optionsAr: ["صح", "غلط"],
+        optionsEn: ["True", "False"],
+        correctIndex: 0,
+      });
+      const otherAr = note.bodyAr.filter((_, otherIndex) => otherIndex !== index);
+      const otherEn = note.bodyEn.filter((_, otherIndex) => otherIndex !== index);
+      if (otherAr.length >= 3) {
+        pushQuestion(bank, {
+          id: `${note.id}-body-mcq-${index}`,
+          lessonId: note.id,
+          chapterId: note.chapterId,
+          kind: "mcq",
+          promptAr: "أي جملة من المنهج تصف هذا الدرس وصفًا صحيحًا؟",
+          promptEn: "Which syllabus sentence correctly describes this lesson?",
+          optionsAr: [line, ...otherAr.slice(0, 3)],
+          optionsEn: [en, ...otherEn.slice(0, 3)],
+          correctIndex: 0,
+        });
+      }
+    });
   }
 
   for (const extra of EXTRA_HOMEWORK) {
-    pushQuestion(bank, extra);
-  }
-
-  for (const row of expandFactsToHomework(BANK_FACTS)) {
-    pushQuestion(bank, row);
+    if (extra.kind === "tf" || extra.kind === "mcq") pushQuestion(bank, extra);
   }
 
   for (const note of LESSON_NOTES) {
@@ -163,18 +187,18 @@ function buildBank(): HomeworkQuestion[] {
           optionsEn: [firstClause(item.bodyEn), ...pick.map((row) => firstClause(row.bodyEn))],
           correctIndex: 0,
         });
-        pushQuestion(bank, {
-          id: `${note.id}-ex-term-${index}`,
-          lessonId: note.id,
-          chapterId: note.chapterId,
-          kind: "mcq",
-          promptAr: `أي مصطلح يناسب هذا المثال: «${item.exampleAr}»؟`,
-          promptEn: `Which term matches this example: “${item.exampleEn}”?`,
-          optionsAr: [item.termAr, ...pick.map((row) => row.termAr)],
-          optionsEn: [item.termEn, ...pick.map((row) => row.termEn)],
-          correctIndex: 0,
-        });
       }
+      pushQuestion(bank, {
+        id: `${note.id}-ex-tf-${index}`,
+        lessonId: note.id,
+        chapterId: note.chapterId,
+        kind: "tf",
+        promptAr: `هل صحيح أن «${item.termAr}» يعني: ${firstClause(item.bodyAr)}؟`,
+        promptEn: `Is it true that “${item.termEn}” means: ${firstClause(item.bodyEn)}?`,
+        optionsAr: ["صح", "غلط"],
+        optionsEn: ["True", "False"],
+        correctIndex: 0,
+      });
     });
   }
 
@@ -199,7 +223,11 @@ export function questionsForChapter(chapterId: ChapterId): HomeworkQuestion[] {
 function isCurriculumMcq(question: HomeworkQuestion): boolean {
   return (
     question.kind === "mcq" &&
-    (EXTRA_IDS.has(question.id) || question.id.includes("-mcq-") || question.id.includes("-x"))
+    (EXTRA_IDS.has(question.id) ||
+      question.id.includes("-mcq-") ||
+      question.id.includes("-body-mcq-") ||
+      question.id.includes("-ex-mean-") ||
+      question.id.includes("-x"))
   );
 }
 

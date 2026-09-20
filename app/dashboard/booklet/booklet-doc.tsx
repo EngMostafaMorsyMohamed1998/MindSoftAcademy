@@ -1,15 +1,17 @@
 import type { ReactNode } from "react";
-import { BookletFigure, CHAPTER_FIGURES, SceneCard } from "@/components/booklet-figures";
+import { BookletFigure, CHAPTER_FIGURES } from "@/components/booklet-figures";
 import { BookletMindMap } from "@/components/booklet-mind-map";
 import { TextbookLesson } from "@/components/textbook-page";
-import { artFor, bookletSafe, lessonArtMap } from "@/lib/booklet-lang";
+import { bookletSafe } from "@/lib/booklet-lang";
 import { BRAND } from "@/lib/brand";
 import {
   bookletAnswerMark,
   bookletChapterPack,
   bookletHomeworkForChapter,
+  bookletLessonEssays,
   bookletLessonPack,
   bookletLessonPractice,
+  bookletLessonTf,
   bookletLetters,
   bookletOptions,
   bookletPrompt,
@@ -199,39 +201,16 @@ function ChapterBlock({ locale, pack }: { locale: Locale; pack: BookletChapterPa
         </PrintSection>
       ) : null}
 
-      {pack.scenes.length ? (
-        <PrintSection title={ar ? "مواقف من الحياة" : "Real-life scenes"}>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {pack.scenes.map((scene) => (
-              <SceneCard
-                key={scene.id}
-                locale={locale}
-                color={chapter.color}
-                term={bookletSafe(locale, ar ? scene.termAr : scene.termEn)}
-                scene={bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn)}
-              />
-            ))}
-          </div>
-        </PrintSection>
-      ) : null}
-
       {notes.map((note, noteIndex) => {
         const page = textbookPageFor(note.id);
         if (!page) return null;
         const drills = bookletLessonPractice(note.id);
+        const tf = bookletLessonTf(note.id);
+        const essays = bookletLessonEssays(note.id);
         return (
           <div key={note.id} className={noteIndex === 0 ? undefined : "print-break"}>
             <TextbookLesson locale={locale} page={page} />
-            {drills.length ? (
-              <PrintSection title={ar ? `تدريبات الدرس ${page.id}` : `Lesson ${page.id} practice`}>
-                <p className="text-base font-semibold text-[#374151]">
-                  {ar
-                    ? "30 سؤال اختيار من متعدد. ظلّل الاختيار. الإجابات في آخر الملزمة."
-                    : "30 multiple-choice questions. Mark a choice. Answers are at the end of this booklet."}
-                </p>
-                <McqBlock locale={locale} rows={drills} />
-              </PrintSection>
-            ) : null}
+            <LessonDrills locale={locale} lessonId={page.id} drills={drills} tf={tf} essays={essays} />
           </div>
         );
       })}
@@ -292,29 +271,55 @@ export function BookletCover({
   );
 }
 
+function LessonDrills({
+  locale,
+  lessonId,
+  drills,
+  tf,
+  essays,
+}: {
+  locale: Locale;
+  lessonId: string;
+  drills: BookletMcq[];
+  tf: BookletMcq[];
+  essays: BookletEssay[];
+}) {
+  const ar = locale === "ar";
+  return (
+    <>
+      {drills.length ? (
+        <PrintSection title={ar ? `اختيار من متعدد — الدرس ${lessonId}` : `Multiple choice — lesson ${lessonId}`}>
+          <p className="text-base font-semibold text-[#374151]">
+            {ar ? "ظلل الاختيار. الأسئلة من المنهج. الإجابات في آخر الملزمة." : "Mark a choice. Questions follow the syllabus. Answers are at the end."}
+          </p>
+          <McqBlock locale={locale} rows={drills} />
+        </PrintSection>
+      ) : null}
+      {tf.length ? (
+        <PrintSection title={ar ? "صح وغلط" : "True or false"}>
+          <p className="text-base font-semibold text-[#374151]">
+            {ar ? "اختَر صح أو غلط من تعريف المنهج." : "Choose true or false from the syllabus definition."}
+          </p>
+          <McqBlock locale={locale} rows={tf} />
+        </PrintSection>
+      ) : null}
+      {essays.length ? (
+        <PrintSection title={ar ? "أسئلة مقالي" : "Essay questions"}>
+          <p className="text-base font-semibold text-[#374151]">
+            {ar ? "اشرح من المنهج. دليل الإجابة في آخر الملزمة." : "Explain from the syllabus. The guide is at the end."}
+          </p>
+          <EssayBlock locale={locale} rows={essays} />
+        </PrintSection>
+      ) : null}
+    </>
+  );
+}
+
 export function BookletLessonPane({ locale, lessonId }: { locale: Locale; lessonId: string }) {
   const ar = locale === "ar";
   const pack = bookletLessonPack(lessonId);
   const page = textbookPageFor(lessonId);
   if (!pack || !page) return null;
-  const drills = pack.practice;
-  const termTable = page.headersAr[0] === "المصطلح" || page.headersEn[0] === "Term";
-  const sceneArts = lessonArtMap([
-    ...(termTable
-      ? page.rows.map((row) => ({
-          term: ar ? (row.cellsAr[0] ?? "") : (row.cellsEn[0] ?? ""),
-          meaning: ar ? (row.cellsAr[1] ?? "") : (row.cellsEn[1] ?? ""),
-        }))
-      : []),
-    ...page.explains.map((item) => ({
-      term: ar ? item.termAr : item.termEn,
-      meaning: ar ? item.bodyAr : item.bodyEn,
-    })),
-    ...pack.scenes.map((scene) => ({
-      term: ar ? scene.termAr : scene.termEn,
-      meaning: ar ? scene.sceneAr : scene.sceneEn,
-    })),
-  ]);
   return (
     <div className="booklet-paper print-sheet rounded-xl bg-white p-5 ring-1 ring-slate-300 sm:p-8">
       <BookletCover
@@ -326,43 +331,34 @@ export function BookletLessonPane({ locale, lessonId }: { locale: Locale; lesson
         color={pack.chapter.color}
       />
       <TextbookLesson locale={locale} page={page} />
-      {pack.scenes.length ? (
-        <PrintSection title={ar ? "مواقف من الحياة" : "Real-life scenes"}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {pack.scenes.map((scene) => {
-              const term = bookletSafe(locale, ar ? scene.termAr : scene.termEn);
-              const text = bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn);
-              return (
-                <SceneCard
-                  key={scene.id}
-                  locale={locale}
-                  color={pack.chapter.color}
-                  term={term}
-                  scene={text}
-                  art={artFor(sceneArts, term, text)}
-                />
-              );
-            })}
-          </div>
-        </PrintSection>
-      ) : null}
-      {drills.length ? (
-        <PrintSection title={ar ? `تدريبات الدرس ${page.id}` : `Lesson ${page.id} practice`}>
-          <p className="text-base font-semibold text-[#374151]">
-            {ar
-              ? "30 سؤال اختيار من متعدد. ظلّل الاختيار. الإجابات في آخر الملزمة."
-              : "30 multiple-choice questions. Mark a choice. Answers are at the end of this booklet."}
-          </p>
-          <McqBlock locale={locale} rows={drills} />
-        </PrintSection>
-      ) : null}
+      <LessonDrills locale={locale} lessonId={page.id} drills={pack.practice} tf={pack.tf} essays={pack.essays} />
       <section className="mt-8 rounded-xl bg-primary/5 p-6">
         <h4 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h4>
         <AnswerKeyList
           locale={locale}
-          title={ar ? `تدريبات الدرس ${lessonId}` : `Lesson ${lessonId} practice`}
-          answers={pack.answers}
+          title={ar ? `اختيار من متعدد — الدرس ${lessonId}` : `Multiple choice — lesson ${lessonId}`}
+          answers={pack.practice.map((row) => ({
+            id: row.id,
+            index: row.correctIndex,
+            promptAr: row.promptAr,
+            promptEn: row.promptEn,
+            choiceAr: row.optionsAr[row.correctIndex] ?? "",
+            choiceEn: row.optionsEn[row.correctIndex] ?? "",
+          }))}
         />
+        <AnswerKeyList
+          locale={locale}
+          title={ar ? "صح وغلط" : "True or false"}
+          answers={pack.tf.map((row) => ({
+            id: row.id,
+            index: row.correctIndex,
+            promptAr: row.promptAr,
+            promptEn: row.promptEn,
+            choiceAr: row.optionsAr[row.correctIndex] ?? "",
+            choiceEn: row.optionsEn[row.correctIndex] ?? "",
+          }))}
+        />
+        <EssayAnswers locale={locale} title={ar ? "المقالي" : "Essays"} rows={pack.essays} />
       </section>
     </div>
   );

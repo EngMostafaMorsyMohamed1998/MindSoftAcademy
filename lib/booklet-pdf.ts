@@ -1522,26 +1522,23 @@ function pushLesson(blocks: Block[], pack: BookletLessonPack, locale: Locale) {
     kind: "takeaway",
     text: bookletSafe(locale, `${ar ? "الخلاصة:" : "Takeaway:"} ${ar ? page.takeawayAr : page.takeawayEn}`),
   });
-  if (pack.scenes.length) {
-    blocks.push({ kind: "section", text: ar ? "مواقف من الحياة" : "Real-life scenes" });
-    blocks.push({
-      kind: "scenes",
-      color: chapter.color,
-      items: pack.scenes.map((scene, index) => {
-        const term = bookletSafe(locale, ar ? scene.termAr : scene.termEn);
-        const text = bookletSafe(locale, ar ? scene.sceneAr : scene.sceneEn);
-        return {
-          term,
-          scene: text,
-          art: artFor(pageArts, term, text),
-          src: `book:${pack.lessonId}:${index + 1}`,
-        };
-      }),
-    });
-  }
   if (pack.practice.length) {
-    blocks.push({ kind: "section", text: ar ? `تدريبات الدرس ${page.id}` : `Lesson ${page.id} practice` });
+    blocks.push({ kind: "section", text: ar ? `اختيار من متعدد — الدرس ${page.id}` : `Multiple choice — lesson ${page.id}` });
     pushQuestions(blocks, locale, pack.practice);
+  }
+  if (pack.tf.length) {
+    blocks.push({ kind: "section", text: ar ? "صح وغلط" : "True or false" });
+    pushQuestions(blocks, locale, pack.tf);
+  }
+  if (pack.essays.length) {
+    blocks.push({ kind: "section", text: ar ? "أسئلة مقالي" : "Essay questions" });
+    pack.essays.forEach((essay, index) => {
+      blocks.push({
+        kind: "essay",
+        n: index + 1,
+        prompt: bookletPrompt(locale, essay.promptAr, essay.promptEn),
+      });
+    });
   }
 }
 
@@ -1827,10 +1824,27 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
   pushLesson(blocks, pack, locale);
   pushAnswerKey(blocks, locale, [
     {
-      title: ar ? `تدريبات الدرس ${pack.lessonId}` : `Lesson ${pack.lessonId} practice`,
-      answers: pack.answers,
+      title: ar ? `اختيار من متعدد — الدرس ${pack.lessonId}` : `Multiple choice — lesson ${pack.lessonId}`,
+      answers: pack.practice.map((row) => ({
+        index: row.correctIndex,
+        promptAr: row.promptAr,
+        promptEn: row.promptEn,
+        choiceAr: row.optionsAr[row.correctIndex] ?? "",
+        choiceEn: row.optionsEn[row.correctIndex] ?? "",
+      })),
+    },
+    {
+      title: ar ? "صح وغلط" : "True or false",
+      answers: pack.tf.map((row) => ({
+        index: row.correctIndex,
+        promptAr: row.promptAr,
+        promptEn: row.promptEn,
+        choiceAr: row.optionsAr[row.correctIndex] ?? "",
+        choiceEn: row.optionsEn[row.correctIndex] ?? "",
+      })),
     },
   ]);
+  pushEssayGuides(blocks, locale, ar ? "المقالي" : "Essays", pack.essays);
   return blocks;
 }
 
