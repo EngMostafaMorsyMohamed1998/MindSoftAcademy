@@ -671,9 +671,9 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "تحيز العينة",
       termEn: "Sampling bias",
       bodyAr:
-        "تحيز العينة اختيار غير عادل يخلي النتيجة واثقة وهي غلط. تحيز الاختيار الذاتي: اللي مهتم بس هو اللي يرد على استطلاع الويب. متعمّمش من جروب واتساب على «كل الأسرة المصرية».",
+        "تحيز العينة اختيار غير عادل يخلي النتيجة واثقة وهي غلط. تحيز الاختيار الذاتي: اللي مهتم بس هو اللي يرد على الاستطلاع. متعمّمش من مجموعة صغيرة على المجتمع كله.",
       bodyEn:
-        "Sampling bias is an unfair pick that makes a confident wrong answer. Self-selection: only the keen answer a web poll. Do not generalise from a WhatsApp group to “every Egyptian family”.",
+        "Sampling bias is an unfair pick that makes a confident wrong answer. Self-selection: only the keen answer a poll. Do not generalise from a small group to the whole population.",
       exampleAr: "استطلاع على نادي الشطرنج عن «حب الرياضيات» مش بيمثل المدرسة كلها.",
       exampleEn: "A chess-club poll about “liking maths” does not represent the whole school.",
     },
@@ -725,9 +725,9 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "بيانات مفتوحة",
       termEn: "Open data",
       bodyAr:
-        "البيانات المفتوحة بيانات عامة ينفع تعيد استخدامها بشروط واضحة. تختصر وقت الجمع. اسأل الترخيص والتحيز المحتمل وتعريف العمود. وثّق المصدر في أي تقرير مدرسي.",
+        "البيانات المفتوحة بيانات عامة ينفع تعيد استخدامها بشروط واضحة. تختصر وقت الجمع. اسأل الترخيص والتحيز المحتمل وتعريف العمود. وثّق المصدر: الجهة والتاريخ والرابط.",
       bodyEn:
-        "Open data is public data you may reuse under a clear licence. It saves collection time. Ask about the licence, possible bias, and column definitions. Cite the source in any school report.",
+        "Open data is public data you may reuse under a clear licence. It saves collection time. Ask about the licence, possible bias, and column definitions. Cite the source: agency, date, and link.",
       exampleAr: "ملف أسعار الخضار من بوابة حكومية، وتحت الجدول تكتب الرابط وتاريخ الزيارة.",
       exampleEn: "A vegetable-price file from a government portal, with the link and visit date under the table.",
     },

@@ -291,7 +291,7 @@ export const LESSON_NOTES: LessonNote[] = [
       "اختبر الصفحة من غير فأرة.",
     ],
     bodyEn: [
-      "Start with the right elements: heading, button, list — not a page of <div>s.",
+      "Start with the right elements: heading, button, list — not empty boxes with no meaning.",
       "Responsive design often serves the phone before the wide screen.",
       "Test the page without a mouse.",
     ],
@@ -459,7 +459,7 @@ export const LESSON_NOTES: LessonNote[] = [
       "وحّد كتابة التاريخ والجنس قبل أي مجموع.",
     ],
     bodyEn: [
-      "Garbage in, garbage out — neat maths on dirty data is still wrong.",
+      "Bad inputs give bad outputs, even when the maths looks neat.",
       "Do not merge two same-day purchases until you know they are a duplicate, not two sales.",
       "Unify date and gender spellings before any total.",
     ],
@@ -484,12 +484,12 @@ export const LESSON_NOTES: LessonNote[] = [
     bodyAr: [
       "البيانات المفتوحة تختصر الوقت، لكن راجع الترخيص وتاريخ التحديث والتحيز المحتمل.",
       "الواجهة البرمجية تعطيك شريحة حية؛ الملف المحمّل قد يكون قديمًا.",
-      "وثّق المصدر في أي تقرير مدرسي.",
+      "وثّق المصدر: الجهة والتاريخ والرابط.",
     ],
     bodyEn: [
       "Open data saves time, but check the licence, update date, and possible bias.",
       "An API gives a live slice; a downloaded file may be stale.",
-      "Cite the source in any school report.",
+      "Cite the source: agency, date, and link.",
     ],
     takeawayAr: "المصدر المفتوح ليس مصدرًا بريئًا تلقائيًا؛ اسأله كما تسأل استطلاعك.",
     takeawayEn: "Open is not automatically innocent; question it as you would your own survey.",

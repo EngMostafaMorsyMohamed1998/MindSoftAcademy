@@ -93,17 +93,6 @@ function buildBank(): HomeworkQuestion[] {
           optionsEn: [en.meaning, ...others.slice(0, 3).map((row) => row.en.meaning)],
           correctIndex: 0,
         });
-        pushQuestion(bank, {
-          id: `${note.id}-mcq-term-${index}`,
-          lessonId: note.id,
-          chapterId: note.chapterId,
-          kind: "mcq",
-          promptAr: `أي مصطلح يطابق هذا المعنى: «${term.meaning}»؟`,
-          promptEn: `Which term matches this meaning: “${en.meaning}”?`,
-          optionsAr: [term.term, ...others.slice(0, 3).map((row) => row.ar.term)],
-          optionsEn: [en.term, ...others.slice(0, 3).map((row) => row.en.term)],
-          correctIndex: 0,
-        });
       }
 
       const farther = others[1];
@@ -153,21 +142,6 @@ function buildBank(): HomeworkQuestion[] {
   for (const note of LESSON_NOTES) {
     const explains = explainsForLesson(note.id);
     explains.forEach((item, index) => {
-      const others = explains.filter((_, other) => other !== index);
-      if (others.length >= 3) {
-        const pick = others.slice(0, 3);
-        pushQuestion(bank, {
-          id: `${note.id}-ex-mean-${index}`,
-          lessonId: note.id,
-          chapterId: note.chapterId,
-          kind: "mcq",
-          promptAr: `ما المعنى الصحيح لـ «${item.termAr}»؟`,
-          promptEn: `What is the correct meaning of “${item.termEn}”?`,
-          optionsAr: [firstClause(item.bodyAr), ...pick.map((row) => firstClause(row.bodyAr))],
-          optionsEn: [firstClause(item.bodyEn), ...pick.map((row) => firstClause(row.bodyEn))],
-          correctIndex: 0,
-        });
-      }
       pushQuestion(bank, {
         id: `${note.id}-ex-tf-${index}`,
         lessonId: note.id,
@@ -200,11 +174,7 @@ export function questionsForChapter(chapterId: ChapterId): HomeworkQuestion[] {
 }
 
 function isCurriculumMcq(question: HomeworkQuestion): boolean {
-  return (
-    question.kind === "mcq" &&
-    (question.id.includes("-mcq-") || question.id.includes("-ex-mean-")) &&
-    !question.id.includes("-ex-term-")
-  );
+  return question.kind === "mcq" && /[-]mcq-\d+$/.test(question.id);
 }
 
 export function pickLessonHomework(

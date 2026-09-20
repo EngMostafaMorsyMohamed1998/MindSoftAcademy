@@ -6,8 +6,8 @@ import { FAIZ_NOTES, type FaizUnitNote } from "@/lib/faiz-notes";
 import { questionsForChapter, questionsForLesson, withShuffledOptions, type HomeworkQuestion } from "@/lib/homework-bank";
 import { explainsForLesson } from "@/lib/lesson-explains";
 import { LESSON_NOTES } from "@/lib/lessons";
-import { analysisForChapter, BANK_FACTS } from "@/lib/question-bank";
-import type { AnalysisPrompt, BankFact } from "@/lib/question-bank/types";
+import { BANK_FACTS } from "@/lib/question-bank";
+import type { BankFact } from "@/lib/question-bank/types";
 import type { Locale } from "@/lib/locale";
 import { shuffled } from "@/lib/shuffle";
 import type { EssayQuestion, ObjectiveQuestion } from "@/lib/exams";
@@ -156,16 +156,6 @@ export function bookletAnswerMark(locale: Locale, index: number): string {
   return bookletLetters(locale)[index] ?? String(index + 1);
 }
 
-function analysisAsEssay(row: AnalysisPrompt): BookletEssay {
-  return {
-    id: row.id,
-    promptAr: row.promptAr,
-    promptEn: row.promptEn,
-    guideAr: row.guideAr,
-    guideEn: row.guideEn,
-  };
-}
-
 function essayAsEssay(row: EssayQuestion): BookletEssay {
   return {
     id: row.id,
@@ -217,11 +207,7 @@ function parkAnswer(row: BookletMcq, dest: number): BookletMcq {
 }
 
 function syllabusMcq(row: HomeworkQuestion): boolean {
-  return (
-    usableMcq(row) &&
-    (row.id.includes("-mcq-") || row.id.includes("-ex-mean-")) &&
-    !row.id.includes("-ex-term-")
-  );
+  return usableMcq(row) && /[-]mcq-\d+$/.test(row.id);
 }
 
 export function bookletLessonPractice(lessonId: string): BookletMcq[] {
@@ -234,7 +220,8 @@ export function bookletLessonPractice(lessonId: string): BookletMcq[] {
 function syllabusTf(row: HomeworkQuestion): boolean {
   return (
     row.kind === "tf" &&
-    (row.id.includes("-tf-") || row.id.includes("-body-tf-") || row.id.includes("-take-tf") || row.id.includes("-ex-tf-"))
+    !row.id.includes("-body-tf-") &&
+    (row.id.includes("-tf-") || row.id.includes("-take-tf") || row.id.includes("-ex-tf-"))
   );
 }
 
@@ -264,6 +251,21 @@ function chapterLessonIds(chapterId: ChapterId): string[] {
   return LESSON_NOTES.filter((note) => note.chapterId === chapterId).map((note) => note.id);
 }
 
+function syllabusEssaysForChapter(chapterId: ChapterId, offset: number, take: number): BookletEssay[] {
+  const rows = chapterLessonIds(chapterId).flatMap((lessonId) =>
+    explainsForLesson(lessonId).map((item, index) => ({
+      id: `${lessonId}-ch-essay-${index}`,
+      promptAr: `اشرح مصطلح «${item.termAr}» كما ورد في المنهج، واذكر أهميته.`,
+      promptEn: `Explain “${item.termEn}” as it appears in the syllabus, and say why it matters.`,
+      guideAr: item.bodyAr,
+      guideEn: item.bodyEn,
+    })),
+  );
+  if (!rows.length || take <= 0) return [];
+  const start = Math.min(offset, Math.max(0, rows.length - take));
+  return rows.slice(start, start + take);
+}
+
 function uniqueTermScenes(facts: BankFact[], take: number, seed: number): BankFact[] {
   const seen = new Set<string>();
   const picked: BankFact[] = [];
@@ -283,17 +285,12 @@ export function bookletChapterPack(chapter: Chapter): BookletChapterPack {
     practice: bookletLessonPractice(id),
   }));
   const practice = lessonDrills.flatMap((row) => row.practice);
-  const essays = analysisForChapter(chapter.id).slice(0, BOOKLET_CHAPTER_ESSAYS).map(analysisAsEssay);
-  const scenes = uniqueTermScenes(
-    BANK_FACTS.filter((row) => row.chapterId === chapter.id),
-    BOOKLET_SCENES,
-    440 + Number(chapter.id),
-  );
+  const essays = syllabusEssaysForChapter(chapter.id, BOOKLET_LESSON_ESSAYS, BOOKLET_CHAPTER_ESSAYS);
   return {
     chapter,
     practice,
     essays,
-    scenes,
+    scenes: [],
     answers: withAnswers(practice),
     answerGroups: lessonDrills.map((row) => ({
       titleAr: `تدريبات الدرس ${row.id}`,
@@ -375,9 +372,11 @@ export function bookletHomeworkForChapter(chapter: Chapter): BookletHomeworkPack
   const pool = chapterMcqPool(chapter.id).filter((row) => !used.has(row.id));
   const mcq = pool.slice(0, BOOKLET_HOMEWORK_PER_CHAPTER);
   const picked = mcq.length ? mcq : chapterMcqPool(chapter.id).slice(0, BOOKLET_HOMEWORK_PER_CHAPTER);
-  const essays = analysisForChapter(chapter.id)
-    .slice(BOOKLET_CHAPTER_ESSAYS, BOOKLET_CHAPTER_ESSAYS + BOOKLET_HOMEWORK_ESSAYS)
-    .map(analysisAsEssay);
+  const essays = syllabusEssaysForChapter(
+    chapter.id,
+    BOOKLET_LESSON_ESSAYS + BOOKLET_CHAPTER_ESSAYS,
+    BOOKLET_HOMEWORK_ESSAYS,
+  );
   return {
     id: `ch-${chapter.id}`,
     titleAr: `واجب الفصل ${chapter.id}`,
@@ -396,9 +395,11 @@ export function bookletHomeworkForPart(part: 1 | 2): BookletHomeworkPack {
     return next.length ? next : pool.slice(0, BOOKLET_HOMEWORK_PER_CHAPTER);
   });
   const essays = chapters.flatMap((chapter) =>
-    analysisForChapter(chapter.id)
-      .slice(BOOKLET_CHAPTER_ESSAYS, BOOKLET_CHAPTER_ESSAYS + BOOKLET_HOMEWORK_ESSAYS)
-      .map(analysisAsEssay),
+    syllabusEssaysForChapter(
+      chapter.id,
+      BOOKLET_LESSON_ESSAYS + BOOKLET_CHAPTER_ESSAYS,
+      BOOKLET_HOMEWORK_ESSAYS,
+    ),
   );
   return {
     id: `part-${part}`,

@@ -407,10 +407,10 @@ export const CHAPTER_GAMES: ChapterGame[] = [
       rounds: [
         {
           id: "e1",
-          promptAr: "زميل طلب منك تلصق رد النموذج في التقرير من غير قراءة. ماذا تفعل؟",
-          promptEn: "A classmate asks you to paste the model’s reply into the report unread. What do you do?",
-          choicesAr: ["ألصق الرد بسرعة عشان نخلّص", "أقرأ الفكرة وأكتب كلامي أنا", "أبعت عنوان البيت للنموذج عشان يوضح"],
-          choicesEn: ["Paste it fast so we finish", "Read the idea and write it in my words", "Send my home address so the model is clearer"],
+          promptAr: "ماذا تعني هلوسة النموذج كما ورد في المنهج؟",
+          promptEn: "What does a model hallucination mean in the syllabus?",
+          choicesAr: ["الجهاز سخن أثناء التشغيل", "نص يبدو صحيحًا وهو خطأ", "النموذج لا يكتب بالعربية"],
+          choicesEn: ["The machine overheated while running", "Text that sounds right and is still wrong", "The model cannot write in Arabic"],
           correct: 1,
         },
         {

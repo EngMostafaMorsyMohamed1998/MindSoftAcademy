@@ -263,8 +263,8 @@ export function BookletCover({
         </div>
         <p className="mt-6 text-base font-semibold leading-8 text-[#111827]">
           {ar
-            ? "شرح الدرس، مواقف من الحياة، تدريبات، ومفتاح الإجابة في الآخر."
-            : "The lesson, real-life scenes, practice, and the answer key at the end."}
+            ? "شرح الدرس، اختيار من متعدد، صح وغلط، مقالي، ومفتاح الإجابة في الآخر."
+            : "The lesson, multiple choice, true or false, essays, and the answer key at the end."}
         </p>
       </div>
     </section>

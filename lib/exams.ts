@@ -1,7 +1,7 @@
 import { CHAPTERS, isChapterId, type ChapterId } from "@/lib/curriculum";
 import { faizExam } from "@/lib/faiz-exam";
 import { questionsForChapter, type HomeworkQuestion } from "@/lib/homework-bank";
-import { analysisForChapter } from "@/lib/question-bank";
+import { syllabusAnalysisForChapter } from "@/lib/question-bank";
 import { shuffled } from "@/lib/shuffle";
 
 export type ObjectiveKind = "mcq" | "tf";
@@ -698,8 +698,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
         "5-e2",
         "جدول حضور فيه خلايا فارغة، درجة 250 من 100، وصفان متطابقان. قرّر لكل مشكلة: حذف أو ملء أو تعليم أو تصحيح، وبرّر.",
         "An attendance table has blanks, a mark of 250/100, and two identical rows. For each problem choose delete, impute, flag, or correct, and justify.",
-        "المصطلح: تنظيف البيانات.\nالسبب: الخلية الفاضية غالباً غياب مش صفر. 250 من 100 غلط يتصحح. صفان بنفس الاسم والوقت المختلف عمليتان مش تكرار.\nالمثال: علّم الفراغ، صحح الدرجة المستحيلة، ومتدمجش إيصالي الكانتين.",
-        "Term: data cleaning.\nReason: a blank is often absence, not zero. 250/100 is an error to correct. Two rows with the same name and different times are two events, not a duplicate.\nExample: flag the blank, fix the impossible mark, and do not merge two canteen receipts.",
+        "المصطلح: تنظيف البيانات.\nالسبب: الخلية الفاضية غالباً غياب مش صفر. 250 من 100 غلط يتصحح. صفان بنفس الاسم والوقت المختلف عمليتان مش تكرار.\nالمثال: علّم الفراغ، صحح الدرجة المستحيلة، ومتدمجش عمليتين منفصلتين.",
+        "Term: data cleaning.\nReason: a blank is often absence, not zero. 250/100 is an error to correct. Two rows with the same name and different times are two events, not a duplicate.\nExample: flag the blank, fix the impossible mark, and do not merge two separate purchases.",
       ),
     ],
   },
@@ -987,7 +987,7 @@ function chapterObjectivePool(chapterId: ChapterId): ObjectiveQuestion[] {
 
 function chapterEssayPool(chapterId: ChapterId): EssayQuestion[] {
   const official = CHAPTER_EXAMS.find((exam) => exam.chapterId === chapterId)?.essays ?? [];
-  return uniqueById([...official, ...analysisForChapter(chapterId).map(asEssay)]);
+  return uniqueById([...official, ...syllabusAnalysisForChapter(chapterId).map(asEssay)]);
 }
 
 function pickObjectives(pool: ObjectiveQuestion[], seed: number): ObjectiveQuestion[] {
@@ -1036,7 +1036,7 @@ export function examForChapter(id: string, seed = examPaperSeed(id)): ChapterExa
     const essays = pickEssays(
       uniqueById([
         ...CHAPTER_EXAMS.flatMap((exam) => exam.essays),
-        ...CHAPTERS.flatMap((chapter) => analysisForChapter(chapter.id).map(asEssay)),
+        ...CHAPTERS.flatMap((chapter) => syllabusAnalysisForChapter(chapter.id).map(asEssay)),
       ]),
       seed,
     );

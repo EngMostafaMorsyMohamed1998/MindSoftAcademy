@@ -40,3 +40,15 @@ export function analysisForLesson(lessonId: string): AnalysisPrompt[] {
 export function analysisForChapter(chapterId: string): AnalysisPrompt[] {
   return BANK_ANALYSIS.filter((row) => row.chapterId === chapterId);
 }
+
+export function isOffSyllabusStory(text: string): boolean {
+  return /عيادة|توك توك|غرق|رئة|canteen|tuk-tuk|flood|clinic|lung|WhatsApp|واتساب|تقرير مدرسي|school report|bakery/i.test(
+    text,
+  );
+}
+
+export function syllabusAnalysisForChapter(chapterId: string): AnalysisPrompt[] {
+  return analysisForChapter(chapterId).filter(
+    (row) => !isOffSyllabusStory(`${row.promptAr} ${row.promptEn} ${row.guideAr} ${row.guideEn}`),
+  );
+}
