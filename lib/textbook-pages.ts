@@ -67,8 +67,8 @@ const PAGE_1_1: TextbookPage = {
   questionEn: "How did IT grow through its main stages, and how did each stage change society?",
   sectionAr: "تاريخ تكنولوجيا المعلومات",
   sectionEn: "A short history of IT",
-  introAr: "الجدول يلخص مراحل التقنية. بعدها خمس تحولات اجتماعية: شبكات التواصل، التجارة الإلكترونية، العمل عن بُعد، التعلّم عبر الإنترنت، والدفع بلا نقد. ثم تقنيات ناشئة: القيادة الذاتية والحوسبة الطرفية، والبت التقليدي مقابل البت الكمومي.",
-  introEn: "The table sums up the IT stages. Then come five social changes: SNS, e-commerce, remote work, online learning, and cashless payment. Then emerging technologies: autonomous driving with edge computing, and the classical bit versus the qubit.",
+  introAr: "الجدول يلخص مراحل التقنية. بعدها خمس تحولات اجتماعية، ثم تقنيات ناشئة.",
+  introEn: "The table sums up the IT stages. Then come five social changes, then emerging technologies.",
   art: "lab",
   headersAr: ["الفترة الزمنية", "التقنيات والأحداث الرئيسية", "التأثير على المجتمع"],
   headersEn: ["Period", "Key technologies and events", "Effect on society"],
@@ -97,8 +97,6 @@ const PAGE_1_1: TextbookPage = {
         "Electronic computers appear, including ENIAC, using vacuum tubes.",
         "Used mainly for military and scientific calculation.",
       ],
-      exampleAr: "مثال: استخدمت القوات العسكرية حاسب إينياك لإجراء حسابات معقدة، مما أظهر أهمية الحاسوب في العمل العلمي والعسكري قبل أن يصل إلى البيوت.",
-      exampleEn: "Example: Armies used machines such as ENIAC for hard calculations, so computers mattered in labs and defence long before homes had one.",
     },
     {
       cellsAr: [
@@ -111,8 +109,6 @@ const PAGE_1_1: TextbookPage = {
         "The personal computer (PC) spreads.",
         "People and offices start using a computer for daily work and learning.",
       ],
-      exampleAr: "مثال: أصبح الحاسوب الشخصي متاحًا للأفراد والمؤسسات، مما أدى إلى استخدامه في الأعمال اليومية والتعليم.",
-      exampleEn: "Example: A PC on a desk replaced paper files in many offices and school rooms.",
     },
     {
       cellsAr: [
@@ -125,14 +121,10 @@ const PAGE_1_1: TextbookPage = {
         "The Internet opens to business, and the web appears.",
         "Worldwide access to information and email.",
       ],
-      exampleAr: "مثال: استخدم الطلاب والموظفون الإنترنت للبحث عن المعلومات وإرسال الرسائل الإلكترونية، فأصبح تبادل المعرفة والتواصل بين الدول أسرع.",
-      exampleEn: "Example: Students and staff used the web to search and send email, so sharing knowledge across countries became faster.",
     },
     {
       cellsAr: ["العقد الأول من الألفية", "ظهور الهواتف الذكية (آيفون وغيره).", "انتشار سريع وواسع للإنترنت عبر المحمول."],
       cellsEn: ["2000s", "Smartphones appear (iPhone and others).", "Fast, wide access to the Internet from a pocket."],
-      exampleAr: "مثال: استخدام الأشخاص الهواتف الذكية لتصفح الإنترنت وتواصل التطبيقات، مما غيّر طريقة الحصول على المعلومات والخدمات اليومية.",
-      exampleEn: "Example: People used smartphones to browse and chat, which changed how daily news and services arrived.",
     },
     {
       cellsAr: [
@@ -145,10 +137,6 @@ const PAGE_1_1: TextbookPage = {
         "Cloud computing spreads.",
         "Big-data analysis and AI; IT arrives as a service over the Internet.",
       ],
-      exampleAr:
-        "مثال: استخدمت شركة منصة سحابية لتخزين بياناتها، وتشغّلت الذكاء الاصطناعي لتحليل بيانات العملاء، مما ساعدها على تحسين خدماتها واتخاذ قرارات أفضل.",
-      exampleEn:
-        "Example: A firm stored data on a cloud platform and used AI to study customer patterns, then improved its service and decisions.",
     },
   ],
 };

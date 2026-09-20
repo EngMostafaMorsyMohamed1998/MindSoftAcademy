@@ -10,124 +10,62 @@ export type LessonExplain = {
 const EXPLAINS: Record<string, LessonExplain[]> = {
   "1-1": [
     {
-      termAr: "مراحل تطور تقنية المعلومات",
-      termEn: "Stages of IT",
-      bodyAr:
-        "تقنية المعلومات اتطورت على مراحل مش قفزة واحدة: حواسيب الغرف بالأنابيب المفرغة (الأربعينيات–الستينيات) للحساب العسكري والعلمي، بعدين الحاسوب الشخصي في الثمانينيات دخل المكتب والفصل، بعدين الإنترنت والويب في التسعينيات فتحوا البريد والبحث العالمي، بعدين الهواتف الذكية خلّت الشبكة في الجيب، وبعدين السحابة والذكاء الاصطناعي كخدمة. كل مرحلة غيّرت المجتمع: شغل عن بُعد، تعلّم أونلاين، تجارة ودفع من غير كاش.",
-      bodyEn:
-        "IT grew in stages, not one jump: room-sized vacuum-tube machines for military and scientific work, then the personal computer in offices and classrooms, then the Internet and the web for email and global search, then smartphones that put the network in a pocket, then cloud and AI as a service. Each stage changed society: remote work, online learning, e-commerce, and cashless payment.",
-      exampleAr: "جدك كان يحجز تذكرة من مكتب. أنت بتحجز من الموبايل لأن المرحلة اتغيّرت.",
-      exampleEn: "A grandparent booked a ticket at a desk. You book on a phone because the stage changed.",
-    },
-    {
-      termAr: "الحاسوب الإلكتروني",
-      termEn: "Electronic computer",
-      bodyAr:
-        "الحاسوب الإلكتروني ظهر في الأربعينيات–الخمسينيات باستخدام الأنابيب المفرغة. أشهر مثال إينياك. كان يملأ غرفة ويُستخدم أساسًا للحساب العسكري والعلمي، قبل ما يوصل البيوت أو الفصول.",
-      bodyEn:
-        "The electronic computer appeared in the 1940s–1950s using vacuum tubes. ENIAC is the well-known example. It filled a room and was used mainly for military and scientific calculation, long before homes or classrooms had one.",
-      exampleAr: "القوات استخدمت إينياك لحسابات معقدة قبل انتشار الحاسوب في العمل اليومي.",
-      exampleEn: "Armies used ENIAC for hard calculations before computers entered daily work.",
-    },
-    {
-      termAr: "الحاسوب الشخصي",
-      termEn: "Personal computer",
-      bodyAr:
-        "الحاسوب الشخصي انتشر في الثمانينيات. بقى على مكتب الفرد والمؤسسة، ودخل العمل والتعليم بدل الملفات الورقية والطرق التقليدية.",
-      bodyEn:
-        "The personal computer spread in the 1980s. It sat on a desk at home and at work, and it entered offices and classrooms in place of paper files and older methods.",
-      exampleAr: "مكتب المدرسة حط جهازًا على المكتب بدل الدفاتر فقط.",
-      exampleEn: "A school office put a PC on the desk instead of relying on paper files alone.",
-    },
-    {
-      termAr: "الإنترنت والويب",
-      termEn: "Internet and the web",
-      bodyAr:
-        "في التسعينيات أُتيح الإنترنت للاستخدام التجاري وظهر الويب. بقى الوصول للمعلومات عالميًا، وانتشر البريد الإلكتروني بين الدول أسرع من الورق والفاكس.",
-      bodyEn:
-        "In the 1990s the Internet opened to business and the web appeared. Access to information became worldwide, and email moved knowledge across countries faster than paper or fax.",
-      exampleAr: "الطالب يبحث ويرسل رسالة إلكترونية بدل ما يستنى خطابًا.",
-      exampleEn: "A student searches and sends email instead of waiting for a letter.",
-    },
-    {
-      termAr: "الهواتف الذكية",
-      termEn: "Smartphones",
-      bodyAr:
-        "الهواتف الذكية ظهرت في العقد الأول من الألفية، ومنها آيفون وغيره. خلّت الإنترنت في الجيب وغيّرت طريقة الحصول على الأخبار والخدمات اليومية.",
-      bodyEn:
-        "Smartphones appeared in the 2000s, including the iPhone and others. They put the Internet in a pocket and changed how daily news and services arrived.",
-      exampleAr: "تصفح الإنترنت والتطبيقات من الموبايل في أي مكان.",
-      exampleEn: "Browse the web and apps from a phone anywhere.",
-    },
-    {
       termAr: "قانون مور",
       termEn: "Moore's Law",
-      bodyAr:
-        "قانون مور ملاحظة قالها جوردون مور سنة 1965، مش قانون فيزيائي ولا قرار وزاري. يقول إن عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين. الترانزستور مفتاح إلكتروني صغير؛ كل ما زاد عدده على نفس المساحة، الجهاز يبقى أسرع وأقدر على الحساب. نتيجة التضاعف عبر العقود: أجهزة أصغر وأرخص ووصلت من غرفة كاملة إلى جيب الطالب. اليوم التصغير اقترب من حد فيزيائي، عشان كده ظهرت أفكار زي المعالجة المتوازية (أنوية كتير تشتغل مع بعض) والحوسبة الكمومية.",
-      bodyEn:
-        "Moore's Law is an observation Gordon Moore made in 1965 — not a physics law and not a ministry order. It says the number of transistors on a chip roughly doubles about every two years. A transistor is a tiny electronic switch; more of them on the same area make a machine faster. Across decades that doubling made computers smaller and cheaper, from a whole room to a student's pocket. Shrinking is now near a physical limit, so new paths appear: parallel cores and quantum computing.",
-      exampleAr: "معمل المدرسة اشترى لابتوب جديد أصغر من جهاز الستينيات لأن الشريحة فيها ترانزستورات أكثر بكتير.",
-      exampleEn: "The school lab bought a laptop smaller than a 1960s machine because the chip now holds far more transistors.",
+      bodyAr: "ملاحظة من 1965: عدد الترانزستورات على الشريحة يتضاعف تقريبًا كل سنتين. ليست قانونًا فيزيائيًا، واقتربت من حد فيزيائي.",
+      bodyEn: "A 1965 observation: transistors on a chip roughly double every two years. It is not a physics law, and it is near a physical limit.",
+      exampleAr: "",
+      exampleEn: "",
     },
     {
       termAr: "الحوسبة السحابية",
       termEn: "Cloud computing",
-      bodyAr:
-        "الحوسبة السحابية تعني إن موارد تكنولوجيا المعلومات — تخزين، برامج، قوة حساب — تتقدم كخدمة عبر الإنترنت. المدرسة مش مضطرة تشتري سيرفر غالي وتقعد تصونه في أوضة مغلقة. تفتح المتصفح، تدخل الحساب، وتشتغل. السحابة مناسبة للملفات المشتركة والنسخ الاحتياطي والبرامج اللي بتتحدث لوحدها. عيوبها: محتاجة إنترنت، والبيانات بتخرج بره الجهاز، فلازم نسأل مين يستضيفها وإيه سياسة الخصوصية.",
-      bodyEn:
-        "Cloud computing means IT resources — storage, software, compute — arrive as a service over the Internet. A school does not have to buy and nurse a server in a locked room. You open a browser, sign in, and work. The cloud fits shared files, backups, and software that updates itself. The cost: you need a network, and data leaves the device, so ask who hosts it and what the privacy policy says.",
-      exampleAr: "درجات الطلاب على منصة ويب تتفتح من البيت والمدرسة من غير فلاشة.",
-      exampleEn: "Student marks live on a web platform that opens at home and at school with no flash drive.",
+      bodyAr: "تقديم موارد تكنولوجيا المعلومات كخدمة عبر الإنترنت: تخزين وبرامج وقوة حساب.",
+      bodyEn: "IT resources delivered as a service over the Internet: storage, software, and compute.",
+      exampleAr: "",
+      exampleEn: "",
     },
     {
       termAr: "الحوسبة الطرفية",
       termEn: "Edge computing",
-      bodyAr:
-        "الحوسبة الطرفية تعالج البيانات على الجهاز نفسه أو قريب جدًا منه، بدل ما تبعتها للسحابة وتستنى الرد. مفيدة لما التأخير خطر أو الشبكة ضعيفة. السيارة الذاتية لو استنت كل قرار يروح السحابة ويرجع، جزء من الثانية ممكن يعمل حادث. كمان الكاميرا في المصنع أو الحساس في المعمل يقدر يقرر محليًا. السحابة والطرفية يكملوا بعض: القرار السريع هنا، والتحليل الثقيل هناك.",
-      bodyEn:
-        "Edge computing processes data on the device itself, or very near it, instead of sending every bit to the cloud and waiting. It matters when delay is dangerous or the network is weak. A self-driving car cannot wait for a round trip to the cloud; a tenth of a second can cause a crash. A factory camera or a lab sensor can decide locally. Cloud and edge work together: fast decisions here, heavy analysis there.",
-      exampleAr: "كاميرا عبور المدرسة تكتشف طالب قرب من الطريق وتطلق تنبيه فورًا من غير انتظار سيرفر بعيد.",
-      exampleEn: "A crossing camera spots a student near the road and alerts at once, without waiting for a distant server.",
+      bodyAr: "معالجة البيانات على الجهاز نفسه بدل إرسالها للسحابة. لازمة لما يكون التأخير خطرًا.",
+      bodyEn: "Process data on the device itself instead of sending it to the cloud. Needed when delay is dangerous.",
+      exampleAr: "",
+      exampleEn: "",
     },
     {
       termAr: "الواقع المعزز / الافتراضي",
       termEn: "AR / VR",
-      bodyAr:
-        "الواقع المعزز يضيف طبقة رقمية فوق العالم الحقيقي: الكاميرا تفضل تشوف الشارع، والتطبيق يحط سهم أو اسم أو معلومة فوق الصورة. الواقع الافتراضي يستبدل الواقع بعالم محاكى: النظارة تغطي العين وتوديك مكان تاني. الغلط الشائع إن الاتنين نفس الحاجة. المعزز يخدم التجول والتعليم في المكان الحقيقي. الافتراضي يخدم التدريب والمحاكاة لما التجربة الحقيقية خطرة أو غالية.",
-      bodyEn:
-        "Augmented reality (AR) adds a digital layer on the real world: the camera still sees the street, and the app draws an arrow, a name, or a fact on top. Virtual reality (VR) replaces the real world with a simulated space: a headset covers the eyes and takes you elsewhere. A common mistake is treating them as the same thing. AR helps navigation and on-the-spot learning. VR helps training when the real experience is dangerous or expensive.",
-      exampleAr: "تطبيق يوري أسماء المعالم وأنت ماشي في الشارع. نظارة تدريب على معمل كيمياء من غير مواد خطرة.",
-      exampleEn: "An app names landmarks while you walk. A headset trains a chemistry lab without hazardous chemicals.",
+      bodyAr: "المعزز يضيف طبقة رقمية فوق العالم الحقيقي. الافتراضي يستبدل الواقع بفضاء يولّده الحاسوب.",
+      bodyEn: "AR overlays digital information on the real world. VR replaces it with a computer-generated space.",
+      exampleAr: "",
+      exampleEn: "",
     },
     {
       termAr: "التحولات الاجتماعية الناتجة عن تكنولوجيا المعلومات",
       termEn: "Social changes resulting from information technology",
       bodyAr:
-        "1) شبكات التواصل الاجتماعي: خدمات تربط المستخدمين لينشروا المعلومات ويشاركوها. فعّالة جدًا في نشر الخبر بسرعة.\n2) التجارة الإلكترونية: بيع وشراء السلع والخدمات عبر الإنترنت، مثل التسوق الإلكتروني. ليست الشراء النقدي من محل فعلي.\n3) العمل عن بُعد: أسلوب يؤدي فيه الموظف العمل من البيت أو مكان بعيد باستخدام الإنترنت.\n4) التعلّم عبر الإنترنت: حصص ومواد دراسية تصل عبر الإنترنت بدل الحضور فقط في الفصل.\n5) الدفع بلا نقد: نظام يدفع فيه المستخدم بمال إلكتروني أو بطاقة أو رمز استجابة سريعة من غير كاش.",
+        "1) شبكات التواصل: تربط المستخدمين لنشر المعلومات بسرعة.\n2) التجارة الإلكترونية: بيع وشراء عبر الإنترنت، ليست شراء نقدي من محل.\n3) العمل عن بُعد: أداء العمل من البيت أو مكان آخر بالإنترنت.\n4) التعلّم عبر الإنترنت: حصص ومواد تصل عبر الإنترنت.\n5) الدفع بلا نقد: بطاقة أو مال إلكتروني أو رمز استجابة سريعة.",
       bodyEn:
-        "1) SNS: services that let users connect, post, and share information. Highly effective at spreading information rapidly.\n2) E-commerce (EC): buying and selling goods and services through the Internet, such as online shops. It is not paying cash in a physical store.\n3) Remote work: the job is done from home or another place using the Internet.\n4) Online learning: classes and study materials delivered over the Internet.\n5) Cashless payment: electronic money, cards, or QR codes, without cash.",
-      exampleAr: "طلب من متجر يصل للبيت، موظف يسلّم التقرير من البيت، حصة تُفتح من البيت، ودفع بالبطاقة أو برمز.",
-      exampleEn: "An online order arrives at home, a report is sent from home, a lesson opens from home, and a bill is paid by card or QR code.",
+        "1) SNS: users connect and share information rapidly.\n2) E-commerce (EC): buying and selling through the Internet, not cash at a physical shop.\n3) Remote work: the job is done from home or another place over the Internet.\n4) Online learning: classes and materials over the Internet.\n5) Cashless payment: cards, electronic money, or QR codes.",
+      exampleAr: "",
+      exampleEn: "",
     },
     {
       termAr: "القيادة الذاتية",
       termEn: "Autonomous driving",
-      bodyAr:
-        "القيادة الذاتية تقنية تستخدم الذكاء الاصطناعي لقيادة مركبة من غير تدخل بشري: كاميرات وحساسات تتعرف على المحيط وتقرر. تأخير 0.1 ثانية قد يسبب حادثًا، لذلك تُستخدم الحوسبة الطرفية على المركبة نفسها بدل انتظار السحابة.",
-      bodyEn:
-        "Autonomous driving uses AI to drive a vehicle without a human. Cameras and sensors read the surroundings and decide. A delay of 0.1 seconds can cause an accident, so edge computing runs on the vehicle instead of waiting for the cloud.",
-      exampleAr: "السيارة تقرر الفرامل على الجهاز نفسه.",
-      exampleEn: "The car decides to brake on the vehicle itself.",
+      bodyAr: "قيادة مركبة بالذكاء الاصطناعي من غير تدخل بشري. تحتاج حوسبة طرفية لأن تأخير 0.1 ثانية قد يسبب حادثًا.",
+      bodyEn: "AI drives a vehicle without a human. It needs edge computing because a 0.1 second delay can cause an accident.",
+      exampleAr: "",
+      exampleEn: "",
     },
     {
       termAr: "البت الكمومي",
       termEn: "Qubit",
-      bodyAr:
-        "البت التقليدي يحمل حالة واحدة في اللحظة: 0 أو 1. البت الكمومي (الكيوبت) يستخدم التراكب فيمثل 0 و 1 معًا، فيوسّع فضاء الحالات للمعالجة المتوازية. يظهر مع اقتراب قانون مور من الحد الفيزيائي.",
-      bodyEn:
-        "A classical bit holds one state at a time: 0 or 1, never both. A qubit uses superposition and can represent 0 and 1 at once, so many qubits give a much larger state space for parallel processing. It appears as Moore's Law nears a physical limit.",
-      exampleAr: "البت: مفتاح واحد. الكيوبت: سهم على كرة يمثل الحالتين معًا.",
-      exampleEn: "A bit is one switch. A qubit is a point on a sphere that can mix both states.",
+      bodyAr: "البت التقليدي 0 أو 1. البت الكمومي يمثل 0 و 1 معًا بالتراكب.",
+      bodyEn: "A classical bit is 0 or 1. A qubit can represent 0 and 1 at once through superposition.",
+      exampleAr: "",
+      exampleEn: "",
     },
   ],
   "1-2": [
@@ -1112,9 +1050,12 @@ const SOCIAL_TERMS_AR = new Set([
   "التعلّم عبر الإنترنت",
   "الدفع بلا نقد",
 ]);
+const TABLE_TERMS_EN = new Set(["Electronic computer", "Personal computer", "Internet and the web", "Smartphones"]);
+const TABLE_TERMS_AR = new Set(["الحاسوب الإلكتروني", "الحاسوب الشخصي", "الإنترنت والويب", "الهواتف الذكية"]);
 
 export function explainCoversTerm(items: LessonExplain[], termEn: string, termAr: string): boolean {
   if (items.some((item) => item.termEn === termEn || item.termAr === termAr)) return true;
+  if (TABLE_TERMS_EN.has(termEn) || TABLE_TERMS_AR.has(termAr)) return true;
   if (SOCIAL_TERMS_EN.has(termEn) || SOCIAL_TERMS_AR.has(termAr)) {
     return items.some(
       (item) =>

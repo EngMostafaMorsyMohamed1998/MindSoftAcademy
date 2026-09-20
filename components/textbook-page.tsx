@@ -58,29 +58,27 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
             </span>
             {bookletSafe(locale, ar ? page.sectionAr : page.sectionEn)}
           </h4>
-          <div className={`mt-5 grid items-center gap-6 ${nest ? "lg:grid-cols-12" : "sm:grid-cols-[220px_minmax(0,1fr)]"}`}>
-            <figure
-              className={
-                nest
-                  ? "flex items-center justify-center rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-100 lg:col-span-5"
-                  : "overflow-hidden rounded-2xl bg-zinc-100 ring-1 ring-slate-200"
-              }
-            >
-              {page.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
-              ) : nest ? (
-                <AiNestDiagram
-                  locale={locale}
-                  selected={picked?.startsWith("explain:") ? picked.slice("explain:".length) : null}
-                  onSelect={(term) => setPicked(`explain:${term}`)}
-                />
-              ) : (
-                <div className="aspect-[4/3] w-full">
-                  <TextbookArt art={page.art} locale={locale} />
-                </div>
-              )}
-            </figure>
+          <div className={`mt-5 grid items-center gap-6 ${nest ? "lg:grid-cols-12" : page.photo || nest ? "sm:grid-cols-[220px_minmax(0,1fr)]" : ""}`}>
+            {page.photo || nest ? (
+              <figure
+                className={
+                  nest
+                    ? "flex items-center justify-center rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-100 lg:col-span-5"
+                    : "overflow-hidden rounded-2xl bg-zinc-100 ring-1 ring-slate-200"
+                }
+              >
+                {page.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
+                ) : (
+                  <AiNestDiagram
+                    locale={locale}
+                    selected={picked?.startsWith("explain:") ? picked.slice("explain:".length) : null}
+                    onSelect={(term) => setPicked(`explain:${term}`)}
+                  />
+                )}
+              </figure>
+            ) : null}
             <div className={nest ? "lg:col-span-7" : undefined}>
               <p className="text-base font-semibold leading-8 text-[#111827]">{bookletSafe(locale, ar ? page.introAr : page.introEn)}</p>
               {points.length ? (

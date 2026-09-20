@@ -25,13 +25,15 @@ import {
 import { getChapter } from "@/lib/curriculum";
 import type { Locale } from "@/lib/locale";
 import { mindMapForFaiz, type MindNode } from "@/lib/mind-maps";
+import { existsSync } from "fs";
 import { textbookPageFor } from "@/lib/textbook-pages";
 import { bundleExplains } from "@/lib/lesson-explains";
 import { renderBookPage } from "@/lib/book-page-image";
 
 const ARABIC_FONT = "NotoNaskh";
-const LATIN_FONT = "GeistSans";
+const LATIN_FONT = "LatinSans";
 const FONT_NAME = ARABIC_FONT;
+let latinOnly = false;
 const PAGE_W = 595;
 const PAGE_H = 842;
 const SCALE = 2.5;
@@ -42,7 +44,16 @@ let fontReady = false;
 function ensureFont() {
   if (fontReady) return;
   GlobalFonts.registerFromPath(path.join(process.cwd(), "fonts/NotoNaskhArabic-Regular.ttf"), ARABIC_FONT);
-  GlobalFonts.registerFromPath(path.join(process.cwd(), "fonts/Geist-Regular.ttf"), LATIN_FONT);
+  const latinFiles = [
+    "/System/Library/Fonts/Supplemental/Arial.ttf",
+    "/Library/Fonts/Arial.ttf",
+    path.join(process.cwd(), "fonts/Geist-Regular.ttf"),
+  ];
+  for (const file of latinFiles) {
+    if (!existsSync(file)) continue;
+    GlobalFonts.registerFromPath(file, LATIN_FONT);
+    break;
+  }
   fontReady = true;
 }
 
@@ -103,7 +114,8 @@ function fontPx(ctx: SKRSContext2D): number {
 function applyFace(ctx: SKRSContext2D, text: string) {
   const size = fontPx(ctx);
   const bold = /\bbold\b/i.test(ctx.font);
-  ctx.font = `${bold ? "bold " : ""}${size}px ${hasArabic(text) ? ARABIC_FONT : LATIN_FONT}`;
+  const latin = latinOnly || !hasArabic(text);
+  ctx.font = `${bold ? "bold " : ""}${size}px ${latin ? LATIN_FONT : ARABIC_FONT}`;
 }
 
 function textWidth(ctx: SKRSContext2D, text: string): number {
@@ -1461,12 +1473,11 @@ function pushLesson(blocks: Block[], pack: BookletLessonPack, locale: Locale) {
     kind: "ask",
     text: bookletSafe(locale, `${ar ? "السؤال الرئيسي:" : "Main question:"} ${ar ? page.questionAr : page.questionEn}`),
   });
+  blocks.push({ kind: "section", text: bookletSafe(locale, ar ? page.sectionAr : page.sectionEn) });
   blocks.push({
-    kind: "photo",
-    src: `book:${pack.lessonId}:0`,
-    art: page.art,
-    title: bookletSafe(locale, ar ? page.sectionAr : page.sectionEn),
-    intro: bookletSafe(locale, ar ? page.introAr : page.introEn),
+    kind: "text",
+    text: bookletSafe(locale, ar ? page.introAr : page.introEn),
+    size: 14,
   });
   const points = (ar ? page.pointsAr : page.pointsEn).map((item) => bookletSafe(locale, item));
   if (points.length) blocks.push({ kind: "points", items: points });
@@ -1861,6 +1872,7 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
 
 export async function buildBookletPdf(locale: Locale, scope: BookletScope): Promise<Uint8Array> {
   ensureFont();
+  latinOnly = locale === "en";
   const ar = locale === "ar";
   const margin = 40;
   const foot = 32;
