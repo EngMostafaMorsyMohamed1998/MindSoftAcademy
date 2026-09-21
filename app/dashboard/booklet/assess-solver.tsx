@@ -73,13 +73,7 @@ export function AssessSolver({
                   return (
                   <article
                     key={row.id}
-                    className={`print-keep rounded-xl border-2 border-dashed p-5 ${
-                      verdict?.ok === true
-                        ? "border-emerald-600 bg-emerald-50/40"
-                        : verdict?.ok === false
-                          ? "border-red-600 bg-red-50/50"
-                          : "border-primary/30"
-                    }`}
+                    className="print-keep rounded-xl border-2 border-dashed border-primary/30 p-5"
                   >
                     <p
                       className="text-lg font-bold leading-9 text-[#111827]"
@@ -109,21 +103,27 @@ export function AssessSolver({
                       ))}
                     </div>
                     {verdict?.ok === true || verdict?.ok === false ? (
-                      <div
-                        className="mt-3 space-y-1 rounded-xl px-4 py-3 text-white"
-                        style={{ background: verdict.ok ? "#047857" : "#b91c1c" }}
-                      >
-                        <p
-                          className="text-xl font-extrabold"
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span
                           dir="rtl"
                           lang="ar"
-                          style={{ fontFamily: "var(--font-cairo), Arial, sans-serif", unicodeBidi: "isolate" }}
+                          className="inline-flex rounded-md px-4 py-2 text-sm font-extrabold text-white"
+                          style={{
+                            background: verdict.ok ? "#047857" : "#b91c1c",
+                            fontFamily: "var(--font-cairo), Arial, sans-serif",
+                            unicodeBidi: "isolate",
+                          }}
                         >
                           {verdict.ok ? "إجابة صحيحة" : "إجابة غلط"}
-                        </p>
-                        <p className="text-sm font-bold" dir="ltr" lang="en" style={{ unicodeBidi: "isolate" }}>
+                        </span>
+                        <span
+                          dir="ltr"
+                          lang="en"
+                          className="inline-flex rounded-md px-4 py-2 text-sm font-extrabold text-white"
+                          style={{ background: verdict.ok ? "#047857" : "#b91c1c", unicodeBidi: "isolate" }}
+                        >
                           {verdict.ok ? "Correct" : "Wrong"}
-                        </p>
+                        </span>
                       </div>
                     ) : null}
                     {verdict?.ok === true || verdict?.ok === false ? <BilingualAnswer guide={verdict} /> : null}
