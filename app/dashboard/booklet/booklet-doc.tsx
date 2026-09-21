@@ -686,7 +686,7 @@ export function BookletAssessPane({ lessonId }: { lessonId: string }) {
           ))}
         </section>
       ) : (
-        <p className="mt-8 text-sm font-semibold text-[#374151]">الأسئلة المكتوبة جاهزة للدرس 1-1 أولًا.</p>
+        <p className="mt-8 text-sm font-semibold text-[#374151]">لا توجد أسئلة مكتوبة لهذا الدرس بعد.</p>
       )}
     </div>
   );
