@@ -17,7 +17,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
-import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "./logout-button";
 import type { CurrentUser } from "@/lib/current-user";
@@ -99,17 +98,11 @@ export function DashboardNav({
           })}
         </nav>
         <div className="space-y-2 border-t border-white/10 p-4">
-          <div className="grid grid-cols-2 gap-2">
-            <LanguageToggle
-              locale={locale}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
-            />
-            <ThemeToggle
-              theme={theme}
-              locale={locale}
-              className="inline-flex items-center justify-center rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
-            />
-          </div>
+          <ThemeToggle
+            theme={theme}
+            locale={locale}
+            className="inline-flex w-full items-center justify-center rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
+          />
           <p className="text-center text-[11px] text-white/45">
             {t(locale, "trackLabel")}: {t(locale, track === "en" ? "trackEn" : "trackAr")}
             <span className="mt-1 block text-white/35">{t(locale, "trackLocked")}</span>
@@ -139,10 +132,6 @@ export function DashboardNav({
       <header className="no-print sticky top-0 z-40 flex h-16 items-center justify-between border-b-2 border-accent bg-nav px-4 text-nav-fg shadow-md md:hidden">
         <BrandMark locale={locale} href="/dashboard" />
         <div className="flex items-center gap-1.5">
-          <LanguageToggle
-            locale={locale}
-            className="inline-flex h-9 items-center gap-1 rounded-full border-2 border-primary/20 bg-primary px-2.5 text-[11px] font-semibold text-white dark:border-accent/40 dark:bg-accent dark:text-primary-dark"
-          />
           <ThemeToggle
             theme={theme}
             locale={locale}

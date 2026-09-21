@@ -155,8 +155,8 @@ export function AssessSolver({
                       <ul className="mt-4 space-y-3">
                         {row.options.map((option, optionIndex) => {
                           const picked = answers[row.id] === optionIndex;
-                          const correct = marked?.correctIndex === optionIndex;
-                          const wrongPick = Boolean(marked) && picked && !correct;
+                          const correct = Boolean(marked?.answered) && marked?.correctIndex === optionIndex;
+                          const wrongPick = Boolean(marked?.answered) && picked && !correct;
                           return (
                             <li key={`${row.id}-${optionIndex}`}>
                               <button
@@ -193,7 +193,7 @@ export function AssessSolver({
                           );
                         })}
                       </ul>
-                      {marked ? (
+                      {marked?.answered ? (
                         <BilingualAnswer
                           guide={{ ar: marked.choiceAr, en: marked.choiceEn }}
                           arabicLabel="الإجابة: "
@@ -228,9 +228,11 @@ export function AssessSolver({
               {busy ? (ar ? "بيتحسب…" : "Scoring…") : ar ? "اعرض درجتي" : "Show my score"}
             </button>
           )}
-          <p className="text-sm font-semibold text-[#374151]">
-            {ar ? `جاوبت ${answered} من ${total}` : `Answered ${answered} of ${total}`}
-          </p>
+          {grade ? null : (
+            <p className="text-sm font-semibold text-[#374151]">
+              {ar ? `جاوبت ${answered} من ${total}` : `Answered ${answered} of ${total}`}
+            </p>
+          )}
           {grade ? (
             <button
               type="button"

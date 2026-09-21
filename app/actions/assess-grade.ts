@@ -7,7 +7,7 @@ import { getLocale } from "@/lib/locale";
 export type AssessGrade = {
   score: number;
   total: number;
-  mcq: { id: string; correctIndex: number; choiceAr: string; choiceEn: string; prompt: string }[];
+  mcq: { id: string; correctIndex: number; choiceAr: string; choiceEn: string; prompt: string; answered: boolean }[];
   essays: { id: string; guideAr: string; guideEn: string; ok: boolean | null }[];
 };
 
@@ -28,25 +28,88 @@ function fold(text: string): string {
     .trim();
 }
 
-function keywords(text: string): string[] {
-  return fold(text)
-    .split(" ")
-    .filter((word) => word.length >= 4 && !STOP.has(word));
+const SAME: string[][] = [
+  ["eniac", "اينياك", "انياك"],
+  ["military", "army", "عسكر", "جيش", "حرب"],
+  ["science", "scientific", "علم"],
+  ["vacuum", "tube", "صمام", "مفرغ"],
+  ["computer", "حاسوب", "حواس", "الكترون"],
+  ["transistor", "ترانزستور", "شريحه"],
+  ["moore", "مور"],
+  ["cloud", "سحاب"],
+  ["edge", "طرف", "مركبه"],
+  ["quantum", "كموم", "كيوبت", "qubit", "تراكب"],
+  ["augment", "معزز"],
+  ["virtual", "افتراض"],
+  ["encrypt", "تشفير", "مفتاح"],
+  ["handshake", "مصافح", "tls"],
+  ["factor", "مصادق", "عامل"],
+  ["password", "مرور"],
+];
+
+function stem(word: string): string {
+  const bare = word
+    .replace(/^(ال|وال|بال|كال|فال|لل)/, "")
+    .replace(/(?:ing|tion|ness|ment)$/g, "")
+    .replace(/(?:ies|es|ed|s)$/g, "");
+  return bare.slice(0, 5);
 }
 
-function essayOk(answer: string, guides: string[]): boolean {
-  const blob = fold(answer);
-  if (blob.length < 12) return false;
+function concepts(text: string): Set<string> {
+  const found = new Set<string>();
+  for (const word of fold(text).split(" ")) {
+    if (word.length < 3 || STOP.has(word)) continue;
+    const token = stem(word);
+    if (token.length < 3) continue;
+    const group = SAME.find((row) =>
+      row.some((item) => {
+        const root = stem(fold(item));
+        if (root.length < 3) return false;
+        if (token === root) return true;
+        return root.length >= 4 && token.startsWith(root) && token.length - root.length <= 2;
+      }),
+    );
+    found.add(group ? group[0] : token);
+  }
+  return found;
+}
+
+function cover(answer: string, guides: string[]): number {
+  const mine = concepts(answer);
   const keys = new Set<string>();
   for (const guide of guides) {
-    for (const word of keywords(guide)) keys.add(word);
+    for (const item of concepts(guide)) keys.add(item);
   }
-  if (!keys.size) return false;
+  if (!keys.size || !mine.size) return 0;
   let hits = 0;
-  for (const word of keys) {
-    if (blob.includes(word)) hits += 1;
+  for (const key of keys) {
+    if (mine.has(key)) hits += 1;
   }
-  return hits >= 2;
+  return hits;
+}
+
+function bestCover(answer: string, guides: string[]): { hits: number; size: number } {
+  let hits = 0;
+  let size = 0;
+  for (const guide of guides) {
+    if (!guide.trim()) continue;
+    const nextHits = cover(answer, [guide]);
+    const nextSize = concepts(guide).size;
+    if (!nextSize) continue;
+    if (nextHits > hits || (nextHits === hits && nextHits / nextSize > (size ? hits / size : 0))) {
+      hits = nextHits;
+      size = nextSize;
+    }
+  }
+  return { hits, size };
+}
+
+function essayOk(answer: string, guides: string[], others: string[][]): boolean {
+  const mine = bestCover(answer, guides);
+  if (!mine.size) return false;
+  const bestOther = others.reduce((best, guide) => Math.max(best, bestCover(answer, guide).hits), 0);
+  if (bestOther > mine.hits) return false;
+  return mine.hits >= 3 && mine.hits / mine.size >= 0.18;
 }
 
 export async function gradeAssessLesson(input: {
@@ -62,7 +125,8 @@ export async function gradeAssessLesson(input: {
   let score = 0;
   const marked = mcq.map((row) => {
     const picked = input.answers[row.id];
-    if (picked === row.correctIndex) score += 1;
+    const answered = typeof picked === "number";
+    if (answered && picked === row.correctIndex) score += 1;
     const optionsAr = assessOptions(row, "ar");
     const optionsEn = assessOptions(row, "en");
     return {
@@ -71,6 +135,7 @@ export async function gradeAssessLesson(input: {
       choiceAr: optionsAr[row.correctIndex ?? 0] ?? "",
       choiceEn: optionsEn[row.correctIndex ?? 0] ?? "",
       prompt: assessPrompt(row, locale),
+      answered,
     };
   });
   const written = input.essays ?? {};
@@ -78,14 +143,17 @@ export async function gradeAssessLesson(input: {
     const guideAr = row.guideAr ?? "";
     const guideEn = row.guideEn ?? "";
     const text = written[row.id] ?? "";
-    const ok = fold(text).length < 2 ? null : essayOk(text, [guideAr, guideEn]);
+    const others = essays
+      .filter((item) => item.id !== row.id)
+      .map((item) => [item.guideAr ?? "", item.guideEn ?? ""]);
+    const ok = fold(text).length < 2 ? null : essayOk(text, [guideAr, guideEn], others);
     if (ok) score += 1;
     return { id: row.id, guideAr, guideEn, ok };
   });
   const attempted = essayMarks.filter((row) => row.ok !== null).length;
   return {
     score,
-    total: mcq.length + attempted,
+    total: marked.filter((row) => row.answered).length + attempted,
     mcq: marked,
     essays: essayMarks,
   };
