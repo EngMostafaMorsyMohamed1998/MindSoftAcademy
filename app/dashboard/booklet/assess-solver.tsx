@@ -35,8 +35,8 @@ export function AssessSolver({
     return map;
   }, [grade]);
   const guides = useMemo(() => {
-    const map = new Map<string, string>();
-    grade?.essays.forEach((row) => map.set(row.id, row.guide));
+    const map = new Map<string, { ar: string; en: string }>();
+    grade?.essays.forEach((row) => map.set(row.id, { ar: row.guideAr, en: row.guideEn }));
     return map;
   }, [grade]);
 
@@ -76,10 +76,18 @@ export function AssessSolver({
                       ))}
                     </div>
                     {grade ? (
-                      <p className="mt-3 text-base font-semibold leading-8 text-[#111827] whitespace-pre-line">
-                        <span className="font-extrabold text-primary">{ar ? "نموذج الإجابة: " : "Model answer: "}</span>
-                        {guides.get(row.id)}
-                      </p>
+                      <div className="mt-3 space-y-2 text-base font-semibold leading-8 text-[#111827]">
+                        <p className="whitespace-pre-line" dir="rtl" lang="ar">
+                          <span className="font-extrabold text-primary">عربي: </span>
+                          {guides.get(row.id)?.ar}
+                        </p>
+                        {guides.get(row.id)?.en ? (
+                          <p className="whitespace-pre-line" dir="ltr" lang="en">
+                            <span className="font-extrabold text-primary">English: </span>
+                            {guides.get(row.id)?.en}
+                          </p>
+                        ) : null}
+                      </div>
                     ) : null}
                   </article>
                 ))}

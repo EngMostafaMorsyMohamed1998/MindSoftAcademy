@@ -1,14 +1,14 @@
 "use server";
 
 import { assessmentsForLesson } from "@/lib/assessments-bank";
-import { assessGuide, assessOptions, assessPrompt } from "@/lib/assessments-helpers";
+import { assessOptions, assessPrompt } from "@/lib/assessments-helpers";
 import { getLocale } from "@/lib/locale";
 
 export type AssessGrade = {
   score: number;
   total: number;
-  mcq: { id: string; correctIndex: number; choice: string; prompt: string }[];
-  essays: { id: string; guide: string }[];
+  mcq: { id: string; correctIndex: number; choiceAr: string; choiceEn: string; prompt: string }[];
+  essays: { id: string; guideAr: string; guideEn: string }[];
 };
 
 export async function gradeAssessLesson(input: {
@@ -23,11 +23,13 @@ export async function gradeAssessLesson(input: {
   const marked = mcq.map((row) => {
     const picked = input.answers[row.id];
     if (picked === row.correctIndex) score += 1;
-    const options = assessOptions(row, locale);
+    const optionsAr = assessOptions(row, "ar");
+    const optionsEn = assessOptions(row, "en");
     return {
       id: row.id,
       correctIndex: row.correctIndex ?? 0,
-      choice: options[row.correctIndex ?? 0] ?? "",
+      choiceAr: optionsAr[row.correctIndex ?? 0] ?? "",
+      choiceEn: optionsEn[row.correctIndex ?? 0] ?? "",
       prompt: assessPrompt(row, locale),
     };
   });
@@ -37,6 +39,10 @@ export async function gradeAssessLesson(input: {
     mcq: marked,
     essays: rows
       .filter((row) => row.kind === "essay")
-      .map((row) => ({ id: row.id, guide: assessGuide(row, locale) })),
+      .map((row) => ({
+        id: row.id,
+        guideAr: row.guideAr ?? "",
+        guideEn: row.guideEn ?? "",
+      })),
   };
 }
