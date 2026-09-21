@@ -1,6 +1,7 @@
 import { BookletAssessPane, BookletFaizHomeworkPane, BookletFaizUnitPane, BookletHomeworkPane, BookletLessonPane } from "./booklet-doc";
 import { BookletViewer } from "./booklet-viewer";
-import { assessScope, part1LessonIds } from "@/lib/assessments";
+import { assessScope } from "@/lib/assessments";
+import { assessLessonIds } from "@/lib/assessments-bank";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { CHAPTERS } from "@/lib/curriculum";
@@ -48,7 +49,7 @@ export default async function BookletPage() {
                   id: "assess",
                   labelAr: "الأداءات والتقييمات",
                   labelEn: "Assessments",
-                  lessons: part1LessonIds().map((lessonId) => ({
+                  lessons: assessLessonIds().map((lessonId) => ({
                     id: assessScope(lessonId),
                     labelAr: `الدرس ${lessonId}`,
                     labelEn: `Lesson ${lessonId}`,

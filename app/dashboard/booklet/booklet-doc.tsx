@@ -3,7 +3,7 @@ import { BookletFigure, CHAPTER_FIGURES } from "@/components/booklet-figures";
 import { BookletMindMap } from "@/components/booklet-mind-map";
 import { TextbookLesson } from "@/components/textbook-page";
 import { assessBlocksForLesson, periodLabelAr } from "@/lib/assessments-bank";
-import { assessLessonTitle, assessmentsPages } from "@/lib/assessments";
+import { assessLessonTitle } from "@/lib/assessments";
 import { bookletSafe } from "@/lib/booklet-lang";
 import { BRAND } from "@/lib/brand";
 import {
@@ -231,6 +231,7 @@ export function BookletCover({
   kicker,
   title,
   color = "#0c2d6b",
+  lead,
 }: {
   locale: Locale;
   teacher: string;
@@ -238,6 +239,7 @@ export function BookletCover({
   kicker: string;
   title: string;
   color?: string;
+  lead?: string;
 }) {
   const ar = locale === "ar";
   return (
@@ -264,9 +266,10 @@ export function BookletCover({
           <Field label={ar ? "المجموعة" : "Group"} />
         </div>
         <p className="mt-6 text-base font-semibold leading-8 text-[#111827]">
-          {ar
-            ? "شرح الدرس، اختيار من متعدد، صح وغلط، مقالي، ومفتاح الإجابة في الآخر."
-            : "The lesson, multiple choice, true or false, essays, and the answer key at the end."}
+          {lead ??
+            (ar
+              ? "شرح الدرس، اختيار من متعدد، صح وغلط، مقالي، ومفتاح الإجابة في الآخر."
+              : "The lesson, multiple choice, true or false, essays, and the answer key at the end.")}
         </p>
       </div>
     </section>
@@ -591,7 +594,6 @@ export function BookletAssessPane({ lessonId }: { lessonId: string }) {
   const lesson = getLesson(lessonId);
   const chapter = lesson ? getChapter(lesson.chapterId) : undefined;
   const title = assessLessonTitle(lessonId);
-  const pages = assessmentsPages(lessonId);
   const blocks = assessBlocksForLesson(lessonId);
   return (
     <div className="booklet-paper print-sheet rounded-xl bg-white p-5 ring-1 ring-slate-300 sm:p-8" lang="ar" dir="rtl">
@@ -602,78 +604,89 @@ export function BookletAssessPane({ lessonId }: { lessonId: string }) {
         kicker="الأداءات والتقييمات"
         title={`${lessonId} — ${title.titleAr}`}
         color={chapter?.color ?? "#0c2d6b"}
+        lead="أسئلة الوزارة مكتوبة، وسطور للحل، ومفتاح الإجابة في الآخر."
       />
-      <p className="text-sm font-semibold leading-8 text-[#374151]">
-        صفحات كتاب الوزارة كما طُبعت. النص تحتها للكتابة فقط، من غير تغيير صياغة السؤال.
-      </p>
-      <div className="mt-6 space-y-6">
-        {pages.map((page) => (
-          <figure key={page} className="print-keep keep-white overflow-hidden rounded-xl ring-1 ring-slate-200">
-            <img
-              src={`/api/book-page?book=assess&page=${page}`}
-              alt={`صفحة ${page} — الأداءات والتقييمات`}
-              className="w-full bg-white"
-              loading="lazy"
-            />
-            <figcaption className="bg-slate-50 px-3 py-2 text-xs font-semibold text-[#374151]">
-              الصفحة {page} من كتاب الأداءات والتقييمات
-            </figcaption>
-          </figure>
-        ))}
-      </div>
+      {blocks.map((block) => (
+        <div key={block.key} className="print-break mt-8">
+          <p className="text-sm font-extrabold text-primary">{periodLabelAr(block.period)}</p>
+          <p className="mt-1 text-xl font-extrabold text-[#0c2d6b]">{block.titleAr}</p>
+          <DateBlanks />
+          {block.essays.length ? (
+            <PrintSection title="الأسئلة المقالية">
+              <div className="mt-4 space-y-4">
+                {block.essays.map((row, index) => (
+                  <article key={row.id} className="print-keep rounded-xl border-2 border-dashed border-primary/30 p-5">
+                    <p className="text-lg font-bold leading-9 text-[#111827]">
+                      <span className="ms-1 font-extrabold text-primary">{index + 1}-</span>
+                      {row.promptAr}
+                    </p>
+                    <WriteLines count={5} />
+                  </article>
+                ))}
+              </div>
+            </PrintSection>
+          ) : null}
+          {block.mcq.length ? (
+            <PrintSection title="الأسئلة الموضوعية (اختيار من متعدد)">
+              <ol className="mt-4 list-none space-y-6">
+                {block.mcq.map((row, index) => (
+                  <li key={row.id} className="booklet-q rounded-xl p-5">
+                    <p className="text-lg font-bold leading-9 text-[#111827]">
+                      <span className="ms-1 font-extrabold text-primary">{index + 1}-</span>
+                      {row.promptAr}
+                    </p>
+                    <ul className="mt-4 space-y-3">
+                      {(row.optionsAr ?? []).map((option, optionIndex) => (
+                        <li key={`${row.id}-${optionIndex}`} className="flex items-start gap-3 text-base font-semibold leading-8 text-[#111827]">
+                          <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-primary text-sm font-extrabold text-primary">
+                            {ASSESS_LETTERS[optionIndex]}
+                          </span>
+                          <span>{option}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ol>
+            </PrintSection>
+          ) : null}
+        </div>
+      ))}
       {blocks.length ? (
-        <section className="mt-10">
-          <h3 className="font-serif text-3xl">نسخة للكتابة</h3>
-          <p className="mt-2 text-sm font-semibold text-[#374151]">نفس أسئلة الوزارة. سطور فارغة للحل.</p>
+        <section className="mt-8 rounded-xl bg-primary/5 p-6">
+          <h4 className="font-serif text-2xl">مفتاح الإجابة</h4>
           {blocks.map((block) => (
-            <div key={block.key} className="print-break mt-8">
-              <p className="text-sm font-extrabold text-primary">{periodLabelAr(block.period)}</p>
-              <p className="mt-1 text-xl font-extrabold text-[#0c2d6b]">{block.titleAr}</p>
-              <DateBlanks />
-              {block.essays.length ? (
-                <PrintSection title="الأسئلة المقالية">
-                  <div className="mt-4 space-y-4">
-                    {block.essays.map((row, index) => (
-                      <article key={row.id} className="print-keep rounded-xl border-2 border-dashed border-primary/30 p-5">
-                        <p className="text-lg font-bold leading-9 text-[#111827]">
-                          <span className="ms-1 font-extrabold text-primary">{index + 1}-</span>
-                          {row.promptAr}
-                        </p>
-                        <WriteLines count={5} />
-                      </article>
-                    ))}
-                  </div>
-                </PrintSection>
-              ) : null}
+            <div key={`key-${block.key}`} className="mt-4">
+              <p className="text-base font-extrabold text-[#0c2d6b]">
+                {periodLabelAr(block.period)} — {block.titleAr}
+              </p>
               {block.mcq.length ? (
-                <PrintSection title="الأسئلة الموضوعية (اختيار من متعدد)">
-                  <ol className="mt-4 list-none space-y-6">
-                    {block.mcq.map((row, index) => (
-                      <li key={row.id} className="booklet-q rounded-xl p-5">
-                        <p className="text-lg font-bold leading-9 text-[#111827]">
-                          <span className="ms-1 font-extrabold text-primary">{index + 1}-</span>
-                          {row.promptAr}
-                        </p>
-                        <ul className="mt-4 space-y-3">
-                          {(row.optionsAr ?? []).map((option, optionIndex) => (
-                            <li key={`${row.id}-${optionIndex}`} className="flex items-start gap-3 text-base font-semibold leading-8 text-[#111827]">
-                              <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-primary text-sm font-extrabold text-primary">
-                                {ASSESS_LETTERS[optionIndex]}
-                              </span>
-                              <span>{option}</span>
-                            </li>
-                          ))}
-                        </ul>
+                <ol className="mt-2 space-y-2">
+                  {block.mcq.map((row, index) => {
+                    const choice = row.optionsAr?.[row.correctIndex ?? 0] ?? "";
+                    return (
+                      <li key={row.id} className="text-base font-bold leading-8 text-[#111827]">
+                        <span className="text-primary">
+                          {index + 1}-{ASSESS_LETTERS[row.correctIndex ?? 0]}
+                        </span>
+                        <span className="ms-2 font-extrabold">{choice}</span>
+                        <span className="ms-2 font-semibold text-[#374151]">— {row.promptAr}</span>
                       </li>
-                    ))}
-                  </ol>
-                </PrintSection>
+                    );
+                  })}
+                </ol>
               ) : null}
+              {block.essays.map((row, index) => (
+                <article key={row.id} className="mt-3 print-keep rounded-xl bg-white p-4 ring-1 ring-slate-300">
+                  <p className="text-sm font-extrabold text-primary">مقالي {index + 1}</p>
+                  <p className="mt-1 text-base font-semibold leading-8 text-[#111827] whitespace-pre-line">{row.guideAr}</p>
+                </article>
+              ))}
             </div>
           ))}
         </section>
       ) : (
-        <p className="mt-8 text-sm font-semibold text-[#374151]">نسخة الكتابة للدرس 1-1 جاهزة. باقي الدروس صفحات الوزارة كما هي إلى أن تُكتب بنفس النص.</p>
+        <p className="mt-8 text-sm font-semibold text-[#374151]">الأسئلة المكتوبة جاهزة للدرس 1-1 أولًا.</p>
       )}
     </div>
   );

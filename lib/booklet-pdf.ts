@@ -4,7 +4,7 @@ import { PDFDocument } from "pdf-lib";
 import { BRAND } from "@/lib/brand";
 import { CHAPTER_FIGURES } from "@/components/booklet-figures";
 import { artFor, bookletSafe, lessonArtMap } from "@/lib/booklet-lang";
-import { assessLessonId, assessLessonTitle, assessmentsPages } from "@/lib/assessments";
+import { assessLessonId, assessLessonTitle } from "@/lib/assessments";
 import { assessBlocksForLesson, periodLabelAr } from "@/lib/assessments-bank";
 import {
   bookletAnswerMark,
@@ -30,7 +30,7 @@ import { mindMapForFaiz, type MindNode } from "@/lib/mind-maps";
 import { existsSync } from "fs";
 import { textbookPageFor } from "@/lib/textbook-pages";
 import { bundleExplains } from "@/lib/lesson-explains";
-import { renderAssessmentsPage, renderBookPage } from "@/lib/book-page-image";
+import { renderBookPage } from "@/lib/book-page-image";
 
 const ARABIC_FONT = "NotoNaskh";
 const LATIN_FONT = "LatinSans";
@@ -1783,7 +1783,7 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
   if (assessId) {
     const typed = assessBlocksForLesson(assessId);
     if (typed.length) {
-      blocks.push({ kind: "banner", text: "نسخة للكتابة — نفس نص الوزارة", color: "#0c2d6b" });
+      blocks.push({ kind: "banner", text: "أسئلة الوزارة — سطور للحل ثم المفتاح", color: "#0c2d6b" });
     }
     for (const block of typed) {
       blocks.push({ kind: "section", text: `${periodLabelAr(block.period)} — ${block.titleAr}` });
@@ -1799,6 +1799,31 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
           letters: ["أ", "ب", "ج", "د"],
         });
       });
+    }
+    if (typed.length) {
+      blocks.push({ kind: "banner", text: "مفتاح الإجابة", color: "#0c2d6b" });
+      for (const block of typed) {
+        blocks.push({ kind: "section", text: `${periodLabelAr(block.period)} — ${block.titleAr}` });
+        block.mcq.forEach((row, index) => {
+          const mark = ["أ", "ب", "ج", "د"][row.correctIndex ?? 0] ?? "";
+          const choice = row.optionsAr?.[row.correctIndex ?? 0] ?? "";
+          blocks.push({
+            kind: "text",
+            text: `${index + 1}-${mark}  ${choice}  —  ${row.promptAr}`,
+            size: 14,
+            gap: 8,
+          });
+        });
+        block.essays.forEach((row, index) => {
+          if (!row.guideAr) return;
+          blocks.push({
+            kind: "text",
+            text: `مقالي ${index + 1}: ${row.guideAr}`,
+            size: 14,
+            gap: 12,
+          });
+        });
+      }
     }
     return blocks;
   }
@@ -1992,20 +2017,6 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
   const coverPage = pdf.addPage([PAGE_W, PAGE_H]);
   const coverImage = await pdf.embedJpg(canvas.toBuffer("image/jpeg", 96));
   coverPage.drawImage(coverImage, { x: 0, y: 0, width: PAGE_W, height: PAGE_H });
-
-  const assessId = assessLessonId(scope);
-  if (assessId) {
-    for (const officialPage of assessmentsPages(assessId)) {
-      const png = await renderAssessmentsPage(officialPage);
-      if (!png) continue;
-      const page = pdf.addPage([PAGE_W, PAGE_H]);
-      const image = await pdf.embedPng(png);
-      const scale = Math.min(PAGE_W / image.width, PAGE_H / image.height);
-      const width = image.width * scale;
-      const height = image.height * scale;
-      page.drawImage(image, { x: (PAGE_W - width) / 2, y: (PAGE_H - height) / 2, width, height });
-    }
-  }
 
   reset();
   let y = margin;
