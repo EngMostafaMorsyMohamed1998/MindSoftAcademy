@@ -41,7 +41,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang={locale}
       dir={localeDir(locale)}
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${locale === "ar" ? cairo.variable : ""} h-full antialiased ${locale === "en" ? "en" : ""} ${theme === "dark" ? "dark" : ""}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${cairo.variable} h-full antialiased ${locale === "en" ? "en" : ""} ${theme === "dark" ? "dark" : ""}`}
     >
       <body
         suppressHydrationWarning

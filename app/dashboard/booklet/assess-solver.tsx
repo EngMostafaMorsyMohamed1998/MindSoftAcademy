@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { gradeAssessLesson, type AssessGrade } from "@/app/actions/assess-grade";
+import { cleanArabic, cleanEnglish, hasArabic } from "@/lib/booklet-lang";
 
 type Block = {
   key: string;
@@ -62,33 +63,27 @@ export function AssessSolver({
               <div className="mt-4 space-y-4">
                 {block.essays.map((row, index) => (
                   <article key={row.id} className="print-keep rounded-xl border-2 border-dashed border-primary/30 p-5">
-                    <p className="text-lg font-bold leading-9 text-[#111827]">
+                    <p
+                      className="text-lg font-bold leading-9 text-[#111827]"
+                      dir={hasArabic(row.prompt) ? "rtl" : "ltr"}
+                      lang={hasArabic(row.prompt) ? "ar" : "en"}
+                      style={hasArabic(row.prompt) ? { fontFamily: "var(--font-cairo), Arial, sans-serif", unicodeBidi: "isolate" } : { unicodeBidi: "isolate" }}
+                    >
                       <span className="ms-1 font-extrabold text-primary">{index + 1}-</span>
                       {row.prompt}
                     </p>
                     <textarea
                       className="no-print mt-3 min-h-28 w-full rounded-xl border border-primary/20 bg-white p-3 text-base leading-8 text-[#111827]"
+                      dir={ar ? "rtl" : "ltr"}
                       placeholder={ar ? "اكتب إجابتك هنا" : "Write your answer here"}
+                      style={ar ? { fontFamily: "var(--font-cairo), Arial, sans-serif" } : undefined}
                     />
                     <div className="mt-3 hidden space-y-3 print:block">
                       {Array.from({ length: 4 }, (_, line) => (
                         <div key={line} className="h-7 border-b border-dashed border-primary/25" />
                       ))}
                     </div>
-                    {grade ? (
-                      <div className="mt-3 space-y-2 text-base font-semibold leading-8 text-[#111827]">
-                        <p className="whitespace-pre-line" dir="rtl" lang="ar">
-                          <span className="font-extrabold text-primary">عربي: </span>
-                          {guides.get(row.id)?.ar}
-                        </p>
-                        {guides.get(row.id)?.en ? (
-                          <p className="whitespace-pre-line" dir="ltr" lang="en">
-                            <span className="font-extrabold text-primary">English: </span>
-                            {guides.get(row.id)?.en}
-                          </p>
-                        ) : null}
-                      </div>
-                    ) : null}
+                    {grade ? <BilingualAnswer guide={guides.get(row.id)} /> : null}
                   </article>
                 ))}
               </div>
@@ -104,7 +99,12 @@ export function AssessSolver({
                   const marked = byId.get(row.id);
                   return (
                     <li key={row.id} className="booklet-q rounded-xl p-5">
-                      <p className="text-lg font-bold leading-9 text-[#111827]">
+                      <p
+                        className="text-lg font-bold leading-9 text-[#111827]"
+                        dir={hasArabic(row.prompt) ? "rtl" : "ltr"}
+                        lang={hasArabic(row.prompt) ? "ar" : "en"}
+                        style={hasArabic(row.prompt) ? { fontFamily: "var(--font-cairo), Arial, sans-serif", unicodeBidi: "isolate" } : { unicodeBidi: "isolate" }}
+                      >
                         <span className="ms-1 font-extrabold text-primary">{index + 1}-</span>
                         {row.prompt}
                       </p>
@@ -119,6 +119,9 @@ export function AssessSolver({
                                 type="button"
                                 disabled={Boolean(grade)}
                                 onClick={() => setAnswers((current) => ({ ...current, [row.id]: optionIndex }))}
+                                dir={hasArabic(option) ? "rtl" : "ltr"}
+                                lang={hasArabic(option) ? "ar" : "en"}
+                                style={hasArabic(option) ? { fontFamily: "var(--font-cairo), Arial, sans-serif", unicodeBidi: "isolate" } : undefined}
                                 className={`flex w-full items-start gap-3 rounded-xl px-2 py-1 text-start text-base font-semibold leading-8 text-[#111827] ${
                                   correct
                                     ? "bg-emerald-50"
@@ -146,6 +149,13 @@ export function AssessSolver({
                           );
                         })}
                       </ul>
+                      {marked ? (
+                        <BilingualAnswer
+                          guide={{ ar: marked.choiceAr, en: marked.choiceEn }}
+                          arabicLabel="الإجابة: "
+                          englishLabel="Answer: "
+                        />
+                      ) : null}
                     </li>
                   );
                 })}
@@ -192,5 +202,40 @@ export function AssessSolver({
         </div>
       ) : null}
     </>
+  );
+}
+
+function BilingualAnswer({
+  guide,
+  arabicLabel = "نموذج الإجابة: ",
+  englishLabel = "Model answer: ",
+}: {
+  guide?: { ar: string; en: string };
+  arabicLabel?: string;
+  englishLabel?: string;
+}) {
+  const arabic = guide?.ar ? cleanArabic(guide.ar) : "";
+  const english = guide?.en && /[A-Za-z]/.test(guide.en) ? cleanEnglish(guide.en) : "";
+  if (!arabic && !english) return null;
+  return (
+    <div className="mt-3 space-y-2 text-base font-semibold leading-8 text-[#111827]">
+      {arabic ? (
+        <p
+          className="whitespace-pre-line"
+          dir="rtl"
+          lang="ar"
+          style={{ fontFamily: "var(--font-cairo), Arial, sans-serif", unicodeBidi: "isolate" }}
+        >
+          <span className="font-extrabold text-primary">{arabicLabel}</span>
+          {arabic}
+        </p>
+      ) : null}
+      {english ? (
+        <p className="whitespace-pre-line" dir="ltr" lang="en" style={{ unicodeBidi: "isolate" }}>
+          <span className="font-extrabold text-primary">{englishLabel}</span>
+          {english}
+        </p>
+      ) : null}
+    </div>
   );
 }

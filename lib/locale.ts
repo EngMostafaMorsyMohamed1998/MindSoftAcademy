@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 export type Locale = "ar" | "en";
 
 export const LANG_COOKIE = "morsy_lang";
+export const LANG_TRACK_COOKIE = "morsy_lang_track";
 export const TEACHER_LANG_COOKIE = "morsy_teacher_lang";
 export const AREA_HEADER = "x-mindsoft-area";
 
@@ -34,7 +35,13 @@ export async function getLocale(): Promise<Locale> {
   try {
     const { getStudentSession } = await import("@/lib/student-session");
     const student = await getStudentSession();
-    if (student) return parseTrack(student.track);
+    if (student) {
+      const track = parseTrack(student.track);
+      const pinned = store.get(LANG_TRACK_COOKIE)?.value;
+      const picked = store.get(LANG_COOKIE)?.value;
+      if (pinned === track && isLocale(picked)) return picked;
+      return track;
+    }
   } catch {
     // cookies() is unavailable outside a request
   }

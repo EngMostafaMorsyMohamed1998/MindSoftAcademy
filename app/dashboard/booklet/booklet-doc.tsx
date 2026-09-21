@@ -4,9 +4,9 @@ import { BookletMindMap } from "@/components/booklet-mind-map";
 import { TextbookLesson } from "@/components/textbook-page";
 import { AssessSolver } from "./assess-solver";
 import { assessBlocksForLesson, periodLabelAr, periodLabelEn } from "@/lib/assessments-bank";
-import { assessOptions, assessPrompt } from "@/lib/assessments-helpers";
+import { assessOptions } from "@/lib/assessments-helpers";
 import { assessLessonTitle } from "@/lib/assessments";
-import { bookletSafe } from "@/lib/booklet-lang";
+import { bookletSafe, cleanArabic, cleanEnglish, hasArabic } from "@/lib/booklet-lang";
 import { BRAND } from "@/lib/brand";
 import {
   bookletAnswerMark,
@@ -576,6 +576,13 @@ export function BookletFaizPane({ locale }: { locale: Locale }) {
   );
 }
 
+function assessText(locale: "ar" | "en", arabic: string, english?: string): string {
+  if (locale === "ar") return cleanArabic(arabic);
+  const other = english?.trim() ?? "";
+  if (other && !hasArabic(other)) return cleanEnglish(other);
+  return arabic;
+}
+
 const ASSESS_LETTERS_AR = ["أ", "ب", "ج", "د"];
 const ASSESS_LETTERS_EN = ["A", "B", "C", "D"];
 
@@ -614,11 +621,13 @@ export function BookletAssessPane({ locale = "ar", lessonId }: { locale?: "ar" |
             key: block.key,
             period: ar ? periodLabelAr(block.period) : periodLabelEn(block.period),
             title: ar ? block.titleAr : block.titleEn,
-            essays: block.essays.map((row) => ({ id: row.id, prompt: assessPrompt(row, locale) })),
+            essays: block.essays.map((row) => ({ id: row.id, prompt: assessText(locale, row.promptAr, row.promptEn) })),
             mcq: block.mcq.map((row) => ({
               id: row.id,
-              prompt: assessPrompt(row, locale),
-              options: assessOptions(row, locale),
+              prompt: assessText(locale, row.promptAr, row.promptEn),
+              options: assessOptions(row, locale).map((option) =>
+                locale === "ar" || hasArabic(option) ? (locale === "ar" ? cleanArabic(option) : option) : cleanEnglish(option),
+              ),
             })),
           }))}
         />
