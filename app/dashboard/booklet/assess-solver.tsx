@@ -48,10 +48,12 @@ export function AssessSolver({
 
   async function finish() {
     setBusy(true);
-    const result = await gradeAssessLesson({ lessonId, answers, essays });
-    setBusy(false);
-    if ("error" in result) return;
-    setGrade(result);
+    try {
+      const result = await gradeAssessLesson({ lessonId, answers, essays });
+      if (!("error" in result)) setGrade(result);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -85,13 +87,17 @@ export function AssessSolver({
                       {row.prompt}
                     </p>
                     <textarea
-                      className="no-print mt-3 min-h-28 w-full rounded-xl border border-primary/20 bg-white p-3 text-base leading-8 text-[#111827] disabled:opacity-80"
-                      dir={ar ? "rtl" : "ltr"}
+                      className="no-print mt-3 min-h-28 w-full rounded-xl border bg-white p-3 text-base leading-8 text-[#111827] disabled:opacity-80"
+                      dir={hasArabic(essays[row.id] ?? "") || ar ? "rtl" : "ltr"}
                       disabled={Boolean(grade)}
                       value={essays[row.id] ?? ""}
                       onChange={(event) => setEssays((current) => ({ ...current, [row.id]: event.target.value }))}
                       placeholder={ar ? "اكتب إجابتك هنا" : "Write your answer here"}
-                      style={ar ? { fontFamily: "var(--font-cairo), Arial, sans-serif" } : undefined}
+                      style={{
+                        fontFamily: hasArabic(essays[row.id] ?? "") || ar ? "var(--font-cairo), Arial, sans-serif" : undefined,
+                        borderColor: verdict ? (verdict.ok ? "#047857" : "#b91c1c") : "#d5deea",
+                        borderWidth: verdict ? 3 : 1,
+                      }}
                     />
                     <div className="mt-3 hidden space-y-3 print:block">
                       {Array.from({ length: 4 }, (_, line) => (
@@ -99,8 +105,18 @@ export function AssessSolver({
                       ))}
                     </div>
                     {verdict ? (
-                      <p className={`mt-3 text-base font-extrabold ${verdict.ok ? "text-emerald-700" : "text-red-700"}`}>
-                        {verdict.ok ? (ar ? "إجابة صحيحة" : "Correct answer") : ar ? "إجابة غلط" : "Wrong answer"}
+                      <p
+                        className="mt-3 rounded-xl px-4 py-3 text-xl font-extrabold text-white"
+                        dir="rtl"
+                        style={{
+                          background: verdict.ok ? "#047857" : "#b91c1c",
+                          fontFamily: "var(--font-cairo), Arial, sans-serif",
+                        }}
+                      >
+                        {verdict.ok ? "إجابة صحيحة" : "إجابة غلط"}
+                        <span className="ms-2 text-base font-bold" dir="ltr">
+                          {verdict.ok ? "Correct" : "Wrong"}
+                        </span>
                       </p>
                     ) : null}
                     {grade ? <BilingualAnswer guide={verdict} /> : null}
