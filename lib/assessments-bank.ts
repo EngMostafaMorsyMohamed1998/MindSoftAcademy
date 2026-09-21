@@ -7,7 +7,9 @@ import { ASSESS_CH1_REST } from "@/lib/assessments-ch1";
 import { ASSESS_CH2 } from "@/lib/assessments-ch2";
 import { ASSESS_CH3 } from "@/lib/assessments-ch3";
 import { ASSESS_CH4 } from "@/lib/assessments-ch4";
+import { ASSESS_EN } from "@/lib/assessments-en";
 import {
+  applyEnglish,
   applyKeys,
   essay,
   mcq,
@@ -428,13 +430,16 @@ const ESSAY_GUIDE: Record<string, string> = {
     "البت الكلاسيكي 0 أو 1 فقط. الكيوبت بالتراكب الكمي يحمل 0 و1 معًا، فيعالج بعض المسائل بكفاءة أعلى في الحوسبة الكمومية.",
 };
 
-const BANK: AssessQuestion[] = [
-  ...applyKeys(LESSON_1_1, MCQ_KEY, ESSAY_GUIDE),
-  ...ASSESS_CH1_REST,
-  ...ASSESS_CH2,
-  ...ASSESS_CH3,
-  ...ASSESS_CH4,
-];
+const BANK: AssessQuestion[] = applyEnglish(
+  [
+    ...applyKeys(LESSON_1_1, MCQ_KEY, ESSAY_GUIDE),
+    ...ASSESS_CH1_REST,
+    ...ASSESS_CH2,
+    ...ASSESS_CH3,
+    ...ASSESS_CH4,
+  ],
+  ASSESS_EN,
+);
 
 const BLOCK_ORDER: AssessSection[] = ["classroom", "home", "weekly-a", "weekly-b", "weekly-c"];
 
