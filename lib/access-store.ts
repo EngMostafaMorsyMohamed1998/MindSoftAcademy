@@ -298,35 +298,37 @@ export async function issueCode(input: {
     existing.id = existing.id || idForStudent(name, phone);
     existing.track = track;
     await writeStore(store);
-    await persistCodeTrack(existing.id, track);
+    await persistCodeTrack(existing.id, track, existing.code);
     return existing;
   }
 
   const record = recordFor(name, phone, { track });
   store.codes.unshift(record);
   await writeStore(store);
-  await persistCodeTrack(record.id, track);
+  await persistCodeTrack(record.id, track, record.code);
   return record;
 }
 
-async function persistCodeTrack(studentId: string, track: "ar" | "en"): Promise<void> {
+async function persistCodeTrack(studentId: string, track: "ar" | "en", code?: string): Promise<void> {
   try {
     const { writeCodeTracks } = await import("@/lib/class-db");
-    await writeCodeTracks([{ id: studentId, track }]);
+    await writeCodeTracks([{ id: studentId, track, code }]);
   } catch {
     // JSON / Blob fallback already wrote the store.
   }
 }
 
-export async function setStudentTrack(studentId: string, track: "ar" | "en"): Promise<void> {
+export async function setStudentTrack(studentId: string, track: "ar" | "en", code?: string): Promise<void> {
   const store = await readStore();
   const next = track === "en" ? "en" : "ar";
   const row = store.codes.find((item) => item.id === studentId);
   if (row) {
     row.track = next;
     await writeStore(store);
+    await persistCodeTrack(studentId, next, code || row.code);
+    return;
   }
-  await persistCodeTrack(studentId, next);
+  await persistCodeTrack(studentId, next, code);
 }
 
 export async function redeemCode(input: {

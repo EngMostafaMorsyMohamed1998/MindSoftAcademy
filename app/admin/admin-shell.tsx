@@ -1010,15 +1010,20 @@ export function AdminShell({
                         <td className="px-3 py-2">{code.name}</td>
                         <td className="px-3 py-2 font-mono text-xs">{code.phone}</td>
                         <td className="px-3 py-2">
-                          <form action={saveStudentTrack}>
+                          <form
+                            onChange={(event) => {
+                              const data = new FormData(event.currentTarget);
+                              void saveStudentTrack(data);
+                            }}
+                          >
                             <input type="hidden" name="studentId" value={code.id} />
                             <input type="hidden" name="name" value={code.name} />
                             <input type="hidden" name="phone" value={code.phone} />
+                            <input type="hidden" name="code" value={code.code} />
                             <select
                               key={`${code.id}-${code.track === "en" ? "en" : "ar"}`}
                               name="track"
                               defaultValue={code.track === "en" ? "en" : "ar"}
-                              onChange={(event) => event.currentTarget.form?.requestSubmit()}
                               className="h-8 rounded-full border border-primary/15 bg-white px-2 text-xs"
                             >
                               <option value="ar">{t(locale, "trackAr")}</option>

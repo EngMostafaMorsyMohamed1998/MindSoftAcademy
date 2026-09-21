@@ -97,8 +97,9 @@ export async function listVisibleCodes(): Promise<AccessCode[]> {
   }
   for (const record of stored) {
     const current = byId.get(record.id);
-    const storedTrack = record.track === "en" || record.track === "ar" ? record.track : undefined;
-    const track = storedTrack ?? rosterTracks.get(record.id) ?? current?.track ?? "ar";
+    const storedTrack = record.track === "en" ? "en" : record.track === "ar" ? "ar" : undefined;
+    const rosterTrack = rosterTracks.get(record.id);
+    const track = rosterTrack ?? storedTrack ?? current?.track ?? "ar";
     byId.set(
       record.id,
       current

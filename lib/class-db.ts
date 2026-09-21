@@ -326,6 +326,21 @@ function asTrack(value: unknown): "ar" | "en" {
   return value === "en" ? "en" : "ar";
 }
 
+async function ensureStudentTrackTable(): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "StudentTrack" (
+        "id" TEXT PRIMARY KEY,
+        "track" TEXT NOT NULL
+      )
+    `);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function readCodeTracks(): Promise<Map<string, "ar" | "en">> {
   const tracks = new Map<string, "ar" | "en">();
   if (!hasLiveDatabase()) return tracks;
@@ -340,21 +355,51 @@ export async function readCodeTracks(): Promise<Map<string, "ar" | "en">> {
   } catch {
     // Column may still be missing on a stale replica.
   }
+  if (await ensureStudentTrackTable()) {
+    try {
+      const rows = await prisma.$queryRaw<Array<{ id: string; track: string | null }>>`
+        SELECT id, track FROM "StudentTrack"
+      `;
+      for (const row of rows) {
+        tracks.set(row.id, asTrack(row.track));
+      }
+    } catch {
+      // Side table is optional until the first write.
+    }
+  }
   return tracks;
 }
 
-export async function writeCodeTracks(rows: { id: string; track?: string }[]): Promise<boolean> {
+export async function writeCodeTracks(rows: { id: string; track?: string; code?: string }[]): Promise<boolean> {
   if (!hasLiveDatabase() || !rows.length) return false;
   await ensureCodeTrackColumn();
-  try {
-    for (const row of rows) {
-      const track = asTrack(row.track);
-      await prisma.$executeRaw`UPDATE "ClassCode" SET "track" = ${track} WHERE "id" = ${row.id}`;
+  const side = await ensureStudentTrackTable();
+  let wrote = false;
+  for (const row of rows) {
+    const track = asTrack(row.track);
+    const code = row.code ?? "";
+    if (side) {
+      try {
+        await prisma.$executeRaw`
+          INSERT INTO "StudentTrack" ("id", "track") VALUES (${row.id}, ${track})
+          ON CONFLICT ("id") DO UPDATE SET "track" = EXCLUDED."track"
+        `;
+        wrote = true;
+      } catch {
+        // Fall through to the ClassCode column.
+      }
     }
-    return true;
-  } catch {
-    return false;
+    try {
+      const updated = await prisma.$executeRaw`
+        UPDATE "ClassCode" SET "track" = ${track}
+        WHERE "id" = ${row.id} OR (${code} <> '' AND "code" = ${code})
+      `;
+      if (Number(updated) > 0) wrote = true;
+    } catch {
+      // Column may still be missing.
+    }
   }
+  return wrote;
 }
 
 export async function readClassDb(): Promise<StoreFile | null> {

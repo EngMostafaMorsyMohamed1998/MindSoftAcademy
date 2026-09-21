@@ -179,9 +179,10 @@ export async function saveStudentTrack(formData: FormData): Promise<void> {
   const name = read(formData, "name");
   const phone = read(formData, "phone");
   const studentId = read(formData, "studentId");
+  const code = read(formData, "code");
   const track = parseTrack(read(formData, "track"));
   if (studentId) {
-    await setStudentTrack(studentId, track);
+    await setStudentTrack(studentId, track, code);
   }
   const saved = studentId ? await getCodeById(studentId) : null;
   const record = saved ?? (name && phone ? await issueCode({ name, phone, track }) : null);
