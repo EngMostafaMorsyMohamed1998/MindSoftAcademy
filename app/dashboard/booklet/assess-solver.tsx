@@ -25,25 +25,30 @@ export function AssessSolver({
 }) {
   const ar = locale === "ar";
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [essays, setEssays] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [grade, setGrade] = useState<AssessGrade | null>(null);
 
-  const total = useMemo(() => blocks.reduce((sum, block) => sum + block.mcq.length, 0), [blocks]);
-  const answered = Object.keys(answers).length;
+  const total = useMemo(
+    () => blocks.reduce((sum, block) => sum + block.mcq.length + block.essays.length, 0),
+    [blocks],
+  );
+  const answered =
+    Object.keys(answers).length + Object.values(essays).filter((text) => text.trim().length > 0).length;
   const byId = useMemo(() => {
     const map = new Map<string, AssessGrade["mcq"][number]>();
     grade?.mcq.forEach((row) => map.set(row.id, row));
     return map;
   }, [grade]);
   const guides = useMemo(() => {
-    const map = new Map<string, { ar: string; en: string }>();
-    grade?.essays.forEach((row) => map.set(row.id, { ar: row.guideAr, en: row.guideEn }));
+    const map = new Map<string, { ar: string; en: string; ok: boolean }>();
+    grade?.essays.forEach((row) => map.set(row.id, { ar: row.guideAr, en: row.guideEn, ok: row.ok }));
     return map;
   }, [grade]);
 
   async function finish() {
     setBusy(true);
-    const result = await gradeAssessLesson({ lessonId, answers });
+    const result = await gradeAssessLesson({ lessonId, answers, essays });
     setBusy(false);
     if ("error" in result) return;
     setGrade(result);
@@ -61,8 +66,15 @@ export function AssessSolver({
                 {ar ? "الأسئلة المقالية" : "Essay questions"}
               </p>
               <div className="mt-4 space-y-4">
-                {block.essays.map((row, index) => (
-                  <article key={row.id} className="print-keep rounded-xl border-2 border-dashed border-primary/30 p-5">
+                {block.essays.map((row, index) => {
+                  const verdict = guides.get(row.id);
+                  return (
+                  <article
+                    key={row.id}
+                    className={`print-keep rounded-xl border-2 border-dashed p-5 ${
+                      verdict ? (verdict.ok ? "border-emerald-600 bg-emerald-50/40" : "border-red-600 bg-red-50/50") : "border-primary/30"
+                    }`}
+                  >
                     <p
                       className="text-lg font-bold leading-9 text-[#111827]"
                       dir={hasArabic(row.prompt) ? "rtl" : "ltr"}
@@ -73,8 +85,11 @@ export function AssessSolver({
                       {row.prompt}
                     </p>
                     <textarea
-                      className="no-print mt-3 min-h-28 w-full rounded-xl border border-primary/20 bg-white p-3 text-base leading-8 text-[#111827]"
+                      className="no-print mt-3 min-h-28 w-full rounded-xl border border-primary/20 bg-white p-3 text-base leading-8 text-[#111827] disabled:opacity-80"
                       dir={ar ? "rtl" : "ltr"}
+                      disabled={Boolean(grade)}
+                      value={essays[row.id] ?? ""}
+                      onChange={(event) => setEssays((current) => ({ ...current, [row.id]: event.target.value }))}
                       placeholder={ar ? "اكتب إجابتك هنا" : "Write your answer here"}
                       style={ar ? { fontFamily: "var(--font-cairo), Arial, sans-serif" } : undefined}
                     />
@@ -83,9 +98,15 @@ export function AssessSolver({
                         <div key={line} className="h-7 border-b border-dashed border-primary/25" />
                       ))}
                     </div>
-                    {grade ? <BilingualAnswer guide={guides.get(row.id)} /> : null}
+                    {verdict ? (
+                      <p className={`mt-3 text-base font-extrabold ${verdict.ok ? "text-emerald-700" : "text-red-700"}`}>
+                        {verdict.ok ? (ar ? "إجابة صحيحة" : "Correct answer") : ar ? "إجابة غلط" : "Wrong answer"}
+                      </p>
+                    ) : null}
+                    {grade ? <BilingualAnswer guide={verdict} /> : null}
                   </article>
-                ))}
+                  );
+                })}
               </div>
             </section>
           ) : null}
@@ -193,6 +214,7 @@ export function AssessSolver({
               onClick={() => {
                 setGrade(null);
                 setAnswers({});
+                setEssays({});
               }}
               className="text-sm font-extrabold text-primary"
             >
