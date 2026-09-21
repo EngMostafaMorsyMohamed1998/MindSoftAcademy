@@ -17,9 +17,10 @@ export async function GET(request: Request) {
   if (url.searchParams.get("book") === "assess") {
     const page = Math.max(1, Number(url.searchParams.get("page") ?? "0") || 0);
     if (!ASSESS_PAGE_SET.has(page)) return NextResponse.json({ error: "page" }, { status: 400 });
+    const locale: Locale = url.searchParams.get("lang") === "en" ? "en" : "ar";
     let png: Buffer | null = null;
     try {
-      png = await renderAssessmentsPage(page);
+      png = await renderAssessmentsPage(page, locale);
     } catch {
       png = null;
     }

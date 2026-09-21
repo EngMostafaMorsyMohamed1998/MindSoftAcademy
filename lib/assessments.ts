@@ -1,5 +1,5 @@
 import { CHAPTERS, getLesson } from "@/lib/curriculum";
-import { ASSESS_BOOK } from "@/lib/library";
+import { ASSESS_BOOK, ASSESS_BOOK_EN } from "@/lib/library";
 
 /** PDF page numbers (1-based) for each part-1 lesson in the ministry assessments book. */
 export const ASSESS_PAGES: Record<string, number[]> = {
@@ -51,4 +51,4 @@ export function assessLessonTitle(lessonId: string): { titleAr: string; titleEn:
   };
 }
 
-export { ASSESS_BOOK };
+export { ASSESS_BOOK, ASSESS_BOOK_EN };

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { bookletFileName, buildBookletPdf } from "@/lib/booklet-pdf";
-import { isBookletScope } from "@/lib/booklet-pack";
+import { faizUnitId, isBookletScope } from "@/lib/booklet-pack";
 import { getCurrentUser } from "@/lib/current-user";
 import { getLocale } from "@/lib/locale";
 
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const scope = url.searchParams.get("chapter");
   if (
     !isBookletScope(scope) ||
-    ((scope === "faiz" || scope.startsWith("f") || scope.startsWith("assess-")) && locale === "en")
+    ((scope === "faiz" || scope === "faiz-hw" || Boolean(faizUnitId(scope))) && locale === "en")
   ) {
     return NextResponse.json({ error: "اختر درس الملزمة" }, { status: 400 });
   }

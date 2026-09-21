@@ -8,6 +8,7 @@ import { FAIZ_UNITS } from "@/lib/faiz";
 import type { Locale } from "@/lib/locale";
 
 export function BookletCatalog({ locale }: { locale: Locale }) {
+  const assessIds = new Set(assessLessonIds());
   return (
     <div className="booklet-paper mx-auto w-full max-w-5xl" lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
       <div className="no-print mb-5">
@@ -37,23 +38,18 @@ export function BookletCatalog({ locale }: { locale: Locale }) {
                 labelEn: "Homework",
                 body: <BookletHomeworkPane locale={locale} chapterId={chapter.id} />,
               },
+              ...chapter.lessons
+                .filter((lesson) => assessIds.has(lesson.id))
+                .map((lesson) => ({
+                  id: assessScope(lesson.id),
+                  labelAr: `أداءات ${lesson.id}`,
+                  labelEn: `Assess ${lesson.id}`,
+                  body: <BookletAssessPane locale={locale} lessonId={lesson.id} />,
+                })),
             ],
           })),
           ...(locale === "ar"
             ? [
-                ...CHAPTERS.filter((chapter) => chapter.part === 1).map((chapter) => ({
-                  id: `assess-ch-${chapter.id}`,
-                  labelAr: `أداءات ف${chapter.id}`,
-                  labelEn: `Assess ${chapter.id}`,
-                  lessons: chapter.lessons
-                    .filter((lesson) => assessLessonIds().includes(lesson.id))
-                    .map((lesson) => ({
-                      id: assessScope(lesson.id),
-                      labelAr: `الدرس ${lesson.id}`,
-                      labelEn: `Lesson ${lesson.id}`,
-                      body: <BookletAssessPane lessonId={lesson.id} />,
-                    })),
-                })),
                 {
                   id: "faiz",
                   labelAr: "الفائز",

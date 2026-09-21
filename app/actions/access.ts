@@ -3,6 +3,7 @@
 import {
   grantChapterUnlock,
   idForStudent,
+  getCodeById,
   issueCode,
   setStudentTrack,
   listExamChapterIds,
@@ -38,6 +39,7 @@ import { parseTrack } from "@/lib/locale";
 import { parseDeviceLimit } from "@/lib/devices";
 import { listVisibleCodes, rememberIssuedCode } from "@/lib/teacher-roster";
 import { isTeacher, setTeacherCookie, teacherPin } from "@/lib/teacher-session";
+import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { notifySessionParents } from "@/lib/telegram-notify";
@@ -121,6 +123,7 @@ export async function createStudentCode(
   try {
     const record = await issueCode({ name, phone, track });
     await rememberIssuedCode(record);
+    revalidatePath("/admin");
     return { error: null, code: record.code };
   } catch (error) {
     const message = error instanceof Error ? error.message : "FAILED";
@@ -163,6 +166,7 @@ export async function createManyStudentCodes(
       const record = await issueCode({ ...row, track });
       await rememberIssuedCode(record);
     }
+    revalidatePath("/admin");
     return { error: null, ok: true, code: String(rows.length) };
   } catch (error) {
     const message = error instanceof Error ? error.message : "FAILED";
@@ -172,9 +176,20 @@ export async function createManyStudentCodes(
 
 export async function saveStudentTrack(formData: FormData): Promise<void> {
   if (!(await isTeacher())) return;
+  const name = read(formData, "name");
+  const phone = read(formData, "phone");
   const studentId = read(formData, "studentId");
-  if (!studentId) return;
-  await setStudentTrack(studentId, parseTrack(read(formData, "track")));
+  const track = parseTrack(read(formData, "track"));
+  if (studentId) {
+    await setStudentTrack(studentId, track);
+  }
+  const saved = studentId ? await getCodeById(studentId) : null;
+  const record = saved ?? (name && phone ? await issueCode({ name, phone, track }) : null);
+  if (record) {
+    await rememberIssuedCode({ ...record, track });
+  }
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
 }
 
 export async function markStudentAttendance(

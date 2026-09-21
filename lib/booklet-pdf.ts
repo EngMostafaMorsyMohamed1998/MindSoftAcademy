@@ -5,7 +5,8 @@ import { BRAND } from "@/lib/brand";
 import { CHAPTER_FIGURES } from "@/components/booklet-figures";
 import { artFor, bookletSafe, lessonArtMap } from "@/lib/booklet-lang";
 import { assessLessonId, assessLessonTitle } from "@/lib/assessments";
-import { assessBlocksForLesson, periodLabelAr } from "@/lib/assessments-bank";
+import { assessBlocksForLesson, periodLabelAr, periodLabelEn } from "@/lib/assessments-bank";
+import { assessGuide, assessOptions, assessPrompt } from "@/lib/assessments-helpers";
 import {
   bookletAnswerMark,
   bookletFaizHomework,
@@ -1782,43 +1783,55 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
   const assessId = assessLessonId(scope);
   if (assessId) {
     const typed = assessBlocksForLesson(assessId);
+    const letters = ar ? ["أ", "ب", "ج", "د"] : ["A", "B", "C", "D"];
     if (typed.length) {
-      blocks.push({ kind: "banner", text: "أسئلة الوزارة — سطور للحل ثم المفتاح", color: "#0c2d6b" });
+      blocks.push({
+        kind: "banner",
+        text: ar ? "أسئلة الوزارة — سطور للحل ثم المفتاح" : "Ministry questions — write, then check the key",
+        color: "#0c2d6b",
+      });
     }
     for (const block of typed) {
-      blocks.push({ kind: "section", text: `${periodLabelAr(block.period)} — ${block.titleAr}` });
+      const heading = ar
+        ? `${periodLabelAr(block.period)} — ${block.titleAr}`
+        : `${periodLabelEn(block.period)} — ${block.titleEn}`;
+      blocks.push({ kind: "section", text: heading });
       block.essays.forEach((row, index) => {
-        blocks.push({ kind: "essay", n: index + 1, prompt: row.promptAr });
+        blocks.push({ kind: "essay", n: index + 1, prompt: assessPrompt(row, locale) });
       });
       block.mcq.forEach((row, index) => {
         blocks.push({
           kind: "question",
           n: index + 1,
-          prompt: row.promptAr,
-          options: row.optionsAr ?? [],
-          letters: ["أ", "ب", "ج", "د"],
+          prompt: assessPrompt(row, locale),
+          options: assessOptions(row, locale),
+          letters,
         });
       });
     }
     if (typed.length) {
-      blocks.push({ kind: "banner", text: "مفتاح الإجابة", color: "#0c2d6b" });
+      blocks.push({ kind: "banner", text: ar ? "مفتاح الإجابة" : "Answer key", color: "#0c2d6b" });
       for (const block of typed) {
-        blocks.push({ kind: "section", text: `${periodLabelAr(block.period)} — ${block.titleAr}` });
+        const heading = ar
+          ? `${periodLabelAr(block.period)} — ${block.titleAr}`
+          : `${periodLabelEn(block.period)} — ${block.titleEn}`;
+        blocks.push({ kind: "section", text: heading });
         block.mcq.forEach((row, index) => {
-          const mark = ["أ", "ب", "ج", "د"][row.correctIndex ?? 0] ?? "";
-          const choice = row.optionsAr?.[row.correctIndex ?? 0] ?? "";
+          const mark = letters[row.correctIndex ?? 0] ?? "";
+          const choice = assessOptions(row, locale)[row.correctIndex ?? 0] ?? "";
           blocks.push({
             kind: "text",
-            text: `${index + 1}-${mark}  ${choice}  —  ${row.promptAr}`,
+            text: `${index + 1}-${mark}  ${choice}  —  ${assessPrompt(row, locale)}`,
             size: 14,
             gap: 8,
           });
         });
         block.essays.forEach((row, index) => {
-          if (!row.guideAr) return;
+          const guide = assessGuide(row, locale);
+          if (!guide) return;
           blocks.push({
             kind: "text",
-            text: `مقالي ${index + 1}: ${row.guideAr}`,
+            text: `${ar ? "مقالي" : "Essay"} ${index + 1}: ${guide}`,
             size: 14,
             gap: 12,
           });

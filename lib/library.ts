@@ -108,6 +108,18 @@ export const ASSESS_BOOK: Book = {
   sizeMb: 1.0,
 };
 
+export const ASSESS_BOOK_EN: Book = {
+  slug: "programming-ai-en-assessments-1",
+  title: "Performances and assessments — part 1 (English)",
+  titleEn: "Performances and assessments — part 1 (English)",
+  language: "en",
+  part: 1,
+  kind: "assessments",
+  file: "/books/programming-ai-en-assessments-1.pdf",
+  sourceUrl: `${BLOB_BASE}/Programming-ArtificialIntelligence-En-EB-Assessments-1.pdf`,
+  sizeMb: 1.0,
+};
+
 export function bookSrc(book: Book): string {
   return book.kind === "workbook" || book.kind === "assessments" ? book.file : book.sourceUrl;
 }
@@ -117,14 +129,23 @@ export function getBook(slug: string): Book | undefined {
 }
 
 export function allBooks(): Book[] {
-  return [...BOOKS, FAIZ_BOOK, ASSESS_BOOK];
+  return [...BOOKS, FAIZ_BOOK, ASSESS_BOOK, ASSESS_BOOK_EN];
 }
 
 export function booksForTrack(track: BookLanguage): Book[] {
   return BOOKS.filter((book) => book.language === track);
 }
 
+export function assessBookForTrack(track: BookLanguage): Book {
+  return track === "en" ? ASSESS_BOOK_EN : ASSESS_BOOK;
+}
+
+export function extraBooksForTrack(track: BookLanguage): Book[] {
+  return track === "en" ? [ASSESS_BOOK_EN] : [FAIZ_BOOK, ASSESS_BOOK];
+}
+
 export function bookAllowedForTrack(book: Book, track: BookLanguage): boolean {
-  if (book.kind === "workbook" || book.kind === "assessments") return track === "ar";
+  if (book.kind === "workbook") return track === "ar";
+  if (book.kind === "assessments") return book.language === track;
   return book.language === track;
 }

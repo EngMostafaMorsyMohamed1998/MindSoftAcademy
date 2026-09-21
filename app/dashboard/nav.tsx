@@ -17,7 +17,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
-import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "./logout-button";
 import type { CurrentUser } from "@/lib/current-user";
@@ -99,19 +98,16 @@ export function DashboardNav({
           })}
         </nav>
         <div className="space-y-2 border-t border-white/10 p-4">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             <ThemeToggle
               theme={theme}
               locale={locale}
               className="inline-flex items-center justify-center rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
             />
-            <LanguageToggle
-              locale={locale}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-[11px] font-medium text-white/80"
-            />
           </div>
           <p className="text-center text-[11px] text-white/45">
             {t(locale, "trackLabel")}: {t(locale, track === "en" ? "trackEn" : "trackAr")}
+            <span className="mt-1 block text-white/35">{t(locale, "trackLocked")}</span>
           </p>
           <Link
             href="/dashboard/leaderboard"
@@ -143,10 +139,9 @@ export function DashboardNav({
             locale={locale}
             className="inline-flex size-9 items-center justify-center rounded-full border-2 border-primary/20 bg-primary text-white dark:border-accent/40 dark:bg-accent dark:text-primary-dark"
           />
-          <LanguageToggle
-            locale={locale}
-            className="inline-flex items-center gap-1 rounded-full border border-primary/15 bg-primary/80 px-2.5 py-1.5 text-[11px] font-medium text-white dark:border-accent/30 dark:bg-accent/80 dark:text-primary-dark"
-          />
+          <p className="rounded-full border border-primary/15 bg-primary/80 px-2.5 py-1.5 text-[11px] font-medium text-white dark:border-accent/30 dark:bg-accent/80 dark:text-primary-dark">
+            {t(locale, track === "en" ? "trackEn" : "trackAr")}
+          </p>
         </div>
       </header>
 

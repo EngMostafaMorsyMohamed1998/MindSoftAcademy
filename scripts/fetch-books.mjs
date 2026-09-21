@@ -22,6 +22,7 @@ const BOOKS = [
 
 const OPTIONAL_BOOKS = [
   ["Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf", "programming-ai-ar-assessments-1.pdf"],
+  ["Programming-ArtificialIntelligence-En-EB-Assessments-1.pdf", "programming-ai-en-assessments-1.pdf"],
 ];
 
 async function alreadyDownloaded(path) {

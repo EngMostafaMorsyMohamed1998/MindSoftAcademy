@@ -31,7 +31,7 @@ export async function getLocale(): Promise<Locale> {
     const picked = store.get(TEACHER_LANG_COOKIE)?.value;
     return isLocale(picked) ? picked : "ar";
   }
-  if (area === "student") {
+  if (area !== "teacher") {
     try {
       const { getStudentSession } = await import("@/lib/student-session");
       const student = await getStudentSession();

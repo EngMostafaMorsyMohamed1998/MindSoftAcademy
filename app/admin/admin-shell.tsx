@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Award, CalendarDays, ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Send, Smartphone, Users, Wallet } from "lucide-react";
+import { Award, BookOpen, CalendarDays, ClipboardCheck, Copy, KeyRound, LoaderCircle, Printer, Send, Settings, Smartphone, Users, Wallet } from "lucide-react";
 import {
   createManyStudentCodes,
   createStudentCode,
@@ -61,7 +61,7 @@ import type { MissBoardRow } from "@/lib/miss-board";
 
 const initial: FormState = { error: null };
 
-type Tab = "class" | "groups" | "codes" | "roster" | "grades" | "certificates" | "profit";
+type Tab = "class" | "groups" | "codes" | "roster" | "grades" | "certificates" | "profit" | "tools";
 
 export function AdminShell({
   locale,
@@ -91,7 +91,7 @@ export function AdminShell({
   month,
   homework,
   examples,
-  initialTab = "class",
+  initialTab = "roster",
 }: {
   locale: Locale;
   codes: AccessCode[];
@@ -158,6 +158,7 @@ export function AdminShell({
   const [slotDeleteState, slotDeleteAction, slotDeletePending] = useActionState(deleteWeekSlot, initial);
   const [windowOverride, setWindowOverride] = useState<"open" | "closed" | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [trackFilter, setTrackFilter] = useState<"all" | "ar" | "en">("all");
 
   useEffect(() => {
     if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok || telegramHookState.ok || telegramOneState.ok || telegramAllState.ok || deviceLimitState.ok || deviceForgetState.ok || exampleState.ok || exampleDeleteState.ok) {
@@ -206,6 +207,9 @@ export function AdminShell({
     currentMonth: month,
   });
   const thisMonth = profits[0];
+  const unusedCodes = codes.filter((row) => !row.usedAt).length;
+  const homeworkBehind = roster.filter((row) => row.homeworkDone < row.homeworkNeed).length;
+  const todayGroups = classGroups.filter((row) => row.weekday === weekday);
   const sampleYear = today.slice(0, 4);
   const sampleCertificate = {
     serial: `MSA-${sampleYear}-0000`,
@@ -289,19 +293,77 @@ export function AdminShell({
     win.print();
   }
 
-  const tabs: { id: Tab; label: string; icon: typeof KeyRound; count?: number }[] = [
-    { id: "class", label: t(locale, "tabClass"), icon: ClipboardCheck },
-    { id: "groups", label: t(locale, "tabGroups"), icon: CalendarDays, count: classGroups.length },
-    { id: "codes", label: t(locale, "tabCodes"), icon: KeyRound, count: codes.length },
+  const dailyTabs: { id: Tab; label: string; icon: typeof KeyRound; count?: number }[] = [
     { id: "roster", label: t(locale, "tabRoster"), icon: Users, count: roster.length },
-    { id: "grades", label: t(locale, "tabGrades"), icon: Printer, count: pendingEssays || undefined },
-    { id: "certificates", label: t(locale, "tabCertificates"), icon: Award, count: certificates.length },
-    { id: "profit", label: t(locale, "tabProfit"), icon: Wallet, count: thisMonth?.revenue || undefined },
+    { id: "codes", label: t(locale, "tabCodes"), icon: KeyRound, count: unusedCodes || codes.length },
+    { id: "class", label: t(locale, "tabClass"), icon: ClipboardCheck },
+    { id: "grades", label: t(locale, "tabGrades"), icon: Printer, count: pendingEssays || homeworkBehind || undefined },
   ];
+  const laterTabs: { id: Tab; label: string; icon: typeof KeyRound; count?: number }[] = [
+    { id: "groups", label: t(locale, "tabGroups"), icon: CalendarDays, count: classGroups.length },
+    { id: "tools", label: t(locale, "tabTools"), icon: Settings },
+    { id: "certificates", label: t(locale, "tabCertificates"), icon: Award, count: certificates.length || undefined },
+    { id: "profit", label: t(locale, "tabProfit"), icon: Wallet },
+  ];
+
+  function tabButton(item: { id: Tab; label: string; icon: typeof KeyRound; count?: number }, compact = false) {
+    const Icon = item.icon;
+    const active = tab === item.id;
+    return (
+      <button
+        key={item.id}
+        type="button"
+        onClick={() => setTab(item.id)}
+        className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 font-semibold ${
+          compact ? "text-xs" : "text-sm"
+        } ${active ? "bg-primary text-white" : "text-primary"}`}
+      >
+        <Icon className={compact ? "size-3.5" : "size-4"} />
+        {item.label}
+        {item.count !== undefined ? (
+          <span className={`rounded-full px-1.5 text-xs ${active ? "bg-white/20" : "bg-primary/10"}`}>
+            {item.count}
+          </span>
+        ) : null}
+      </button>
+    );
+  }
 
   return (
     <div className="mt-6">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <button
+          type="button"
+          onClick={() => setTab("roster")}
+          className="rounded-2xl bg-white p-4 text-start ring-1 ring-primary/10"
+        >
+          <p className="text-xs text-foreground/55">{t(locale, "classRoster")}</p>
+          <p className="mt-1 text-sm font-semibold">
+            {roster.length}
+            {unpaid.length ? ` · ${t(locale, "monthDue")} ${unpaid.length}` : ""}
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("codes")}
+          className="rounded-2xl bg-white p-4 text-start ring-1 ring-primary/10"
+        >
+          <p className="text-xs text-foreground/55">{t(locale, "unusedCodes")}</p>
+          <p className="mt-1 text-sm font-semibold">
+            {unusedCodes} / {codes.length}
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("grades")}
+          className="rounded-2xl bg-white p-4 text-start ring-1 ring-primary/10"
+        >
+          <p className="text-xs text-foreground/55">{t(locale, "homeworkBehind")}</p>
+          <p className="mt-1 text-sm font-semibold">
+            {homeworkBehind}
+            {pendingEssays ? ` · ${t(locale, "pendingReview")} ${pendingEssays}` : ""}
+          </p>
+        </button>
         <button
           type="button"
           onClick={() => setTab("class")}
@@ -317,193 +379,40 @@ export function AdminShell({
               : t(locale, "examClosedNow")}
           </p>
         </button>
-        <button
-          type="button"
-          onClick={() => setTab("roster")}
-          className="rounded-2xl bg-white p-4 text-start ring-1 ring-primary/10"
-        >
-          <p className="text-xs text-foreground/55">{t(locale, "classRoster")}</p>
-          <p className="mt-1 text-sm font-semibold">{roster.length}</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("grades")}
-          className="rounded-2xl bg-white p-4 text-start ring-1 ring-primary/10"
-        >
-          <p className="text-xs text-foreground/55">{t(locale, "results")}</p>
-          <p className="mt-1 text-sm font-semibold">{exams.length}</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("certificates")}
-          className="rounded-2xl bg-white p-4 text-start ring-1 ring-primary/10"
-        >
-          <p className="text-xs text-foreground/55">{t(locale, "tabCertificates")}</p>
-          <p className="mt-1 text-sm font-semibold">{certificates.length}</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("profit")}
-          className="rounded-2xl bg-white p-4 text-start ring-1 ring-primary/10"
-        >
-          <p className="text-xs text-foreground/55">{t(locale, "monthProfit")}</p>
-          <p className="mt-1 text-sm font-semibold tabular-nums" dir="ltr">
-            {thisMonth?.revenue ?? 0} {t(locale, "currency")}
-          </p>
-        </button>
       </div>
 
-      <div className="sticky top-0 z-20 mt-5 flex gap-2 overflow-x-auto rounded-2xl bg-primary/5 p-2">
-        {tabs.map((item) => {
-          const Icon = item.icon;
-          const active = tab === item.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setTab(item.id)}
-              className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${
-                active ? "bg-primary text-white" : "text-primary"
-              }`}
-            >
-              <Icon className="size-4" />
-              {item.label}
-              {item.count !== undefined ? (
-                <span className={`rounded-full px-1.5 text-xs ${active ? "bg-white/20" : "bg-primary/10"}`}>
-                  {item.count}
-                </span>
-              ) : null}
-            </button>
-          );
-        })}
+      <div className="sticky top-0 z-20 mt-5 space-y-2 rounded-2xl bg-primary/5 p-2">
+        <p className="px-1 text-[11px] font-semibold tracking-wide text-foreground/50">{t(locale, "adminDaily")}</p>
+        <div className="flex gap-2 overflow-x-auto">{dailyTabs.map((item) => tabButton(item))}</div>
+        <p className="px-1 pt-1 text-[11px] font-semibold tracking-wide text-foreground/50">{t(locale, "adminLater")}</p>
+        <div className="flex gap-2 overflow-x-auto">{laterTabs.map((item) => tabButton(item, true))}</div>
       </div>
 
       {tab === "class" ? (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
+            <h2 className="text-lg font-semibold">{t(locale, "todaySlot")}</h2>
+            {todayGroups.length ? (
+              <ul className="mt-3 space-y-2">
+                {todayGroups.map((group) => (
+                  <li key={group.id} className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                    <strong>{group.name}</strong>
+                    <span className="mx-2 text-foreground/55">{group.startTime}</span>
+                    {group.place}
+                    {group.nextLesson ? ` · ${group.nextLesson}` : ""}
+                    {group.studentIds.length ? ` · ${group.studentIds.length}` : ""}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm text-foreground/55">{t(locale, "todayEmpty")}</p>
+            )}
+          </section>
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
             <h2 className="text-lg font-semibold">{t(locale, "presenceTitle")}</h2>
             <p className="mt-1 text-sm text-foreground/60">{t(locale, "presenceHint")}</p>
             <div className="mt-4">
               <PresenceBoard locale={locale} />
-            </div>
-          </section>
-          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
-            <h2 className="text-lg font-semibold">{t(locale, "telegramTitle")}</h2>
-            <p className="mt-1 text-sm text-foreground/60">{t(locale, "telegramLead")}</p>
-            <p className="mt-2 text-sm font-semibold">
-              {t(locale, "telegramCount")}: {telegramLinks.length}
-            </p>
-            {!telegramConfigured ? (
-              <p className="mt-3 text-sm text-amber-800">{t(locale, "telegramMissingToken")}</p>
-            ) : (
-              <p className="mt-3 text-sm text-emerald-800">{t(locale, "telegramReady")}</p>
-            )}
-            {codes.length === 0 ? (
-              <p className="mt-3 text-sm text-amber-800">{t(locale, "telegramNeedStudent")}</p>
-            ) : null}
-            <p className="mt-3 text-sm text-foreground/70">{t(locale, "teacherTelegramHint")}</p>
-            <p className={`mt-1 text-sm font-semibold ${teacherTelegramLinked ? "text-emerald-800" : "text-amber-800"}`}>
-              {teacherTelegramLinked ? t(locale, "teacherTelegramLinked") : t(locale, "teacherTelegramMissing")}
-            </p>
-            <form action={telegramHookAction} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-              <label className="grid gap-1 text-sm">
-                <span className="font-medium">{t(locale, "telegramTokenLabel")}</span>
-                <input
-                  name="token"
-                  type="password"
-                  required={!telegramConfigured}
-                  autoComplete="off"
-                  placeholder="123456:ABC..."
-                  className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
-                />
-                <span className="text-xs text-foreground/55">{t(locale, "telegramTokenHint")}</span>
-              </label>
-              <button
-                type="submit"
-                disabled={telegramHookPending}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {t(locale, "telegramActivate")}
-              </button>
-            </form>
-            {telegramHookState.error === "TOKEN" ? (
-              <p className="mt-2 text-sm text-amber-800">{t(locale, "telegramBadToken")}</p>
-            ) : null}
-            {telegramHookState.error === "WEBHOOK" ? (
-              <p className="mt-2 text-sm text-amber-800">{t(locale, "telegramHookFail")}</p>
-            ) : null}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {telegramHref ? (
-                <a
-                  href={telegramHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-11 items-center gap-2 rounded-full bg-sky-600 px-4 text-sm font-semibold text-white"
-                >
-                  <Send className="size-4" />
-                  {t(locale, "telegramOpen")}
-                </a>
-              ) : null}
-              <form action={telegramAllAction}>
-                <button
-                  type="submit"
-                  disabled={telegramAllPending || telegramLinks.length === 0}
-                  className="inline-flex h-11 items-center rounded-full bg-primary-dark px-4 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {t(locale, "telegramSendAll")}
-                </button>
-              </form>
-            </div>
-            {telegramHookState.ok || telegramAllState.ok || telegramOneState.ok ? (
-              <p className="mt-3 text-sm text-emerald-700">{t(locale, "telegramSent")}</p>
-            ) : null}
-            {telegramLinks.length === 0 ? (
-              <p className="mt-3 text-sm text-foreground/55">{t(locale, "telegramNone")}</p>
-            ) : (
-              <ul className="mt-3 space-y-1 text-sm">
-                {telegramLinks.map((link) => {
-                  const student = roster.find((row) => row.id === link.studentId);
-                  return (
-                    <li key={link.chatId}>
-                      {student?.name || link.phone}
-                      {link.parentName ? ` · ${link.parentName}` : ""}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
-            <h2 className="text-lg font-semibold">{t(locale, "deviceTitle")}</h2>
-            <p className="mt-1 text-sm text-foreground/60">{t(locale, "deviceLead")}</p>
-            <p className="mt-3 text-sm font-semibold">
-              {t(locale, "deviceLimit")}: {deviceLimit === 1 ? t(locale, "deviceLimit1") : t(locale, "deviceLimit2")}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <form action={deviceLimitAction}>
-                <input type="hidden" name="limit" value="1" />
-                <button
-                  type="submit"
-                  disabled={deviceLimitPending}
-                  className={`inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold ${
-                    deviceLimit === 1 ? "bg-primary text-white" : "bg-primary/10 text-primary"
-                  }`}
-                >
-                  {t(locale, "deviceLimit1")}
-                </button>
-              </form>
-              <form action={deviceLimitAction}>
-                <input type="hidden" name="limit" value="2" />
-                <button
-                  type="submit"
-                  disabled={deviceLimitPending}
-                  className={`inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold ${
-                    deviceLimit === 2 ? "bg-primary text-white" : "bg-primary/10 text-primary"
-                  }`}
-                >
-                  {t(locale, "deviceLimit2")}
-                </button>
-              </form>
             </div>
           </section>
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
@@ -691,9 +600,21 @@ export function AdminShell({
             ) : null}
           </section>
 
-          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-            <h2 className="text-lg font-semibold">{t(locale, "classExampleTitle")}</h2>
-            <p className="mt-1 text-sm text-foreground/60">{t(locale, "classExampleHint")}</p>
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold">{t(locale, "homeworkShort")}</h2>
+                <p className="mt-1 text-sm text-foreground/60">{t(locale, "classExampleHint")}</p>
+              </div>
+              <a
+                href="/admin/booklet"
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-white"
+              >
+                <BookOpen className="size-4" />
+                {t(locale, "openBookletAdmin")}
+              </a>
+            </div>
+            <h3 className="mt-5 text-sm font-semibold">{t(locale, "classExampleTitle")}</h3>
             <form action={exampleAction} className="mt-4 grid gap-3">
               <label className="grid gap-1 text-sm font-medium">
                 {t(locale, "lessons")}
@@ -776,117 +697,6 @@ export function AdminShell({
                   })}
               />
             </div>
-          </section>
-
-          {classGroups.filter((row) => row.weekday === weekday).length ? (
-            <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
-              <h2 className="text-lg font-semibold">{t(locale, "todaySlot")}</h2>
-              <ul className="mt-3 space-y-2">
-                {classGroups
-                  .filter((row) => row.weekday === weekday)
-                  .map((group) => (
-                    <li key={group.id} className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
-                      <strong>{group.name}</strong>
-                      <span className="mx-2 text-foreground/55">{group.startTime}</span>
-                      {group.place}
-                      {group.nextLesson ? ` · ${group.nextLesson}` : ""}
-                    </li>
-                  ))}
-              </ul>
-            </section>
-          ) : null}
-
-          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-            <h2 className="text-lg font-semibold">{t(locale, "weekPlan")}</h2>
-            <p className="mt-1 text-sm text-foreground/60">{t(locale, "weekPlanHint")}</p>
-            <form action={slotAction} className="mt-4 grid gap-3 sm:grid-cols-[8rem_7rem_1fr_auto]">
-              <select name="weekday" defaultValue={String(weekday)} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm">
-                {[0, 1, 2, 3, 4, 5, 6].map((day) => (
-                  <option key={day} value={day}>
-                    {weekdayName(locale, day)}
-                  </option>
-                ))}
-              </select>
-              <input name="startTime" type="time" required defaultValue="17:00" className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
-              <input name="topic" required minLength={2} placeholder={t(locale, "slotTopic")} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
-              <button type="submit" disabled={slotPending} className="h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white">
-                {t(locale, "addSlot")}
-              </button>
-            </form>
-            {slotState.error ? <p className="mt-2 text-sm text-red-700">{slotState.error}</p> : null}
-            {weekPlan.length === 0 ? (
-              <p className="mt-3 text-sm text-foreground/55">{t(locale, "noWeekPlan")}</p>
-            ) : (
-              <ul className="mt-4 space-y-2">
-                {weekPlan.map((slot) => (
-                  <li key={slot.id} className="flex items-center justify-between gap-2 rounded-2xl bg-primary/5 px-3 py-2 text-sm">
-                    <span>
-                      <strong>{weekdayName(locale, slot.weekday)}</strong>
-                      <span className="mx-2 text-foreground/55">{slot.startTime}</span>
-                      {slot.topic}
-                    </span>
-                    <form action={slotDeleteAction}>
-                      <input type="hidden" name="slotId" value={slot.id} />
-                      <button type="submit" disabled={slotDeletePending} className="rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">
-                        {t(locale, "removeSlot")}
-                      </button>
-                    </form>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
-            <h2 className="text-lg font-semibold">{t(locale, "missBoardTitle")}</h2>
-            <p className="mt-1 text-sm text-foreground/60">{t(locale, "missBoardHint")}</p>
-            {missBoard.length === 0 ? (
-              <p className="mt-3 text-sm text-foreground/55">{t(locale, "missBoardEmpty")}</p>
-            ) : (
-              <ol className="mt-4 space-y-2">
-                {missBoard.map((row) => (
-                  <li key={row.questionKey} className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
-                    <span className="font-semibold text-primary">
-                      {t(locale, "missBoardCount")} {row.count}
-                    </span>
-                    <span className="mx-2 text-foreground/55">
-                      {row.chapterId} · {row.lessonId}
-                    </span>
-                    <p className="mt-1">{row.prompt}</p>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </section>
-
-          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
-            <h2 className="text-lg font-semibold">{t(locale, "announce")}</h2>
-            <p className="mt-1 text-sm text-foreground/60">{t(locale, "announceHint")}</p>
-            <form action={announceAction} className="mt-4 grid gap-3">
-              <input
-                name="body"
-                defaultValue={announcement}
-                placeholder={t(locale, "announceHint")}
-                className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
-              />
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="submit"
-                  disabled={announcePending}
-                  className="h-11 rounded-full bg-primary px-5 text-sm font-semibold text-white"
-                >
-                  {t(locale, "announce")}
-                </button>
-                <button
-                  type="submit"
-                  name="body"
-                  value=""
-                  className="h-11 rounded-full bg-primary/10 px-5 text-sm font-semibold"
-                >
-                  {t(locale, "clearAnnounce")}
-                </button>
-              </div>
-            </form>
           </section>
 
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10 lg:col-span-2">
@@ -979,8 +789,7 @@ export function AdminShell({
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
             <h2 className="text-lg font-semibold">{t(locale, "groupsTitle")}</h2>
             <p className="mt-1 text-sm text-foreground/60">{t(locale, "groupsHint")}</p>
-            <p className="mt-2 text-sm text-foreground/70">{t(locale, "teacherTelegramHint")}</p>
-            <p className={`mt-1 text-sm font-semibold ${teacherTelegramLinked ? "text-emerald-800" : "text-amber-800"}`}>
+            <p className={`mt-2 text-xs font-semibold ${teacherTelegramLinked ? "text-emerald-800" : "text-amber-800"}`}>
               {teacherTelegramLinked ? t(locale, "teacherTelegramLinked") : t(locale, "teacherTelegramMissing")}
             </p>
             <form action={groupAction} className="mt-4 grid gap-3">
@@ -1112,11 +921,148 @@ export function AdminShell({
               </section>
             ))
           )}
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "weekPlan")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "weekPlanHint")}</p>
+            <form action={slotAction} className="mt-4 grid gap-3 sm:grid-cols-[8rem_7rem_1fr_auto]">
+              <select name="weekday" defaultValue={String(weekday)} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm">
+                {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                  <option key={day} value={day}>
+                    {weekdayName(locale, day)}
+                  </option>
+                ))}
+              </select>
+              <input name="startTime" type="time" required defaultValue="17:00" className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
+              <input name="topic" required minLength={2} placeholder={t(locale, "slotTopic")} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
+              <button type="submit" disabled={slotPending} className="h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white">
+                {t(locale, "addSlot")}
+              </button>
+            </form>
+            {slotState.error ? <p className="mt-2 text-sm text-red-700">{slotState.error}</p> : null}
+            {weekPlan.length === 0 ? (
+              <p className="mt-3 text-sm text-foreground/55">{t(locale, "noWeekPlan")}</p>
+            ) : (
+              <ul className="mt-4 space-y-2">
+                {weekPlan.map((slot) => (
+                  <li key={slot.id} className="flex items-center justify-between gap-2 rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                    <span>
+                      <strong>{weekdayName(locale, slot.weekday)}</strong>
+                      <span className="mx-2 text-foreground/55">{slot.startTime}</span>
+                      {slot.topic}
+                    </span>
+                    <form action={slotDeleteAction}>
+                      <input type="hidden" name="slotId" value={slot.id} />
+                      <button type="submit" disabled={slotDeletePending} className="rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">
+                        {t(locale, "removeSlot")}
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
       ) : null}
 
       {tab === "codes" ? (
         <div className="mt-6 space-y-6">
+          <section>
+            <h2 className="text-lg font-semibold">{t(locale, "codesListTitle")}</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(["all", "ar", "en"] as const).map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTrackFilter(value)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                    trackFilter === value ? "bg-primary text-white" : "bg-primary/8 text-primary"
+                  }`}
+                >
+                  {t(locale, value === "all" ? "trackAll" : value === "en" ? "trackEn" : "trackAr")}
+                  <span className="ms-1 opacity-70">
+                    {value === "all"
+                      ? codes.length
+                      : codes.filter((row) => (row.track === "en" ? "en" : "ar") === value).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {codes.length === 0 ? (
+              <p className="mt-3 text-sm text-foreground/55">{t(locale, "noCodes")}</p>
+            ) : (
+              <div className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-primary/10">
+                <table className="w-full min-w-[45rem] text-sm">
+                  <thead className="bg-primary/5 text-start">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">{t(locale, "student")}</th>
+                      <th className="px-3 py-2 font-semibold">{t(locale, "phone")}</th>
+                      <th className="px-3 py-2 font-semibold">{t(locale, "trackLabel")}</th>
+                      <th className="px-3 py-2 font-semibold">{t(locale, "accessCode")}</th>
+                      <th className="px-3 py-2 font-semibold">{t(locale, "used")}</th>
+                      <th className="px-3 py-2" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {codes
+                      .filter((code) => trackFilter === "all" || (code.track === "en" ? "en" : "ar") === trackFilter)
+                      .map((code) => (
+                      <tr key={code.id} className="border-t border-primary/8">
+                        <td className="px-3 py-2">{code.name}</td>
+                        <td className="px-3 py-2 font-mono text-xs">{code.phone}</td>
+                        <td className="px-3 py-2">
+                          <form action={saveStudentTrack}>
+                            <input type="hidden" name="studentId" value={code.id} />
+                            <input type="hidden" name="name" value={code.name} />
+                            <input type="hidden" name="phone" value={code.phone} />
+                            <select
+                              key={`${code.id}-${code.track === "en" ? "en" : "ar"}`}
+                              name="track"
+                              defaultValue={code.track === "en" ? "en" : "ar"}
+                              onChange={(event) => event.currentTarget.form?.requestSubmit()}
+                              className="h-8 rounded-full border border-primary/15 bg-white px-2 text-xs"
+                            >
+                              <option value="ar">{t(locale, "trackAr")}</option>
+                              <option value="en">{t(locale, "trackEn")}</option>
+                            </select>
+                          </form>
+                        </td>
+                        <td className="px-3 py-2 font-mono">{code.code}</td>
+                        <td className="px-3 py-2">{code.usedAt ? t(locale, "used") : t(locale, "unused")}</td>
+                        <td className="px-3 py-2">
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => copy(code.code)}
+                              className="inline-flex items-center gap-1 rounded-full bg-primary/8 px-2 py-1 text-xs"
+                            >
+                              <Copy className="size-3" />
+                              {copied === code.code ? "OK" : t(locale, "copy")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => printSlip(code)}
+                              className="inline-flex items-center gap-1 rounded-full bg-primary/8 px-2 py-1 text-xs"
+                            >
+                              <Printer className="size-3" />
+                              {t(locale, "printSlip")}
+                            </button>
+                            <a
+                              href={whatsappHref(code.phone, codeWhatsappText(code.name, code.code, locale))}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center rounded-full bg-emerald-600 px-2 py-1 text-xs font-semibold text-white"
+                            >
+                              {t(locale, "sendWhatsapp")}
+                            </a>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
             <h2 className="text-lg font-semibold">{t(locale, "generate")}</h2>
             <p className="mt-1 text-xs text-foreground/55">{t(locale, "trackHint")}</p>
@@ -1193,109 +1139,11 @@ export function AdminShell({
               ) : null}
             </form>
           </section>
-
-          <section>
-            <h2 className="text-lg font-semibold">{t(locale, "accessCode")}</h2>
-            {codes.length === 0 ? (
-              <p className="mt-3 text-sm text-foreground/55">{t(locale, "noCodes")}</p>
-            ) : (
-              <div className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-primary/10">
-                <table className="w-full min-w-[45rem] text-sm">
-                  <thead className="bg-primary/5 text-start">
-                    <tr>
-                      <th className="px-3 py-2 font-semibold">{t(locale, "student")}</th>
-                      <th className="px-3 py-2 font-semibold">{t(locale, "phone")}</th>
-                      <th className="px-3 py-2 font-semibold">{t(locale, "trackLabel")}</th>
-                      <th className="px-3 py-2 font-semibold">{t(locale, "accessCode")}</th>
-                      <th className="px-3 py-2 font-semibold">{t(locale, "used")}</th>
-                      <th className="px-3 py-2" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {codes.map((code) => (
-                      <tr key={code.id} className="border-t border-primary/8">
-                        <td className="px-3 py-2">{code.name}</td>
-                        <td className="px-3 py-2 font-mono text-xs">{code.phone}</td>
-                        <td className="px-3 py-2">
-                          <form action={saveStudentTrack}>
-                            <input type="hidden" name="studentId" value={code.id} />
-                            <select
-                              name="track"
-                              defaultValue={code.track === "en" ? "en" : "ar"}
-                              onChange={(event) => event.currentTarget.form?.requestSubmit()}
-                              className="h-8 rounded-full border border-primary/15 bg-white px-2 text-xs"
-                            >
-                              <option value="ar">{t(locale, "trackAr")}</option>
-                              <option value="en">{t(locale, "trackEn")}</option>
-                            </select>
-                          </form>
-                        </td>
-                        <td className="px-3 py-2 font-mono">{code.code}</td>
-                        <td className="px-3 py-2">{code.usedAt ? t(locale, "used") : t(locale, "unused")}</td>
-                        <td className="px-3 py-2">
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => copy(code.code)}
-                              className="inline-flex items-center gap-1 rounded-full bg-primary/8 px-2 py-1 text-xs"
-                            >
-                              <Copy className="size-3" />
-                              {copied === code.code ? "OK" : t(locale, "copy")}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => printSlip(code)}
-                              className="inline-flex items-center gap-1 rounded-full bg-primary/8 px-2 py-1 text-xs"
-                            >
-                              <Printer className="size-3" />
-                              {t(locale, "printSlip")}
-                            </button>
-                            <a
-                              href={whatsappHref(code.phone, codeWhatsappText(code.name, code.code, locale))}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center rounded-full bg-emerald-600 px-2 py-1 text-xs font-semibold text-white"
-                            >
-                              {t(locale, "sendWhatsapp")}
-                            </a>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
         </div>
       ) : null}
 
       {tab === "roster" ? (
         <div className="mt-6 space-y-6">
-          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
-            <h2 className="text-lg font-semibold">{t(locale, "unlockChapter")}</h2>
-            <form action={unlockAction} className="mt-4 grid gap-3 sm:grid-cols-2">
-              <input name="name" required placeholder={t(locale, "fullName")} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
-              <input name="phone" required inputMode="tel" placeholder={t(locale, "phone")} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
-              <select name="chapterId" className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" defaultValue="1">
-                {CHAPTERS.map((chapter) => (
-                  <option key={chapter.id} value={chapter.id}>
-                    {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
-                  </option>
-                ))}
-              </select>
-              <input name="reason" placeholder={t(locale, "unlockReason")} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
-              <button
-                type="submit"
-                disabled={unlockPending}
-                className="sm:col-span-2 h-11 rounded-full bg-primary text-sm font-semibold text-white"
-              >
-                {t(locale, "unlockBtn")}
-              </button>
-              {unlockState.ok ? <p className="sm:col-span-2 text-sm text-emerald-700">{t(locale, "unlockBtn")} ✓</p> : null}
-            </form>
-          </section>
-
           <section>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold">{t(locale, "classRoster")}</h2>
@@ -1330,6 +1178,7 @@ export function AdminShell({
                       <th className="px-3 py-2 font-semibold">{t(locale, "student")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "weekStars")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "standing")}</th>
+                      <th className="px-3 py-2 font-semibold">{t(locale, "homeworkShort")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "lastPercent")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "attendance")}</th>
                       <th className="px-3 py-2 font-semibold">{t(locale, "monthFees")}</th>
@@ -1400,6 +1249,17 @@ export function AdminShell({
                         </td>
                         <td className="px-3 py-2">
                           {row.standing === "done" ? t(locale, "finishedAll") : `${t(locale, "chapterExam")} ${row.standing}`}
+                        </td>
+                        <td className="px-3 py-2">
+                          <p>
+                            {row.homeworkDone}/{row.homeworkNeed}
+                          </p>
+                          {row.missingHomework.length ? (
+                            <p className="text-xs text-amber-800">
+                              {t(locale, "missingHomework")} {row.missingHomework.slice(0, 3).join(locale === "ar" ? "، " : ", ")}
+                              {row.missingHomework.length > 3 ? ` +${row.missingHomework.length - 3}` : ""}
+                            </p>
+                          ) : null}
                         </td>
                         <td className="px-3 py-2">
                           {row.lastPercent === null ? "—" : `${row.lastPercent}%`}
@@ -1528,6 +1388,29 @@ export function AdminShell({
               </div>
             )}
           </section>
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "unlockChapter")}</h2>
+            <form action={unlockAction} className="mt-4 grid gap-3 sm:grid-cols-2">
+              <input name="name" required placeholder={t(locale, "fullName")} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
+              <input name="phone" required inputMode="tel" placeholder={t(locale, "phone")} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
+              <select name="chapterId" className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" defaultValue="1">
+                {CHAPTERS.map((chapter) => (
+                  <option key={chapter.id} value={chapter.id}>
+                    {chapter.id}. {locale === "ar" ? chapter.titleAr : chapter.titleEn}
+                  </option>
+                ))}
+              </select>
+              <input name="reason" placeholder={t(locale, "unlockReason")} className="h-11 rounded-2xl border border-primary/15 px-3 text-sm" />
+              <button
+                type="submit"
+                disabled={unlockPending}
+                className="sm:col-span-2 h-11 rounded-full bg-primary text-sm font-semibold text-white"
+              >
+                {t(locale, "unlockBtn")}
+              </button>
+              {unlockState.ok ? <p className="sm:col-span-2 text-sm text-emerald-700">{t(locale, "unlockBtn")} ✓</p> : null}
+            </form>
+          </section>
         </div>
       ) : null}
 
@@ -1560,7 +1443,47 @@ export function AdminShell({
       ) : null}
 
       {tab === "grades" ? (
-        <section className="mt-6">
+        <section className="mt-6 space-y-6">
+          {homeworkBehind > 0 ? (
+            <div className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+              <h2 className="text-lg font-semibold">{t(locale, "homeworkBehind")}</h2>
+              <ul className="mt-3 space-y-2">
+                {roster
+                  .filter((row) => row.homeworkDone < row.homeworkNeed)
+                  .map((row) => (
+                    <li key={row.id} className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                      <strong>{row.name}</strong>
+                      <span className="mx-2 text-foreground/55">
+                        {row.homeworkDone}/{row.homeworkNeed}
+                      </span>
+                      {row.missingHomework.slice(0, 6).join(locale === "ar" ? "، " : ", ")}
+                      {row.missingHomework.length > 6 ? ` +${row.missingHomework.length - 6}` : ""}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ) : null}
+          <div className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "missBoardTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "missBoardHint")}</p>
+            {missBoard.length === 0 ? (
+              <p className="mt-3 text-sm text-foreground/55">{t(locale, "missBoardEmpty")}</p>
+            ) : (
+              <ol className="mt-4 space-y-2">
+                {missBoard.map((row) => (
+                  <li key={row.questionKey} className="rounded-2xl bg-primary/5 px-3 py-2 text-sm">
+                    <span className="font-semibold text-primary">
+                      {t(locale, "missBoardCount")} {row.count}
+                    </span>
+                    <span className="mx-2 text-foreground/55">
+                      {row.chapterId} · {row.lessonId}
+                    </span>
+                    <p className="mt-1">{row.prompt}</p>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
           <h2 className="text-lg font-semibold">{t(locale, "results")}</h2>
           {exams.length === 0 ? (
             <p className="mt-3 text-sm text-foreground/55">{t(locale, "noResults")}</p>
@@ -1625,6 +1548,160 @@ export function AdminShell({
             </div>
           )}
         </section>
+      ) : null}
+
+      {tab === "tools" ? (
+        <div className="mt-6 space-y-6">
+          <p className="text-sm text-foreground/60">{t(locale, "toolsLead")}</p>
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "telegramTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "telegramLead")}</p>
+            <p className="mt-2 text-sm font-semibold">
+              {t(locale, "telegramCount")}: {telegramLinks.length}
+            </p>
+            {!telegramConfigured ? (
+              <p className="mt-3 text-sm text-amber-800">{t(locale, "telegramMissingToken")}</p>
+            ) : (
+              <p className="mt-3 text-sm text-emerald-800">{t(locale, "telegramReady")}</p>
+            )}
+            {codes.length === 0 ? (
+              <p className="mt-3 text-sm text-amber-800">{t(locale, "telegramNeedStudent")}</p>
+            ) : null}
+            <p className="mt-3 text-sm text-foreground/70">{t(locale, "teacherTelegramHint")}</p>
+            <p className={`mt-1 text-sm font-semibold ${teacherTelegramLinked ? "text-emerald-800" : "text-amber-800"}`}>
+              {teacherTelegramLinked ? t(locale, "teacherTelegramLinked") : t(locale, "teacherTelegramMissing")}
+            </p>
+            <form action={telegramHookAction} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+              <label className="grid gap-1 text-sm">
+                <span className="font-medium">{t(locale, "telegramTokenLabel")}</span>
+                <input
+                  name="token"
+                  type="password"
+                  required={!telegramConfigured}
+                  autoComplete="off"
+                  placeholder="123456:ABC..."
+                  className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+                />
+                <span className="text-xs text-foreground/55">{t(locale, "telegramTokenHint")}</span>
+              </label>
+              <button
+                type="submit"
+                disabled={telegramHookPending}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {t(locale, "telegramActivate")}
+              </button>
+            </form>
+            {telegramHookState.error === "TOKEN" ? (
+              <p className="mt-2 text-sm text-amber-800">{t(locale, "telegramBadToken")}</p>
+            ) : null}
+            {telegramHookState.error === "WEBHOOK" ? (
+              <p className="mt-2 text-sm text-amber-800">{t(locale, "telegramHookFail")}</p>
+            ) : null}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {telegramHref ? (
+                <a
+                  href={telegramHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-sky-600 px-4 text-sm font-semibold text-white"
+                >
+                  <Send className="size-4" />
+                  {t(locale, "telegramOpen")}
+                </a>
+              ) : null}
+              <form action={telegramAllAction}>
+                <button
+                  type="submit"
+                  disabled={telegramAllPending || telegramLinks.length === 0}
+                  className="inline-flex h-11 items-center rounded-full bg-primary-dark px-4 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {t(locale, "telegramSendAll")}
+                </button>
+              </form>
+            </div>
+            {telegramHookState.ok || telegramAllState.ok || telegramOneState.ok ? (
+              <p className="mt-3 text-sm text-emerald-700">{t(locale, "telegramSent")}</p>
+            ) : null}
+            {telegramLinks.length === 0 ? (
+              <p className="mt-3 text-sm text-foreground/55">{t(locale, "telegramNone")}</p>
+            ) : (
+              <ul className="mt-3 space-y-1 text-sm">
+                {telegramLinks.map((link) => {
+                  const student = roster.find((row) => row.id === link.studentId);
+                  return (
+                    <li key={link.chatId}>
+                      {student?.name || link.phone}
+                      {link.parentName ? ` · ${link.parentName}` : ""}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "deviceTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "deviceLead")}</p>
+            <p className="mt-3 text-sm font-semibold">
+              {t(locale, "deviceLimit")}: {deviceLimit === 1 ? t(locale, "deviceLimit1") : t(locale, "deviceLimit2")}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <form action={deviceLimitAction}>
+                <input type="hidden" name="limit" value="1" />
+                <button
+                  type="submit"
+                  disabled={deviceLimitPending}
+                  className={`inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold ${
+                    deviceLimit === 1 ? "bg-primary text-white" : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  {t(locale, "deviceLimit1")}
+                </button>
+              </form>
+              <form action={deviceLimitAction}>
+                <input type="hidden" name="limit" value="2" />
+                <button
+                  type="submit"
+                  disabled={deviceLimitPending}
+                  className={`inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold ${
+                    deviceLimit === 2 ? "bg-primary text-white" : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  {t(locale, "deviceLimit2")}
+                </button>
+              </form>
+            </div>
+          </section>
+          <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
+            <h2 className="text-lg font-semibold">{t(locale, "announce")}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{t(locale, "announceHint")}</p>
+            <form action={announceAction} className="mt-4 grid gap-3">
+              <input
+                name="body"
+                defaultValue={announcement}
+                placeholder={t(locale, "announceHint")}
+                className="h-11 rounded-2xl border border-primary/15 px-3 text-sm"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="submit"
+                  disabled={announcePending}
+                  className="h-11 rounded-full bg-primary px-5 text-sm font-semibold text-white"
+                >
+                  {t(locale, "announce")}
+                </button>
+                <button
+                  type="submit"
+                  name="body"
+                  value=""
+                  className="h-11 rounded-full bg-primary/10 px-5 text-sm font-semibold"
+                >
+                  {t(locale, "clearAnnounce")}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
       ) : null}
 
       {tab === "profit" ? (

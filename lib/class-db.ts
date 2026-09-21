@@ -322,6 +322,41 @@ export async function ensureCodeTrackColumn(): Promise<boolean> {
   }
 }
 
+function asTrack(value: unknown): "ar" | "en" {
+  return value === "en" ? "en" : "ar";
+}
+
+export async function readCodeTracks(): Promise<Map<string, "ar" | "en">> {
+  const tracks = new Map<string, "ar" | "en">();
+  if (!hasLiveDatabase()) return tracks;
+  await ensureCodeTrackColumn();
+  try {
+    const rows = await prisma.$queryRaw<Array<{ id: string; track: string | null }>>`
+      SELECT id, track FROM "ClassCode"
+    `;
+    for (const row of rows) {
+      tracks.set(row.id, asTrack(row.track));
+    }
+  } catch {
+    // Column may still be missing on a stale replica.
+  }
+  return tracks;
+}
+
+export async function writeCodeTracks(rows: { id: string; track?: string }[]): Promise<boolean> {
+  if (!hasLiveDatabase() || !rows.length) return false;
+  await ensureCodeTrackColumn();
+  try {
+    for (const row of rows) {
+      const track = asTrack(row.track);
+      await prisma.$executeRaw`UPDATE "ClassCode" SET "track" = ${track} WHERE "id" = ${row.id}`;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function readClassDb(): Promise<StoreFile | null> {
   if (!hasLiveDatabase()) return null;
   await ensureCodeTrackColumn();
@@ -343,6 +378,7 @@ export async function readClassDb(): Promise<StoreFile | null> {
       ]);
     const announcement = announcements.find((row) => row.active) ?? announcements[0] ?? null;
     const window = windows[0] ?? null;
+    const tracks = await readCodeTracks();
     return {
       codes: codes.map((row): AccessCode => ({
         id: row.id,
@@ -355,7 +391,7 @@ export async function readClassDb(): Promise<StoreFile | null> {
         points: row.points,
         suspendedAt: row.suspendedAt?.toISOString() ?? null,
         suspendReason: row.suspendReason,
-        track: "track" in row && row.track === "en" ? "en" : "ar",
+        track: tracks.get(row.id) ?? asTrack("track" in row ? (row as { track?: string }).track : "ar"),
       })),
       messages: messages.map((row): ChatMessage => ({
         id: row.id,
@@ -468,11 +504,11 @@ async function upsertClassCodes(codes: AccessCode[]): Promise<void> {
   if (!codes.length) return;
   const existing = await prisma.classCode.findMany({ select: { id: true, points: true } });
   const prevPoints = new Map(existing.map((row) => [row.id, row.points]));
-  await prisma.$transaction(
-    codes.map((row) =>
-      prisma.classCode.upsert({
-        where: { id: row.id },
-        create: {
+  const run = (withTrack: boolean) =>
+    prisma.$transaction(
+      codes.map((row) => {
+        const track = asTrack(row.track);
+        const create = {
           id: row.id,
           code: row.code,
           name: row.name,
@@ -483,9 +519,9 @@ async function upsertClassCodes(codes: AccessCode[]): Promise<void> {
           points: Math.max(0, row.points),
           suspendedAt: row.suspendedAt ? asDate(row.suspendedAt) : null,
           suspendReason: row.suspendReason ?? "",
-          track: row.track === "en" ? "en" : "ar",
-        },
-        update: {
+          ...(withTrack ? { track } : {}),
+        };
+        const update = {
           code: row.code,
           name: row.name,
           phone: row.phone,
@@ -493,12 +529,22 @@ async function upsertClassCodes(codes: AccessCode[]): Promise<void> {
           usedById: row.usedById,
           suspendedAt: row.suspendedAt ? asDate(row.suspendedAt) : null,
           suspendReason: row.suspendReason ?? "",
-          track: row.track === "en" ? "en" : "ar",
           points: Math.max(prevPoints.get(row.id) ?? 0, Math.max(0, row.points)),
-        },
+          ...(withTrack ? { track } : {}),
+        };
+        return prisma.classCode.upsert({
+          where: { id: row.id },
+          create,
+          update,
+        });
       }),
-    ),
-  );
+    );
+  try {
+    await run(true);
+  } catch {
+    await run(false);
+  }
+  await writeCodeTracks(codes);
 }
 
 async function upsertClassMessages(messages: ChatMessage[]): Promise<void> {

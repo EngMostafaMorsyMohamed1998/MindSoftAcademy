@@ -29,9 +29,9 @@ export default async function AdminPage({
   const theme = await getTheme();
   const { tab } = await searchParams;
   const initialTab =
-    tab === "certificates" || tab === "class" || tab === "groups" || tab === "codes" || tab === "roster" || tab === "grades" || tab === "profit"
+    tab === "certificates" || tab === "class" || tab === "groups" || tab === "codes" || tab === "roster" || tab === "grades" || tab === "profit" || tab === "tools"
       ? tab
-      : "class";
+      : "roster";
   const [codes, exams, homework, attendance, payments, announcement, examWindow, weekPlan, classGroups, misses, sessions, essayGrades, monthlyFee, surprise, certificates, telegramLinks, devices, deviceLimit, telegramUsername, teacherChatId, examples] = await Promise.all([
     listVisibleCodes(),
     listExams(),
@@ -71,18 +71,6 @@ export default async function AdminPage({
           <BrandMark locale={locale} href="/admin" />
           <div className="flex items-center gap-2">
             <HeaderTools locale={locale} theme={theme} />
-            <Link href="/admin?tab=certificates" className="text-xs font-semibold text-primary">
-              {t(locale, "tabCertificates")}
-            </Link>
-            <Link href="/admin/community" className="text-xs font-semibold text-primary">
-              {t(locale, "tabCommunity")}
-            </Link>
-            <Link href="/admin/chat" className="text-xs font-semibold text-primary">
-              {t(locale, "chatTeacherInbox")}
-            </Link>
-            <Link href="/" className="text-xs font-semibold text-primary">
-              {t(locale, "back")}
-            </Link>
             <LogoutButton
               label={t(locale, "logout")}
               className="inline-flex items-center gap-1 rounded-full border-2 border-primary/20 px-3 py-1.5 text-xs font-semibold text-primary"
@@ -93,6 +81,11 @@ export default async function AdminPage({
       <main className="mx-auto max-w-5xl px-4 py-8">
         <h1 className="font-serif text-3xl">{t(locale, "adminTitle")}</h1>
         <p className="mt-2 text-sm text-foreground/65">{t(locale, "adminLead")}</p>
+        <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold text-primary">
+          <Link href="/admin/booklet">{t(locale, "openBookletAdmin")}</Link>
+          <Link href="/admin/chat">{t(locale, "chatTeacherInbox")}</Link>
+          <Link href="/admin/community">{t(locale, "tabCommunity")}</Link>
+        </nav>
         <AdminShell
           initialTab={initialTab}
           locale={locale}

@@ -5,7 +5,7 @@ import { createCanvas } from "@napi-rs/canvas";
 import { getLesson } from "@/lib/curriculum";
 import { lessonPdfPages } from "@/lib/book-pages";
 import type { Locale } from "@/lib/locale";
-import { ASSESS_BOOK, BOOKS, FAIZ_BOOK } from "@/lib/library";
+import { BOOKS, FAIZ_BOOK, assessBookForTrack } from "@/lib/library";
 
 export { lessonPdfPages };
 
@@ -140,9 +140,10 @@ async function rasterNamedBook(fileName: string, remote: string, pageNo: number,
   }
 }
 
-export async function renderAssessmentsPage(pageNo: number): Promise<Buffer | null> {
+export async function renderAssessmentsPage(pageNo: number, locale: Locale = "ar"): Promise<Buffer | null> {
+  const book = assessBookForTrack(locale);
   try {
-    return await rasterNamedBook(path.basename(ASSESS_BOOK.file), ASSESS_BOOK.file, pageNo, 1.35);
+    return await rasterNamedBook(path.basename(book.file), book.sourceUrl || book.file, pageNo, 1.35);
   } catch {
     return null;
   }

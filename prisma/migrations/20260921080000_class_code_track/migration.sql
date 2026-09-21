@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "ClassCode" ADD COLUMN IF NOT EXISTS "track" TEXT NOT NULL DEFAULT 'ar';

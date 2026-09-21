@@ -11,7 +11,9 @@ import {
   applyKeys,
   essay,
   mcq,
+  periodLabel,
   SECTION_TITLE,
+  SECTION_TITLE_EN,
   type AssessBlock,
   type AssessPeriod,
   type AssessQuestion,
@@ -452,6 +454,7 @@ export function assessBlocksForLesson(lessonId: string): AssessBlock[] {
     blocks.push({
       key,
       titleAr: SECTION_TITLE[row.section],
+      titleEn: SECTION_TITLE_EN[row.section],
       period: row.period,
       section: row.section,
       essays: group.filter((item) => item.kind === "essay"),
@@ -465,9 +468,11 @@ export function assessBlocksForLesson(lessonId: string): AssessBlock[] {
 }
 
 export function periodLabelAr(period: AssessPeriod): string {
-  if (period === 1) return "الفترة الأولى";
-  if (period === 2) return "الفترة الثانية";
-  return "الفترة الثالثة";
+  return periodLabel(period, "ar");
+}
+
+export function periodLabelEn(period: AssessPeriod): string {
+  return periodLabel(period, "en");
 }
 
 export function assessLessonIds(): string[] {

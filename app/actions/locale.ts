@@ -5,8 +5,10 @@ import { getRequestArea, LANG_COOKIE, TEACHER_LANG_COOKIE, isLocale, type Locale
 
 export async function setLocale(locale: Locale) {
   if (!isLocale(locale)) return;
+  const area = await getRequestArea();
+  if (area === "student") return;
   const store = await cookies();
-  const name = (await getRequestArea()) === "teacher" ? TEACHER_LANG_COOKIE : LANG_COOKIE;
+  const name = area === "teacher" ? TEACHER_LANG_COOKIE : LANG_COOKIE;
   store.set(name, locale, {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,

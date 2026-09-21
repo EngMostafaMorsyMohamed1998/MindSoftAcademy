@@ -298,21 +298,35 @@ export async function issueCode(input: {
     existing.id = existing.id || idForStudent(name, phone);
     existing.track = track;
     await writeStore(store);
+    await persistCodeTrack(existing.id, track);
     return existing;
   }
 
   const record = recordFor(name, phone, { track });
   store.codes.unshift(record);
   await writeStore(store);
+  await persistCodeTrack(record.id, track);
   return record;
+}
+
+async function persistCodeTrack(studentId: string, track: "ar" | "en"): Promise<void> {
+  try {
+    const { writeCodeTracks } = await import("@/lib/class-db");
+    await writeCodeTracks([{ id: studentId, track }]);
+  } catch {
+    // JSON / Blob fallback already wrote the store.
+  }
 }
 
 export async function setStudentTrack(studentId: string, track: "ar" | "en"): Promise<void> {
   const store = await readStore();
+  const next = track === "en" ? "en" : "ar";
   const row = store.codes.find((item) => item.id === studentId);
-  if (!row) return;
-  row.track = track === "en" ? "en" : "ar";
-  await writeStore(store);
+  if (row) {
+    row.track = next;
+    await writeStore(store);
+  }
+  await persistCodeTrack(studentId, next);
 }
 
 export async function redeemCode(input: {

@@ -17,7 +17,12 @@ type RosterRow = {
   name: string;
   phone: string;
   createdAt: string;
+  track?: "ar" | "en";
 };
+
+function rosterTrackOf(row: RosterRow): "ar" | "en" | undefined {
+  return row.track === "en" || row.track === "ar" ? row.track : undefined;
+}
 
 function toRecord(row: RosterRow): AccessCode {
   const phone = normalizePhone(row.phone);
@@ -32,7 +37,7 @@ function toRecord(row: RosterRow): AccessCode {
     points: 0,
     suspendedAt: null,
     suspendReason: "",
-    track: "ar",
+    track: rosterTrackOf(row) ?? "ar",
   };
 }
 
@@ -75,6 +80,7 @@ export async function rememberIssuedCode(record: AccessCode): Promise<void> {
     name: record.name,
     phone: record.phone,
     createdAt: record.createdAt,
+    track: record.track === "en" ? "en" : "ar",
   });
   await writeRoster(next);
 }
@@ -82,12 +88,17 @@ export async function rememberIssuedCode(record: AccessCode): Promise<void> {
 export async function listVisibleCodes(): Promise<AccessCode[]> {
   const [roster, stored] = await Promise.all([readRoster(), listCodes()]);
   const byId = new Map<string, AccessCode>();
+  const rosterTracks = new Map<string, "ar" | "en">();
   for (const row of roster) {
     const record = toRecord(row);
     byId.set(record.id, record);
+    const track = rosterTrackOf(row);
+    if (track) rosterTracks.set(record.id, track);
   }
   for (const record of stored) {
     const current = byId.get(record.id);
+    const storedTrack = record.track === "en" || record.track === "ar" ? record.track : undefined;
+    const track = storedTrack ?? rosterTracks.get(record.id) ?? current?.track ?? "ar";
     byId.set(
       record.id,
       current
@@ -97,9 +108,9 @@ export async function listVisibleCodes(): Promise<AccessCode[]> {
             usedAt: record.usedAt ?? current.usedAt,
             suspendedAt: record.suspendedAt ?? current.suspendedAt,
             suspendReason: record.suspendReason || current.suspendReason,
-            track: record.track ?? current.track,
+            track,
           }
-        : record,
+        : { ...record, track },
     );
   }
   return [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
