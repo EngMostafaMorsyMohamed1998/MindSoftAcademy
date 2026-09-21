@@ -1,5 +1,6 @@
 import { bookletSafe, hasArabic } from "@/lib/booklet-lang";
 import { CHAPTERS, getChapter, getLesson, type Chapter, type ChapterId } from "@/lib/curriculum";
+import { isAssessScope } from "@/lib/assessments";
 import { FAIZ_UNITS } from "@/lib/faiz";
 import { FAIZ_ESSAYS, FAIZ_OBJECTIVES } from "@/lib/faiz-exam";
 import { FAIZ_NOTES, type FaizUnitNote } from "@/lib/faiz-notes";
@@ -336,6 +337,7 @@ export function faizUnitId(value: string): "f1" | "f2" | "f3" | "f4" | null {
 export function isBookletScope(value: string | null | undefined): value is BookletScope {
   if (!value) return false;
   if (value === "faiz" || value === "faiz-hw") return true;
+  if (isAssessScope(value)) return true;
   if (homeworkChapterId(value) || faizUnitId(value)) return true;
   return Boolean(getLesson(value));
 }

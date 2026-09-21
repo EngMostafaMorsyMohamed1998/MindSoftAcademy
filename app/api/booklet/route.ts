@@ -15,7 +15,10 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const locale = await getLocale();
   const scope = url.searchParams.get("chapter");
-  if (!isBookletScope(scope) || ((scope === "faiz" || scope.startsWith("f")) && locale === "en")) {
+  if (
+    !isBookletScope(scope) ||
+    ((scope === "faiz" || scope.startsWith("f") || scope.startsWith("assess-")) && locale === "en")
+  ) {
     return NextResponse.json({ error: "اختر درس الملزمة" }, { status: 400 });
   }
   const pdf = await buildBookletPdf(locale, scope);

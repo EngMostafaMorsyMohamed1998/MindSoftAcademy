@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { BookletFigure, CHAPTER_FIGURES } from "@/components/booklet-figures";
 import { BookletMindMap } from "@/components/booklet-mind-map";
 import { TextbookLesson } from "@/components/textbook-page";
+import { assessBlocksForLesson, periodLabelAr } from "@/lib/assessments-bank";
+import { assessLessonTitle, assessmentsPages } from "@/lib/assessments";
 import { bookletSafe } from "@/lib/booklet-lang";
 import { BRAND } from "@/lib/brand";
 import {
@@ -21,7 +23,7 @@ import {
   type BookletHomeworkPack,
   type BookletMcq,
 } from "@/lib/booklet-pack";
-import { getChapter, type ChapterId } from "@/lib/curriculum";
+import { getChapter, getLesson, type ChapterId } from "@/lib/curriculum";
 import { LESSON_NOTES } from "@/lib/lessons";
 import type { Locale } from "@/lib/locale";
 import { mindMapForChapter, mindMapForFaiz } from "@/lib/mind-maps";
@@ -565,6 +567,114 @@ export function BookletFaizPane({ locale }: { locale: Locale }) {
         <AnswerKeyList locale={locale} title={ar ? faizHomework.titleAr : faizHomework.titleEn} answers={faizHomework.answers} />
         <EssayAnswers locale={locale} title={ar ? "مقالي واجب الفائز" : "Al-Faiz essays"} rows={faizHomework.essays} />
       </section>
+    </div>
+  );
+}
+
+const ASSESS_LETTERS = ["أ", "ب", "ج", "د"];
+
+function DateBlanks() {
+  return (
+    <div className="mt-3 grid gap-3 sm:grid-cols-3 text-sm font-semibold text-[#111827]">
+      <p>
+        الأسبوع <span className="ms-2 inline-block w-16 border-b border-primary/30" />
+      </p>
+      <p>
+        التاريخ <span className="ms-2 inline-block w-28 border-b border-primary/30" />
+      </p>
+      <p>......../......../........</p>
+    </div>
+  );
+}
+
+export function BookletAssessPane({ lessonId }: { lessonId: string }) {
+  const lesson = getLesson(lessonId);
+  const chapter = lesson ? getChapter(lesson.chapterId) : undefined;
+  const title = assessLessonTitle(lessonId);
+  const pages = assessmentsPages(lessonId);
+  const blocks = assessBlocksForLesson(lessonId);
+  return (
+    <div className="booklet-paper print-sheet rounded-xl bg-white p-5 ring-1 ring-slate-300 sm:p-8" lang="ar" dir="rtl">
+      <BookletCover
+        locale="ar"
+        teacher={BRAND.teacherAr}
+        brand={BRAND.nameAr}
+        kicker="الأداءات والتقييمات"
+        title={`${lessonId} — ${title.titleAr}`}
+        color={chapter?.color ?? "#0c2d6b"}
+      />
+      <p className="text-sm font-semibold leading-8 text-[#374151]">
+        صفحات كتاب الوزارة كما طُبعت. النص تحتها للكتابة فقط، من غير تغيير صياغة السؤال.
+      </p>
+      <div className="mt-6 space-y-6">
+        {pages.map((page) => (
+          <figure key={page} className="print-keep keep-white overflow-hidden rounded-xl ring-1 ring-slate-200">
+            <img
+              src={`/api/book-page?book=assess&page=${page}`}
+              alt={`صفحة ${page} — الأداءات والتقييمات`}
+              className="w-full bg-white"
+              loading="lazy"
+            />
+            <figcaption className="bg-slate-50 px-3 py-2 text-xs font-semibold text-[#374151]">
+              الصفحة {page} من كتاب الأداءات والتقييمات
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      {blocks.length ? (
+        <section className="mt-10">
+          <h3 className="font-serif text-3xl">نسخة للكتابة</h3>
+          <p className="mt-2 text-sm font-semibold text-[#374151]">نفس أسئلة الوزارة. سطور فارغة للحل.</p>
+          {blocks.map((block) => (
+            <div key={block.key} className="print-break mt-8">
+              <p className="text-sm font-extrabold text-primary">{periodLabelAr(block.period)}</p>
+              <p className="mt-1 text-xl font-extrabold text-[#0c2d6b]">{block.titleAr}</p>
+              <DateBlanks />
+              {block.essays.length ? (
+                <PrintSection title="الأسئلة المقالية">
+                  <div className="mt-4 space-y-4">
+                    {block.essays.map((row, index) => (
+                      <article key={row.id} className="print-keep rounded-xl border-2 border-dashed border-primary/30 p-5">
+                        <p className="text-lg font-bold leading-9 text-[#111827]">
+                          <span className="ms-1 font-extrabold text-primary">{index + 1}-</span>
+                          {row.promptAr}
+                        </p>
+                        <WriteLines count={5} />
+                      </article>
+                    ))}
+                  </div>
+                </PrintSection>
+              ) : null}
+              {block.mcq.length ? (
+                <PrintSection title="الأسئلة الموضوعية (اختيار من متعدد)">
+                  <ol className="mt-4 list-none space-y-6">
+                    {block.mcq.map((row, index) => (
+                      <li key={row.id} className="booklet-q rounded-xl p-5">
+                        <p className="text-lg font-bold leading-9 text-[#111827]">
+                          <span className="ms-1 font-extrabold text-primary">{index + 1}-</span>
+                          {row.promptAr}
+                        </p>
+                        <ul className="mt-4 space-y-3">
+                          {(row.optionsAr ?? []).map((option, optionIndex) => (
+                            <li key={`${row.id}-${optionIndex}`} className="flex items-start gap-3 text-base font-semibold leading-8 text-[#111827]">
+                              <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-primary text-sm font-extrabold text-primary">
+                                {ASSESS_LETTERS[optionIndex]}
+                              </span>
+                              <span>{option}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </li>
+                    ))}
+                  </ol>
+                </PrintSection>
+              ) : null}
+            </div>
+          ))}
+        </section>
+      ) : (
+        <p className="mt-8 text-sm font-semibold text-[#374151]">نسخة الكتابة للدرس 1-1 جاهزة. باقي الدروس صفحات الوزارة كما هي إلى أن تُكتب بنفس النص.</p>
+      )}
     </div>
   );
 }

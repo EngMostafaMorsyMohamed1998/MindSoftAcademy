@@ -5,7 +5,7 @@ import { createCanvas } from "@napi-rs/canvas";
 import { getLesson } from "@/lib/curriculum";
 import { lessonPdfPages } from "@/lib/book-pages";
 import type { Locale } from "@/lib/locale";
-import { BOOKS, FAIZ_BOOK } from "@/lib/library";
+import { ASSESS_BOOK, BOOKS, FAIZ_BOOK } from "@/lib/library";
 
 export { lessonPdfPages };
 
@@ -111,11 +111,12 @@ async function rasterBookPage(locale: Locale, lessonId: string, offset = 0): Pro
   }
 }
 
-export async function faizBookPage(pageNo: number): Promise<Buffer | null> {
-  const bytes = await pdfBytes(path.basename(FAIZ_BOOK.file), FAIZ_BOOK.sourceUrl);
+async function rasterNamedBook(fileName: string, remote: string, pageNo: number, scale: number): Promise<Buffer | null> {
+  const bytes = await pdfBytes(fileName, remote);
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const task = pdfjs.getDocument({
     data: Uint8Array.from(bytes),
+    disableFontFace: false,
     isOffscreenCanvasSupported: false,
     verbosity: 0,
   });
@@ -123,7 +124,7 @@ export async function faizBookPage(pageNo: number): Promise<Buffer | null> {
   try {
     if (pageNo < 1 || pageNo > doc.numPages) return null;
     const page = await doc.getPage(pageNo);
-    const viewport = page.getViewport({ scale: 1.2 });
+    const viewport = page.getViewport({ scale });
     const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "#ffffff";
@@ -136,5 +137,21 @@ export async function faizBookPage(pageNo: number): Promise<Buffer | null> {
     return canvas.toBuffer("image/png");
   } finally {
     doc.cleanup?.();
+  }
+}
+
+export async function renderAssessmentsPage(pageNo: number): Promise<Buffer | null> {
+  try {
+    return await rasterNamedBook(path.basename(ASSESS_BOOK.file), ASSESS_BOOK.file, pageNo, 1.35);
+  } catch {
+    return null;
+  }
+}
+
+export async function faizBookPage(pageNo: number): Promise<Buffer | null> {
+  try {
+    return await rasterNamedBook(path.basename(FAIZ_BOOK.file), FAIZ_BOOK.sourceUrl, pageNo, 1.2);
+  } catch {
+    return null;
   }
 }

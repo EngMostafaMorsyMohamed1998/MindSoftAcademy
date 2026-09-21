@@ -44,13 +44,14 @@ export default async function CourseBookPage({
     notFound();
   }
   const workbook = book.kind === "workbook";
+  const assessments = book.kind === "assessments";
 
   return (
     <BookViewer
       book={book}
       locale={locale}
-      backHref={workbook ? "/dashboard/faiz" : "/dashboard/courses"}
-      backLabel={workbook ? t(locale, "navFaiz") : t(locale, "libraryBack")}
+      backHref={workbook ? "/dashboard/faiz" : assessments ? "/dashboard/booklet" : "/dashboard/courses"}
+      backLabel={workbook ? t(locale, "navFaiz") : assessments ? t(locale, "navBooklet") : t(locale, "libraryBack")}
       page={Number.isFinite(page) && page > 0 ? page : undefined}
     />
   );

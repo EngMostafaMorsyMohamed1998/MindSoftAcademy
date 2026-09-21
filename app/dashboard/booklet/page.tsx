@@ -1,5 +1,6 @@
-import { BookletFaizHomeworkPane, BookletFaizUnitPane, BookletHomeworkPane, BookletLessonPane } from "./booklet-doc";
+import { BookletAssessPane, BookletFaizHomeworkPane, BookletFaizUnitPane, BookletHomeworkPane, BookletLessonPane } from "./booklet-doc";
 import { BookletViewer } from "./booklet-viewer";
+import { assessScope, part1LessonIds } from "@/lib/assessments";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { CHAPTERS } from "@/lib/curriculum";
@@ -43,6 +44,17 @@ export default async function BookletPage() {
           })),
           ...(locale === "ar"
             ? [
+                {
+                  id: "assess",
+                  labelAr: "الأداءات والتقييمات",
+                  labelEn: "Assessments",
+                  lessons: part1LessonIds().map((lessonId) => ({
+                    id: assessScope(lessonId),
+                    labelAr: `الدرس ${lessonId}`,
+                    labelEn: `Lesson ${lessonId}`,
+                    body: <BookletAssessPane lessonId={lessonId} />,
+                  })),
+                },
                 {
                   id: "faiz",
                   labelAr: "الفائز",

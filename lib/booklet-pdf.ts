@@ -4,6 +4,8 @@ import { PDFDocument } from "pdf-lib";
 import { BRAND } from "@/lib/brand";
 import { CHAPTER_FIGURES } from "@/components/booklet-figures";
 import { artFor, bookletSafe, lessonArtMap } from "@/lib/booklet-lang";
+import { assessLessonId, assessLessonTitle, assessmentsPages } from "@/lib/assessments";
+import { assessBlocksForLesson, periodLabelAr } from "@/lib/assessments-bank";
 import {
   bookletAnswerMark,
   bookletFaizHomework,
@@ -22,13 +24,13 @@ import {
   type BookletMcq,
   type BookletScope,
 } from "@/lib/booklet-pack";
-import { getChapter } from "@/lib/curriculum";
+import { getChapter, getLesson } from "@/lib/curriculum";
 import type { Locale } from "@/lib/locale";
 import { mindMapForFaiz, type MindNode } from "@/lib/mind-maps";
 import { existsSync } from "fs";
 import { textbookPageFor } from "@/lib/textbook-pages";
 import { bundleExplains } from "@/lib/lesson-explains";
-import { renderBookPage } from "@/lib/book-page-image";
+import { renderAssessmentsPage, renderBookPage } from "@/lib/book-page-image";
 
 const ARABIC_FONT = "NotoNaskh";
 const LATIN_FONT = "LatinSans";
@@ -1622,6 +1624,17 @@ function faizColors(id: string) {
 
 function coverCopy(locale: Locale, scope: BookletScope) {
   const ar = locale === "ar";
+  const assessId = assessLessonId(scope);
+  if (assessId) {
+    const title = assessLessonTitle(assessId);
+    const lesson = getLesson(assessId);
+    const chapter = lesson ? getChapter(lesson.chapterId) : undefined;
+    return {
+      kicker: ar ? "الأداءات والتقييمات" : "Assessments",
+      title: ar ? `${assessId} — ${title.titleAr}` : `${assessId} — ${title.titleEn}`,
+      color: chapter?.color ?? "#0c2d6b",
+    };
+  }
   if (scope === "faiz") {
     return {
       kicker: ar ? "كتاب الفائز" : "Al-Faiz",
@@ -1766,6 +1779,29 @@ function pushHomeworkBlocks(blocks: Block[], pack: BookletHomeworkPack, locale: 
 function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
   const ar = locale === "ar";
   const blocks: Block[] = [];
+  const assessId = assessLessonId(scope);
+  if (assessId) {
+    const typed = assessBlocksForLesson(assessId);
+    if (typed.length) {
+      blocks.push({ kind: "banner", text: "نسخة للكتابة — نفس نص الوزارة", color: "#0c2d6b" });
+    }
+    for (const block of typed) {
+      blocks.push({ kind: "section", text: `${periodLabelAr(block.period)} — ${block.titleAr}` });
+      block.essays.forEach((row, index) => {
+        blocks.push({ kind: "essay", n: index + 1, prompt: row.promptAr });
+      });
+      block.mcq.forEach((row, index) => {
+        blocks.push({
+          kind: "question",
+          n: index + 1,
+          prompt: row.promptAr,
+          options: row.optionsAr ?? [],
+          letters: ["أ", "ب", "ج", "د"],
+        });
+      });
+    }
+    return blocks;
+  }
 
   if (scope === "faiz-hw") {
     const homework = bookletFaizHomework();
@@ -1956,6 +1992,20 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
   const coverPage = pdf.addPage([PAGE_W, PAGE_H]);
   const coverImage = await pdf.embedJpg(canvas.toBuffer("image/jpeg", 96));
   coverPage.drawImage(coverImage, { x: 0, y: 0, width: PAGE_W, height: PAGE_H });
+
+  const assessId = assessLessonId(scope);
+  if (assessId) {
+    for (const officialPage of assessmentsPages(assessId)) {
+      const png = await renderAssessmentsPage(officialPage);
+      if (!png) continue;
+      const page = pdf.addPage([PAGE_W, PAGE_H]);
+      const image = await pdf.embedPng(png);
+      const scale = Math.min(PAGE_W / image.width, PAGE_H / image.height);
+      const width = image.width * scale;
+      const height = image.height * scale;
+      page.drawImage(image, { x: (PAGE_W - width) / 2, y: (PAGE_H - height) / 2, width, height });
+    }
+  }
 
   reset();
   let y = margin;
@@ -2218,6 +2268,10 @@ export async function buildBookletPdf(locale: Locale, scope: BookletScope): Prom
 }
 
 export function bookletFileName(locale: Locale, scope: BookletScope): string {
+  const assessId = assessLessonId(scope);
+  if (assessId) {
+    return locale === "ar" ? `ملزمة-أداءات-${assessId}-MindSoft-2027.pdf` : `MindSoft-assessments-${assessId}-2027.pdf`;
+  }
   if (scope === "faiz") return locale === "ar" ? "ملزمة-الفائز-MindSoft-2027.pdf" : "MindSoft-faiz-2027.pdf";
   if (scope === "faiz-hw") return locale === "ar" ? "ملزمة-واجب-الفائز-MindSoft-2027.pdf" : "MindSoft-faiz-homework-2027.pdf";
   if (faizUnitId(scope)) {

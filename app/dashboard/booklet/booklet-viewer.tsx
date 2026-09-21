@@ -50,7 +50,11 @@ export function BookletViewer({
       const link = document.createElement("a");
       link.href = url;
       link.download =
-        activeId === "faiz" || activeId === "faiz-hw"
+        activeId.startsWith("assess-")
+          ? ar
+            ? `ملزمة-أداءات-${activeId.slice(7)}-MindSoft-2027.pdf`
+            : `MindSoft-assessments-${activeId.slice(7)}-2027.pdf`
+          : activeId === "faiz" || activeId === "faiz-hw"
           ? ar
             ? activeId === "faiz-hw"
               ? "ملزمة-واجب-الفائز-MindSoft-2027.pdf"
@@ -141,11 +145,13 @@ export function BookletViewer({
           </div>
         ) : null}
       </div>
-      {groups.flatMap((item) => item.lessons).map((tab) => (
-        <div key={tab.id} className={tab.id === activeId ? "booklet-pane" : "booklet-pane hidden"}>
-          {tab.body}
-        </div>
-      ))}
+      {lessons
+        .filter((tab) => tab.id === activeId)
+        .map((tab) => (
+          <div key={tab.id} className="booklet-pane">
+            {tab.body}
+          </div>
+        ))}
     </div>
   );
 }

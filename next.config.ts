@@ -9,8 +9,8 @@ const nextConfig: NextConfig = {
     "pdfjs-dist",
   ],
   outputFileTracingIncludes: {
-    "/api/booklet": ["./fonts/**/*", "./public/booklet/**/*"],
-    "/api/book-page": ["./fonts/**/*"],
+    "/api/booklet": ["./fonts/**/*", "./public/booklet/**/*", "./public/books/programming-ai-ar-assessments-1.pdf"],
+    "/api/book-page": ["./fonts/**/*", "./public/books/programming-ai-ar-assessments-1.pdf"],
   },
 };
 

@@ -20,6 +20,10 @@ const BOOKS = [
   ["Programming-ArtificialIntelligence-En-EB-part2.pdf", "programming-ai-en-part2.pdf"],
 ];
 
+const OPTIONAL_BOOKS = [
+  ["Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf", "programming-ai-ar-assessments-1.pdf"],
+];
+
 async function alreadyDownloaded(path) {
   try {
     const info = await stat(path);
@@ -44,6 +48,22 @@ for (const [remote, local] of BOOKS) {
     throw new Error(`Failed to download ${remote}: HTTP ${response.status}`);
   }
 
+  const bytes = Buffer.from(await response.arrayBuffer());
+  await writeFile(target, bytes);
+  console.log(`saved  ${local} (${(bytes.length / 1024 / 1024).toFixed(1)} MB)`);
+}
+
+for (const [remote, local] of OPTIONAL_BOOKS) {
+  const target = join(OUT_DIR, local);
+  if (await alreadyDownloaded(target)) {
+    console.log(`skip   ${local} (already present)`);
+    continue;
+  }
+  const response = await fetch(`${BLOB_BASE}/${remote}`);
+  if (!response.ok) {
+    console.warn(`skip   ${local} (optional assessments book HTTP ${response.status})`);
+    continue;
+  }
   const bytes = Buffer.from(await response.arrayBuffer());
   await writeFile(target, bytes);
   console.log(`saved  ${local} (${(bytes.length / 1024 / 1024).toFixed(1)} MB)`);
