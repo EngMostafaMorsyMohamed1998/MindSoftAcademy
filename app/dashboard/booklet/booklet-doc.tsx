@@ -2,8 +2,9 @@ import type { ReactNode } from "react";
 import { BookletFigure, CHAPTER_FIGURES } from "@/components/booklet-figures";
 import { BookletMindMap } from "@/components/booklet-mind-map";
 import { TextbookLesson } from "@/components/textbook-page";
+import { AssessSolver } from "./assess-solver";
 import { assessBlocksForLesson, periodLabelAr, periodLabelEn } from "@/lib/assessments-bank";
-import { assessGuide, assessOptions, assessPrompt } from "@/lib/assessments-helpers";
+import { assessOptions, assessPrompt } from "@/lib/assessments-helpers";
 import { assessLessonTitle } from "@/lib/assessments";
 import { bookletSafe } from "@/lib/booklet-lang";
 import { BRAND } from "@/lib/brand";
@@ -578,21 +579,6 @@ export function BookletFaizPane({ locale }: { locale: Locale }) {
 const ASSESS_LETTERS_AR = ["أ", "ب", "ج", "د"];
 const ASSESS_LETTERS_EN = ["A", "B", "C", "D"];
 
-function DateBlanks({ locale }: { locale: "ar" | "en" }) {
-  const ar = locale === "ar";
-  return (
-    <div className="mt-3 grid gap-3 sm:grid-cols-3 text-sm font-semibold text-[#111827]">
-      <p>
-        {ar ? "الأسبوع" : "Week"} <span className="ms-2 inline-block w-16 border-b border-primary/30" />
-      </p>
-      <p>
-        {ar ? "التاريخ" : "Date"} <span className="ms-2 inline-block w-28 border-b border-primary/30" />
-      </p>
-      <p>......../......../........</p>
-    </div>
-  );
-}
-
 export function BookletAssessPane({ locale = "ar", lessonId }: { locale?: "ar" | "en"; lessonId: string }) {
   const ar = locale === "ar";
   const letters = ar ? ASSESS_LETTERS_AR : ASSESS_LETTERS_EN;
@@ -615,92 +601,27 @@ export function BookletAssessPane({ locale = "ar", lessonId }: { locale?: "ar" |
         color={chapter?.color ?? "#0c2d6b"}
         lead={
           ar
-            ? "أسئلة الوزارة مكتوبة، وسطور للحل، ومفتاح الإجابة في الآخر."
-            : "Ministry questions as printed, writing lines, and the answer key at the end."
+            ? "اختار الإجابة، وبعدين «اعرض درجتي». الدرجة بتظهر فورًا، ونموذج المقالي بعد التسليم."
+            : "Pick an answer, then Show my score. The mark appears at once, and essay guides after you submit."
         }
       />
-      {blocks.map((block) => (
-        <div key={block.key} className="print-break mt-8">
-          <p className="text-sm font-extrabold text-primary">{ar ? periodLabelAr(block.period) : periodLabelEn(block.period)}</p>
-          <p className="mt-1 text-xl font-extrabold text-[#0c2d6b]">{ar ? block.titleAr : block.titleEn}</p>
-          <DateBlanks locale={locale} />
-          {block.essays.length ? (
-            <PrintSection title={ar ? "الأسئلة المقالية" : "Essay questions"}>
-              <div className="mt-4 space-y-4">
-                {block.essays.map((row, index) => (
-                  <article key={row.id} className="print-keep rounded-xl border-2 border-dashed border-primary/30 p-5">
-                    <p className="text-lg font-bold leading-9 text-[#111827]">
-                      <span className="ms-1 font-extrabold text-primary">{index + 1}-</span>
-                      {assessPrompt(row, locale)}
-                    </p>
-                    <WriteLines count={5} />
-                  </article>
-                ))}
-              </div>
-            </PrintSection>
-          ) : null}
-          {block.mcq.length ? (
-            <PrintSection title={ar ? "الأسئلة الموضوعية (اختيار من متعدد)" : "Objective questions (multiple choice)"}>
-              <ol className="mt-4 list-none space-y-6">
-                {block.mcq.map((row, index) => (
-                  <li key={row.id} className="booklet-q rounded-xl p-5">
-                    <p className="text-lg font-bold leading-9 text-[#111827]">
-                      <span className="ms-1 font-extrabold text-primary">{index + 1}-</span>
-                      {assessPrompt(row, locale)}
-                    </p>
-                    <ul className="mt-4 space-y-3">
-                      {assessOptions(row, locale).map((option, optionIndex) => (
-                        <li key={`${row.id}-${optionIndex}`} className="flex items-start gap-3 text-base font-semibold leading-8 text-[#111827]">
-                          <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-primary text-sm font-extrabold text-primary">
-                            {letters[optionIndex]}
-                          </span>
-                          <span>{option}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ol>
-            </PrintSection>
-          ) : null}
-        </div>
-      ))}
       {blocks.length ? (
-        <section className="mt-8 rounded-xl bg-primary/5 p-6">
-          <h4 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h4>
-          {blocks.map((block) => (
-            <div key={`key-${block.key}`} className="mt-4">
-              <p className="text-base font-extrabold text-[#0c2d6b]">
-                {ar ? periodLabelAr(block.period) : periodLabelEn(block.period)} — {ar ? block.titleAr : block.titleEn}
-              </p>
-              {block.mcq.length ? (
-                <ol className="mt-2 space-y-2">
-                  {block.mcq.map((row, index) => {
-                    const options = assessOptions(row, locale);
-                    const choice = options[row.correctIndex ?? 0] ?? "";
-                    return (
-                      <li key={row.id} className="text-base font-bold leading-8 text-[#111827]">
-                        <span className="text-primary">
-                          {index + 1}-{letters[row.correctIndex ?? 0]}
-                        </span>
-                        <span className="ms-2 font-extrabold">{choice}</span>
-                        <span className="ms-2 font-semibold text-[#374151]">— {assessPrompt(row, locale)}</span>
-                      </li>
-                    );
-                  })}
-                </ol>
-              ) : null}
-              {block.essays.map((row, index) => (
-                <article key={row.id} className="mt-3 print-keep rounded-xl bg-white p-4 ring-1 ring-slate-300">
-                  <p className="text-sm font-extrabold text-primary">{ar ? `مقالي ${index + 1}` : `Essay ${index + 1}`}</p>
-                  <p className="mt-1 text-base font-semibold leading-8 text-[#111827] whitespace-pre-line">
-                    {assessGuide(row, locale)}
-                  </p>
-                </article>
-              ))}
-            </div>
-          ))}
-        </section>
+        <AssessSolver
+          locale={locale}
+          lessonId={lessonId}
+          letters={letters}
+          blocks={blocks.map((block) => ({
+            key: block.key,
+            period: ar ? periodLabelAr(block.period) : periodLabelEn(block.period),
+            title: ar ? block.titleAr : block.titleEn,
+            essays: block.essays.map((row) => ({ id: row.id, prompt: assessPrompt(row, locale) })),
+            mcq: block.mcq.map((row) => ({
+              id: row.id,
+              prompt: assessPrompt(row, locale),
+              options: assessOptions(row, locale),
+            })),
+          }))}
+        />
       ) : (
         <p className="mt-8 text-sm font-semibold text-[#374151]">
           {ar ? "لا توجد أسئلة مكتوبة لهذا الدرس بعد." : "No typed questions for this lesson yet."}
