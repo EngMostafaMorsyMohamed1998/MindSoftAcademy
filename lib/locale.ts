@@ -31,17 +31,16 @@ export async function getLocale(): Promise<Locale> {
     const picked = store.get(TEACHER_LANG_COOKIE)?.value;
     return isLocale(picked) ? picked : "ar";
   }
-  if (area !== "teacher") {
-    try {
-      const { getStudentSession } = await import("@/lib/student-session");
-      const student = await getStudentSession();
-      if (student) return parseTrack(student.track);
-    } catch {
-      // cookies() is unavailable outside a request
-    }
-  }
   const picked = store.get(LANG_COOKIE)?.value;
-  return isLocale(picked) ? picked : "ar";
+  if (isLocale(picked)) return picked;
+  try {
+    const { getStudentSession } = await import("@/lib/student-session");
+    const student = await getStudentSession();
+    if (student) return parseTrack(student.track);
+  } catch {
+    // cookies() is unavailable outside a request
+  }
+  return "ar";
 }
 
 export function localeDir(locale: Locale): "rtl" | "ltr" {

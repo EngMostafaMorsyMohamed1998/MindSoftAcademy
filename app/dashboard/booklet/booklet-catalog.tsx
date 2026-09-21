@@ -7,6 +7,10 @@ import { CHAPTERS } from "@/lib/curriculum";
 import { FAIZ_UNITS } from "@/lib/faiz";
 import type { Locale } from "@/lib/locale";
 
+function markId(id: string) {
+  return `\u2066${id}\u2069`;
+}
+
 export function BookletCatalog({ locale }: { locale: Locale }) {
   const assessIds = new Set(assessLessonIds());
   return (
@@ -23,12 +27,12 @@ export function BookletCatalog({ locale }: { locale: Locale }) {
         groups={[
           ...CHAPTERS.map((chapter) => ({
             id: chapter.id,
-            labelAr: `الفصل ${chapter.id}`,
+            labelAr: `الفصل ${markId(chapter.id)}`,
             labelEn: `Ch. ${chapter.id}`,
             lessons: [
               ...chapter.lessons.map((lesson) => ({
                 id: lesson.id,
-                labelAr: `الدرس ${lesson.id}`,
+                labelAr: `الدرس ${markId(lesson.id)}`,
                 labelEn: `Lesson ${lesson.id}`,
                 body: <BookletLessonPane locale={locale} lessonId={lesson.id} />,
               })),
@@ -42,7 +46,7 @@ export function BookletCatalog({ locale }: { locale: Locale }) {
                 .filter((lesson) => assessIds.has(lesson.id))
                 .map((lesson) => ({
                   id: assessScope(lesson.id),
-                  labelAr: `أداءات ${lesson.id}`,
+                  labelAr: `أداءات ${markId(lesson.id)}`,
                   labelEn: `Assess ${lesson.id}`,
                   body: <BookletAssessPane locale={locale} lessonId={lesson.id} />,
                 })),
