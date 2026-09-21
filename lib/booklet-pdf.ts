@@ -50,7 +50,7 @@ function ensureFont() {
     path.join(process.cwd(), "fonts/Geist-Regular.ttf"),
   ];
   for (const file of latinFiles) {
-    if (!existsSync(file)) continue;
+    if (!existsSync(/* turbopackIgnore: true */ file)) continue;
     GlobalFonts.registerFromPath(file, LATIN_FONT);
     break;
   }
