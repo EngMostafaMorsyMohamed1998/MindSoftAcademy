@@ -8,7 +8,7 @@ export type AssessGrade = {
   score: number;
   total: number;
   mcq: { id: string; correctIndex: number; choiceAr: string; choiceEn: string; prompt: string }[];
-  essays: { id: string; guideAr: string; guideEn: string; ok: boolean }[];
+  essays: { id: string; guideAr: string; guideEn: string; ok: boolean | null }[];
 };
 
 const STOP = new Set([
@@ -77,13 +77,15 @@ export async function gradeAssessLesson(input: {
   const essayMarks = essays.map((row) => {
     const guideAr = row.guideAr ?? "";
     const guideEn = row.guideEn ?? "";
-    const ok = essayOk(written[row.id] ?? "", [guideAr, guideEn]);
+    const text = written[row.id] ?? "";
+    const ok = fold(text).length < 2 ? null : essayOk(text, [guideAr, guideEn]);
     if (ok) score += 1;
     return { id: row.id, guideAr, guideEn, ok };
   });
+  const attempted = essayMarks.filter((row) => row.ok !== null).length;
   return {
     score,
-    total: mcq.length + essays.length,
+    total: mcq.length + attempted,
     mcq: marked,
     essays: essayMarks,
   };

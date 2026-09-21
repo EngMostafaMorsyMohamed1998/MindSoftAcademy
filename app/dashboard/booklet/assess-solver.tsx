@@ -41,7 +41,7 @@ export function AssessSolver({
     return map;
   }, [grade]);
   const guides = useMemo(() => {
-    const map = new Map<string, { ar: string; en: string; ok: boolean }>();
+    const map = new Map<string, { ar: string; en: string; ok: boolean | null }>();
     grade?.essays.forEach((row) => map.set(row.id, { ar: row.guideAr, en: row.guideEn, ok: row.ok }));
     return map;
   }, [grade]);
@@ -74,7 +74,11 @@ export function AssessSolver({
                   <article
                     key={row.id}
                     className={`print-keep rounded-xl border-2 border-dashed p-5 ${
-                      verdict ? (verdict.ok ? "border-emerald-600 bg-emerald-50/40" : "border-red-600 bg-red-50/50") : "border-primary/30"
+                      verdict?.ok === true
+                        ? "border-emerald-600 bg-emerald-50/40"
+                        : verdict?.ok === false
+                          ? "border-red-600 bg-red-50/50"
+                          : "border-primary/30"
                     }`}
                   >
                     <p
@@ -95,8 +99,8 @@ export function AssessSolver({
                       placeholder={ar ? "اكتب إجابتك هنا" : "Write your answer here"}
                       style={{
                         fontFamily: hasArabic(essays[row.id] ?? "") || ar ? "var(--font-cairo), Arial, sans-serif" : undefined,
-                        borderColor: verdict ? (verdict.ok ? "#047857" : "#b91c1c") : "#d5deea",
-                        borderWidth: verdict ? 3 : 1,
+                        borderColor: verdict?.ok === true ? "#047857" : verdict?.ok === false ? "#b91c1c" : "#d5deea",
+                        borderWidth: verdict?.ok === null || !verdict ? 1 : 3,
                       }}
                     />
                     <div className="mt-3 hidden space-y-3 print:block">
@@ -104,22 +108,25 @@ export function AssessSolver({
                         <div key={line} className="h-7 border-b border-dashed border-primary/25" />
                       ))}
                     </div>
-                    {verdict ? (
-                      <p
-                        className="mt-3 rounded-xl px-4 py-3 text-xl font-extrabold text-white"
-                        dir="rtl"
-                        style={{
-                          background: verdict.ok ? "#047857" : "#b91c1c",
-                          fontFamily: "var(--font-cairo), Arial, sans-serif",
-                        }}
+                    {verdict?.ok === true || verdict?.ok === false ? (
+                      <div
+                        className="mt-3 space-y-1 rounded-xl px-4 py-3 text-white"
+                        style={{ background: verdict.ok ? "#047857" : "#b91c1c" }}
                       >
-                        {verdict.ok ? "إجابة صحيحة" : "إجابة غلط"}
-                        <span className="ms-2 text-base font-bold" dir="ltr">
+                        <p
+                          className="text-xl font-extrabold"
+                          dir="rtl"
+                          lang="ar"
+                          style={{ fontFamily: "var(--font-cairo), Arial, sans-serif", unicodeBidi: "isolate" }}
+                        >
+                          {verdict.ok ? "إجابة صحيحة" : "إجابة غلط"}
+                        </p>
+                        <p className="text-sm font-bold" dir="ltr" lang="en" style={{ unicodeBidi: "isolate" }}>
                           {verdict.ok ? "Correct" : "Wrong"}
-                        </span>
-                      </p>
+                        </p>
+                      </div>
                     ) : null}
-                    {grade ? <BilingualAnswer guide={verdict} /> : null}
+                    {verdict?.ok === true || verdict?.ok === false ? <BilingualAnswer guide={verdict} /> : null}
                   </article>
                   );
                 })}
