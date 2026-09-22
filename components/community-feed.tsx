@@ -29,6 +29,7 @@ export function CommunityFeed({
 }) {
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [draft, setDraft] = useState("");
 
   async function onShare(formData: FormData) {
     setPending(true);
@@ -39,7 +40,7 @@ export function CommunityFeed({
       setError(t(locale, "communityError"));
       return;
     }
-    (document.getElementById("community-body") as HTMLTextAreaElement | null)?.form?.reset();
+    setDraft("");
   }
 
   return (
@@ -54,6 +55,8 @@ export function CommunityFeed({
           rows={3}
           maxLength={500}
           required
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
           placeholder={t(locale, "communityPlaceholder")}
           className="w-full resize-none rounded-2xl border border-primary/15 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40"
         />

@@ -1339,47 +1339,52 @@ async function persistCommunityFallback(store: CommunityStore): Promise<boolean>
   return blobOk || (localOk && !process.env.VERCEL);
 }
 
+async function runCommunitySql(sql: string): Promise<void> {
+  try {
+    await prisma.$executeRawUnsafe(sql);
+  } catch {
+    // A later statement can still create the table the insert needs.
+  }
+}
+
 export async function ensureCommunityTables(): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
-  try {
-    await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "ClassCommunityPost" (
-        "id" TEXT NOT NULL,
-        "authorId" TEXT NOT NULL,
-        "authorName" TEXT NOT NULL,
-        "groupId" TEXT NOT NULL DEFAULT '',
-        "body" TEXT NOT NULL,
-        "createdAt" TIMESTAMP(3) NOT NULL,
-        CONSTRAINT "ClassCommunityPost_pkey" PRIMARY KEY ("id")
-      )
-    `);
-    await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "ClassCommunityComment" (
-        "id" TEXT NOT NULL,
-        "postId" TEXT NOT NULL,
-        "authorId" TEXT NOT NULL,
-        "authorName" TEXT NOT NULL,
-        "body" TEXT NOT NULL,
-        "createdAt" TIMESTAMP(3) NOT NULL,
-        CONSTRAINT "ClassCommunityComment_pkey" PRIMARY KEY ("id")
-      )
-    `);
-    await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "ClassCommunityLike" (
-        "id" TEXT NOT NULL,
-        "postId" TEXT NOT NULL,
-        "studentId" TEXT NOT NULL,
-        CONSTRAINT "ClassCommunityLike_pkey" PRIMARY KEY ("id")
-      )
-    `);
-    await prisma.$executeRawUnsafe(`
-      CREATE UNIQUE INDEX IF NOT EXISTS "ClassCommunityLike_postId_studentId_key"
-      ON "ClassCommunityLike"("postId", "studentId")
-    `);
-    return true;
-  } catch {
-    return false;
-  }
+  await runCommunitySql(`
+    CREATE TABLE IF NOT EXISTS "ClassCommunityPost" (
+      "id" TEXT PRIMARY KEY,
+      "authorId" TEXT NOT NULL,
+      "authorName" TEXT NOT NULL,
+      "groupId" TEXT NOT NULL DEFAULT '',
+      "body" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL
+    )
+  `);
+  await runCommunitySql(`ALTER TABLE "ClassCommunityPost" ADD COLUMN IF NOT EXISTS "groupId" TEXT NOT NULL DEFAULT ''`);
+  await runCommunitySql(`ALTER TABLE "ClassCommunityPost" DISABLE ROW LEVEL SECURITY`);
+  await runCommunitySql(`
+    CREATE TABLE IF NOT EXISTS "ClassCommunityComment" (
+      "id" TEXT PRIMARY KEY,
+      "postId" TEXT NOT NULL,
+      "authorId" TEXT NOT NULL,
+      "authorName" TEXT NOT NULL,
+      "body" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL
+    )
+  `);
+  await runCommunitySql(`ALTER TABLE "ClassCommunityComment" DISABLE ROW LEVEL SECURITY`);
+  await runCommunitySql(`
+    CREATE TABLE IF NOT EXISTS "ClassCommunityLike" (
+      "id" TEXT PRIMARY KEY,
+      "postId" TEXT NOT NULL,
+      "studentId" TEXT NOT NULL
+    )
+  `);
+  await runCommunitySql(`
+    CREATE UNIQUE INDEX IF NOT EXISTS "ClassCommunityLike_postId_studentId_key"
+    ON "ClassCommunityLike"("postId", "studentId")
+  `);
+  await runCommunitySql(`ALTER TABLE "ClassCommunityLike" DISABLE ROW LEVEL SECURITY`);
+  return true;
 }
 
 export async function readCommunityState(): Promise<CommunityStore> {
@@ -1388,9 +1393,15 @@ export async function readCommunityState(): Promise<CommunityStore> {
   await ensureCommunityTables();
   try {
     const [posts, comments, likes] = await Promise.all([
-      prisma.classCommunityPost.findMany(),
-      prisma.classCommunityComment.findMany(),
-      prisma.classCommunityLike.findMany(),
+      prisma.$queryRaw<Array<{ id: string; authorId: string; authorName: string; groupId: string; body: string; createdAt: Date }>>`
+        SELECT "id", "authorId", "authorName", "groupId", "body", "createdAt" FROM "ClassCommunityPost"
+      `,
+      prisma.$queryRaw<Array<{ id: string; postId: string; authorId: string; authorName: string; body: string; createdAt: Date }>>`
+        SELECT "id", "postId", "authorId", "authorName", "body", "createdAt" FROM "ClassCommunityComment"
+      `,
+      prisma.$queryRaw<Array<{ postId: string; studentId: string }>>`
+        SELECT "postId", "studentId" FROM "ClassCommunityLike"
+      `,
     ]);
     return mergeCommunity(
       {
@@ -1401,7 +1412,7 @@ export async function readCommunityState(): Promise<CommunityStore> {
             authorName: row.authorName,
             groupId: row.groupId,
             body: row.body,
-            createdAt: row.createdAt.toISOString(),
+            createdAt: asDate(String(row.createdAt)).toISOString(),
           })),
         ),
         comments: parseCommunityComments(
@@ -1411,7 +1422,7 @@ export async function readCommunityState(): Promise<CommunityStore> {
             authorId: row.authorId,
             authorName: row.authorName,
             body: row.body,
-            createdAt: row.createdAt.toISOString(),
+            createdAt: asDate(String(row.createdAt)).toISOString(),
           })),
         ),
         likes: parseCommunityLikes(likes.map((row) => ({ postId: row.postId, studentId: row.studentId }))),
@@ -1431,24 +1442,26 @@ export async function insertCommunityPostRow(post: CommunityPost): Promise<boole
   });
   if (!hasLiveDatabase()) return fallbackOk || true;
   await ensureCommunityTables();
+  const createdAt = asDate(post.createdAt);
   try {
-    await prisma.classCommunityPost.create({
-      data: {
-        id: post.id,
-        authorId: post.authorId,
-        authorName: post.authorName,
-        groupId: post.groupId,
-        body: post.body,
-        createdAt: asDate(post.createdAt),
-      },
-    });
+    await prisma.$executeRaw`
+      INSERT INTO "ClassCommunityPost" ("id","authorId","authorName","groupId","body","createdAt")
+      VALUES (${post.id}, ${post.authorId}, ${post.authorName}, ${post.groupId}, ${post.body}, ${createdAt})
+      ON CONFLICT ("id") DO NOTHING
+    `;
     return true;
   } catch {
     try {
-      await prisma.$executeRaw`
-        INSERT INTO "ClassCommunityPost" ("id","authorId","authorName","groupId","body","createdAt")
-        VALUES (${post.id}, ${post.authorId}, ${post.authorName}, ${post.groupId}, ${post.body}, ${asDate(post.createdAt)})
-      `;
+      await prisma.classCommunityPost.create({
+        data: {
+          id: post.id,
+          authorId: post.authorId,
+          authorName: post.authorName,
+          groupId: post.groupId,
+          body: post.body,
+          createdAt,
+        },
+      });
       return true;
     } catch {
       return fallbackOk;
@@ -1485,24 +1498,26 @@ export async function insertCommunityCommentRow(comment: CommunityComment): Prom
   });
   if (!hasLiveDatabase()) return fallbackOk || true;
   await ensureCommunityTables();
+  const createdAt = asDate(comment.createdAt);
   try {
-    await prisma.classCommunityComment.create({
-      data: {
-        id: comment.id,
-        postId: comment.postId,
-        authorId: comment.authorId,
-        authorName: comment.authorName,
-        body: comment.body,
-        createdAt: asDate(comment.createdAt),
-      },
-    });
+    await prisma.$executeRaw`
+      INSERT INTO "ClassCommunityComment" ("id","postId","authorId","authorName","body","createdAt")
+      VALUES (${comment.id}, ${comment.postId}, ${comment.authorId}, ${comment.authorName}, ${comment.body}, ${createdAt})
+      ON CONFLICT ("id") DO NOTHING
+    `;
     return true;
   } catch {
     try {
-      await prisma.$executeRaw`
-        INSERT INTO "ClassCommunityComment" ("id","postId","authorId","authorName","body","createdAt")
-        VALUES (${comment.id}, ${comment.postId}, ${comment.authorId}, ${comment.authorName}, ${comment.body}, ${asDate(comment.createdAt)})
-      `;
+      await prisma.classCommunityComment.create({
+        data: {
+          id: comment.id,
+          postId: comment.postId,
+          authorId: comment.authorId,
+          authorName: comment.authorName,
+          body: comment.body,
+          createdAt,
+        },
+      });
       return true;
     } catch {
       return fallbackOk;
