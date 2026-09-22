@@ -25,11 +25,14 @@ export function BookletSheet({ locale }: { locale: Locale }) {
           <p className="mt-1 text-sm text-foreground/65">
             {ar ? BRAND.teacherAr : BRAND.teacherEn} · {BRAND.year} · 2Bac
           </p>
-          <p className="mt-3 text-sm">
-            {ar
-              ? "الاسم: ________________    الرقم: ________________    الحصة: ______"
-              : "Name: ________________    Phone: ________________    Class: ______"}
-          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            {(ar ? ["الاسم", "الرقم", "الحصة"] : ["Name", "Phone", "Class"]).map((label) => (
+              <p key={label} className="text-sm">
+                <span className="font-semibold">{label}</span>
+                <span className="mt-2 block h-7 border-b border-primary/30" />
+              </p>
+            ))}
+          </div>
         </header>
 
         {CHAPTERS.map((chapter) => {
@@ -46,25 +49,26 @@ export function BookletSheet({ locale }: { locale: Locale }) {
                 const terms = ar ? note.termsAr : note.termsEn;
                 return (
                   <article key={note.id} className="mt-5">
-                    <h4 className="font-semibold">
-                      {note.id} {ar ? lesson?.titleAr : lesson?.titleEn}
+                    <h4 className="font-semibold leading-8">
+                      <span dir="ltr" className="me-1 inline-block">{note.id}</span>
+                      {ar ? lesson?.titleAr : lesson?.titleEn}
                     </h4>
-                    <ul className="mt-2 list-disc space-y-1 ps-5 text-sm">
+                    <ul className="mt-2 list-disc space-y-2 ps-5 text-sm leading-7">
                       {body.map((line) => (
                         <li key={line}>{line}</li>
                       ))}
                     </ul>
-                    <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-primary/60">
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-primary/60">
                       {ar ? "مصطلحات" : "Key terms"}
                     </p>
-                    <ul className="mt-1 text-sm">
+                    <ul className="mt-2 space-y-2 text-sm leading-7">
                       {terms.map((term) => (
                         <li key={term.term}>
                           <strong>{term.term}:</strong> {term.meaning}
                         </li>
                       ))}
                     </ul>
-                    <p className="mt-2 text-sm">
+                    <p className="mt-3 text-sm leading-7">
                       <strong>{ar ? "الخلاصة:" : "Takeaway:"}</strong> {ar ? note.takeawayAr : note.takeawayEn}
                     </p>
                   </article>
