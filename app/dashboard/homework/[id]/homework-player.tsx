@@ -47,7 +47,7 @@ export function HomeworkPlayer({
   const [seed, setSeed] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
-  const [result, setResult] = useState<{ score: number; total: number; passed: boolean } | null>(
+  const [result, setResult] = useState<{ score: number; total: number; passed: boolean; points: number } | null>(
     null,
   );
 
@@ -66,7 +66,9 @@ export function HomeworkPlayer({
     const response = await submitLessonHomework({ lessonId, answers, seed, size, makeupDate });
     setSaving(false);
     if ("error" in response) return;
-    setResult(response);
+    const points = "points" in response && typeof response.points === "number" ? response.points : response.score;
+    setResult({ ...response, points });
+    window.dispatchEvent(new CustomEvent("msa-points", { detail: points }));
     router.refresh();
   }
 
@@ -81,6 +83,9 @@ export function HomeworkPlayer({
         </p>
         <p className={`mt-3 text-sm font-medium ${result.passed ? "text-emerald-700" : "text-red-700"}`}>
           {result.passed ? t(locale, "homeworkPassed") : t(locale, "homeworkFailed")}
+        </p>
+        <p className="mt-2 text-sm font-semibold text-primary">
+          {locale === "ar" ? `نقاطك الآن: ${result.points}` : `Your points now: ${result.points}`}
         </p>
         <AnswerReview
           locale={locale}

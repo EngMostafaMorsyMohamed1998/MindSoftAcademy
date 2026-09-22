@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -71,7 +71,19 @@ export function DashboardNav({
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const user = initialUser;
-  const { level } = levelFromPoints(user.points);
+  const [points, setPoints] = useState(user.points);
+  useEffect(() => {
+    setPoints(user.points);
+  }, [user.points]);
+  useEffect(() => {
+    const onPoints = (event: Event) => {
+      const next = (event as CustomEvent<number>).detail;
+      if (typeof next === "number" && Number.isFinite(next)) setPoints((current) => Math.max(current, next));
+    };
+    window.addEventListener("msa-points", onPoints);
+    return () => window.removeEventListener("msa-points", onPoints);
+  }, []);
+  const { level } = levelFromPoints(points);
   const navItems = items(locale);
   const mobilePrimary = MOBILE_PRIMARY.map((href) => navItems.find((item) => item.href === href)).filter(
     (item): item is (typeof navItems)[number] => Boolean(item),
@@ -128,7 +140,7 @@ export function DashboardNav({
                 <span className="flex items-center gap-1 text-[10px] leading-4 text-white/55">
                   <Trophy className="size-3 shrink-0 text-accent" aria-hidden="true" />
                   <span className="truncate">
-                    L{level} · {user.points} {t(locale, "points")}
+                    L{level} · {points} {t(locale, "points")}
                   </span>
                 </span>
               </span>

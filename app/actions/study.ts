@@ -178,7 +178,7 @@ export async function submitLessonHomework(input: {
   seed: number;
   size?: number;
   makeupDate?: string;
-}): Promise<{ score: number; total: number; passed: boolean } | { error: string }> {
+}): Promise<{ score: number; total: number; passed: boolean; points: number } | { error: string }> {
   const student = await getStudentSession();
   if (!student) return { error: "AUTH" };
   const record = await getCodeById(student.id);
@@ -237,11 +237,26 @@ export async function submitLessonHomework(input: {
       clearedAt: null,
     }));
   await recordMisses(missed);
-  refreshPoints();
   if (input.makeupDate && passed) {
     await completeMakeup(student.id, input.makeupDate, score, paper.length);
   }
-  return { score, total: paper.length, passed };
+  let points = score;
+  try {
+    const { commitHomeworkPoints } = await import("@/lib/class-db");
+    const saved = await commitHomeworkPoints({
+      studentId: student.id,
+      lessonId: input.lessonId,
+      score,
+      total: paper.length,
+      passed,
+      submittedAt: new Date().toISOString(),
+    });
+    if (saved !== null) points = saved;
+  } catch {
+    points = score;
+  }
+  refreshPoints();
+  return { score, total: paper.length, passed, points };
 }
 
 export async function submitMistakeReview(input: {

@@ -694,6 +694,28 @@ export async function upsertHomeworkRow(row: HomeworkResult): Promise<boolean> {
   }
 }
 
+export async function commitHomeworkPoints(row: HomeworkResult): Promise<number | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const submittedAt = asDate(row.submittedAt);
+    await prisma.$executeRaw`
+      INSERT INTO "ClassHomework" ("studentId", "lessonId", "score", "total", "passed", "submittedAt")
+      VALUES (${row.studentId}, ${row.lessonId}, ${Math.max(0, row.score)}, ${Math.max(0, row.total)}, ${row.passed}, ${submittedAt})
+      ON CONFLICT ("studentId", "lessonId") DO UPDATE
+      SET "score" = GREATEST("ClassHomework"."score", EXCLUDED."score"),
+          "total" = GREATEST("ClassHomework"."total", EXCLUDED."total"),
+          "passed" = "ClassHomework"."passed" OR EXCLUDED."passed",
+          "submittedAt" = CASE
+            WHEN EXCLUDED."score" >= "ClassHomework"."score" THEN EXCLUDED."submittedAt"
+            ELSE "ClassHomework"."submittedAt"
+          END
+    `;
+    return syncStudentPointsFromDb(row.studentId);
+  } catch {
+    return null;
+  }
+}
+
 export async function syncStudentPointsFromDb(studentId: string): Promise<number | null> {
   if (!hasLiveDatabase()) return null;
   try {
