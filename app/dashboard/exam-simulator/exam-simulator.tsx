@@ -504,7 +504,7 @@ export function ExamSimulator() {
       </div>
 
       {confirming ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-primary-dark/40 p-4 sm:items-center">
+        <div className="no-print fixed inset-0 z-50 flex items-end justify-center bg-primary-dark/40 p-4 sm:items-center">
           <div
             role="dialog"
             aria-labelledby="submit-confirm-title"

@@ -476,7 +476,7 @@ export function SceneCard({
       <div className="booklet-scene-art aspect-[5/3] bg-slate-50">
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo} alt={term} className="size-full object-contain bg-white" />
+          <img src={photo} alt={term} decoding="async" className="keep-white size-full object-contain" />
         ) : (
           <TextbookArt art={picture} locale={locale} />
         )}

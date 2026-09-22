@@ -76,7 +76,7 @@ export function SurpriseCatcher({ locale }: { locale: Locale }) {
   if (hide || !state.open || !state.prompt) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-primary-dark/70 p-4 sm:items-center">
+    <div className="no-print fixed inset-0 z-50 flex items-end justify-center bg-primary-dark/70 p-4 sm:items-center">
       <div className="max-h-[min(32rem,calc(100dvh-2rem))] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-5 shadow-xl">
         <p className="inline-flex items-center gap-2 text-xs font-semibold text-amber-700">
           <Zap className="size-4" />

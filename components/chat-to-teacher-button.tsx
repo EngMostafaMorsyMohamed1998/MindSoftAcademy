@@ -14,7 +14,7 @@ export function ChatToTeacherButton({ locale }: { locale: Locale }) {
     <Link
       href="/dashboard/chat-to-teacher"
       aria-label={t(locale, "navChat")}
-      className="no-print fixed end-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-50 inline-flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-bold text-primary-dark shadow-lg shadow-black/20 hover:brightness-105 md:bottom-6"
+      className="no-print fixed end-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-50 inline-flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-bold text-primary-dark shadow-lg shadow-black/20 transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-dark md:bottom-6"
     >
       <MessageCircle className="size-5 shrink-0" aria-hidden="true" />
       <span className="truncate">{t(locale, "navChat")}</span>

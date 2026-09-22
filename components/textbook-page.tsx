@@ -69,7 +69,12 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
               >
                 {page.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={page.photo} alt={ar ? page.sectionAr : page.sectionEn} className="aspect-[4/3] w-full object-cover" />
+                  <img
+                    src={page.photo}
+                    alt={ar ? page.sectionAr : page.sectionEn}
+                    decoding="async"
+                    className="aspect-[4/3] w-full object-cover"
+                  />
                 ) : (
                   <AiNestDiagram
                     locale={locale}
@@ -160,7 +165,7 @@ export function TextbookLesson({ locale, page }: { locale: Locale; page: Textboo
           <div className="mt-8 space-y-4">
             <h4 className="text-xl font-extrabold text-[#0c2d6b]">
               {ar ? "شرح المصطلحات" : "Term explanations"}
-              <span className="ms-2 text-base font-semibold text-slate-400">
+              <span className="ms-2 text-base font-semibold text-slate-600">
                 {ar ? "— اقرأ قبل التدريبات" : "— read before the drills"}
               </span>
             </h4>
