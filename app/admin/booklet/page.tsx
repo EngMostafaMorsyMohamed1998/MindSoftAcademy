@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
 import { HeaderTools } from "@/components/header-tools";
 import { LogoutButton } from "@/app/dashboard/logout-button";
-import { BookletCatalog } from "@/app/dashboard/booklet/booklet-catalog";
+import { BookletSheet } from "@/app/dashboard/booklet/booklet-sheet";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { getTheme } from "@/lib/theme";
@@ -34,7 +34,7 @@ export default async function TeacherBookletPage() {
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4 py-8">
-        <BookletCatalog locale={locale} />
+        <BookletSheet locale={locale} />
       </main>
     </div>
   );
