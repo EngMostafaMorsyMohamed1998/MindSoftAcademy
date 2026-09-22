@@ -14,6 +14,7 @@ import type {
   MissedQuestion,
 } from "@/lib/access-store";
 import { encodeExamChapter, parseExamChapter } from "@/lib/class-clock";
+import { displayPoints } from "@/lib/student-points";
 import { parseClassSessions, type ClassSession } from "@/lib/class-session";
 import { parseCertificates, type CourseCertificate } from "@/lib/certificates";
 import { parseTelegramLinks, type TelegramLink } from "@/lib/telegram";
@@ -666,6 +667,72 @@ export async function markChatReadRows(studentId: string, reader: "student" | "t
   }
 }
 
+export async function upsertHomeworkRow(row: HomeworkResult): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    const prev = await prisma.classHomework.findUnique({
+      where: { studentId_lessonId: { studentId: row.studentId, lessonId: row.lessonId } },
+    });
+    const score = Math.max(row.score, prev?.score ?? 0);
+    const passed = row.passed || Boolean(prev?.passed);
+    const submittedAt = asDate(score === row.score ? row.submittedAt : (prev?.submittedAt.toISOString() ?? row.submittedAt));
+    await prisma.classHomework.upsert({
+      where: { studentId_lessonId: { studentId: row.studentId, lessonId: row.lessonId } },
+      create: {
+        studentId: row.studentId,
+        lessonId: row.lessonId,
+        score,
+        total: row.total,
+        passed,
+        submittedAt,
+      },
+      update: { score, total: Math.max(row.total, prev?.total ?? 0), passed, submittedAt },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function syncStudentPointsFromDb(studentId: string): Promise<number | null> {
+  if (!hasLiveDatabase()) return null;
+  try {
+    const [code, homework, exams] = await Promise.all([
+      prisma.classCode.findUnique({ where: { id: studentId }, select: { points: true } }),
+      prisma.classHomework.findMany({ where: { studentId } }),
+      prisma.classExam.findMany({ where: { studentId } }),
+    ]);
+    if (!code) return null;
+    const next = displayPoints(
+      code.points,
+      studentId,
+      homework.map((row) => ({
+        studentId: row.studentId,
+        lessonId: row.lessonId,
+        score: row.score,
+        total: row.total,
+        passed: row.passed,
+        submittedAt: row.submittedAt.toISOString(),
+      })),
+      exams.map((row) => ({
+        id: row.id,
+        chapterId: row.chapterId,
+        studentId: row.studentId,
+        name: row.name,
+        phone: row.phone,
+        locale: row.locale === "en" ? "en" : "ar",
+        objectiveScore: row.objectiveScore,
+        objectiveTotal: row.objectiveTotal,
+        essays: [],
+        submittedAt: row.submittedAt.toISOString(),
+      })),
+    );
+    return setClassCodePoints(studentId, next);
+  } catch {
+    return null;
+  }
+}
+
 export async function writeClassDb(store: StoreFile): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
   await ensureCodeTrackColumn();
@@ -677,7 +744,6 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
     await upsertClassMessages(store.messages);
     await prisma.$transaction([
       prisma.classExam.deleteMany(),
-      prisma.classHomework.deleteMany(),
       prisma.classUnlock.deleteMany(),
       prisma.classEssayGrade.deleteMany(),
       prisma.classAttendance.deleteMany(),
@@ -696,20 +762,6 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
                 objectiveScore: row.objectiveScore,
                 objectiveTotal: row.objectiveTotal,
                 essays: row.essays,
-                submittedAt: asDate(row.submittedAt),
-              })),
-            }),
-          ]
-        : []),
-      ...(store.homework.length
-        ? [
-            prisma.classHomework.createMany({
-              data: store.homework.map((row) => ({
-                studentId: row.studentId,
-                lessonId: row.lessonId,
-                score: row.score,
-                total: row.total,
-                passed: row.passed,
                 submittedAt: asDate(row.submittedAt),
               })),
             }),
@@ -787,6 +839,9 @@ export async function writeClassDb(store: StoreFile): Promise<boolean> {
           ]
         : []),
     ]);
+    for (const row of store.homework) {
+      await upsertHomeworkRow(row);
+    }
     return true;
   } catch {
     return false;

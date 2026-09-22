@@ -447,19 +447,20 @@ export async function saveHomework(result: HomeworkResult): Promise<void> {
     passed: result.passed || Boolean(previous?.passed),
     submittedAt: score === result.score ? result.submittedAt : (previous?.submittedAt ?? result.submittedAt),
   });
+  const saved = store.homework[0];
   const record = store.codes.find((item) => item.id === result.studentId);
-  if (record) {
+  if (record && saved) {
     record.points = displayPoints(record.points, result.studentId, store.homework, store.exams);
   }
-  await writeStore(store);
-  if (record) {
-    try {
-      const { setClassCodePoints } = await import("@/lib/class-db");
-      await setClassCodePoints(result.studentId, record.points);
-    } catch {
-      // The store write already kept the homework score.
-    }
+  try {
+    const { upsertHomeworkRow, syncStudentPointsFromDb } = await import("@/lib/class-db");
+    if (saved) await upsertHomeworkRow(saved);
+    const synced = await syncStudentPointsFromDb(result.studentId);
+    if (record && synced !== null) record.points = Math.max(record.points, synced);
+  } catch {
+    // The full store write below still keeps the score when the database row cannot be updated alone.
   }
+  await writeStore(store);
 }
 
 export async function listPassedHomework(studentId: string): Promise<string[]> {
