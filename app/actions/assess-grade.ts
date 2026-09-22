@@ -1,8 +1,11 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { saveHomework } from "@/lib/access-store";
 import { assessmentsForLesson } from "@/lib/assessments-bank";
 import { assessOptions, assessPrompt } from "@/lib/assessments-helpers";
 import { getLocale } from "@/lib/locale";
+import { getStudentSession } from "@/lib/student-session";
 
 export type AssessGrade = {
   score: number;
@@ -151,6 +154,19 @@ export async function gradeAssessLesson(input: {
     return { id: row.id, guideAr, guideEn, ok };
   });
   const attempted = essayMarks.filter((row) => row.ok !== null).length;
+  const student = await getStudentSession();
+  if (student && (marked.some((row) => row.answered) || attempted > 0)) {
+    await saveHomework({
+      studentId: student.id,
+      lessonId: `booklet:${input.lessonId}`,
+      score,
+      total: marked.filter((row) => row.answered).length + attempted,
+      passed: false,
+      submittedAt: new Date().toISOString(),
+    });
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/leaderboard");
+  }
   return {
     score,
     total: marked.filter((row) => row.answered).length + attempted,

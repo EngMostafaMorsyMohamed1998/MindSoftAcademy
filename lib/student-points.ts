@@ -7,7 +7,7 @@ export function pointsFromResults(
 ): number {
   const hwByLesson = new Map<string, HomeworkResult>();
   for (const row of homework) {
-    if (row.studentId !== studentId || !row.passed) continue;
+    if (row.studentId !== studentId) continue;
     const prev = hwByLesson.get(row.lessonId);
     if (!prev || row.submittedAt > prev.submittedAt) hwByLesson.set(row.lessonId, row);
   }

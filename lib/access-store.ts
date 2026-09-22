@@ -434,10 +434,19 @@ export async function listExamChapterIds(studentId: string): Promise<string[]> {
 
 export async function saveHomework(result: HomeworkResult): Promise<void> {
   const store = await readStore();
+  const previous = store.homework.find(
+    (item) => item.studentId === result.studentId && item.lessonId === result.lessonId,
+  );
+  const score = Math.max(result.score, previous?.score ?? 0);
   store.homework = store.homework.filter(
     (item) => !(item.studentId === result.studentId && item.lessonId === result.lessonId),
   );
-  store.homework.unshift(result);
+  store.homework.unshift({
+    ...result,
+    score,
+    passed: result.passed || Boolean(previous?.passed),
+    submittedAt: score === result.score ? result.submittedAt : (previous?.submittedAt ?? result.submittedAt),
+  });
   await writeStore(store);
 }
 

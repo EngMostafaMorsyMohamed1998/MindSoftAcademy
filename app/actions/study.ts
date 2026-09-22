@@ -128,7 +128,6 @@ export async function submitChapterExam(input: {
         clearedAt: null,
       }));
     await recordMisses(missed);
-    await addPoints(student.id, objectiveScore);
     refreshPoints();
     const exams = mergeCompleted(
       student.exams,
@@ -238,10 +237,7 @@ export async function submitLessonHomework(input: {
       clearedAt: null,
     }));
   await recordMisses(missed);
-  if (passed) {
-    await addPoints(student.id, score);
-    refreshPoints();
-  }
+  refreshPoints();
   if (input.makeupDate && passed) {
     await completeMakeup(student.id, input.makeupDate, score, paper.length);
   }
@@ -262,6 +258,8 @@ export async function submitMistakeReview(input: {
       await clearMiss(student.id, question.questionKey);
     }
   }
+  if (score > 0) await addPoints(student.id, score);
+  refreshPoints();
   return { score, total: due.length };
 }
 
