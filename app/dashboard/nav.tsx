@@ -104,35 +104,40 @@ export function DashboardNav({
             );
           })}
         </nav>
-        <div className="shrink-0 space-y-2 border-t border-white/10 p-4">
-          <ThemeToggle
-            theme={theme}
-            locale={locale}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
-          />
-          <p className="text-center text-[11px] text-white/45">
-            {t(locale, "trackLabel")}: {t(locale, track === "en" ? "trackEn" : "trackAr")}
-            <span className="mt-1 block text-white/35">{t(locale, "trackLocked")}</span>
-          </p>
-          <Link
-            href="/dashboard/leaderboard"
-            className="flex items-center gap-3 rounded-2xl bg-white/8 px-3 py-3 hover:bg-white/12"
-          >
-            <span className="flex size-10 items-center justify-center rounded-full bg-accent/20 text-sm font-semibold text-accent">
-              {initials(user.name)}
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{user.name}</p>
-              <p className="flex items-center gap-1 text-xs text-white/55">
-                <Trophy className="size-3 text-accent" />
-                {user.points} {t(locale, "points")} · L{level}
-              </p>
-            </div>
-          </Link>
-          <LogoutButton
-            label={t(locale, "logout")}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold"
-          />
+        <div className="shrink-0 border-t border-white/10 px-3 py-2">
+          <div className="flex items-center gap-2">
+            <ThemeToggle
+              theme={theme}
+              locale={locale}
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white"
+            />
+            <p className="min-w-0 flex-1 truncate text-[10px] leading-4 text-white/45" title={t(locale, "trackLocked")}>
+              {t(locale, "trackLabel")}: {t(locale, track === "en" ? "trackEn" : "trackAr")}
+            </p>
+          </div>
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <Link
+              href="/dashboard/leaderboard"
+              className="flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-white/8 px-2 py-1.5 hover:bg-white/12"
+            >
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent/20 text-[11px] font-semibold text-accent">
+                {initials(user.name)}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-xs font-semibold leading-4">{user.name}</span>
+                <span className="flex items-center gap-1 text-[10px] leading-4 text-white/55">
+                  <Trophy className="size-3 shrink-0 text-accent" aria-hidden="true" />
+                  <span className="truncate">
+                    L{level} · {user.points} {t(locale, "points")}
+                  </span>
+                </span>
+              </span>
+            </Link>
+            <LogoutButton
+              label={t(locale, "logout")}
+              className="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg bg-white/10 px-2 py-1.5 text-[10px] font-semibold"
+            />
+          </div>
         </div>
       </aside>
 

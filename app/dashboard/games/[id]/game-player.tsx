@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type PointerEvent } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { awardGameXp } from "@/app/actions/study";
 import { ChapterMindMap } from "@/components/chapter-mind-map";
 import type { ChapterGame } from "@/lib/games";
@@ -81,6 +82,7 @@ function SortPlay({
   const data = game.data.kind === "sort" ? game.data : null;
   const ids = data?.items.map((item) => item.id) ?? [];
   const [order, setOrder] = useState(ids);
+  const [dragging, setDragging] = useState<string | null>(null);
   useEffect(() => {
     setOrder(shuffle(ids));
     // Shuffle once after mount so server and client HTML match.
@@ -96,23 +98,80 @@ function SortPlay({
     setOrder(copy);
   }
 
+  function moveId(fromId: string, toId: string) {
+    setOrder((current) => {
+      const from = current.indexOf(fromId);
+      const to = current.indexOf(toId);
+      if (from < 0 || to < 0 || from === to) return current;
+      const copy = [...current];
+      const [item] = copy.splice(from, 1);
+      copy.splice(to, 0, item!);
+      return copy;
+    });
+  }
+
+  function onPointerDown(event: PointerEvent<HTMLLIElement>, id: string) {
+    if ((event.target as HTMLElement).closest("button")) return;
+    setDragging(id);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function onPointerMove(event: PointerEvent<HTMLLIElement>) {
+    if (!dragging) return;
+    const hit = document.elementFromPoint(event.clientX, event.clientY);
+    const toId = hit?.closest("[data-sort-id]")?.getAttribute("data-sort-id");
+    if (toId) moveId(dragging, toId);
+  }
+
   return (
     <div className="mt-6 rounded-3xl bg-white p-5 ring-1 ring-primary/10">
       <p className="text-sm text-foreground/70">{gameText(locale, data.introAr, data.introEn)}</p>
-      <ol className="mt-4 space-y-2">
+      <p className="mt-2 text-xs font-medium text-foreground/55">
+        {locale === "ar" ? "اسحب البطاقة، أو استخدم الأزرار الكبيرة." : "Drag a card, or use the large buttons."}
+      </p>
+      <ol className="mt-4 space-y-3">
         {order.map((id, index) => {
           const item = data.items.find((entry) => entry.id === id);
           if (!item) return null;
           return (
-            <li key={id} className="flex items-center gap-2 rounded-xl bg-primary/5 px-3 py-2">
-              <span className="w-6 text-sm font-bold">{index + 1}</span>
-              <span className="flex-1 text-sm">{gameText(locale, item.labelAr, item.labelEn)}</span>
-              <button type="button" className="text-xs" onClick={() => move(index, -1)}>
-                ↑
-              </button>
-              <button type="button" className="text-xs" onClick={() => move(index, 1)}>
-                ↓
-              </button>
+            <li
+              key={id}
+              data-sort-id={id}
+              onPointerDown={(event) => onPointerDown(event, id)}
+              onPointerMove={onPointerMove}
+              onPointerUp={() => setDragging(null)}
+              onPointerCancel={() => setDragging(null)}
+              className={`flex cursor-grab items-center gap-3 rounded-2xl bg-primary/5 px-3 py-3 select-none active:cursor-grabbing ${
+                dragging === id ? "ring-2 ring-accent" : "ring-1 ring-primary/10"
+              }`}
+              style={{ touchAction: "none" }}
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                {index + 1}
+              </span>
+              <span className="min-w-0 flex-1 text-base font-semibold leading-7">
+                {gameText(locale, item.labelAr, item.labelEn)}
+              </span>
+              <span className="flex shrink-0 gap-1">
+                <button
+                  type="button"
+                  aria-label={locale === "ar" ? "فوق" : "Up"}
+                  disabled={index === 0}
+                  className="inline-flex size-11 items-center justify-center rounded-xl bg-primary text-white disabled:opacity-30"
+                  onClick={() => move(index, -1)}
+                >
+                  <ChevronUp className="size-5" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={locale === "ar" ? "تحت" : "Down"}
+                  disabled={index === order.length - 1}
+                  className="inline-flex size-11 items-center justify-center rounded-xl bg-primary text-white disabled:opacity-30"
+                  onClick={() => move(index, 1)}
+                >
+                  <ChevronDown className="size-5" aria-hidden="true" />
+                </button>
+              </span>
             </li>
           );
         })}
