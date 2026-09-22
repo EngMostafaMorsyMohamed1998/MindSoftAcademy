@@ -8,6 +8,9 @@ import { ASSESS_CH2 } from "@/lib/assessments-ch2";
 import { ASSESS_CH3 } from "@/lib/assessments-ch3";
 import { ASSESS_CH4 } from "@/lib/assessments-ch4";
 import { ASSESS_EN } from "@/lib/assessments-en";
+import { ASSESS_EN_CH2 } from "@/lib/assessments-en-ch2";
+import { ASSESS_EN_CH3 } from "@/lib/assessments-en-ch3";
+import { ASSESS_EN_CH4 } from "@/lib/assessments-en-ch4";
 import {
   applyEnglish,
   applyKeys,
@@ -438,7 +441,7 @@ const BANK: AssessQuestion[] = applyEnglish(
     ...ASSESS_CH3,
     ...ASSESS_CH4,
   ],
-  ASSESS_EN,
+  { ...ASSESS_EN, ...ASSESS_EN_CH2, ...ASSESS_EN_CH3, ...ASSESS_EN_CH4 },
 );
 
 const BLOCK_ORDER: AssessSection[] = ["classroom", "home", "weekly-a", "weekly-b", "weekly-c"];

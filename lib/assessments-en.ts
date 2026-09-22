@@ -2,7 +2,7 @@
  * English overlay for the performances-and-assessments booklet.
  * Official EN PDF was not in Downloads/public/books (ministry blob 403).
  * Chapter 1 wording follows the Arabic ministry bank, same IDs and keys.
- * Later chapters still fall back to Arabic until the EN book is typed.
+ * Chapters 2–4 live in assessments-en-ch2.ts, assessments-en-ch3.ts, and assessments-en-ch4.ts.
  */
 import type { AssessEnText } from "@/lib/assessments-helpers";
 
