@@ -229,9 +229,9 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "التشفير غير المتماثل",
       termEn: "Asymmetric",
       bodyAr:
-        "التشفير غير المتماثل يستخدم زوج مفاتيح: العام يتشفر به أي حد، والخاص يفك به صاحبه فقط. مناسب لتبادل مفتاح الجلسة وللتوقيع الرقمي. أبطأ من المتماثل، عشان كده الأنظمة غالبًا تمزج الاتنين: غير متماثل في البداية، بعدين متماثل للبيانات الثقيلة.",
+        "التشفير غير المتماثل يستخدم زوج مفاتيح. للسرية: العام يتشفر به أي حد، والخاص يفك به صاحبه فقط. للتوقيع الرقمي العكس: الخاص يوقّع والعام يتحقق. أبطأ من المتماثل، عشان كده الأنظمة غالبًا تمزج الاتنين: غير متماثل في البداية، بعدين متماثل للبيانات الثقيلة.",
       bodyEn:
-        "Asymmetric encryption uses a key pair: the public key encrypts for anyone, the private key decrypts for the owner only. It fits exchanging a session key and digital signatures. It is slower than symmetric crypto, so systems often mix both: asymmetric at the start, then symmetric for the heavy data.",
+        "Asymmetric encryption uses a key pair. For secrecy the public key encrypts and only the private key decrypts. A digital signature reverses that: the private key signs and the public key verifies. It is slower than symmetric crypto, so systems often mix both: asymmetric at the start, then symmetric for the heavy data.",
       exampleAr: "موقع المدرسة يعرض مفتاحًا عامًا؛ المتصفح يشفّر به، والخادم وحده يفك بالمفتاح الخاص.",
       exampleEn: "The school site shows a public key; the browser encrypts with it, and only the server unlocks with the private key.",
     },
@@ -249,9 +249,9 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       termAr: "المصادقة متعددة العوامل",
       termEn: "MFA",
       bodyAr:
-        "المصادقة متعددة العوامل تجمع أكثر من نوع إثبات: حاجة تعرفها (كلمة مرور)، حاجة تملكها (تليفون أو مفتاح)، وحاجة أنت عليها (بصمة أو وجه). لو عامل واحد اتسرق، التاني يوقف المحتال. متبعتش صورة البصمة على جروب، ومتخلّيش البصمة وحدها من غير مراجعة.",
+        "المصادقة متعددة العوامل عاملان أو أكثر من فئات مختلفة: حاجة تعرفها (كلمة مرور)، حاجة تملكها (تليفون أو مفتاح)، أو حاجة أنت عليها (بصمة أو وجه). الثنائية عاملان فقط من فئتين، وهي حالة شائعة من المتعددة مش أوسع منها. لو عامل اتسرق، التاني يوقف المحتال. متبعتش صورة البصمة على جروب.",
       bodyEn:
-        "Multi-factor authentication combines more than one kind of proof: something you know (a password), something you have (a phone or a key), and something you are (a fingerprint or a face). If one factor is stolen, the second stops the thief. Do not send fingerprint photos to a group chat, and do not rely on biometrics alone with no review.",
+        "Multi-factor authentication uses two or more factors from different categories: something you know (a password), something you have (a phone or a key), or something you are (a fingerprint or a face). Two-factor authentication is exactly two categories, a common case of MFA, not a wider one. If one factor is stolen, the second stops the thief. Do not send fingerprint photos to a group chat.",
       exampleAr: "دخول حساب المدرس: كلمة مرور + رمز من التطبيق على الموبايل.",
       exampleEn: "Teacher login: a password plus a code from the phone app.",
     },
@@ -394,17 +394,17 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
   ],
   "3-2": [
     {
-      termAr: "بروتوكول الويب",
+      termAr: "HTTP",
       termEn: "HTTP",
       bodyAr:
-        "بروتوكول الويب طلب واستجابة: العميل يقول الطريقة والعنوان، والخادم يرد بجسم ورمز حالة. الطرق الشائعة: الجلب للقراءة من غير تعديل، الإرسال للإنشاء، البديل الكامل أو التعديل الجزئي للتحديث، والحذف بعد إذن. من غير الاتفاق ده التطبيقان مش هيفهموا بعض.",
+        "HTTP طلب واستجابة: العميل يقول الطريقة والعنوان، والخادم يرد بجسم ورمز حالة. الطرق الشائعة: GET للقراءة من غير تعديل، POST للإنشاء، PUT للاستبدال أو PATCH للتعديل الجزئي، وDELETE للحذف بعد إذن. من غير الاتفاق ده التطبيقان مش هيفهموا بعض.",
       bodyEn:
         "HTTP is a request–response protocol: the client names a method and a URL, and the server replies with a body and a status code. Common methods: GET to read, POST to create, PUT to replace, PATCH to change part, DELETE to remove after permission. Without that contract two apps cannot understand each other.",
-      exampleAr: "فتح صفحة الدرس جلب. تسجيل واجب جديد إرسال.",
+      exampleAr: "فتح صفحة الدرس GET. تسجيل واجب جديد POST.",
       exampleEn: "Opening a lesson page is GET. Submitting new homework is POST.",
     },
     {
-      termAr: "بروتوكول ويب آمن",
+      termAr: "HTTPS",
       termEn: "HTTPS",
       bodyAr:
         "بروتوكول الويب الآمن هو نفس الطلب والاستجابة فوق قناة مشفّرة. العنوان والمتصفح يظهروا قفل. من غير القفل كلمة المرور والدرجة ممكن تتقرأ على الشبكة العامة. أي بوابة درجات أو حضور لازم تكون مشفّرة.",
@@ -414,7 +414,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       exampleEn: "Use https:// for the school site; if the browser warns the certificate is broken, do not type the password.",
     },
     {
-      termAr: "واجهة برمجية",
+      termAr: "API",
       termEn: "API",
       bodyAr:
         "الواجهة البرمجية اتفاق بين برنامجين: إيه العنوان، إيه الطريقة، وإيه شكل البيانات. التطبيق مش محتاج يعرف تفاصيل قاعدة البيانات، بس العقد. وثّق الردود والأخطاء عشان الفريق الثاني يبني عليها.",
@@ -424,7 +424,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       exampleEn: "The attendance app calls /api/attendance and gets a JSON list.",
     },
     {
-      termAr: "موارد ونص بيانات",
+      termAr: "REST / JSON",
       termEn: "REST / JSON",
       bodyAr:
         "نمط شائع: كل مورد له عنوان، والطرق تتصرف عليه. نص البيانات المنظّم سهل للمتصفح والخادم. رمز الحالة جزء من العقد: 200 نجاح، 404 المورد مش على العنوان، 500 الخادم فشل. ملفات الجلسة تحفظ تسجيل الدخول بعد الطلب.",
@@ -436,7 +436,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
   ],
   "3-3": [
     {
-      termAr: "هيكل الصفحة",
+      termAr: "HTML",
       termEn: "HTML",
       bodyAr:
         "هيكل الصفحة يعطي معناها: عنوان، فقرة، زر، قائمة، جدول. ابدأ بالعنصر الصحيح، متخلّيش الصفحة كلها مربعات شكل من غير معنى. المعنى الصح يساعد قارئ الشاشة ومحركات البحث والطالب اللي بيتصفح بلوحة المفاتيح.",
@@ -446,7 +446,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       exampleEn: "The lesson title is an h1, and submit is a button, not a fake picture of a button.",
     },
     {
-      termAr: "تنسيق الصفحة",
+      termAr: "CSS",
       termEn: "CSS",
       bodyAr:
         "تنسيق الصفحة مسؤول عن المظهر: لون، شبكة، مسافات، وتجاوب الشاشات. التصميم المتجاوب يخدم الموبايل قبل الشاشة العريضة أحيانًا. الاتساق أهم من المفاجأة: نفس مكان القائمة ونفس لون الزر الرئيسي.",
@@ -456,7 +456,7 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       exampleEn: "The primary button stays navy on every page, not a random colour each time.",
     },
     {
-      termAr: "لغة التفاعل",
+      termAr: "JavaScript",
       termEn: "JavaScript",
       bodyAr:
         "لغة التفاعل تضيف السلوك بعد التحميل: التحقق من النموذج، فتح قائمة، تحديث جزء من الصفحة من غير إعادة تحميل كاملة. متستخدمهاش بديلًا عن معنى الهيكل، ومتحطش فيها مفتاح سري.",
@@ -834,12 +834,12 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
       exampleEn: "Every point sits far from the line — look for another relationship or drop the claim.",
     },
     {
-      termAr: "استكمال",
+      termAr: "الاستكمال الخارجي",
       termEn: "Extrapolation",
       bodyAr:
-        "الاستكمال تنبؤ خارج مدى البيانات اللي الخط اتبنى عليها. خطر: الخط ممكن ينكسر بره العينة. متستخدمش درجات الشهر الأول عشان تتوقع مجموع السنة من غير دليل جديد.",
+        "الاستكمال الخارجي تنبؤ خارج مدى البيانات اللي الخط اتبنى عليها. خطر: الخط ممكن ينكسر بره العينة. الاستكمال الداخلي تنبؤ بين نقطتين موجودتين، وهو أأمن. متستخدمش درجات الشهر الأول عشان تتوقع مجموع السنة من غير دليل جديد.",
       bodyEn:
-        "Extrapolation predicts outside the data range the line was built on. It is risky: the pattern may break beyond the sample. Do not use the first month's marks to forecast the year's total with no new evidence.",
+        "Extrapolation predicts outside the data range the line was built on. It is risky: the pattern may break beyond the sample. Interpolation predicts between two known points and is safer. Do not use the first month's marks to forecast the year's total with no new evidence.",
       exampleAr: "خط طول الطلاب من 12 لـ 15 سنة مش يتسحب عشان تتوقع طولهم في الستين.",
       exampleEn: "A height line from ages 12 to 15 must not be pulled to predict height at sixty.",
     },
@@ -936,6 +936,16 @@ const EXPLAINS: Record<string, LessonExplain[]> = {
         "Classification predicts a class: pass/fail, spam/ham, apple/orange. Regression predicts a number. Do not mix the two in the same evaluation sentence.",
       exampleAr: "«هل الرسالة احتيال؟» تصنيف. «كام درجة متوقعة؟» انحدار.",
       exampleEn: "“Is this message fraud?” is classification. “What mark is predicted?” is regression.",
+    },
+    {
+      termAr: "تعلم بالتعزيز",
+      termEn: "Reinforcement",
+      bodyAr:
+        "التعلم بالتعزيز مش بياخد إجابة جاهزة لكل مثال. الوكيل يعمل فعل، وبعدين ياخد مكافأة أو عقاب، ويعدّل سلوكه عشان المكافأة تكبر. مختلف عن الإشراف (تسمية جاهزة) وعن عدم الإشراف (تجميع بلا مكافأة).",
+      bodyEn:
+        "Reinforcement learning does not get a ready answer for every example. An agent takes an action, then receives a reward or a penalty, and changes its behaviour so the reward grows. It is not supervised learning (a ready label) and not unsupervised learning (clustering with no reward).",
+      exampleAr: "لعبة تتعلم تلعب أحسن لأن كل فوز يديها نقطة وكل خسارة تخصم.",
+      exampleEn: "A game learns to play better because each win adds a point and each loss subtracts one.",
     },
   ],
   "7-2": [

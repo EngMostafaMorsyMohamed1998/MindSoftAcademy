@@ -33,7 +33,7 @@ export function reviewObjectives(
   questions: Array<
     Pick<
       ObjectiveQuestion,
-      "id" | "kind" | "promptAr" | "promptEn" | "optionsAr" | "optionsEn" | "correctIndex"
+      "id" | "kind" | "promptAr" | "promptEn" | "optionsAr" | "optionsEn" | "correctIndex" | "whyAr" | "whyEn"
     >
   >,
   answers: Record<string, number>,
@@ -47,12 +47,13 @@ export function reviewObjectives(
     const chosenIndex = answers[question.id];
     const answered = chosenIndex !== undefined;
     const ok = answered && chosenIndex === question.correctIndex;
+    const why = locale === "ar" ? question.whyAr : question.whyEn;
     return {
       id: question.id,
       prompt: bookletSafe(locale, locale === "ar" ? question.promptAr : question.promptEn),
       chosen: optionLabel(options, chosenIndex, question.kind, locale),
       correct: optionLabel(options, question.correctIndex, question.kind, locale),
-      hint,
+      hint: bookletSafe(locale, why || hint),
       ok,
       answered,
     };

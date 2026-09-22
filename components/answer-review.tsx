@@ -52,6 +52,11 @@ export function AnswerReview({
             {t(locale, "reviewCorrect")}:
             <span className="mt-1 block font-medium leading-6">{item.correct}</span>
           </p>
+          {item.hint ? (
+            <p className="mt-2 text-xs text-foreground/65">
+              {t(locale, "reviewHint")}: {item.hint}
+            </p>
+          ) : null}
         </article>
       ))}
       {takeaway ? (

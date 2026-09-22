@@ -15,6 +15,8 @@ export type ObjectiveQuestion = {
   optionsEn?: string[];
   correctIndex: 0 | 1 | 2 | 3;
   points: number;
+  whyAr?: string;
+  whyEn?: string;
 };
 
 export type EssayQuestion = {
@@ -101,19 +103,19 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "1-m2",
-        "ما العلاقة الصحيحة بين التقنيات؟",
-        "What is the correct relationship between the fields?",
+        "أي ترتيب يصف المجالات من الأوسع إلى الأخص؟",
+        "Which order goes from the widest field to the narrowest?",
         [
-          "تعلم عميق > تعلم آلي > ذكاء اصطناعي",
-          "ذكاء اصطناعي > تعلم آلي > تعلم عميق > ذكاء توليدي",
-          "ذكاء توليدي > ذكاء اصطناعي > تعلم آلي",
-          "تعلم آلي وذكاء اصطناعي معناهما واحد",
+          "تعلم عميق، ثم تعلم آلي، ثم ذكاء اصطناعي",
+          "ذكاء اصطناعي، ثم تعلم آلي، ثم تعلم عميق، ثم ذكاء توليدي",
+          "ذكاء توليدي، ثم ذكاء اصطناعي، ثم تعلم آلي",
+          "التعلم الآلي والذكاء الاصطناعي اسمان لشيء واحد",
         ],
         [
-          "Deep learning > machine learning > AI",
-          "AI > machine learning > deep learning > generative AI",
-          "Generative AI > AI > machine learning",
-          "Machine learning and AI mean the same",
+          "Deep learning, then machine learning, then AI",
+          "AI, then machine learning, then deep learning, then generative AI",
+          "Generative AI, then AI, then machine learning",
+          "Machine learning and AI are two names for one thing",
         ],
         1,
       ),
@@ -159,8 +161,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       tf("1-t4", "مشاركة بيانات زميل مع نموذج عام تُعد مشكلة خصوصية.", "Sharing a classmate's data with a public model is a privacy problem.", true),
       mcq(
         "1-m5",
-        "الذكاء الضيق — نوع معظم أنظمة اليوم — يعني إيه؟",
-        "Narrow AI — the type of most systems today — means what?",
+        "ماذا يعني الذكاء الضيق، وهو شكل معظم أنظمة اليوم؟",
+        "What does narrow AI, the form of most systems today, mean?",
         [
           "نظام يفهم كل المجالات مثل الإنسان",
           "نظام يتقن مهمة واحدة فقط",
@@ -208,8 +210,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
         "1-e2",
         "اشرح العلاقة المتداخلة بين الذكاء الاصطناعي والتعلم الآلي والتعلم العميق والذكاء التوليدي، وأعطِ مثالًا لكل مستوى.",
         "Explain the nested relationship between AI, machine learning, deep learning, and generative AI, with one example each.",
-        "المصطلح: الذكاء الاصطناعي ثم التعلم الآلي ثم التعلم العميق ثم الذكاء التوليدي.\nالسبب: كل مستوى أضيق من اللي فوقه. التوليدي ينتج نصاً أو صورة جديدة وقد يهلوس.\nالمثال: فلتر البريد تعلم آلي، وصورة من جملة ذكاء توليدي.",
-        "Term: AI, then machine learning, then deep learning, then generative AI.\nReason: each level sits inside the one above. Generative AI makes new text or images and can hallucinate.\nExample: a spam filter is machine learning; an image from a sentence is generative AI.",
+        "المصطلح: ذكاء اصطناعي، ثم تعلم آلي، ثم تعلم عميق، ثم ذكاء توليدي.\nالسبب: كل مستوى أخص من الذي يسبقه. التوليدي ينتج نصًا أو صورة وقد يهلوس.\nالمثال: نظام خبير قديم ذكاء اصطناعي، فلتر البريد تعلم آلي، التعرف على الوجوه تعلم عميق، وصورة من جملة ذكاء توليدي.",
+        "Term: AI, then machine learning, then deep learning, then generative AI.\nReason: each level is narrower than the one before it. Generative AI makes new text or images and can hallucinate.\nExample: an old expert system is AI, a spam filter is machine learning, face recognition is deep learning, and an image from a sentence is generative AI.",
       ),
     ],
   },
@@ -272,8 +274,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "2-m4",
-        "ما أولوية الاستجابة بعد اكتشاف اختراق؟",
-        "After detecting a breach, what is the first priority?",
+        "ما التسلسل الصحيح بعد اكتشاف الاختراق؟",
+        "What is the right sequence after a breach is found?",
         [
           "مسح كل الأجهزة فورًا بلا توثيق",
           "إخفاء الأمر عن الإدارة",
@@ -302,19 +304,19 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "2-m6",
-        "بعد اكتشاف اختراق في المعمل، ما القرار الصحيح أولًا؟",
-        "After a lab breach, what is the first sound decision?",
+        "أي تصرف يجب تجنبه فور اكتشاف الاختراق؟",
+        "Which action must you avoid as soon as a breach is found?",
         [
-          "مسح الأقراص قبل أي تسجيل",
-          "احتواء الضرر ثم حفظ الأدلة",
-          "نشر كلمات المرور في الجروب",
-          "تجاهل الحادث لأنه نادر",
+          "عزل الجهاز عن الشبكة",
+          "مسح القرص قبل أي تسجيل",
+          "تصوير حالة الجهاز",
+          "إبلاغ مسؤول المعمل",
         ],
         [
-          "Wipe the disks before any record",
-          "Contain the damage then preserve evidence",
-          "Post passwords in the group chat",
-          "Ignore the incident because it is rare",
+          "Isolate the device from the network",
+          "Wipe the disk before any record",
+          "Image the device state",
+          "Tell the lab supervisor",
         ],
         1,
       ),
@@ -361,15 +363,15 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "3-m2",
-        "ما طريقة بروتوكول الويب المناسبة لقراءة قائمة من غير تغييرها؟",
-        "Which HTTP method is best to read a list without changing it?",
-        ["إرسال", "حذف", "جلب", "استبدال كامل"],
+        "أي طريقة HTTP تقرأ قائمة من غير أن تغيّرها؟",
+        "Which HTTP method reads a list without changing it?",
+        ["POST (إرسال)", "DELETE (حذف)", "GET (جلب)", "PUT (استبدال)"],
         ["POST", "DELETE", "GET", "PUT"],
         2,
       ),
       mcq(
         "3-m3",
-        "ماذا يعني بروتوكول الويب الآمن؟",
+        "ماذا يعني HTTPS؟",
         "What does HTTPS mean?",
         [
           "بروتوكول ويب أسرع بلا أمان",
@@ -405,7 +407,7 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       tf("3-t1", "قاعدة البيانات جزء من طبقة البيانات الدائمة.", "The database belongs to the persistent data layer.", true),
       tf("3-t2", "رمز الحالة 404 يعني أن الخادم وجد المورد بنجاح.", "Status 404 means the server found the resource successfully.", false),
-      tf("3-t3", "هيكل الصفحة يعطي المعنى، وتنسيق الصفحة يعطي المظهر.", "HTML gives meaning and structure; CSS gives appearance.", true),
+      tf("3-t3", "HTML يعطي معنى الصفحة وهيكلها، وCSS يعطي المظهر.", "HTML gives the page its meaning and structure; CSS gives the appearance.", true),
       tf("3-t4", "إتاحة الوصول تعني تجاهل لوحة المفاتيح وقارئ الشاشة.", "Accessibility means ignoring the keyboard and screen readers.", false),
       mcq(
         "3-m5",
@@ -417,7 +419,7 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
       ),
       mcq(
         "3-m6",
-        "ما ترتيب أدوار هيكل الصفحة ثم تنسيقها ثم لغة التفاعل؟",
+        "ما ترتيب أدوار HTML ثم CSS ثم JavaScript؟",
         "In order, what are the jobs of HTML, then CSS, then JavaScript?",
         [
           "مظهر، هيكل، سلوك",
@@ -433,8 +435,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
         ],
         1,
       ),
-      tf("3-t5", "بروتوكول الويب الآمن هو بروتوكول الويب فوق قناة مشفّرة.", "HTTPS is HTTP over an encrypted channel.", true),
-      tf("3-t6", "ملفات الجلسة قد تحفظ حالة تسجيل الدخول بين الطلبات.", "Cookies can keep a login alive across requests.", true),
+      tf("3-t5", "HTTPS هو HTTP فوق قناة مشفّرة.", "HTTPS is HTTP over an encrypted channel.", true),
+      tf("3-t6", "ملفات الارتباط (cookies) قد تحفظ حالة تسجيل الدخول بين الطلبات.", "Cookies can keep a login alive across requests.", true),
     ],
     essays: [
       essay(
@@ -458,8 +460,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
     objectives: [
       mcq(
         "4-m1",
-        "ما أفضل وسيط لعرض تغيّر درجات الصف عبر الشهور؟",
-        "What is the best medium to show class scores changing over months?",
+        "ما أنسب تمثيل بصري لتغيّر درجات الصف عبر الشهور؟",
+        "What is the best visual for class scores changing over months?",
         ["أيقونة واحدة", "رسم خط زمني", "مقطع صوتي بلا أرقام", "خلفية متحركة فقط"],
         ["A single icon", "A line chart over time", "Audio with no numbers", "A moving background only"],
         1,
@@ -698,8 +700,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
         "5-e2",
         "جدول حضور فيه خلايا فارغة، درجة 250 من 100، وصفان متطابقان. قرّر لكل مشكلة: حذف أو ملء أو تعليم أو تصحيح، وبرّر.",
         "An attendance table has blanks, a mark of 250/100, and two identical rows. For each problem choose delete, impute, flag, or correct, and justify.",
-        "المصطلح: تنظيف البيانات.\nالسبب: الخلية الفاضية غالباً غياب مش صفر. 250 من 100 غلط يتصحح. صفان بنفس الاسم والوقت المختلف عمليتان مش تكرار.\nالمثال: علّم الفراغ، صحح الدرجة المستحيلة، ومتدمجش عمليتين منفصلتين.",
-        "Term: data cleaning.\nReason: a blank is often absence, not zero. 250/100 is an error to correct. Two rows with the same name and different times are two events, not a duplicate.\nExample: flag the blank, fix the impossible mark, and do not merge two separate purchases.",
+        "المصطلح: تنظيف البيانات.\nالسبب: الخلية الفارغة قد تكون رفض إجابة، فتُعلَّم ولا تُملأ بصفر. 250 من 100 خطأ إدخال يُصحَّح أو يُحذف بعد التأكد. الصفان المتطابقان نسخة مكررة، فيُحذف أحدهما بعد التأكد أنهما نفس الحدث.\nالمثال: علّم الغياب الفارغ، صحّح الدرجة المستحيلة، واحذف الصف المنسوخ.",
+        "Term: data cleaning.\nReason: a blank may be a refused answer, so flag it instead of filling zero. 250/100 is an input error to correct or delete after you confirm it. Two identical rows are a copy, so delete one after you confirm they are the same event.\nExample: flag the blank absence, fix the impossible mark, and delete the pasted duplicate row.",
       ),
     ],
   },
@@ -766,8 +768,8 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
         "6-m5",
         "ماذا يُسمّى التنبؤ خارج مدى بيانات الخط؟",
         "What do we call predicting outside the line's data range?",
-        ["تطبيعًا", "استكمالًا خطرًا", "عينة طبقية", "جدار حماية"],
-        ["Normalising", "Risky extrapolation", "Stratified sampling", "A firewall"],
+        ["تطبيعًا", "استكمالًا خارجيًا", "عينة طبقية", "جدار حماية"],
+        ["Normalising", "Extrapolation (outside the data range)", "Stratified sampling", "A firewall"],
         1,
       ),
       mcq(
@@ -924,6 +926,354 @@ export const CHAPTER_EXAMS: ChapterExam[] = [
     ],
   },
 ];
+
+const EXAM_WHY: Record<string, { ar: string; en: string }> = {
+  "1-m1": {
+    ar: "الترتيب الذي ندرسه: الحاسوب، ثم الإنترنت، ثم الهواتف، ثم السحابة.",
+    en: "The order we study is computer, then the Internet, then phones, then the cloud.",
+  },
+  "1-m2": {
+    ar: "الذكاء الاصطناعي هو الأوسع. داخله التعلم الآلي، وداخله التعلم العميق، وداخله الذكاء التوليدي.",
+    en: "AI is the widest field. Machine learning sits inside it, deep learning inside that, and generative AI inside deep learning.",
+  },
+  "1-m3": {
+    ar: "قرار القيادة لا ينتظر رحلة إلى السحابة. الحوسبة الطرفية تعالج البيانات على المركبة فورًا.",
+    en: "A driving decision cannot wait for a round trip to the cloud. Edge computing decides on the vehicle at once.",
+  },
+  "1-m4": {
+    ar: "الذكاء التوليدي ينشئ محتوى جديدًا. فلتر البريد والتوصية تعلم آلي، والمتوسط حساب عادي.",
+    en: "Generative AI creates new content. A spam filter and a recommender are machine learning; a mean is ordinary arithmetic.",
+  },
+  "1-m5": {
+    ar: "الذكاء الضيق يتقن مهمة واحدة. معظم أنظمة اليوم من هذا النوع، وليست ذكاءً عامًا.",
+    en: "Narrow AI is expert at one task. Most systems today are this kind, not general intelligence.",
+  },
+  "1-m6": {
+    ar: "الهلوسة نص فصيح يبدو صحيحًا وهو خطأ. ليست سخونة الجهاز ولا قصر الرد.",
+    en: "A hallucination is fluent text that sounds right and is still wrong. It is not heat or a short reply.",
+  },
+  "1-t1": {
+    ar: "قانون مور ملاحظة من 1965: عدد الترانزستورات يتضاعف تقريبًا كل سنتين، وهو ليس قانونًا فيزيائيًا ثابتًا.",
+    en: "Moore's Law is a 1965 observation: transistor count roughly doubles about every two years. It is not a fixed physical law.",
+  },
+  "1-t2": {
+    ar: "التجارة الإلكترونية شراء وبيع عبر الشبكة، لا الدفع النقدي في محل فقط.",
+    en: "E-commerce is buying and selling over the network, not cash in a shop only.",
+  },
+  "1-t3": {
+    ar: "الواقع المعزز يضيف طبقة على العالم الحقيقي. الذي يستبدله بعالم محاكى هو الواقع الافتراضي.",
+    en: "Augmented reality adds a layer on the real world. Virtual reality is what replaces it with a simulation.",
+  },
+  "1-t4": {
+    ar: "بيانات الزميل ليست لك. إرسالها إلى نموذج عام خرق للخصوصية.",
+    en: "A classmate's data is not yours. Sending it to a public model breaks privacy.",
+  },
+  "1-t5": {
+    ar: "التحيز يتكرر لأن بيانات التدريب ناقصة أو غير عادلة، فيتعلم النموذج الخطأ نفسه.",
+    en: "Bias repeats because the training data is incomplete or unfair, so the model learns the same error.",
+  },
+  "1-t6": {
+    ar: "المساءلة تُبقي إنسانًا مسؤولًا عن أثر القرار. الحاسوب لا يتحمل المسؤولية وحده.",
+    en: "Accountability keeps a human responsible for the effect of a decision. The computer does not carry it alone.",
+  },
+  "2-m1": {
+    ar: "غير المتماثل زوج: مفتاح عام ومفتاح خاص. المفتاح الواحد هو التشفير المتماثل.",
+    en: "Asymmetric encryption uses a pair: a public key and a private key. One shared key is symmetric encryption.",
+  },
+  "2-m2": {
+    ar: "متعددة العوامل تجمع فئات مختلفة: شيء تعرفه، أو تملكه، أو أنت عليه. ثلاث كلمات مرور كلها معرفة، فليست عوامل متعددة.",
+    en: "Multi-factor authentication mixes different categories: something you know, have, or are. Three passwords are all knowledge, so they are not multiple factors.",
+  },
+  "2-m3": {
+    ar: "أقل صلاحية تعني أن كل مستخدم يأخذ فقط ما يحتاجه عمله، لا صلاحية المدير للجميع.",
+    en: "Least privilege means each user gets only what the job needs, not admin rights for everyone.",
+  },
+  "2-m4": {
+    ar: "بعد الاكتشاف: احتوِ الضرر، ثم احفظ الأدلة، ثم أزل السبب وتعافَ. المسح الفوري يضيع الدليل.",
+    en: "After detection: contain the damage, preserve evidence, then eradicate and recover. Wiping at once destroys the evidence.",
+  },
+  "2-m5": {
+    ar: "كلمة المرور شيء تعرفه، وتطبيق الهاتف شيء تملكه. فئتان مختلفتان، فهذه مصادقة متعددة العوامل.",
+    en: "A password is something you know, and a phone app is something you have. Two different categories make this multi-factor authentication.",
+  },
+  "2-m6": {
+    ar: "مسح القرص قبل التسجيل يمحو الدليل. العزل والتصوير والإبلاغ تحفظ الحادث.",
+    en: "Wiping the disk before a record erases the evidence. Isolation, imaging, and reporting preserve the incident.",
+  },
+  "2-t1": {
+    ar: "التجزئة اتجاه واحد. نقارن البصمة ولا نسترجع كلمة المرور منها.",
+    en: "A hash is one-way. We compare the fingerprint and do not recover the password from it.",
+  },
+  "2-t2": {
+    ar: "الشبكة الخاصة الافتراضية نفق مشفّر يعبر شبكة عامة مثل الإنترنت.",
+    en: "A VPN is an encrypted tunnel across a public network such as the Internet.",
+  },
+  "2-t3": {
+    ar: "تقسيم الشبكة يعزل الأجزاء، فإذا اخترق المهاجم جزءًا لم ينتشر بسهولة إلى الباقي.",
+    en: "Segmentation isolates parts, so a breach in one part does not spread easily to the rest.",
+  },
+  "2-t4": {
+    ar: "إدارة المخاطر تحدد الخطر وتقدّره ثم تقبله أو تخففه أو تنقله. التجاهل ليس إدارة.",
+    en: "Risk management identifies and estimates a risk, then accepts, reduces, or transfers it. Ignoring it is not management.",
+  },
+  "2-t5": {
+    ar: "أقل صلاحية: أقل ما يكفي للعمل، لا أكثر.",
+    en: "Least privilege is the least access the job needs, not more.",
+  },
+  "2-t6": {
+    ar: "الشهادة تربط المفتاح العام بهوية موثوقة، حتى لا نسلم السر لموقع منتحل.",
+    en: "A certificate binds a public key to a trusted identity, so we do not hand a secret to a fake site.",
+  },
+  "3-m1": {
+    ar: "الواجهة الأمامية ما يراه المستخدم في المتصفح. حفظ كلمات المرور عمل الخادم وقاعدة البيانات.",
+    en: "The frontend is what the user sees in the browser. Storing passwords is the server and the database.",
+  },
+  "3-m2": {
+    ar: "GET تطلب موردًا للقراءة. POST ترسل بيانات جديدة، وPUT تستبدل، وDELETE تحذف.",
+    en: "GET asks for a resource to read. POST sends new data, PUT replaces, and DELETE removes.",
+  },
+  "3-m3": {
+    ar: "HTTPS هو HTTP نفسه فوق قناة TLS مشفّرة. السرعة وحدها ليست أمانًا.",
+    en: "HTTPS is HTTP over an encrypted TLS channel. Speed by itself is not security.",
+  },
+  "3-m4": {
+    ar: "كود الواجهة يصل إلى زائر المتصفح. أي مفتاح داخل JavaScript يصبح مكشوفًا.",
+    en: "Frontend code reaches the visitor's browser. A key inside JavaScript is exposed.",
+  },
+  "3-m5": {
+    ar: "500 يعني أن الخادم فشل. 404 تعني أن المورد غير موجود، و200 تعني نجاحًا.",
+    en: "500 means the server failed. 404 means the resource is missing, and 200 means success.",
+  },
+  "3-m6": {
+    ar: "HTML يبني المعنى والهيكل، وCSS المظهر، وJavaScript السلوك بعد التحميل.",
+    en: "HTML builds meaning and structure, CSS the look, and JavaScript the behaviour after load.",
+  },
+  "3-t1": {
+    ar: "قاعدة البيانات طبقة التخزين الدائم، لا طبقة العرض.",
+    en: "The database is the persistent storage layer, not the presentation layer.",
+  },
+  "3-t2": {
+    ar: "404 تعني أن المورد غير موجود على هذا العنوان، لا أنه وُجد بنجاح.",
+    en: "404 means the resource is not at that address, not that it was found.",
+  },
+  "3-t3": {
+    ar: "HTML للمعنى والهيكل، وCSS للمظهر. لا نعكس الدورين.",
+    en: "HTML is meaning and structure; CSS is appearance. Do not swap the two jobs.",
+  },
+  "3-t4": {
+    ar: "إتاحة الوصول تعني أن الصفحة تعمل بلوحة المفاتيح وقارئ الشاشة، لا أن نتجاهلهما.",
+    en: "Accessibility means the page works with a keyboard and a screen reader, not that we ignore them.",
+  },
+  "3-t5": {
+    ar: "HTTPS = HTTP + تشفير TLS. من غير القفل لا تكتب كلمة المرور.",
+    en: "HTTPS is HTTP plus TLS encryption. Without the lock, do not type a password.",
+  },
+  "3-t6": {
+    ar: "ملف الارتباط يحمل معرّف الجلسة، فيبقى تسجيل الدخول بعد الطلب التالي.",
+    en: "A cookie can carry the session id, so the login survives the next request.",
+  },
+  "4-m1": {
+    ar: "التغيّر عبر الشهور خط زمني. الأيقونة والصوت والخلفية لا تعرض الأرقام.",
+    en: "Change over months is a line. An icon, audio, or a moving background does not show the numbers.",
+  },
+  "4-m2": {
+    ar: "تجربة المستخدم هي إتمام المهمة بوضوح. لون الشعار وحده واجهة، لا رحلة.",
+    en: "User experience is finishing a clear task. Logo colour alone is interface, not the journey.",
+  },
+  "4-m3": {
+    ar: "اختبار أ/ب يقارن نسختين بمقياس محدد، لا بالذوق ولا بتغيير كل شيء معًا.",
+    en: "An A/B test compares two versions on a set measure, not by taste and not by changing everything at once.",
+  },
+  "4-m4": {
+    ar: "التحسين يبدأ بنموذج رخيص يُختبر، ثم نتعلم ونغيّر. النشر بلا اختبار لا يخبرنا ما الذي فشل.",
+    en: "Improvement starts with a cheap prototype that is tested, then we learn and change. A launch with no test does not show what failed.",
+  },
+  "4-m5": {
+    ar: "في موقع الحضور نقيس زمن المهمة أو عدد الأخطاء، لا أي زر أجمل.",
+    en: "On an attendance site we measure task time or errors, not which button looks prettier.",
+  },
+  "4-m6": {
+    ar: "تغيير عنصر واحد يجعل السبب واضحًا. تغيير عشرين عنصرًا معًا يخلط الأثر.",
+    en: "Changing one element makes the cause clear. Changing twenty at once mixes the effects.",
+  },
+  "4-t1": {
+    ar: "النص البديل يصف الصورة لمن يستخدم قارئ الشاشة أو لا يراها.",
+    en: "Alt text describes the image for someone using a screen reader or who cannot see it.",
+  },
+  "4-t2": {
+    ar: "الصورة الضخمة تبطئ التحميل على شبكة ضعيفة. الحجم جزء من التصميم.",
+    en: "A huge image slows loading on a weak network. Size is part of the design.",
+  },
+  "4-t3": {
+    ar: "مكان القائمة الثابت يقلل الضياع. المفاجأة في كل صفحة تبطئ المهمة.",
+    en: "A stable menu place reduces getting lost. A surprise layout on every page slows the task.",
+  },
+  "4-t4": {
+    ar: "قطع المحور يضخّم فرقًا صغيرًا ويضلّل القارئ. الرسم الصادق لا يفعل ذلك.",
+    en: "Cropping the axis inflates a tiny gap and misleads the reader. An honest chart does not do that.",
+  },
+  "4-t5": {
+    ar: "النموذج الأولي نسخة سريعة رخيصة للاختبار قبل البناء الكامل.",
+    en: "A prototype is a fast, cheap version used to test before the full build.",
+  },
+  "4-t6": {
+    ar: "العكس هو الصحيح: تجربة المستخدم هي الرحلة كلها، وواجهة المستخدم هي العناصر الظاهرة.",
+    en: "The reverse is true: user experience is the whole journey, and the user interface is the visible controls.",
+  },
+  "5-m1": {
+    ar: "الأولية تجمعها أنت لغرضك. الجدول الجاهز الذي حمّلته بيانات ثانوية.",
+    en: "Primary data is what you gather for your purpose. A table you downloaded is secondary data.",
+  },
+  "5-m2": {
+    ar: "الطبقية تقسّم المجتمع إلى شرائح ثم تسحب عشوائيًا من كل شريحة، فلا تُسقط مجموعة.",
+    en: "Stratified sampling splits the population into groups, then draws at random from each, so no group is dropped.",
+  },
+  "5-m3": {
+    ar: "إذا تأكدت أن الشذوذ خطأ إدخال، صحّحه أو احذفه. لا تضاعفه ولا تصفّر العمود.",
+    en: "Once you confirm the outlier is an input error, correct or delete it. Do not double it or zero the column.",
+  },
+  "5-m4": {
+    ar: "التطبيع إلى 0–1 يضع متغيرات بوحدات مختلفة على مقياس واحد يمكن مقارنته.",
+    en: "Normalising to 0–1 puts variables with different units on one scale that can be compared.",
+  },
+  "5-m5": {
+    ar: "من يردّ فقط هو المهتم. هذا تحيز اختيار ذاتي، والعينة ليست عشوائية كاملة.",
+    en: "Only the keen reply. That is self-selection bias, and the sample is not a complete random one.",
+  },
+  "5-m6": {
+    ar: "البيانات المفتوحة تحتاج ترخيصًا وتاريخ تحديث. المصدر المفتوح ليس بريئًا تلقائيًا.",
+    en: "Open data still needs a licence and an update date. Open does not mean innocent.",
+  },
+  "5-t1": {
+    ar: "العينة المتحيزة تعطي رقمًا واثقًا لا يمثّل المجتمع.",
+    en: "A biased sample gives a confident number that does not represent the population.",
+  },
+  "5-t2": {
+    ar: "الثانوية أسرع لأنها جاهزة، لكنها قد لا تطابق سؤالك.",
+    en: "Secondary data is faster because it already exists, but it may not match your question.",
+  },
+  "5-t3": {
+    ar: "الفراغ قد يكون رفض إجابة. الحذف الدائم يضيع صفوفًا لها معنى.",
+    en: "A blank may be a refused answer. Always deleting it throws away rows that still mean something.",
+  },
+  "5-t4": {
+    ar: "واجهة البرمجة عقد لجلب بيانات محدّثة، بدل ملف قديم محمول.",
+    en: "An API is a contract for fetching fresh data, instead of an old downloaded file.",
+  },
+  "5-t5": {
+    ar: "أنت تجمع الأولية الآن لغرض محدد.",
+    en: "You gather primary data now for a specific purpose.",
+  },
+  "5-t6": {
+    ar: "بعد التقسيم، السحب يكون من كل شريحة لا من شريحة واحدة.",
+    en: "After the split, the draw comes from every stratum, not from one group only.",
+  },
+  "6-m1": {
+    ar: "الاستدلال يعمّم بحذر من العينة إلى المجتمع، ويُظهر عدم اليقين. ليس نسخ الرقم ولا حذف الشواذ تلقائيًا.",
+    en: "Inference generalises carefully from sample to population and shows uncertainty. It is not copying the number or deleting outliers automatically.",
+  },
+  "6-m2": {
+    ar: "الوسيط يقاوم القيمة الشاذة الكبيرة. المتوسط ينجذب إليها.",
+    en: "The median resists a large outlier. The mean is pulled toward it.",
+  },
+  "6-m3": {
+    ar: "الانحدار الخطي يصف اتجاهًا تقريبيًا بين متغيرين كميين. سحابة بلا اتجاه لا يناسبها خط.",
+    en: "Linear regression describes an approximate trend between two quantitative variables. A shapeless cloud does not fit a line.",
+  },
+  "6-m4": {
+    ar: "مقارنة ثلاث شعب أعمدة. الدائرة الكثيرة الشرائح والخريطة بلا أرقام لا تقارن الفئات.",
+    en: "Comparing three classes is bars. A pie with many slices, or a map with no numbers, does not compare the categories.",
+  },
+  "6-m5": {
+    ar: "التنبؤ خارج مدى البيانات استكمال خارجي. التطبيع والعينة الطبقية وجدار الحماية مواضيع أخرى.",
+    en: "Predicting outside the data range is extrapolation. Normalising, stratified sampling, and a firewall are other topics.",
+  },
+  "6-m6": {
+    ar: "انظر الوسيط مع المتوسط. الشذوذ لا يثبت سببية، ولا يُعالج باختيار رسم خاطئ.",
+    en: "Look at the median as well as the mean. An outlier does not prove cause, and a wrong chart does not fix it.",
+  },
+  "6-t1": {
+    ar: "الارتباط علاقة رقمية. لا يثبت وحده أن أحد المتغيرين سبب للآخر.",
+    en: "Correlation is a numerical link. By itself it does not prove that one variable causes the other.",
+  },
+  "6-t2": {
+    ar: "العينة الصغيرة تجعل فترة الثقة أوسع، فلا نعلن نتيجة قاطعة.",
+    en: "A small sample makes the confidence interval wider, so we do not announce a final result.",
+  },
+  "6-t3": {
+    ar: "البواقي الكبيرة تعني أن النقاط بعيدة عن الخط، فالوصف ضعيف لا ممتاز.",
+    en: "Large residuals mean the points sit far from the line, so the fit is weak, not excellent.",
+  },
+  "6-t4": {
+    ar: "العنوان يقول الادعاء، والمحاور تُسمّى، والمصدر يُكتب تحت الرسم.",
+    en: "The title states the claim, the axes are labelled, and the source is written under the chart.",
+  },
+  "6-t5": {
+    ar: "الوصفي يلخّص العينة التي بين يديك: متوسط ووسيط وانتشار. التعميم استدلال.",
+    en: "Descriptive stats summarise the sample you have: mean, median, and spread. Generalising is inference.",
+  },
+  "6-t6": {
+    ar: "البواقي الصغيرة تعني أن الخط أقرب إلى النقاط من خط بواقيه كبيرة.",
+    en: "Small residuals mean the line sits closer to the points than a line with large residuals.",
+  },
+  "7-m1": {
+    ar: "التعلم بإشراف يحتاج أمثلة معلّمة: مدخل معروف ومخرج معروف.",
+    en: "Supervised learning needs labeled examples: a known input and a known output.",
+  },
+  "7-m2": {
+    ar: "مجموعة الاختبار لم يرها النموذج، فالقياس صادق. الاختبار على التدريب يضخّم الدرجة.",
+    en: "The test set is data the model has not seen, so the measure is honest. Testing on the training set inflates the score.",
+  },
+  "7-m3": {
+    ar: "الشبكة تتعلم بتعديل أوزان الروابط من البيانات، لا بتغيير اسم الملف.",
+    en: "A network learns by adjusting connection weights from data, not by renaming a file.",
+  },
+  "7-m4": {
+    ar: "نموذج اللغة يتنبأ بالرمز التالي الأرجح. لا يفهم كإنسان ولا يضمن صحة الجملة.",
+    en: "A language model predicts the next most likely token. It does not understand as a person does, and it does not guarantee the sentence is true.",
+  },
+  "7-m5": {
+    ar: "التنبؤ برقم انحدار. التنبؤ بفئة تصنيف.",
+    en: "Predicting a number is regression. Predicting a class is classification.",
+  },
+  "7-m6": {
+    ar: "استخدم النموذج لفهم الفكرة، ثم اكتب أنت وراجع المصدر. اللصق ونشر الدرجات وصور البطاقات ممنوعة.",
+    en: "Use the model to understand the idea, then write yourself and check the source. Pasting, publishing marks, and sending ID photos are not allowed.",
+  },
+  "7-t1": {
+    ar: "التصنيف فئة مثل ناجح أو راسب. الانحدار رقم مثل درجة متوقعة.",
+    en: "Classification is a class such as pass or fail. Regression is a number such as a predicted mark.",
+  },
+  "7-t2": {
+    ar: "الاختبار على بيانات التدريب يعيد ما حفظه النموذج، فيكون التقدير متفائلًا كاذبًا.",
+    en: "Testing on the training data repeats what the model memorised, so the estimate is falsely optimistic.",
+  },
+  "7-t3": {
+    ar: "التعلم العميق يحتاج عادة بيانات وحسابًا أكثر من خط بسيط لمسألة صغيرة.",
+    en: "Deep learning usually needs more data and compute than a simple line on a small problem.",
+  },
+  "7-t4": {
+    ar: "الهلوسة جملة فصيحة بلا سند. سلاسة اللغة ليست دليل صدق.",
+    en: "A hallucination is fluent text with no grounding. Smooth language is not proof of truth.",
+  },
+  "7-t5": {
+    ar: "بلا إشراف نبحث عن تجمعات من غير تسمية جاهزة لكل مثال.",
+    en: "Unsupervised learning looks for clusters without a ready label on every example.",
+  },
+  "7-t6": {
+    ar: "إذا مسّ القرار حياة إنسان أو درجته، فالصندوق الذي لا يُشرح مشكلة مساءلة.",
+    en: "When a decision touches a human life or a mark, a model that cannot be explained is an accountability problem.",
+  },
+};
+
+for (const exam of CHAPTER_EXAMS) {
+  for (const question of exam.objectives) {
+    const why = EXAM_WHY[question.id];
+    if (!why) continue;
+    question.whyAr = why.ar;
+    question.whyEn = why.en;
+  }
+}
 
 export function examPaperSeed(chapterId: string, opensAt?: string | null): number {
   const text = `${chapterId}:${opensAt ?? "open"}`;
