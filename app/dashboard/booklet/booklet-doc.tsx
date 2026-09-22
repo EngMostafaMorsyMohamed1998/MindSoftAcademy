@@ -621,14 +621,26 @@ export function BookletAssessPane({ locale = "ar", lessonId }: { locale?: "ar" |
             key: block.key,
             period: ar ? periodLabelAr(block.period) : periodLabelEn(block.period),
             title: ar ? block.titleAr : block.titleEn,
-            essays: block.essays.map((row) => ({ id: row.id, prompt: assessText(locale, row.promptAr, row.promptEn) })),
-            mcq: block.mcq.map((row) => ({
+            essays: block.essays.map((row) => ({
               id: row.id,
               prompt: assessText(locale, row.promptAr, row.promptEn),
-              options: assessOptions(row, locale).map((option) =>
-                locale === "ar" || hasArabic(option) ? (locale === "ar" ? cleanArabic(option) : option) : cleanEnglish(option),
-              ),
+              guideAr: row.guideAr ?? "",
+              guideEn: row.guideEn ?? "",
             })),
+            mcq: block.mcq.map((row) => {
+              const options = assessOptions(row, locale).map((option) =>
+                locale === "ar" || hasArabic(option) ? (locale === "ar" ? cleanArabic(option) : option) : cleanEnglish(option),
+              );
+              const index = row.correctIndex ?? 0;
+              return {
+                id: row.id,
+                prompt: assessText(locale, row.promptAr, row.promptEn),
+                options,
+                correctIndex: index,
+                choiceAr: cleanArabic((row.optionsAr ?? [])[index] ?? ""),
+                choiceEn: cleanEnglish((row.optionsEn ?? [])[index] ?? ""),
+              };
+            }),
           }))}
         />
       ) : (

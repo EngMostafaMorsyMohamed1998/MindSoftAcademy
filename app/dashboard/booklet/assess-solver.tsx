@@ -8,8 +8,8 @@ type Block = {
   key: string;
   period: string;
   title: string;
-  essays: { id: string; prompt: string }[];
-  mcq: { id: string; prompt: string; options: string[] }[];
+  essays: { id: string; prompt: string; guideAr: string; guideEn: string }[];
+  mcq: { id: string; prompt: string; options: string[]; correctIndex: number; choiceAr: string; choiceEn: string }[];
 };
 
 export function AssessSolver({
@@ -206,6 +206,31 @@ export function AssessSolver({
               </ol>
             </section>
           ) : null}
+          <section className="booklet-section mt-8 rounded-xl bg-primary/5 p-6">
+            <p className="font-serif text-2xl text-[#0c2d6b]">{ar ? "إجابات هذا الأداء" : "Answers for this task"}</p>
+            {block.mcq.length ? (
+              <ol className="mt-4 space-y-2">
+                {block.mcq.map((row, index) => (
+                  <li key={`${row.id}-key`} className="text-base font-bold leading-8 text-[#111827]">
+                    <span className="font-extrabold text-primary">{index + 1}-{letters[row.correctIndex] ?? ""}</span>
+                    <span className="ms-2">{ar ? row.choiceAr || row.choiceEn : row.choiceEn || row.choiceAr}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : null}
+            {block.essays.length ? (
+              <div className="mt-4 space-y-3">
+                {block.essays.map((row, index) => (
+                  <article key={`${row.id}-key`}>
+                    <p className="text-sm font-extrabold text-primary">
+                      {ar ? "مقالي" : "Essay"} {index + 1}
+                    </p>
+                    <BilingualAnswer guide={{ ar: row.guideAr, en: row.guideEn }} />
+                  </article>
+                ))}
+              </div>
+            ) : null}
+          </section>
         </div>
       ))}
 

@@ -1808,35 +1808,27 @@ function buildBlocks(locale: Locale, scope: BookletScope): Block[] {
           letters,
         });
       });
-    }
-    if (typed.length) {
-      blocks.push({ kind: "banner", text: ar ? "مفتاح الإجابة" : "Answer key", color: "#0c2d6b" });
-      for (const block of typed) {
-        const heading = ar
-          ? `${periodLabelAr(block.period)} — ${block.titleAr}`
-          : `${periodLabelEn(block.period)} — ${block.titleEn}`;
-        blocks.push({ kind: "section", text: heading });
-        block.mcq.forEach((row, index) => {
-          const mark = letters[row.correctIndex ?? 0] ?? "";
-          const choice = assessOptions(row, locale)[row.correctIndex ?? 0] ?? "";
-          blocks.push({
-            kind: "text",
-            text: `${index + 1}-${mark}  ${choice}  —  ${assessPrompt(row, locale)}`,
-            size: 14,
-            gap: 8,
-          });
+      blocks.push({ kind: "section", text: ar ? "إجابات هذا الأداء" : "Answers for this task" });
+      block.mcq.forEach((row, index) => {
+        const mark = letters[row.correctIndex ?? 0] ?? "";
+        const choice = assessOptions(row, locale)[row.correctIndex ?? 0] ?? "";
+        blocks.push({
+          kind: "text",
+          text: `${index + 1}-${mark}  ${choice}`,
+          size: 14,
+          gap: 8,
         });
-        block.essays.forEach((row, index) => {
-          const guide = assessGuide(row, locale);
-          if (!guide) return;
-          blocks.push({
-            kind: "text",
-            text: `${ar ? "مقالي" : "Essay"} ${index + 1}: ${guide}`,
-            size: 14,
-            gap: 12,
-          });
+      });
+      block.essays.forEach((row, index) => {
+        const guide = assessGuide(row, locale);
+        if (!guide) return;
+        blocks.push({
+          kind: "text",
+          text: `${ar ? "مقالي" : "Essay"} ${index + 1}: ${guide}`,
+          size: 14,
+          gap: 12,
         });
-      }
+      });
     }
     return blocks;
   }
