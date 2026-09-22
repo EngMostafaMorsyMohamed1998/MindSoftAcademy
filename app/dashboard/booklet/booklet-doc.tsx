@@ -53,7 +53,7 @@ function Field({ label }: { label: string }) {
 
 function WriteLines({ count = 4 }: { count?: number }) {
   return (
-    <div className="mt-3 space-y-3">
+    <div className="write-lines mt-3 space-y-3">
       {Array.from({ length: count }, (_, index) => (
         <div key={index} className="h-7 border-b border-dashed border-primary/25" />
       ))}
@@ -205,23 +205,25 @@ function ChapterBlock({ locale, pack }: { locale: Locale; pack: BookletChapterPa
         </PrintSection>
       ) : null}
 
-      {notes.map((note, noteIndex) => {
+      {notes.map((note) => {
         const page = textbookPageFor(note.id);
         if (!page) return null;
         const drills = bookletLessonPractice(note.id);
         const tf = bookletLessonTf(note.id);
         const essays = bookletLessonEssays(note.id);
         return (
-          <div key={note.id} className={noteIndex === 0 ? undefined : "print-break"}>
+          <div key={note.id} className="lesson-sheet">
             <TextbookLesson locale={locale} page={page} />
             <LessonDrills locale={locale} lessonId={page.id} drills={drills} tf={tf} essays={essays} />
           </div>
         );
       })}
 
-      <PrintSection title={ar ? "حلّل واكتب" : "Analyse and write"}>
-        <EssayBlock locale={locale} rows={pack.essays} />
-      </PrintSection>
+      <div className="print-break">
+        <PrintSection title={ar ? "حلّل واكتب" : "Analyse and write"}>
+          <EssayBlock locale={locale} rows={pack.essays} />
+        </PrintSection>
+      </div>
     </section>
   );
 }
@@ -337,9 +339,11 @@ export function BookletLessonPane({ locale, lessonId }: { locale: Locale; lesson
         title={ar ? pack.titleAr : pack.titleEn}
         color={pack.chapter.color}
       />
-      <TextbookLesson locale={locale} page={page} />
-      <LessonDrills locale={locale} lessonId={page.id} drills={pack.practice} tf={pack.tf} essays={pack.essays} />
-      <section className="mt-8 rounded-xl bg-primary/5 p-6">
+      <div className="lesson-sheet">
+        <TextbookLesson locale={locale} page={page} />
+        <LessonDrills locale={locale} lessonId={page.id} drills={pack.practice} tf={pack.tf} essays={pack.essays} />
+      </div>
+      <section className="print-break mt-8 rounded-xl bg-primary/5 p-6">
         <h4 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h4>
         <AnswerKeyList
           locale={locale}
@@ -489,7 +493,7 @@ export function BookletChapterPane({ locale, chapterId }: { locale: Locale; chap
       />
       <ChapterBlock locale={locale} pack={pack} />
       <HomeworkBlock locale={locale} pack={homework} />
-      <section className="mt-8 rounded-xl bg-primary/5 p-6">
+      <section className="print-break mt-8 rounded-xl bg-primary/5 p-6">
         <h4 className="font-serif text-2xl">{ar ? "مفتاح الإجابة" : "Answer key"}</h4>
         {pack.answerGroups.map((group) => (
           <AnswerKeyList
@@ -503,6 +507,94 @@ export function BookletChapterPane({ locale, chapterId }: { locale: Locale; chap
         <EssayAnswers locale={locale} title={ar ? "مقالي التدريبات" : "Practice essays"} rows={pack.essays} />
         <EssayAnswers locale={locale} title={ar ? "مقالي الواجب" : "Homework essays"} rows={homework.essays} />
       </section>
+    </div>
+  );
+}
+
+export function BookletPartPane({ locale, part }: { locale: Locale; part: 1 | 2 }) {
+  const ar = locale === "ar";
+  const block = buildBookletDocument().parts.find((row) => row.part === part);
+  if (!block) return null;
+  const first = block.chapters[0]?.chapter.id ?? "";
+  const last = block.chapters[block.chapters.length - 1]?.chapter.id ?? "";
+  return (
+    <div className="booklet-paper print-sheet rounded-xl bg-white p-5 ring-1 ring-slate-300 sm:p-8">
+      <BookletCover
+        locale={locale}
+        teacher={ar ? BRAND.teacherAr : BRAND.teacherEn}
+        brand={ar ? BRAND.nameAr : BRAND.nameEn}
+        kicker={ar ? (part === 1 ? "الجزء الأول" : "الجزء الثاني") : `Part ${part}`}
+        title={ar ? `الفصول ${first}–${last}` : `Chapters ${first}–${last}`}
+        color={block.chapters[0]?.chapter.color ?? "#0c2d6b"}
+        lead={
+          ar
+            ? "كل فصل: خريطة ذهنية، رسوم، شرح كل درس، اختيار من متعدد، صح وغلط، ومقالي. آخر الجزء واجب يُسلّم في الحصة."
+            : "Each chapter: mind map, figures, every lesson, multiple choice, true or false, and essays. Homework closes the part."
+        }
+      />
+      {block.chapters.map((pack) => (
+        <ChapterBlock key={pack.chapter.id} locale={locale} pack={pack} />
+      ))}
+      <HomeworkBlock locale={locale} pack={block.homework} />
+    </div>
+  );
+}
+
+export function BookletAnswersPane({ locale }: { locale: Locale }) {
+  const ar = locale === "ar";
+  const doc = buildBookletDocument();
+  return (
+    <div className="booklet-paper print-sheet rounded-xl bg-white p-5 ring-1 ring-slate-300 sm:p-8">
+      <BookletCover
+        locale={locale}
+        teacher={ar ? BRAND.teacherAr : BRAND.teacherEn}
+        brand={ar ? BRAND.nameAr : BRAND.nameEn}
+        kicker={ar ? "مفتاح الإجابة" : "Answer key"}
+        title={ar ? "إجابات الملزمة" : "Booklet answers"}
+        color="#134e4a"
+        lead={ar ? "راجعه بعد ما تحل، مش قبل." : "Check it after you finish, not before."}
+      />
+      {doc.parts.map(({ part, chapters, homework }) => (
+        <section key={part} className="print-break mt-8 rounded-xl bg-primary/5 p-6">
+          <h4 className="font-serif text-2xl">
+            {ar ? (part === 1 ? "الجزء الأول" : "الجزء الثاني") : `Part ${part}`}
+          </h4>
+          {chapters.map((pack) =>
+            pack.answerGroups.map((group) => (
+              <AnswerKeyList
+                key={`${pack.chapter.id}-${group.titleEn}`}
+                locale={locale}
+                title={ar ? group.titleAr : group.titleEn}
+                answers={group.answers}
+              />
+            )),
+          )}
+          <AnswerKeyList locale={locale} title={ar ? homework.titleAr : homework.titleEn} answers={homework.answers} />
+          {chapters.map((pack) => (
+            <EssayAnswers
+              key={`${pack.chapter.id}-essays`}
+              locale={locale}
+              title={ar ? `مقالي الفصل ${pack.chapter.id}` : `Chapter ${pack.chapter.id} essays`}
+              rows={pack.essays}
+            />
+          ))}
+          <EssayAnswers
+            locale={locale}
+            title={ar ? `مقالي ${homework.titleAr}` : `${homework.titleEn} essays`}
+            rows={homework.essays}
+          />
+        </section>
+      ))}
+      {ar ? (
+        <section className="print-break mt-8 rounded-xl bg-primary/5 p-6">
+          <h4 className="font-serif text-2xl">كتاب الفائز</h4>
+          {doc.faiz.map((unit) => (
+            <AnswerKeyList key={unit.note.id} locale={locale} title={unit.note.titleAr} answers={unit.answers} />
+          ))}
+          <AnswerKeyList locale={locale} title={doc.faizHomework.titleAr} answers={doc.faizHomework.answers} />
+          <EssayAnswers locale={locale} title="مقالي واجب الفائز" rows={doc.faizHomework.essays} />
+        </section>
+      ) : null}
     </div>
   );
 }
