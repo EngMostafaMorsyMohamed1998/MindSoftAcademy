@@ -98,7 +98,7 @@ export function CommunityFeed({
                   </form>
                 ) : null}
               </div>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{post.body}</p>
+              <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed">{post.body}</p>
               <div className="mt-3 flex items-center gap-3 text-sm">
                 <CommunityLikeButton postId={post.id} liked={post.liked} likes={post.likes} />
                 <span className="inline-flex items-center gap-1.5 text-foreground/55">

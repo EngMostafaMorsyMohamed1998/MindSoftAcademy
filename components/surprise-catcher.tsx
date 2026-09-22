@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LoaderCircle, Zap } from "lucide-react";
 import { TrueFalsePick } from "@/components/true-false-pick";
 import { t } from "@/lib/i18n";
@@ -21,6 +21,7 @@ type SurpriseState = {
 
 export function SurpriseCatcher({ locale }: { locale: Locale }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [state, setState] = useState<SurpriseState>({ open: false });
   const [pending, setPending] = useState(false);
   const hide = pathname.startsWith("/admin");
@@ -49,7 +50,7 @@ export function SurpriseCatcher({ locale }: { locale: Locale }) {
   async function pick(choice: number) {
     if (!state.open || state.answered || pending) return;
     if (state.needsLogin) {
-      window.location.href = "/activate";
+      router.push("/activate");
       return;
     }
     setPending(true);
@@ -61,7 +62,7 @@ export function SurpriseCatcher({ locale }: { locale: Locale }) {
         body: JSON.stringify({ choice }),
       });
       if (response.status === 401) {
-        window.location.href = "/activate";
+        router.push("/activate");
         return;
       }
       if (response.ok) {
@@ -76,7 +77,7 @@ export function SurpriseCatcher({ locale }: { locale: Locale }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-primary-dark/70 p-4 sm:items-center">
-      <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-xl">
+      <div className="max-h-[min(32rem,calc(100dvh-2rem))] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-5 shadow-xl">
         <p className="inline-flex items-center gap-2 text-xs font-semibold text-amber-700">
           <Zap className="size-4" />
           {t(locale, "surpriseTitle")}

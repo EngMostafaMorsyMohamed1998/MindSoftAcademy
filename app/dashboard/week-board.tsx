@@ -21,7 +21,7 @@ export function WeekBoard({ locale, slots }: { locale: Locale; slots: WeekSlot[]
                   todaySlot ? "bg-accent/20 ring-1 ring-accent" : "bg-primary/5"
                 }`}
               >
-                <span>
+                <span className="min-w-0 break-words">
                   <strong>{weekdayName(locale, slot.weekday)}</strong>
                   <span className="mx-2 text-foreground/55">{slot.startTime}</span>
                   {slot.topic}

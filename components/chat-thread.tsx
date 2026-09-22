@@ -33,18 +33,18 @@ export function ChatThread({
   const [drafts, setDrafts] = useState<ChatMessage[]>([]);
   const shown = [
     ...messages,
-    ...drafts.filter((item) => !messages.some((message) => message.body === item.body)),
+    ...drafts.filter((item) => !messages.some((message) => message.id === item.id || message.body === item.body)),
   ];
+  const lastShownId = shown.at(-1)?.id;
 
   useEffect(() => {
     const box = scroller.current;
     if (box) box.scrollTop = box.scrollHeight;
-  }, [shown.length, shown.at(-1)?.id]);
+  }, [shown.length, lastShownId]);
 
   useEffect(() => {
     if (role === "student") void markStudentChatRead();
     else if (studentId) void markTeacherChatRead(studentId);
-    if (messages.length) setDrafts([]);
   }, [role, studentId, messages.length]);
 
   useEffect(() => {
@@ -54,11 +54,11 @@ export function ChatThread({
 
   async function onSubmit(formData: FormData) {
     setPending(true);
+    try {
     const result =
       role === "student"
         ? await sendStudentChat({ error: null }, formData)
         : await sendTeacherChat({ error: null }, formData);
-    setPending(false);
     if (result.ok) {
       const body = String(formData.get("body") ?? "").trim();
       setDrafts((current) => [
@@ -79,6 +79,11 @@ export function ChatThread({
       return;
     }
     window.alert(t(locale, "chatError"));
+    } catch {
+      window.alert(t(locale, "chatError"));
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -107,7 +112,7 @@ export function ChatThread({
                         ? t(locale, "teacherCard")
                         : message.studentName}
                   </p>
-                  <p className="whitespace-pre-wrap">{message.body}</p>
+                  <p className="whitespace-pre-wrap break-words">{message.body}</p>
                   <p className="mt-1 text-[10px] opacity-60">
                     {message.createdAt.replace("T", " ").slice(11, 16)}
                   </p>
@@ -121,7 +126,7 @@ export function ChatThread({
       <form
         ref={formRef}
         action={onSubmit}
-        className="flex items-end gap-2 border-t border-primary/10 p-3"
+        className="flex min-w-0 items-end gap-2 border-t border-primary/10 p-3"
       >
         {role === "teacher" ? (
           <>
@@ -135,12 +140,13 @@ export function ChatThread({
           maxLength={800}
           rows={2}
           placeholder={t(locale, "chatPlaceholder")}
-          className="min-h-12 flex-1 resize-none rounded-2xl border border-primary/15 bg-background px-3 py-2.5 text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/25"
+          className="min-h-12 min-w-0 flex-1 resize-none rounded-2xl border border-primary/15 bg-background px-3 py-2.5 text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/25"
         />
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-white disabled:opacity-70"
+          aria-label={t(locale, "chatSend")}
+          className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-white disabled:opacity-70"
         >
           <span className="relative size-4 shrink-0">
             <LoaderCircle
@@ -149,7 +155,7 @@ export function ChatThread({
             />
             <Send className={`size-4 ${pending ? "invisible" : ""}`} aria-hidden="true" />
           </span>
-          {t(locale, "chatSend")}
+          <span className="hidden sm:inline">{t(locale, "chatSend")}</span>
         </button>
       </form>
     </div>

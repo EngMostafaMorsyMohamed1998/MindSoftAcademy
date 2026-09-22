@@ -68,7 +68,7 @@ export default async function DashboardHomePage() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <section className="relative overflow-hidden rounded-3xl bg-primary-dark p-6 text-white sm:p-8">
-        <div className="relative z-10 max-w-xl pe-28 sm:pe-40">
+        <div className="relative z-10 max-w-xl pe-36 sm:pe-48">
           <p className="text-sm text-white/60">{t(locale, "welcome")}</p>
           <h1 className="mt-1 font-serif text-3xl sm:text-4xl">{firstName}</h1>
           <p className="mt-2 text-sm text-white/70">{t(locale, "dashboardHint")}</p>

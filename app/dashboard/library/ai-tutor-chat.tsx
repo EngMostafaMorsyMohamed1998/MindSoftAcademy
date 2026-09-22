@@ -149,7 +149,7 @@ export function AiTutorChat({
             key={item.id}
             className={`max-w-[95%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
               item.role === "user"
-                ? "ml-auto bg-primary text-white"
+                ? "ms-auto bg-primary text-white"
                 : "bg-background text-foreground"
             }`}
           >
@@ -189,7 +189,7 @@ export function AiTutorChat({
       </div>
 
       <form
-        className="flex items-end gap-2 border-t border-primary/8 p-3"
+        className="flex min-w-0 items-end gap-2 border-t border-primary/8 p-3"
         onSubmit={(event) => {
           event.preventDefault();
           void sendMessage(draft);
@@ -211,7 +211,7 @@ export function AiTutorChat({
             }
           }}
           placeholder={t(locale, "tutorPlaceholder")}
-          className="min-h-11 flex-1 resize-none rounded-2xl border border-primary/15 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 disabled:opacity-60"
+          className="min-h-11 min-w-0 flex-1 resize-none rounded-2xl border border-primary/15 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 disabled:opacity-60"
         />
         <button
           type="submit"
