@@ -135,27 +135,6 @@ export default async function Page() {
           </div>
         </section>
 
-        <section aria-labelledby="platform-demo-title" className="border-b border-primary/8 bg-white">
-          <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-            <h2 id="platform-demo-title" className="font-serif text-3xl tracking-tight">
-              {locale === "ar" ? "شوف المنصة" : "Watch the platform"}
-            </h2>
-            <p className="mt-3 max-w-2xl text-base leading-relaxed text-foreground/70">
-              {locale === "ar"
-                ? "درس قصير من داخل المنصة عن أساسيات جافا."
-                : "A short lesson from the platform on Java basics."}
-            </p>
-            <video
-              className="mt-6 aspect-video w-full max-w-3xl rounded-2xl bg-black shadow-md"
-              controls
-              playsInline
-              preload="metadata"
-            >
-              <source src="/demo/platform-demo.mp4" type="video/mp4" />
-            </video>
-          </div>
-        </section>
-
         <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((feature) => {
