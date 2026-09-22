@@ -312,7 +312,7 @@ export const ASSESS_EN_CH4: Record<string, AssessEnText> = {
   "4-2-p1-home-m2": {
     prompt: "Which of the following accurately expresses accessibility in web design?",
     options: [
-      "Designing the content and the interface so that people with disabilities can use the site and interact with it, including people with special needs.",
+      "Designing the content and the user interface (UI) so that people with disabilities can use the site and interact with it, including people with special needs.",
       "Deciding where elements go and their priorities using few visual details.",
       "Grouping related information close together on one screen.",
       "Unifying the font and color of headings on all pages of the website.",
@@ -429,7 +429,7 @@ export const ASSESS_EN_CH4: Record<string, AssessEnText> = {
     ],
   },
   "4-2-wa-m4": {
-    prompt: "Which of the following is the precise meaning of user-centered design?",
+    prompt: "Which of the following is the precise meaning of user-centered design (UCD)?",
     options: [
       "An approach that makes understanding users, their needs, and their context of use the basis of design decisions.",
       "Giving priority to the comfort of the site’s creator and its developers.",
@@ -604,7 +604,7 @@ export const ASSESS_EN_CH4: Record<string, AssessEnText> = {
   },
   "4-3-p2-class-e2": {
     prompt:
-      "Give three examples of the heuristic rules used in evaluating the user interface (UI), and briefly explain one of them.",
+      "Give three examples of the Heuristic Evaluation rules used in evaluating the user interface (UI), and briefly explain one of them.",
     guide:
       "Three rules: error prevention, visibility of system status, and consistency. Error prevention reduces the chance of a wrong submission before it happens.",
   },
@@ -618,7 +618,7 @@ export const ASSESS_EN_CH4: Record<string, AssessEnText> = {
     ],
   },
   "4-3-p2-class-m2": {
-    prompt: "Which of the following options is one of the basic heuristic rules for the user interface (UI)?",
+    prompt: "Which of the following options is one of the basic Heuristic Evaluation rules for the user interface (UI)?",
     options: ["Bounce Rate.", "Total page views (PV).", "Error prevention.", "Conversion rate (CVR)."],
   },
   "4-3-p2-home-e1": {
@@ -701,7 +701,7 @@ export const ASSESS_EN_CH4: Record<string, AssessEnText> = {
     prompt:
       "Explain how a usability test is carried out, and what its basic goals are in studying users’ behavior.",
     guide:
-      "Watch a user complete a task through observation and interview, and record the errors and the time. The goal is to reveal difficulty in the interface from actual behavior.",
+      "Watch a user complete a task through observation and interview, and record the errors and the time. The goal is to reveal difficulty in the UI from actual behavior.",
   },
   "4-3-wb-e2": {
     prompt:
@@ -711,7 +711,7 @@ export const ASSESS_EN_CH4: Record<string, AssessEnText> = {
   },
   "4-3-wb-e3": {
     prompt:
-      "Name the three heuristic rules for the user interface (UI) mentioned in the lesson, and explain what “visibility of system status” and “consistency” mean.",
+      "Name the three Heuristic Evaluation rules for the user interface (UI) mentioned in the lesson, and explain what “visibility of system status” and “consistency” mean.",
     guide:
       "The three: visibility of system status (the user knows where they are and what is happening), consistency (the same pattern across the pages), and error prevention.",
   },
@@ -733,15 +733,15 @@ export const ASSESS_EN_CH4: Record<string, AssessEnText> = {
     prompt: "What does the PV indicator represent in web-analytics tools?",
     options: [
       "The total number of times the page was viewed.",
-      "The conversion rate for the goals.",
+      "The conversion rate (CVR) for the goals.",
       "The site’s Bounce Rate.",
-      "The experts’ heuristic rules.",
+      "The experts’ Heuristic Evaluation rules.",
     ],
   },
   "4-3-wb-m4": {
     prompt:
       "What term expresses the proportion of sessions or users who left the site after viewing the first page only?",
-    options: ["Conversion rate.", "Page views.", "Bounce Rate.", "Heuristic Evaluation."],
+    options: ["Conversion rate (CVR).", "Page views (PV).", "Bounce Rate.", "Heuristic Evaluation."],
   },
   "4-3-wc-e1": {
     prompt:
@@ -782,8 +782,8 @@ export const ASSESS_EN_CH4: Record<string, AssessEnText> = {
     options: ["Web analytics.", "A usability test.", "Direct interviews.", "Heuristic Evaluation."],
   },
   "4-3-wc-m4": {
-    prompt: "Which of the following heuristic rules means making sure the design reduces the likelihood of making errors?",
-    options: ["Consistency.", "Visibility of system status.", "Error prevention.", "Conversion rate."],
+    prompt: "Which of the following Heuristic Evaluation rules means making sure the design reduces the likelihood of making errors?",
+    options: ["Consistency.", "Visibility of system status.", "Error prevention.", "Conversion rate (CVR)."],
   },
   "4-4-p1-class-e1": {
     prompt:
@@ -854,7 +854,7 @@ export const ASSESS_EN_CH4: Record<string, AssessEnText> = {
   },
   "4-4-p2-class-m1": {
     prompt:
-      "Which design-thinking stage includes learning the user’s experience and needs through observation, questions, and suitable research?",
+      "Which design-thinking stage includes learning the user experience (UX) and the user’s needs through observation, questions, and suitable research?",
     options: ["Define.", "Ideate.", "Empathize.", "Test."],
   },
   "4-4-p2-class-m2": {
@@ -994,7 +994,7 @@ export const ASSESS_EN_CH4: Record<string, AssessEnText> = {
     options: [
       "A method that uses purely numerical data to analyze server use.",
       "A way of thinking that leads to discovering problems and generating solutions from the user’s point of view.",
-      "A method in which experts identify interface problems based on purely abstract rules.",
+      "A method in which experts identify UI problems based on purely abstract rules.",
       "A method for creating a programming-code diagram in JavaScript.",
     ],
   },
