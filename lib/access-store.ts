@@ -748,15 +748,26 @@ export async function setAnnouncement(body: string): Promise<void> {
   await writeStore(store);
 }
 
+function preferExamWindow(left: ExamWindow | null, right: ExamWindow | null, now = Date.now()): ExamWindow | null {
+  if (!left) return right;
+  if (!right) return left;
+  const leftOpen = Date.parse(left.closesAt) > now;
+  const rightOpen = Date.parse(right.closesAt) > now;
+  if (leftOpen !== rightOpen) return leftOpen ? left : right;
+  return Date.parse(left.closesAt) >= Date.parse(right.closesAt) ? left : right;
+}
+
 export async function getExamWindow(): Promise<ExamWindow | null> {
+  let fromDb: ExamWindow | null = null;
   try {
     const { readExamWindowRow } = await import("@/lib/class-db");
-    const fromDb = await readExamWindowRow();
-    if (fromDb) return fromDb;
+    fromDb = await readExamWindowRow();
   } catch {
     // Table may not exist yet.
   }
-  return (await readStore()).examWindow;
+  const fromStore = (await readStore()).examWindow ?? null;
+  const fromLocal = (await readLocalStore())?.examWindow ?? null;
+  return preferExamWindow(preferExamWindow(fromDb, fromStore), fromLocal);
 }
 
 async function persistExamWindow(window: ExamWindow | null): Promise<void> {
@@ -859,10 +870,24 @@ async function dedicatedSurprise(): Promise<{
   }
 }
 
+function preferSurprise(
+  left: SurpriseQuestion | null,
+  right: SurpriseQuestion | null,
+  now = Date.now(),
+): SurpriseQuestion | null {
+  if (!left) return right;
+  if (!right) return left;
+  const leftOpen = surpriseOpen(left, now);
+  const rightOpen = surpriseOpen(right, now);
+  if (leftOpen !== rightOpen) return leftOpen ? left : right;
+  return Date.parse(left.closesAt) >= Date.parse(right.closesAt) ? left : right;
+}
+
 export async function getSurprise(): Promise<SurpriseQuestion | null> {
   const dedicated = await dedicatedSurprise();
-  if (dedicated?.question) return dedicated.question;
-  return parseSurprise((await readStore()).surprise);
+  const fromStore = parseSurprise((await readStore()).surprise);
+  const fromLocal = parseSurprise((await readLocalStore())?.surprise);
+  return preferSurprise(preferSurprise(dedicated?.question ?? null, fromStore), fromLocal);
 }
 
 export async function listSurpriseAnswers(surpriseId?: string): Promise<SurpriseAnswer[]> {

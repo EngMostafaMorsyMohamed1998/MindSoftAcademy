@@ -44,6 +44,15 @@ import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { notifySessionParents } from "@/lib/telegram-notify";
 
+function revalidateExamSurfaces() {
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/exams");
+  revalidatePath("/dashboard/faiz");
+  revalidatePath("/dashboard/exam/[id]", "page");
+  revalidatePath("/dashboard/chapters/[id]", "page");
+}
+
 export type FormState = {
   error: string | null;
   code?: string;
@@ -288,6 +297,7 @@ export async function openClassExam(
   const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 60 * 60;
   const mode = read(formData, "ministry") === "1" ? "ministry" : "class";
   const window = await startExamWindow(chapterId, duration, mode);
+  revalidateExamSurfaces();
   return {
     error: null,
     ok: true,
@@ -305,6 +315,7 @@ export async function openMixedMock(
   const minutes = Number(read(formData, "minutes") || "90");
   const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 90 * 60;
   const window = await startExamWindow("mix", duration, "ministry");
+  revalidateExamSurfaces();
   return {
     error: null,
     ok: true,
@@ -322,6 +333,7 @@ export async function openFaizExam(
   const minutes = Number(read(formData, "minutes") || "60");
   const duration = Number.isFinite(minutes) ? Math.round(minutes * 60) : 60 * 60;
   const window = await startExamWindow(FAIZ_PAPER_ID, duration, "class");
+  revalidateExamSurfaces();
   return {
     error: null,
     ok: true,
@@ -364,6 +376,7 @@ export async function stopClassExam(
   if (!(await isTeacher())) return { error: "FORBIDDEN" };
   const session = await archiveClassSession(await listVisibleCodes());
   await closeExamWindow();
+  revalidateExamSurfaces();
   after(async () => {
     await notifySessionParents(session);
   });

@@ -54,3 +54,4 @@ next-env.d.ts
 
 # student codes and exam essays (phones + names)
 /data/*.json
+/data/subscription-proofs/

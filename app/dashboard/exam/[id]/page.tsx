@@ -16,6 +16,8 @@ import { notesForChapter } from "@/lib/lessons";
 import { getLocale } from "@/lib/locale";
 import { ChapterExamPlayer } from "./exam-player";
 
+export const dynamic = "force-dynamic";
+
 export default async function ChapterExamPage({
   params,
 }: {

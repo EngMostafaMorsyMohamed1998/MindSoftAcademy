@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BookOpen, ClipboardCheck, Gamepad2, Network } from "lucide-react";
 import { ChapterMindMap } from "@/components/chapter-mind-map";
+import { getExamWindow } from "@/lib/access-store";
 import { chapterHomeworkDone, isChapterUnlocked } from "@/lib/chapter-progress";
+import { examWindowOpen } from "@/lib/class-clock";
 import { studentProgress } from "@/lib/student-progress";
 import { bookSlugFor, getChapter, isChapterId } from "@/lib/curriculum";
 import { gamesForChapter } from "@/lib/games";
@@ -13,6 +15,8 @@ import { bundleExplains, explainsForLesson } from "@/lib/lesson-explains";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { BOOKS } from "@/lib/library";
+
+export const dynamic = "force-dynamic";
 
 export default async function ChapterPage({
   params,
@@ -27,7 +31,8 @@ export default async function ChapterPage({
   if (!isChapterUnlocked(completed, id, unlocks)) {
     redirect("/dashboard/chapters");
   }
-  const examReady = chapterHomeworkDone(id, homework);
+  const examWindow = await getExamWindow();
+  const examReady = chapterHomeworkDone(id, homework) || examWindowOpen(examWindow, id);
   const locale = await getLocale();
   const notes = notesForChapter(id);
   const games = gamesForChapter(id);

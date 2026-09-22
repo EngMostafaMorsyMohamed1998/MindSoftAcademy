@@ -45,6 +45,12 @@ export default async function Page() {
           <div className="flex items-center gap-2">
             <HeaderTools locale={locale} theme={theme} />
             <Link
+              href="/subscribe"
+              className="inline-flex items-center justify-center px-2 py-2 text-xs font-semibold text-primary sm:px-3"
+            >
+              اشتراك الكورس
+            </Link>
+            <Link
               href="/admin/login"
               className="hidden items-center justify-center rounded-full border border-primary/20 px-3 py-2 text-xs font-semibold text-primary sm:inline-flex"
             >
@@ -126,6 +132,27 @@ export default async function Page() {
                 </ul>
               </article>
             </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="platform-demo-title" className="border-b border-primary/8 bg-white">
+          <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
+            <h2 id="platform-demo-title" className="font-serif text-3xl tracking-tight">
+              {locale === "ar" ? "شوف المنصة" : "Watch the platform"}
+            </h2>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-foreground/70">
+              {locale === "ar"
+                ? "درس قصير من داخل المنصة عن أساسيات جافا."
+                : "A short lesson from the platform on Java basics."}
+            </p>
+            <video
+              className="mt-6 aspect-video w-full max-w-3xl rounded-2xl bg-black shadow-md"
+              controls
+              playsInline
+              preload="metadata"
+            >
+              <source src="/demo/platform-demo.mp4" type="video/mp4" />
+            </video>
           </div>
         </section>
 

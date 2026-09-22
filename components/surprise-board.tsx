@@ -71,7 +71,7 @@ export function SurpriseBoard({
         {t(locale, "surpriseAnswered")} {live.answered} · {t(locale, "surpriseCorrect")} {live.correct}
       </p>
       <ul className="space-y-1">
-        {live.rows.map((row) => (
+        {live.rows.filter((row) => row.answered).map((row) => (
           <li
             key={row.id}
             className={`flex items-center justify-between rounded-2xl px-3 py-2 text-sm ${

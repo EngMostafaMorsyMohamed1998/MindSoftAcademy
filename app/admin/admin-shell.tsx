@@ -52,12 +52,14 @@ import { HomeworkSlipButton } from "@/components/homework-slip-button";
 import { CertificateCard } from "@/components/certificate-card";
 import { CertificatePrintButton } from "@/components/certificate-print-button";
 import { PresenceBoard } from "@/components/presence-board";
+import { SubscriptionInbox } from "@/components/subscription-inbox";
 import { SurpriseBoard } from "@/components/surprise-board";
 import { ESSAY_MARKS, markForGrade } from "@/lib/essay-marks";
 import { surpriseOpen, surpriseRemaining, type SurpriseAnswer, type SurpriseQuestion } from "@/lib/surprise";
 import { weekdayName, type WeekSlot } from "@/lib/week-plan";
 import type { ClassGroup } from "@/lib/class-groups";
 import type { MissBoardRow } from "@/lib/miss-board";
+import type { SubscriptionRequestView } from "@/lib/subscription";
 
 const initial: FormState = { error: null };
 
@@ -91,6 +93,7 @@ export function AdminShell({
   month,
   homework,
   examples,
+  subscriptionRequests = [],
   initialTab = "roster",
 }: {
   locale: Locale;
@@ -120,6 +123,7 @@ export function AdminShell({
   month: string;
   homework: HomeworkResult[];
   examples: ClassLessonExample[];
+  subscriptionRequests?: SubscriptionRequestView[];
   initialTab?: Tab;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -161,14 +165,14 @@ export function AdminShell({
   const [trackFilter, setTrackFilter] = useState<"all" | "ar" | "en">("all");
 
   useEffect(() => {
-    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok || telegramHookState.ok || telegramOneState.ok || telegramAllState.ok || deviceLimitState.ok || deviceForgetState.ok || exampleState.ok || exampleDeleteState.ok) {
+    if (issueState.code || bulkState.ok || announceState.ok || examState.ok || mixState.ok || faizState.ok || closeState.ok || unlockState.ok || slotState.ok || slotDeleteState.ok || feeState.ok || surpriseState.ok || surpriseCloseState.ok || telegramHookState.ok || telegramOneState.ok || telegramAllState.ok || deviceLimitState.ok || deviceForgetState.ok || exampleState.ok || exampleDeleteState.ok) {
       router.refresh();
     }
-  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, mixState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, feeState.ok, surpriseState.ok, surpriseCloseState.ok, telegramHookState.ok, telegramOneState.ok, telegramAllState.ok, deviceLimitState.ok, deviceForgetState.ok, exampleState.ok, exampleDeleteState.ok, router]);
+  }, [issueState.code, bulkState.ok, announceState.ok, examState.ok, mixState.ok, faizState.ok, closeState.ok, unlockState.ok, slotState.ok, slotDeleteState.ok, feeState.ok, surpriseState.ok, surpriseCloseState.ok, telegramHookState.ok, telegramOneState.ok, telegramAllState.ok, deviceLimitState.ok, deviceForgetState.ok, exampleState.ok, exampleDeleteState.ok, router]);
 
   useEffect(() => {
-    if (examState.examChapterId || mixState.examChapterId) setWindowOverride("open");
-  }, [examState.examChapterId, examState.examClosesAt, mixState.examChapterId, mixState.examClosesAt]);
+    if (examState.examChapterId || mixState.examChapterId || faizState.examChapterId) setWindowOverride("open");
+  }, [examState.examChapterId, examState.examClosesAt, mixState.examChapterId, mixState.examClosesAt, faizState.examChapterId, faizState.examClosesAt]);
 
   useEffect(() => {
     if (closeState.examClosed) setWindowOverride("closed");
@@ -179,9 +183,9 @@ export function AdminShell({
       ? null
       : windowOverride === "open" && (examState.examChapterId || mixState.examChapterId)
         ? {
-            chapterId: examState.examChapterId ?? mixState.examChapterId ?? "",
-            closesAt: examState.examClosesAt ?? mixState.examClosesAt ?? "",
-            mode: examState.examMode ?? mixState.examMode,
+            chapterId: examState.examChapterId ?? mixState.examChapterId ?? faizState.examChapterId ?? "",
+            closesAt: examState.examClosesAt ?? mixState.examClosesAt ?? faizState.examClosesAt ?? "",
+            mode: examState.examMode ?? mixState.examMode ?? faizState.examMode,
           }
         : examWindow;
 
@@ -456,6 +460,21 @@ export function AdminShell({
                 {t(locale, "startClassExam")}
               </button>
             </form>
+            <p className={`mt-3 rounded-2xl px-3 py-2 text-sm ${liveWindow ? "bg-emerald-50 text-emerald-800" : "bg-primary/5 text-foreground/65"}`}>
+              {liveWindow
+                ? `${t(locale, "examStarted")} ${
+                    liveWindow.chapterId === "mix"
+                      ? t(locale, "mixedMock")
+                      : liveWindow.chapterId === "faiz"
+                        ? t(locale, "faizExam")
+                        : `${t(locale, "chapterExam")} ${liveWindow.chapterId}`
+                  }${
+                    liveWindow.closesAt
+                      ? ` · ${cairoClock(liveWindow.closesAt)}`
+                      : ""
+                  }`
+                : t(locale, "examClosedNow")}
+            </p>
             <form action={faizAction} className="mt-4 grid gap-3 rounded-2xl bg-primary/5 p-3 ring-1 ring-primary/15">
               <p className="text-sm font-semibold">{t(locale, "faizExam")}</p>
               <p className="text-xs text-foreground/60">{t(locale, "faizExamHint")}</p>
@@ -512,19 +531,6 @@ export function AdminShell({
                 {t(locale, "closeClassSave")}
               </button>
             </form>
-            <p className={`mt-3 rounded-2xl px-3 py-2 text-sm ${liveWindow ? "bg-emerald-50 text-emerald-800" : "bg-primary/5 text-foreground/65"}`}>
-              {liveWindow
-                ? `${t(locale, "examStarted")} ${
-                    liveWindow.chapterId === "mix"
-                      ? t(locale, "mixedMock")
-                      : `${t(locale, "chapterExam")} ${liveWindow.chapterId}`
-                  }${
-                    liveWindow.closesAt
-                      ? ` · ${cairoClock(liveWindow.closesAt)}`
-                      : ""
-                  }`
-                : t(locale, "examClosedNow")}
-            </p>
             {examState.error || mixState.error || closeState.error ? (
               <p className="mt-2 text-sm text-red-700">{examState.error || mixState.error || closeState.error}</p>
             ) : null}
@@ -576,18 +582,15 @@ export function AdminShell({
                   promptAr: surprise?.promptAr,
                   answered: surpriseAnswers.length,
                   correct: surpriseAnswers.filter((row) => row.correct).length,
-                  rows: roster.map((row) => {
-                    const hit = surpriseAnswers.find((item) => item.studentId === row.id);
-                    return {
-                      id: row.id,
-                      name: row.name,
-                      answered: Boolean(hit),
-                      correct: hit?.correct ?? null,
-                      seconds: hit && surprise
-                        ? Math.max(0, Math.round((Date.parse(hit.answeredAt) - Date.parse(surprise.opensAt)) / 1000))
-                        : null,
-                    };
-                  }),
+                  rows: surpriseAnswers.map((hit) => ({
+                    id: hit.studentId,
+                    name: roster.find((row) => row.id === hit.studentId)?.name ?? hit.studentId,
+                    answered: true,
+                    correct: hit.correct,
+                    seconds: surprise
+                      ? Math.max(0, Math.round((Date.parse(hit.answeredAt) - Date.parse(surprise.opensAt)) / 1000))
+                      : null,
+                  })),
                 }}
               />
             </div>
@@ -1789,6 +1792,7 @@ export function AdminShell({
               </tbody>
             </table>
           </div>
+          <SubscriptionInbox requests={subscriptionRequests} locale={locale} />
         </section>
       ) : null}
     </div>

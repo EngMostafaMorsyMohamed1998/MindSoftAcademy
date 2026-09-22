@@ -9,6 +9,8 @@ import { FAIZ_PAPER_ID } from "@/lib/faiz";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 
+export const dynamic = "force-dynamic";
+
 export default async function ExamsIndexPage() {
   const locale = await getLocale();
   const [{ completed, unlocks, homework }, examWindow] = await Promise.all([

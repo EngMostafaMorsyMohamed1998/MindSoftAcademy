@@ -111,7 +111,26 @@ export async function writeExamWindowRow(window: ExamWindow | null): Promise<boo
     });
     return true;
   } catch {
-    return false;
+    try {
+      if (!window) {
+        await prisma.$executeRaw`DELETE FROM "ClassExamWindow" WHERE "id" = 'current'`;
+        return true;
+      }
+      const chapterId = encodeExamChapter(window.chapterId, window.mode);
+      const opensAt = asDate(window.opensAt);
+      const closesAt = asDate(window.closesAt);
+      await prisma.$executeRaw`
+        INSERT INTO "ClassExamWindow" ("id", "chapterId", "opensAt", "closesAt")
+        VALUES ('current', ${chapterId}, ${opensAt}, ${closesAt})
+        ON CONFLICT ("id") DO UPDATE SET
+          "chapterId" = EXCLUDED."chapterId",
+          "opensAt" = EXCLUDED."opensAt",
+          "closesAt" = EXCLUDED."closesAt"
+      `;
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 
@@ -423,7 +442,7 @@ export async function readClassDb(): Promise<StoreFile | null> {
         safeMany(prisma.classSessionArchive?.findMany()),
       ]);
     const announcement = announcements.find((row) => row.active) ?? announcements[0] ?? null;
-    const window = windows[0] ?? null;
+    const window = windows.find((row) => row.id === "current") ?? null;
     const tracks = await readCodeTracks();
     return {
       codes: codes.map((row): AccessCode => ({
@@ -1159,6 +1178,10 @@ export async function ensureSurpriseTables(): Promise<boolean> {
         CONSTRAINT "ClassSurpriseAnswer_pkey" PRIMARY KEY ("id")
       )
     `);
+    await prisma.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "ClassSurpriseAnswer_surpriseId_studentId_key"
+      ON "ClassSurpriseAnswer"("surpriseId", "studentId")
+    `);
     return true;
   } catch {
     return false;
@@ -1201,40 +1224,83 @@ export async function readSurpriseState(): Promise<{
   }
 }
 
+async function writeSurprisePayload(payload: string): Promise<boolean> {
+  try {
+    await prisma.classSurprise.upsert({
+      where: { id: "current" },
+      create: { id: "current", payload },
+      update: { payload },
+    });
+    return true;
+  } catch {
+    try {
+      await prisma.$executeRaw`
+        INSERT INTO "ClassSurprise" ("id", "payload")
+        VALUES ('current', ${payload})
+        ON CONFLICT ("id") DO UPDATE SET "payload" = EXCLUDED."payload"
+      `;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+async function replaceSurpriseAnswers(rows: SurpriseAnswer[]): Promise<boolean> {
+  try {
+    await prisma.classSurpriseAnswer.deleteMany();
+    if (rows.length) {
+      await prisma.classSurpriseAnswer.createMany({
+        data: rows.map((row) => ({
+          id: `${row.surpriseId}:${row.studentId}`,
+          surpriseId: row.surpriseId,
+          studentId: row.studentId,
+          choice: row.choice,
+          correct: row.correct,
+          answeredAt: asDate(row.answeredAt),
+        })),
+      });
+    }
+    return true;
+  } catch {
+    try {
+      await prisma.$executeRaw`DELETE FROM "ClassSurpriseAnswer"`;
+      for (const row of rows) {
+        await prisma.$executeRaw`
+          INSERT INTO "ClassSurpriseAnswer" ("id", "surpriseId", "studentId", "choice", "correct", "answeredAt")
+          VALUES (
+            ${`${row.surpriseId}:${row.studentId}`},
+            ${row.surpriseId},
+            ${row.studentId},
+            ${row.choice},
+            ${row.correct},
+            ${asDate(row.answeredAt)}
+          )
+          ON CONFLICT ("id") DO UPDATE SET
+            "choice" = EXCLUDED."choice",
+            "correct" = EXCLUDED."correct",
+            "answeredAt" = EXCLUDED."answeredAt"
+        `;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
 export async function writeSurpriseState(
   question: SurpriseQuestion | null,
   answers: SurpriseAnswer[],
 ): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
   await ensureSurpriseTables();
-  try {
-    const rows = parseSurpriseAnswers(answers);
-    await prisma.$transaction([
-      prisma.classSurprise.upsert({
-        where: { id: "current" },
-        create: { id: "current", payload: JSON.stringify(question) },
-        update: { payload: JSON.stringify(question) },
-      }),
-      prisma.classSurpriseAnswer.deleteMany(),
-      ...(rows.length
-        ? [
-            prisma.classSurpriseAnswer.createMany({
-              data: rows.map((row) => ({
-                id: `${row.surpriseId}:${row.studentId}`,
-                surpriseId: row.surpriseId,
-                studentId: row.studentId,
-                choice: row.choice,
-                correct: row.correct,
-                answeredAt: asDate(row.answeredAt),
-              })),
-            }),
-          ]
-        : []),
-    ]);
-    return true;
-  } catch {
-    return false;
-  }
+  const payload = JSON.stringify(question ?? null).replace(/\u0000/g, "");
+  const saved = await writeSurprisePayload(payload);
+  if (!saved) return false;
+  const rows = parseSurpriseAnswers(answers);
+  const answersSaved = await replaceSurpriseAnswers(rows);
+  return rows.length === 0 || answersSaved;
 }
 
 export async function ensureExampleTables(): Promise<boolean> {

@@ -17,18 +17,14 @@ export async function GET() {
   }
   const answers = await listSurpriseAnswers(question.id);
   const codes = await listVisibleCodes();
-  const byId = new Map(answers.map((row) => [row.studentId, row]));
-  const rows = codes.map((code) => {
-    const hit = byId.get(code.id);
-    const seconds = hit
-      ? Math.max(0, Math.round((Date.parse(hit.answeredAt) - Date.parse(question.opensAt)) / 1000))
-      : null;
+  const rows = answers.map((hit) => {
+    const code = codes.find((item) => item.id === hit.studentId);
     return {
-      id: code.id,
-      name: code.name,
-      answered: Boolean(hit),
-      correct: hit?.correct ?? null,
-      seconds,
+      id: hit.studentId,
+      name: code?.name ?? hit.studentId,
+      answered: true,
+      correct: hit.correct,
+      seconds: Math.max(0, Math.round((Date.parse(hit.answeredAt) - Date.parse(question.opensAt)) / 1000)),
     };
   });
   return NextResponse.json({
