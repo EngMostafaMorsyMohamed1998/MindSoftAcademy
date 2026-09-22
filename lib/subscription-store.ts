@@ -117,7 +117,10 @@ function ensureTable(): Promise<boolean> {
         )
       `)
       .then(() => true)
-      .catch(() => false);
+      .catch(() => {
+        tableReady = null;
+        return false;
+      });
   }
   return tableReady;
 }
@@ -190,13 +193,7 @@ export async function addSubscriptionRequest(input: {
     createdAt: new Date().toISOString(),
     reviewedAt: null,
   };
-  await enqueue(async () => {
-    await mkdir(path.dirname(proofPath(record.id)), { recursive: true });
-    await writeFile(proofPath(record.id), input.proof);
-    const rows = await readLocal();
-    rows.unshift(record);
-    await writeLocal(rows);
-  });
+
   if (await ensureTable()) {
     const proofData = input.proof.toString("base64");
     try {
@@ -211,10 +208,20 @@ export async function addSubscriptionRequest(input: {
         )
         ON CONFLICT ("id") DO NOTHING
       `;
+      return viewOf(record);
     } catch {
-      // The class file already has the request when Postgres is offline.
+      if (!skipDatabase()) throw new Error("SAVE");
     }
   }
+
+  if (!skipDatabase()) throw new Error("SAVE");
+  await enqueue(async () => {
+    await mkdir(path.dirname(proofPath(record.id)), { recursive: true });
+    await writeFile(proofPath(record.id), input.proof);
+    const rows = await readLocal();
+    rows.unshift(record);
+    await writeLocal(rows);
+  });
   return viewOf(record);
 }
 

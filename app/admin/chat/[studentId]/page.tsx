@@ -10,6 +10,8 @@ import { getLocale } from "@/lib/locale";
 import { getTheme } from "@/lib/theme";
 import { isTeacher } from "@/lib/teacher-session";
 
+export const dynamic = "force-dynamic";
+
 export default async function TeacherChatThreadPage({
   params,
 }: {

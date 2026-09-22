@@ -5,6 +5,7 @@ import {
   appendChatMessage,
   getCodeById,
   markChatRead,
+  type ChatMessage,
 } from "@/lib/access-store";
 import { getCurrentUser } from "@/lib/current-user";
 import { isTeacher } from "@/lib/teacher-session";
@@ -12,9 +13,11 @@ import { isTeacher } from "@/lib/teacher-session";
 function refreshChat() {
   revalidatePath("/dashboard/chat-to-teacher");
   revalidatePath("/admin");
+  revalidatePath("/admin/chat");
+  revalidatePath("/admin/chat/[studentId]", "page");
 }
 
-export type ChatState = { error: string | null; ok?: boolean };
+export type ChatState = { error: string | null; ok?: boolean; message?: ChatMessage };
 
 function read(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -37,7 +40,7 @@ export async function sendStudentChat(
   });
   if (!saved) return { error: "EMPTY" };
   refreshChat();
-  return { error: null, ok: true };
+  return { error: null, ok: true, message: saved };
 }
 
 export async function sendTeacherChat(
@@ -57,7 +60,7 @@ export async function sendTeacherChat(
   });
   if (!saved) return { error: "EMPTY" };
   refreshChat();
-  return { error: null, ok: true };
+  return { error: null, ok: true, message: saved };
 }
 
 export async function markStudentChatRead() {

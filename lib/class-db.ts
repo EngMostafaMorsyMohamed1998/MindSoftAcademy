@@ -614,6 +614,7 @@ async function upsertClassCodes(codes: AccessCode[]): Promise<void> {
 
 async function upsertClassMessages(messages: ChatMessage[]): Promise<void> {
   if (!messages.length) return;
+  await ensureChatTable();
   await prisma.$transaction(
     messages.map((row) =>
       prisma.classMessage.upsert({
@@ -637,8 +638,58 @@ async function upsertClassMessages(messages: ChatMessage[]): Promise<void> {
   );
 }
 
+export async function ensureChatTable(): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "ClassMessage" (
+        "id" TEXT NOT NULL,
+        "studentId" TEXT NOT NULL,
+        "studentName" TEXT NOT NULL,
+        "from" TEXT NOT NULL,
+        "body" TEXT NOT NULL,
+        "createdAt" TIMESTAMP(3) NOT NULL,
+        "readByTeacher" BOOLEAN NOT NULL DEFAULT false,
+        "readByStudent" BOOLEAN NOT NULL DEFAULT false,
+        CONSTRAINT "ClassMessage_pkey" PRIMARY KEY ("id")
+      )
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "ClassMessage_studentId_createdAt_idx"
+      ON "ClassMessage"("studentId", "createdAt")
+    `);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readChatMessageRows(studentId?: string): Promise<ChatMessage[] | null> {
+  if (!hasLiveDatabase()) return null;
+  await ensureChatTable();
+  try {
+    const rows = await prisma.classMessage.findMany({
+      where: studentId ? { studentId } : undefined,
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      studentId: row.studentId,
+      studentName: row.studentName,
+      from: row.from === "teacher" ? "teacher" : "student",
+      body: row.body,
+      createdAt: row.createdAt.toISOString(),
+      readByTeacher: row.readByTeacher,
+      readByStudent: row.readByStudent,
+    }));
+  } catch {
+    return null;
+  }
+}
+
 export async function insertChatMessageRow(message: ChatMessage): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
+  await ensureChatTable();
   try {
     await prisma.classMessage.create({
       data: {
@@ -668,6 +719,7 @@ export async function insertChatMessageRow(message: ChatMessage): Promise<boolea
 
 export async function markChatReadRows(studentId: string, reader: "student" | "teacher"): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
+  await ensureChatTable();
   try {
     if (reader === "teacher") {
       await prisma.classMessage.updateMany({

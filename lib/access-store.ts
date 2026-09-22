@@ -546,6 +546,13 @@ function threadFromMessages(
 }
 
 export async function listStudentMessages(studentId: string): Promise<ChatMessage[]> {
+  try {
+    const { readChatMessageRows } = await import("@/lib/class-db");
+    const dedicated = await readChatMessageRows(studentId);
+    if (dedicated) return dedicated;
+  } catch {
+    // Fall through to the shared store when the database is unavailable.
+  }
   const store = await readStore();
   return store.messages
     .filter((item) => item.studentId === studentId)
@@ -554,18 +561,26 @@ export async function listStudentMessages(studentId: string): Promise<ChatMessag
 
 export async function listChatThreads(): Promise<ChatThread[]> {
   const store = await readStore();
+  let messages = store.messages;
+  try {
+    const { readChatMessageRows } = await import("@/lib/class-db");
+    const dedicated = await readChatMessageRows();
+    if (dedicated) messages = dedicated;
+  } catch {
+    // Fall through to the shared store when the database is unavailable.
+  }
   const byStudent = new Map<string, { name: string; phone?: string }>();
   for (const code of store.codes) {
     byStudent.set(code.id, { name: code.name, phone: code.phone });
   }
-  for (const message of store.messages) {
+  for (const message of messages) {
     if (!byStudent.has(message.studentId)) {
       byStudent.set(message.studentId, { name: message.studentName });
     }
   }
   return [...byStudent.entries()]
     .map(([studentId, meta]) =>
-      threadFromMessages(studentId, meta.name, store.messages, meta.phone),
+      threadFromMessages(studentId, meta.name, messages, meta.phone),
     )
     .filter((thread) => thread.messages.length > 0)
     .sort((a, b) => (b.lastAt || "").localeCompare(a.lastAt || ""));
@@ -600,6 +615,21 @@ export async function appendChatMessage(input: {
     // Fall through to the class store write.
   }
   await writeStore(store);
+  const databaseUrl =
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL ||
+    "";
+  const liveDatabase = Boolean(databaseUrl) && !databaseUrl.includes("build:build@127.0.0.1");
+  if (liveDatabase) {
+    try {
+      const { readChatMessageRows } = await import("@/lib/class-db");
+      const saved = await readChatMessageRows(input.studentId);
+      if (!saved?.some((row) => row.id === message.id)) return null;
+    } catch {
+      return null;
+    }
+  }
   return message;
 }
 

@@ -31,9 +31,10 @@ export function ChatThread({
   const formRef = useRef<HTMLFormElement>(null);
   const [pending, setPending] = useState(false);
   const [drafts, setDrafts] = useState<ChatMessage[]>([]);
+  const [sent, setSent] = useState(false);
   const shown = [
     ...messages,
-    ...drafts.filter((item) => !messages.some((message) => message.id === item.id || message.body === item.body)),
+    ...drafts.filter((item) => !messages.some((message) => message.id === item.id)),
   ];
   const lastShownId = shown.at(-1)?.id;
 
@@ -54,27 +55,20 @@ export function ChatThread({
 
   async function onSubmit(formData: FormData) {
     setPending(true);
+    setSent(false);
     try {
     const result =
       role === "student"
         ? await sendStudentChat({ error: null }, formData)
         : await sendTeacherChat({ error: null }, formData);
-    if (result.ok) {
-      const body = String(formData.get("body") ?? "").trim();
+    if (result.ok && result.message) {
       setDrafts((current) => [
         ...current,
-        {
-          id: `local-${Date.now()}`,
-          studentId: studentId ?? "",
-          studentName: studentName ?? "",
-          from: role,
-          body,
-          createdAt: new Date().toISOString(),
-          readByTeacher: role === "teacher",
-          readByStudent: role === "student",
-        },
+        result.message!,
       ]);
       formRef.current?.reset();
+      setSent(true);
+      window.setTimeout(() => setSent(false), 2500);
       router.refresh();
       return;
     }
@@ -158,6 +152,11 @@ export function ChatThread({
           <span className="hidden sm:inline">{t(locale, "chatSend")}</span>
         </button>
       </form>
+      {sent ? (
+        <p className="px-4 pb-3 text-xs font-semibold text-emerald-700" role="status">
+          {locale === "ar" ? "تم إرسال الرسالة وحفظها." : "Message sent and saved."}
+        </p>
+      ) : null}
     </div>
   );
 }
