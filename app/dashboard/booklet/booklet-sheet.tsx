@@ -39,48 +39,49 @@ export function BookletSheet({ locale }: { locale: Locale }) {
           const notes = LESSON_NOTES.filter((note) => note.chapterId === chapter.id);
           return (
             <section key={chapter.id} className="print-break border-t border-primary/10 pt-6">
-              <h3 className="text-xl font-semibold">
-                {chapter.id}. {ar ? chapter.titleAr : chapter.titleEn}
+              <h3 className="text-2xl font-extrabold leading-9">
+                <span dir="ltr" className="me-1 inline-block">{chapter.id}.</span>
+                {ar ? chapter.titleAr : chapter.titleEn}
               </h3>
-              <p className="mt-1 text-sm text-foreground/65">{ar ? chapter.blurbAr : chapter.blurbEn}</p>
+              <p className="mt-2 text-base leading-8 text-foreground/70">{ar ? chapter.blurbAr : chapter.blurbEn}</p>
               {notes.map((note) => {
                 const lesson = chapter.lessons.find((item) => item.id === note.id);
                 const body = ar ? note.bodyAr : note.bodyEn;
                 const terms = ar ? note.termsAr : note.termsEn;
                 return (
-                  <article key={note.id} className="mt-5">
-                    <h4 className="font-semibold leading-8">
+                  <article key={note.id} className="print-keep mt-8 border-t border-primary/10 pt-5">
+                    <h4 className="text-lg font-bold leading-8">
                       <span dir="ltr" className="me-1 inline-block">{note.id}</span>
                       {ar ? lesson?.titleAr : lesson?.titleEn}
                     </h4>
-                    <ul className="mt-2 list-disc space-y-2 ps-5 text-sm leading-7">
+                    <ul className="mt-3 list-disc space-y-3 ps-5 text-base leading-8">
                       {body.map((line) => (
                         <li key={line}>{line}</li>
                       ))}
                     </ul>
-                    <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-primary/60">
+                    <p className="mt-5 text-sm font-bold tracking-wide text-primary">
                       {ar ? "مصطلحات" : "Key terms"}
                     </p>
-                    <ul className="mt-2 space-y-2 text-sm leading-7">
+                    <dl className="mt-3 grid gap-3 sm:grid-cols-2">
                       {terms.map((term) => (
-                        <li key={term.term}>
-                          <strong>{term.term}:</strong> {term.meaning}
-                        </li>
+                        <div key={term.term} className="rounded-xl bg-primary/5 px-4 py-3">
+                          <dt className="text-sm font-bold">{term.term}</dt>
+                          <dd className="mt-1 text-sm leading-7 text-foreground/75">{term.meaning}</dd>
+                        </div>
                       ))}
-                    </ul>
-                    <p className="mt-3 text-sm leading-7">
+                    </dl>
+                    <p className="mt-4 rounded-xl bg-accent/15 px-4 py-3 text-base leading-8">
                       <strong>{ar ? "الخلاصة:" : "Takeaway:"}</strong> {ar ? note.takeawayAr : note.takeawayEn}
                     </p>
                   </article>
                 );
               })}
-              <div className="mt-5 rounded-xl border border-dashed border-primary/25 p-4">
-                <p className="text-sm font-semibold">{ar ? "مساحة حل الحصة / الواجب" : "Class / homework space"}</p>
-                <div className="mt-3 space-y-5 text-foreground/25">
-                  <p>________________________________________________________________</p>
-                  <p>________________________________________________________________</p>
-                  <p>________________________________________________________________</p>
-                  <p>________________________________________________________________</p>
+              <div className="print-keep mt-8 rounded-xl border-2 border-dashed border-primary/25 p-5">
+                <p className="text-base font-bold">{ar ? "مساحة حل الحصة / الواجب" : "Class / homework space"}</p>
+                <div className="mt-4 space-y-5">
+                  {[0, 1, 2, 3, 4].map((line) => (
+                    <span key={line} className="block h-7 border-b border-dashed border-primary/25" />
+                  ))}
                 </div>
               </div>
             </section>
