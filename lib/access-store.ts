@@ -447,7 +447,19 @@ export async function saveHomework(result: HomeworkResult): Promise<void> {
     passed: result.passed || Boolean(previous?.passed),
     submittedAt: score === result.score ? result.submittedAt : (previous?.submittedAt ?? result.submittedAt),
   });
+  const record = store.codes.find((item) => item.id === result.studentId);
+  if (record) {
+    record.points = displayPoints(record.points, result.studentId, store.homework, store.exams);
+  }
   await writeStore(store);
+  if (record) {
+    try {
+      const { setClassCodePoints } = await import("@/lib/class-db");
+      await setClassCodePoints(result.studentId, record.points);
+    } catch {
+      // The store write already kept the homework score.
+    }
+  }
 }
 
 export async function listPassedHomework(studentId: string): Promise<string[]> {

@@ -33,7 +33,7 @@ import { getGame } from "@/lib/games";
 import { after } from "next/server";
 
 function refreshPoints() {
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   revalidatePath("/dashboard/leaderboard");
 }
 

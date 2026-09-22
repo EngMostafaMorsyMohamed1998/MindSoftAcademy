@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnswerReview } from "@/components/answer-review";
 import { HomeworkSlipButton } from "@/components/homework-slip-button";
 import { TrueFalsePick } from "@/components/true-false-pick";
@@ -42,6 +43,7 @@ export function HomeworkPlayer({
   makeupDate?: string;
   dueDate?: string;
 }) {
+  const router = useRouter();
   const [seed, setSeed] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
@@ -65,6 +67,7 @@ export function HomeworkPlayer({
     setSaving(false);
     if ("error" in response) return;
     setResult(response);
+    router.refresh();
   }
 
   if (result) {
