@@ -28,8 +28,12 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(BRAND.siteUrl),
   title: `${BRAND.nameAr} — ${BRAND.subjectAr}`,
   description: `${BRAND.teacherAr} · ${BRAND.titleAr} · ${BRAND.subjectAr} · ${BRAND.gradeAr}`,
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

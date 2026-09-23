@@ -223,7 +223,13 @@ export default async function Page() {
             © {new Date().getFullYear()} {locale === "ar" ? BRAND.nameAr : BRAND.nameEn} ·{" "}
             {locale === "ar" ? BRAND.teacherAr : BRAND.teacherEn}
           </p>
-          <p>{locale === "ar" ? BRAND.subjectAr : BRAND.subjectEn}</p>
+          <p>
+            <a href={BRAND.siteUrl} className="text-white/80 underline-offset-2 hover:underline" dir="ltr">
+              {BRAND.domain}
+            </a>
+            <span className="mx-2 text-white/30">·</span>
+            {locale === "ar" ? BRAND.subjectAr : BRAND.subjectEn}
+          </p>
         </div>
       </footer>
     </div>

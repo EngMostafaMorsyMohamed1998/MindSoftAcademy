@@ -13,4 +13,6 @@ export const BRAND = {
   trackAr: "مسار الهندسة وعلوم الحاسب",
   trackEn: "Engineering and Computer Science",
   phone: "01153464345",
+  domain: "mindsoftacademy.com",
+  siteUrl: "https://mindsoftacademy.com",
 } as const;

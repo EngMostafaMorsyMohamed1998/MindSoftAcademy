@@ -1,4 +1,5 @@
 import type { AccessCode, AttendanceRow, ExamSubmission, HomeworkResult } from "@/lib/access-store";
+import { BRAND } from "@/lib/brand";
 import { CHAPTERS, type ChapterId } from "@/lib/curriculum";
 import { passedObjective } from "@/lib/chapter-progress";
 import { cairoDate, cairoMonth } from "@/lib/class-clock";
@@ -105,10 +106,7 @@ export function buildClassRoster(
 }
 
 export function siteUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://baccalaureate-platform-mind-soft-academy.vercel.app"
-  );
+  return process.env.NEXT_PUBLIC_SITE_URL || BRAND.siteUrl;
 }
 
 export function whatsappHref(phone: string, text: string): string {
