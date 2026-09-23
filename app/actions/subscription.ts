@@ -35,7 +35,7 @@ export async function submitWalletSubscription(
 
   const proof = formData.get("proof");
   if (!(proof instanceof File) || proof.size < 32) return { error: "ارفع صورة التحويل." };
-  if (proof.size > 900_000) return { error: "صورة التحويل كبيرة. صوّر الشاشة تاني أو قصّها." };
+  if (proof.size > 2_000_000) return { error: "صورة التحويل كبيرة. صوّر الشاشة تاني أو قصّها." };
 
   const bytes = Buffer.from(await proof.arrayBuffer());
   const mime = sniffImage(bytes);
@@ -61,11 +61,12 @@ export async function submitWalletSubscription(
     });
   } catch (error) {
     console.error("subscription request failed", error);
-    const message = error instanceof Error ? error.message : "";
+    const message = error instanceof Error ? error.message.trim() : "";
     return {
-      error: message.startsWith("حفظ الطلب")
-        ? message
-        : "حصلت مشكلة في حفظ الطلب. حاول تاني.",
+      error:
+        message && !/^[A-Z_]+$/.test(message)
+          ? message
+          : "حفظ الطلب وقف. حدّث الصفحة وحاول تاني.",
     };
   }
 

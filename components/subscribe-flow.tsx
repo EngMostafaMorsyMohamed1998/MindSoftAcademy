@@ -116,13 +116,18 @@ export function SubscribeFlow({
     data.set("studentName", name);
     data.set("senderPhone", phone);
     data.set("proof", proof);
-    const result = await submitWalletSubscription({ error: null }, data);
-    setPending(false);
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      const result = await submitWalletSubscription({ error: null }, data);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setStep("sent");
+    } catch {
+      setError("حفظ الطلب وقف. حدّث الصفحة وحاول تاني.");
+    } finally {
+      setPending(false);
     }
-    setStep("sent");
   }
 
   return (
