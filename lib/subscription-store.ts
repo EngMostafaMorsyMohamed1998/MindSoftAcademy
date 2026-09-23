@@ -125,6 +125,57 @@ function ensureTable(): Promise<boolean> {
   return tableReady;
 }
 
+function saveError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : "";
+  if (/P1001|Can't reach database|ECONNREFUSED|timeout/i.test(message)) {
+    return new Error("حفظ الطلب وقف لأن السيرفر مش قادر يوصل لقاعدة البيانات.");
+  }
+  if (/42P01|does not exist/i.test(message)) {
+    return new Error("حفظ الطلب وقف لأن جدول الطلبات مش موجود.");
+  }
+  if (/22001|too large|payload/i.test(message)) {
+    return new Error("حفظ الطلب وقف لأن صورة التحويل كبيرة. صوّر الشاشة تاني.");
+  }
+  return new Error("حفظ الطلب وقف. حاول تاني.");
+}
+
+async function insertSubscriptionRow(record: StoredRequest, proofData: string): Promise<void> {
+  const data = {
+    id: record.id,
+    plan: record.plan,
+    amount: record.amount,
+    wallet: record.wallet,
+    senderPhone: record.senderPhone,
+    studentName: record.studentName,
+    studentId: record.studentId,
+    proofMime: record.proofMime,
+    proofData,
+    status: record.status,
+    createdAt: record.createdAt,
+    reviewedAt: record.reviewedAt,
+  };
+  const client = prisma as typeof prisma & {
+    classSubscriptionRequest?: {
+      create: (args: { data: typeof data }) => Promise<unknown>;
+    };
+  };
+  if (client.classSubscriptionRequest?.create) {
+    await client.classSubscriptionRequest.create({ data });
+    return;
+  }
+  await prisma.$executeRaw`
+    INSERT INTO "ClassSubscriptionRequest" (
+      "id", "plan", "amount", "wallet", "senderPhone", "studentName", "studentId",
+      "proofMime", "proofData", "status", "createdAt", "reviewedAt"
+    ) VALUES (
+      ${data.id}, ${data.plan}, ${data.amount}, ${data.wallet}, ${data.senderPhone},
+      ${data.studentName}, ${data.studentId}, ${data.proofMime}, ${data.proofData},
+      ${data.status}, ${data.createdAt}, ${data.reviewedAt}
+    )
+    ON CONFLICT ("id") DO NOTHING
+  `;
+}
+
 function viewOf(row: StoredRequest): SubscriptionRequestView {
   return {
     id: row.id,
@@ -194,27 +245,22 @@ export async function addSubscriptionRequest(input: {
     reviewedAt: null,
   };
 
-  if (await ensureTable()) {
+  if (!skipDatabase()) {
     const proofData = input.proof.toString("base64");
-    try {
-      await prisma.$executeRaw`
-        INSERT INTO "ClassSubscriptionRequest" (
-          "id", "plan", "amount", "wallet", "senderPhone", "studentName", "studentId",
-          "proofMime", "proofData", "status", "createdAt", "reviewedAt"
-        ) VALUES (
-          ${record.id}, ${record.plan}, ${record.amount}, ${record.wallet}, ${record.senderPhone},
-          ${record.studentName}, ${record.studentId}, ${record.proofMime}, ${proofData},
-          ${record.status}, ${record.createdAt}, ${record.reviewedAt}
-        )
-        ON CONFLICT ("id") DO NOTHING
-      `;
-      return viewOf(record);
-    } catch {
-      if (!skipDatabase()) throw new Error("SAVE");
+    let lastError: unknown = null;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (attempt === 1) tableReady = null;
+      if (!(await ensureTable())) continue;
+      try {
+        await insertSubscriptionRow(record, proofData);
+        return viewOf(record);
+      } catch (error) {
+        lastError = error;
+      }
     }
+    console.error("subscription save failed", lastError);
+    throw saveError(lastError);
   }
-
-  if (!skipDatabase()) throw new Error("SAVE");
   await enqueue(async () => {
     await mkdir(path.dirname(proofPath(record.id)), { recursive: true });
     await writeFile(proofPath(record.id), input.proof);

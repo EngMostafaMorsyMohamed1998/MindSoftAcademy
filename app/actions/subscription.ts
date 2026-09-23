@@ -59,8 +59,14 @@ export async function submitWalletSubscription(
       proofMime: mime,
       proof: bytes,
     });
-  } catch {
-    return { error: "حصلت مشكلة في حفظ الطلب. حاول تاني." };
+  } catch (error) {
+    console.error("subscription request failed", error);
+    const message = error instanceof Error ? error.message : "";
+    return {
+      error: message.startsWith("حفظ الطلب")
+        ? message
+        : "حصلت مشكلة في حفظ الطلب. حاول تاني.",
+    };
   }
 
   revalidatePath("/admin");

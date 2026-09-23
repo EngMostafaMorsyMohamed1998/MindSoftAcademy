@@ -398,3 +398,18 @@ model ClassCommunityLike {
   @@unique([postId, studentId])
   @@index([postId])
 }
+
+model ClassSubscriptionRequest {
+  id          String  @id
+  plan        String
+  amount      Int
+  wallet      String
+  senderPhone String
+  studentName String
+  studentId   String?
+  proofMime   String
+  proofData   String
+  status      String  @default("pending")
+  createdAt   String
+  reviewedAt  String?
+}
