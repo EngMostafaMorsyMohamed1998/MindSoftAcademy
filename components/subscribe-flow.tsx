@@ -323,7 +323,7 @@ export function SubscribeFlow({
           </p>
           <p className="mt-1 text-center text-sm text-foreground/55">{plan.label}</p>
           <p className="mx-auto mt-4 max-w-sm text-center text-sm leading-relaxed text-foreground/75">
-            ادفع المبلغ كاش في الحصة مع المدرس. مفيش تحويل، ومفيش صورة. المدرس بيسجّل السداد من سجل الاشتراك في المكتبة.
+            ادفع المبلغ كاش في الحصة مع المدرس. مفيش تحويل، ومفيش صورة. المدرس بيأكد السداد من المكتبة ويبعتلك كود التفعيل.
           </p>
           <button
             type="button"
@@ -342,7 +342,7 @@ export function SubscribeFlow({
           </span>
           <h2 className="mt-4 text-lg font-semibold">وصل طلب التحويل</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-foreground/70">
-            المدرس هيراجع صورة التحويل ويأكد الاشتراك. لحد ما يتأكد، السداد مش بيتسجل لوحده.
+            المدرس هيأكد التحويل ويبعتلك كود التفعيل على واتساب. بعد التفعيل تفتح المنصة من صفحة التفعيل.
           </p>
           <Link
             href="/"

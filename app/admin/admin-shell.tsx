@@ -299,7 +299,7 @@ export function AdminShell({
 
   const dailyTabs: { id: Tab; label: string; icon: typeof KeyRound; count?: number }[] = [
     { id: "roster", label: t(locale, "tabRoster"), icon: Users, count: roster.length },
-    { id: "codes", label: t(locale, "tabCodes"), icon: KeyRound, count: unusedCodes || codes.length },
+    { id: "codes", label: t(locale, "tabCodes"), icon: KeyRound, count: subscriptionRequests.filter((row) => row.status === "pending").length || unusedCodes || codes.length },
     { id: "class", label: t(locale, "tabClass"), icon: ClipboardCheck },
     { id: "grades", label: t(locale, "tabGrades"), icon: Printer, count: pendingEssays || homeworkBehind || undefined },
   ];
@@ -969,6 +969,7 @@ export function AdminShell({
 
       {tab === "codes" ? (
         <div className="mt-6 space-y-6">
+          <SubscriptionInbox requests={subscriptionRequests} locale={locale} />
           <section>
             <h2 className="text-lg font-semibold">{t(locale, "codesListTitle")}</h2>
             <div className="mt-3 flex flex-wrap gap-2">

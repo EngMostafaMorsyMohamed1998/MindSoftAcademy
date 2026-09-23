@@ -729,17 +729,34 @@ async function persistPayments(rows: MonthPayment[]): Promise<void> {
 }
 
 export async function setMonthPaid(input: { studentId: string; paid: boolean }): Promise<void> {
-  const month = cairoMonth();
-  const rows = await listPayments();
-  const next = rows.filter((row) => !(row.studentId === input.studentId && row.month === month));
-  next.unshift({
+  await setMonthsPaid({
     studentId: input.studentId,
-    month,
+    months: [cairoMonth()],
     paid: input.paid,
-    updatedAt: new Date().toISOString(),
   });
+}
+
+export async function setMonthsPaid(input: {
+  studentId: string;
+  months: string[];
+  paid?: boolean;
+}): Promise<void> {
+  const paid = input.paid !== false;
+  const months = [...new Set(input.months.filter((month) => /^\d{4}-\d{2}$/.test(month)))];
+  if (!months.length) return;
+  const rows = await listPayments();
+  const now = new Date().toISOString();
+  const next = rows.filter((row) => !(row.studentId === input.studentId && months.includes(row.month)));
+  for (const month of months) {
+    next.unshift({
+      studentId: input.studentId,
+      month,
+      paid,
+      updatedAt: now,
+    });
+  }
   await persistPayments(next);
-  if (!input.paid) return;
+  if (!paid) return;
   const store = await readStore();
   const record = store.codes.find((item) => item.id === input.studentId);
   if (record?.suspendedAt && (!record.suspendReason || record.suspendReason === "اشتراك")) {
