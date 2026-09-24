@@ -19,6 +19,9 @@ type SurpriseState = {
   needsLogin?: boolean;
 };
 
+const SURPRISE_LIVE_MS = 1000;
+const SURPRISE_IDLE_MS = 12000;
+
 export function SurpriseCatcher({ locale }: { locale: Locale }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -26,24 +29,51 @@ export function SurpriseCatcher({ locale }: { locale: Locale }) {
   const [pending, setPending] = useState(false);
   const hide = pathname.startsWith("/admin");
 
+  // This catcher lives in the root layout, so a fixed one-second poll would ask
+  // the class database once a second for every open page. Only run that fast
+  // while a question is actually live.
   useEffect(() => {
     if (hide) return;
     let cancelled = false;
+    let timer = 0;
+    let live = false;
+
     async function pull() {
       try {
         const response = await fetch("/api/surprise", { cache: "no-store", credentials: "same-origin" });
         if (!response.ok) return;
         const body = (await response.json()) as SurpriseState;
-        if (!cancelled) setState(body);
+        if (cancelled) return;
+        live = Boolean(body.open);
+        setState(body);
       } catch {
         // Keep the last snapshot if the poll fails.
       }
     }
-    void pull();
-    const id = window.setInterval(() => void pull(), 1000);
+
+    function schedule() {
+      timer = window.setTimeout(async () => {
+        if (!document.hidden) await pull();
+        if (!cancelled) schedule();
+      }, live ? SURPRISE_LIVE_MS : SURPRISE_IDLE_MS);
+    }
+
+    function onVisible() {
+      if (document.hidden || cancelled) return;
+      window.clearTimeout(timer);
+      void pull().then(() => {
+        if (!cancelled) schedule();
+      });
+    }
+
+    void pull().then(() => {
+      if (!cancelled) schedule();
+    });
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [hide]);
 

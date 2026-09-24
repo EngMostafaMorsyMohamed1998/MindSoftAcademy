@@ -13,6 +13,9 @@ import type { ChatMessage } from "@/lib/access-store";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 
+const POLL_MIN_MS = 4000;
+const POLL_MAX_MS = 30000;
+
 export function ChatThread({
   locale,
   role,
@@ -48,10 +51,33 @@ export function ChatThread({
     else if (studentId) void markTeacherChatRead(studentId);
   }, [role, studentId, messages.length]);
 
+  // A fixed poll costs a database read every few seconds per open tab. Start
+  // fast, slow down while the thread is quiet, and stop while the tab is hidden.
   useEffect(() => {
-    const timer = window.setInterval(() => router.refresh(), 4000);
-    return () => window.clearInterval(timer);
-  }, [router]);
+    let delay = POLL_MIN_MS;
+    let timer = 0;
+
+    function tick() {
+      if (!document.hidden) router.refresh();
+      delay = Math.min(POLL_MAX_MS, Math.round(delay * 1.6));
+      timer = window.setTimeout(tick, delay);
+    }
+
+    function onVisible() {
+      if (document.hidden) return;
+      delay = POLL_MIN_MS;
+      window.clearTimeout(timer);
+      router.refresh();
+      timer = window.setTimeout(tick, delay);
+    }
+
+    timer = window.setTimeout(tick, delay);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [router, lastShownId]);
 
   async function onSubmit(formData: FormData) {
     setPending(true);

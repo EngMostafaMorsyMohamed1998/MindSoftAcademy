@@ -15,10 +15,16 @@ import {
 
 type Step = "plan" | "method" | "proof" | "class" | "sent";
 
+const PROOF_MAX_EDGE = 1280;
+const PROOF_TARGET_BYTES = 220_000;
+
+function encodeJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> {
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+}
+
 async function shrinkProof(file: File): Promise<File> {
   const bitmap = await createImageBitmap(file);
-  const maxEdge = 1400;
-  const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, PROOF_MAX_EDGE / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(bitmap.width * scale));
   canvas.height = Math.max(1, Math.round(bitmap.height * scale));
@@ -26,14 +32,18 @@ async function shrinkProof(file: File): Promise<File> {
   if (!ctx) throw new Error("canvas");
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.72));
-  if (!blob) throw new Error("blob");
-  const finalBlob =
-    blob.size > 850_000
-      ? await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.5))
-      : blob;
-  if (!finalBlob) throw new Error("blob");
-  return new File([finalBlob], "proof.jpg", { type: "image/jpeg" });
+
+  // Every proof is kept inside the class database, so step the quality down
+  // until the receipt fits the budget while the amount stays readable.
+  let best: Blob | null = null;
+  for (const quality of [0.7, 0.58, 0.46, 0.36]) {
+    const blob = await encodeJpeg(canvas, quality);
+    if (!blob) continue;
+    best = blob;
+    if (blob.size <= PROOF_TARGET_BYTES) break;
+  }
+  if (!best) throw new Error("blob");
+  return new File([best], "proof.jpg", { type: "image/jpeg" });
 }
 
 export function SubscribeFlow({
