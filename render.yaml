@@ -6,12 +6,15 @@ services:
     region: frankfurt
     buildCommand: npm ci && npm run build
     startCommand: npm start
-    healthCheckPath: /
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: "22"
       - key: NEXT_PUBLIC_SITE_URL
         value: https://mindsoftacademy.com
+      # Point this at a mounted disk to keep the class store across restarts.
+      - key: DATA_DIR
+        value: /var/data
       # Postgres. Set the pooled URI here and the direct URI on DIRECT_URL.
       - key: DATABASE_URL
         sync: false

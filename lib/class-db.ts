@@ -1,4 +1,7 @@
+import { mkdir } from "node:fs/promises";
 import { readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { dataPath } from "@/lib/data-dir";
 import { prisma } from "@/lib/prisma";
 import type { StoreFile } from "@/lib/access-store-io";
 import type {
@@ -1451,7 +1454,7 @@ export async function ensureExampleTables(): Promise<boolean> {
   }
 }
 
-const EXAMPLE_FILE = "/tmp/mindsoft-lesson-examples.json";
+const EXAMPLE_FILE = dataPath("mindsoft-lesson-examples.json");
 
 async function readLocalExamples(): Promise<ClassLessonExample[]> {
   try {
@@ -1463,6 +1466,7 @@ async function readLocalExamples(): Promise<ClassLessonExample[]> {
 
 async function writeLocalExamples(examples: ClassLessonExample[]): Promise<boolean> {
   try {
+    await mkdir(path.dirname(EXAMPLE_FILE), { recursive: true });
     await writeFile(EXAMPLE_FILE, JSON.stringify(parseClassExamples(examples)), "utf8");
     return true;
   } catch {
@@ -1516,7 +1520,7 @@ export async function writeExampleRows(examples: ClassLessonExample[]): Promise<
   }
 }
 
-const COMMUNITY_FILE = "/tmp/mindsoft-community.json";
+const COMMUNITY_FILE = dataPath("mindsoft-community.json");
 const COMMUNITY_BLOB = "mindsoft-community.json";
 
 type CommunityStore = {
@@ -1562,6 +1566,7 @@ async function readLocalCommunity(): Promise<CommunityStore> {
 
 async function writeLocalCommunity(store: CommunityStore): Promise<boolean> {
   try {
+    await mkdir(path.dirname(COMMUNITY_FILE), { recursive: true });
     await writeFile(COMMUNITY_FILE, JSON.stringify(store), "utf8");
     return true;
   } catch {

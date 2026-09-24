@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import { dataPath } from "@/lib/data-dir";
 import type {
   AccessCode,
   AttendanceRow,
@@ -60,10 +61,7 @@ export type StoreFile = {
 const BLOB_KEY = "mindsoft-access-store.json";
 
 function localPath(): string {
-  if (process.env.VERCEL) {
-    return path.join("/tmp", BLOB_KEY);
-  }
-  return path.join(process.cwd(), "data", "access-store.json");
+  return dataPath("access-store.json");
 }
 
 export function emptyStore(): StoreFile {
