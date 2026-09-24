@@ -4,6 +4,7 @@ import { BRAND } from "@/lib/brand";
 import { getLocale, localeDir } from "@/lib/locale";
 import { getTheme } from "@/lib/theme";
 import { SurpriseCatcher } from "@/components/surprise-catcher";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,6 +54,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       >
         {children}
         <SurpriseCatcher locale={locale} />
+        <SpeedInsights />
       </body>
     </html>
   );
