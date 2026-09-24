@@ -1,5 +1,5 @@
 import { cookies, headers } from "next/headers";
-import { claimStudentDevice, getCodeById, getDeviceLimit, listDevices } from "@/lib/access-store";
+import { claimStudentDevice, getCodeById, getDeviceLimit, getStudentTrack, listDevices } from "@/lib/access-store";
 import { canRegisterDevice, deviceLabel, isDeviceId, newDeviceId } from "@/lib/devices";
 import { DEVICE_COOKIE, DEVICE_COOKIE_MAX_AGE, STUDENT_COOKIE } from "@/lib/session-cookies";
 import {
@@ -31,7 +31,14 @@ export async function getStudentSession(): Promise<(StudentSession & { points: n
       track: record.track === "en" ? "en" : "ar",
     };
   }
-  return { ...session, points: 0, exams, homework, unlocks, track: "ar" };
+  return {
+    ...session,
+    points: 0,
+    exams,
+    homework,
+    unlocks,
+    track: await getStudentTrack(session.id),
+  };
 }
 
 export async function setStudentCookie(record: {

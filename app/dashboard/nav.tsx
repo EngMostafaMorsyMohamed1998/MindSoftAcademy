@@ -19,6 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { FontScaleToggle } from "@/components/font-scale-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "./logout-button";
 import type { CurrentUser } from "@/lib/current-user";
@@ -118,10 +119,14 @@ export function DashboardNav({
         </nav>
         <div className="shrink-0 border-t border-white/10 px-3 py-2">
           <div className="flex items-center gap-2">
+            <FontScaleToggle
+              locale={locale}
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/15"
+            />
             <ThemeToggle
               theme={theme}
               locale={locale}
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/15"
             />
             <p className="min-w-0 flex-1 truncate text-[10px] leading-4 text-white/45" title={t(locale, "trackLocked")}>
               {t(locale, "trackLabel")}: {t(locale, track === "en" ? "trackEn" : "trackAr")}
@@ -156,6 +161,10 @@ export function DashboardNav({
       <header className="no-print sticky top-0 z-40 flex h-16 min-w-0 items-center justify-between gap-2 border-b-2 border-accent bg-nav px-4 text-nav-fg shadow-md md:hidden">
         <BrandMark locale={locale} href="/dashboard" compact />
         <div className="flex shrink-0 items-center gap-1.5">
+          <FontScaleToggle
+            locale={locale}
+            className="inline-flex size-9 items-center justify-center rounded-full border-2 border-primary/20 bg-primary text-white dark:border-accent/40 dark:bg-accent dark:text-primary-dark"
+          />
           <ThemeToggle
             theme={theme}
             locale={locale}

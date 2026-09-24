@@ -70,9 +70,38 @@ function readableMarks(text: string): string {
     .replace(/\s*>\s*/g, " > ");
 }
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * A swap can echo a word the sentence already had, so "قناة TLS مشفّرة" becomes
+ * "قناة قناة مشفّرة مشفّرة". Only swapped phrases are collapsed, so a real
+ * repetition such as "كلمة كلمة" survives.
+ */
+const AR_ECHOES: [RegExp, string][] = AR_SWAPS.flatMap(([, swap]) => {
+  const words = swap.split(" ");
+  const head = words[0] ?? "";
+  const tail = words[words.length - 1] ?? "";
+  const phrase = escapeRegex(swap);
+  const rules: [RegExp, string][] = [[new RegExp(`${phrase}(?:\\s+${phrase})+`, "g"), swap]];
+  if (words.length > 1) {
+    rules.push([new RegExp(`${escapeRegex(head)}\\s+${phrase}`, "g"), swap]);
+    rules.push([new RegExp(`${phrase}\\s+${escapeRegex(tail)}(?![\\u0600-\\u06FF])`, "g"), swap]);
+  }
+  return rules;
+});
+
+function collapseSwapEchoes(text: string): string {
+  let next = text;
+  for (const [pattern, swap] of AR_ECHOES) next = next.replace(pattern, swap);
+  return next;
+}
+
 export function cleanArabic(text: string): string {
   let next = readableMarks(text);
   for (const [pattern, swap] of AR_SWAPS) next = next.replace(pattern, swap);
+  next = collapseSwapEchoes(next);
   if (!hasArabic(next)) next = next.replace(LATIN_WORD, "");
   next = next
     .replace(/\(\s*\)/g, "")

@@ -318,6 +318,16 @@ async function persistCodeTrack(studentId: string, track: "ar" | "en", code?: st
   }
 }
 
+/** Resolves a student's stream when the class store lost their code record. */
+export async function getStudentTrack(studentId: string): Promise<"ar" | "en"> {
+  try {
+    const { readCodeTracks } = await import("@/lib/class-db");
+    return (await readCodeTracks()).get(studentId) ?? "ar";
+  } catch {
+    return "ar";
+  }
+}
+
 export async function setStudentTrack(studentId: string, track: "ar" | "en", code?: string): Promise<void> {
   const store = await readStore();
   const next = track === "en" ? "en" : "ar";
@@ -614,21 +624,10 @@ export async function appendChatMessage(input: {
   } catch {
     // Fall through to the class store write.
   }
-  await writeStore(store);
-  const databaseUrl =
-    process.env.DATABASE_URL ||
-    process.env.POSTGRES_PRISMA_URL ||
-    process.env.POSTGRES_URL ||
-    "";
-  const liveDatabase = Boolean(databaseUrl) && !databaseUrl.includes("build:build@127.0.0.1");
-  if (liveDatabase) {
-    try {
-      const { readChatMessageRows } = await import("@/lib/class-db");
-      const saved = await readChatMessageRows(input.studentId);
-      if (!saved?.some((row) => row.id === message.id)) return null;
-    } catch {
-      return null;
-    }
+  try {
+    await writeStore(store);
+  } catch {
+    return null;
   }
   return message;
 }

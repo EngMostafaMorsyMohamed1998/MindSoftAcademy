@@ -53,6 +53,7 @@ import { CertificateCard } from "@/components/certificate-card";
 import { CertificatePrintButton } from "@/components/certificate-print-button";
 import { PresenceBoard } from "@/components/presence-board";
 import { SubscriptionInbox } from "@/components/subscription-inbox";
+import { SystemStatusCard } from "@/components/system-status-card";
 import { SurpriseBoard } from "@/components/surprise-board";
 import { ESSAY_MARKS, markForGrade } from "@/lib/essay-marks";
 import { surpriseOpen, surpriseRemaining, type SurpriseAnswer, type SurpriseQuestion } from "@/lib/surprise";
@@ -60,6 +61,7 @@ import { weekdayName, type WeekSlot } from "@/lib/week-plan";
 import type { ClassGroup } from "@/lib/class-groups";
 import type { MissBoardRow } from "@/lib/miss-board";
 import type { SubscriptionRequestView } from "@/lib/subscription";
+import type { SystemHealthReport } from "@/app/actions/system-health";
 
 const initial: FormState = { error: null };
 
@@ -94,6 +96,7 @@ export function AdminShell({
   homework,
   examples,
   subscriptionRequests = [],
+  healthReport = null,
   initialTab = "roster",
 }: {
   locale: Locale;
@@ -124,6 +127,7 @@ export function AdminShell({
   homework: HomeworkResult[];
   examples: ClassLessonExample[];
   subscriptionRequests?: SubscriptionRequestView[];
+  healthReport?: SystemHealthReport | null;
   initialTab?: Tab;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -1561,6 +1565,7 @@ export function AdminShell({
 
       {tab === "tools" ? (
         <div className="mt-6 space-y-6">
+          <SystemStatusCard initialReport={healthReport} />
           <p className="text-sm text-foreground/60">{t(locale, "toolsLead")}</p>
           <section className="rounded-3xl bg-white p-5 ring-1 ring-primary/10">
             <h2 className="text-lg font-semibold">{t(locale, "telegramTitle")}</h2>

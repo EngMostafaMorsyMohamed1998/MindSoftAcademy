@@ -3,6 +3,8 @@ import { EXTRA_HOMEWORK } from "../lib/homework-extra";
 import { questionsForLesson, LESSON_HOMEWORK_SIZE, pickLessonHomework } from "../lib/homework-bank";
 import { examForChapter, EXAM_OBJECTIVE_COUNT } from "../lib/exams";
 import { CHAPTERS } from "../lib/curriculum";
+import { assessLessonIds, assessmentsForLesson } from "../lib/assessments-bank";
+import { BANK_FACTS, BANK_ANALYSIS } from "../lib/question-bank/index";
 
 const problems: string[] = [];
 
@@ -44,6 +46,41 @@ for (const chapter of CHAPTERS) {
   }
 }
 
+// Check ministry assessments
+for (const lessonId of assessLessonIds()) {
+  for (const row of assessmentsForLesson(lessonId)) {
+    if (!row.promptAr?.trim()) {
+      problems.push(`assess ${row.id}: empty prompt`);
+    }
+    if (row.kind === "mcq") {
+      const opts = row.optionsAr ?? [];
+      if (opts.length < 2) problems.push(`assess ${row.id}: too few options`);
+      if (row.correctIndex === undefined || row.correctIndex < 0 || row.correctIndex >= opts.length) {
+        problems.push(`assess ${row.id}: invalid correctIndex (${row.correctIndex})`);
+      }
+    }
+    if (row.kind === "essay" && !row.guideAr?.trim()) {
+      problems.push(`assess ${row.id}: missing essay guide`);
+    }
+  }
+}
+
+// Check curriculum facts and analysis prompts
+for (const fact of BANK_FACTS) {
+  if (!fact.claimAr?.trim() || !fact.whyAr?.trim()) {
+    problems.push(`fact ${fact.id}: missing claim or why`);
+  }
+  if (fact.wrongAr.some((w) => !w?.trim())) {
+    problems.push(`fact ${fact.id}: empty wrong option`);
+  }
+}
+
+for (const item of BANK_ANALYSIS) {
+  if (!item.promptAr?.trim() || !item.guideAr?.trim()) {
+    problems.push(`analysis ${item.id}: missing prompt or guide`);
+  }
+}
+
 if (problems.length) {
   console.error(problems.join("\n"));
   console.error(`\nfailed: ${problems.length}`);
@@ -51,5 +88,5 @@ if (problems.length) {
 }
 
 console.log(
-  `ok: ${LESSON_NOTES.length} lessons, extras ${EXTRA_HOMEWORK.length}, homework ${LESSON_HOMEWORK_SIZE}`,
+  `ok: ${LESSON_NOTES.length} lessons, ${BANK_FACTS.length} facts, ${BANK_ANALYSIS.length} analysis, ${assessLessonIds().length} assessment sets`,
 );

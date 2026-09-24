@@ -463,7 +463,7 @@ export const CHAPTER_2_FACTS: BankFact[] = [
     whyEn: "The internal layer assumes the perimeter may fall and then splits paths between services.",
     termAr: "الأمن متعدد الطبقات",
     termEn: "Layered security",
-    wrongAr: ["اجعل كل الغرف في eth واحد بلا فلاتر", "انقل جدار الحماية إلى درج المكتب واعتبر الداخل آمنًا تلقائيًا", "اسمح لأي جهاز داخلي أن يمسح الشبكة كلها"],
+    wrongAr: ["اجعل كل الغرف في شبكة محلية واحدة (Ethernet) بلا فلاتر", "انقل جدار الحماية إلى درج المكتب واعتبر الداخل آمنًا تلقائيًا", "اسمح لأي جهاز داخلي أن يمسح الشبكة كلها"],
     wrongEn: ["Put every room on one Ethernet with no filters", "Move the firewall into a desk drawer and treat the inside as automatically safe", "Let any inner device scan the whole network"],
   },
   {

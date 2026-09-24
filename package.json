@@ -5,9 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "node scripts/prisma-generate.mjs",
-    "build": "node scripts/prisma-generate.mjs && node scripts/prisma-migrate.mjs && next build",
+    "build": "node scripts/prisma-generate.mjs && node scripts/prisma-migrate.mjs && tsx scripts/check-questions.ts && next build",
     "start": "next start",
     "lint": "eslint",
+    "check:content": "tsx scripts/check-questions.ts",
     "books:fetch": "node scripts/fetch-books.mjs",
     "server": "npm run start --prefix server",
     "server:dev": "npm run dev --prefix server",

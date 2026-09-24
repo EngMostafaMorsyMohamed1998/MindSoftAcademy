@@ -1531,7 +1531,7 @@ async function writeBlobCommunity(store: CommunityStore): Promise<boolean> {
 async function persistCommunityFallback(store: CommunityStore): Promise<boolean> {
   const localOk = await writeLocalCommunity(store);
   const blobOk = await writeBlobCommunity(store);
-  return blobOk || (localOk && !process.env.VERCEL);
+  return blobOk || localOk;
 }
 
 async function runCommunitySql(sql: string): Promise<void> {
