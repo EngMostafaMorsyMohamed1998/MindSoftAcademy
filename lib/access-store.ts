@@ -556,44 +556,69 @@ function threadFromMessages(
 }
 
 export async function listStudentMessages(studentId: string): Promise<ChatMessage[]> {
+  const store = await readStore();
+  const storeMessages = store.messages.filter((item) => item.studentId === studentId);
+  let dedicated: ChatMessage[] = [];
   try {
     const { readChatMessageRows } = await import("@/lib/class-db");
-    const dedicated = await readChatMessageRows(studentId);
-    if (dedicated) return dedicated;
+    dedicated = (await readChatMessageRows(studentId)) ?? [];
   } catch {
     // Fall through to the shared store when the database is unavailable.
   }
-  const store = await readStore();
-  return store.messages
-    .filter((item) => item.studentId === studentId)
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const merged = new Map<string, ChatMessage>();
+  for (const item of [...storeMessages, ...dedicated]) {
+    merged.set(item.id, item);
+  }
+  return [...merged.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
 export async function listChatThreads(): Promise<ChatThread[]> {
   const store = await readStore();
-  let messages = store.messages;
+  let dedicated: ChatMessage[] = [];
   try {
     const { readChatMessageRows } = await import("@/lib/class-db");
-    const dedicated = await readChatMessageRows();
-    if (dedicated) messages = dedicated;
+    dedicated = (await readChatMessageRows()) ?? [];
   } catch {
     // Fall through to the shared store when the database is unavailable.
   }
-  const byStudent = new Map<string, { name: string; phone?: string }>();
-  for (const code of store.codes) {
-    byStudent.set(code.id, { name: code.name, phone: code.phone });
+  const merged = new Map<string, ChatMessage>();
+  for (const item of [...store.messages, ...dedicated]) {
+    merged.set(item.id, item);
   }
-  for (const message of messages) {
+  const allMessages = [...merged.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+  const byStudent = new Map<string, { name: string; phone?: string }>();
+  try {
+    const { listVisibleCodes } = await import("@/lib/teacher-roster");
+    const visibleCodes = await listVisibleCodes();
+    for (const code of visibleCodes) {
+      byStudent.set(code.id, { name: code.name, phone: code.phone });
+    }
+  } catch {
+    for (const code of store.codes) {
+      byStudent.set(code.id, { name: code.name, phone: code.phone });
+    }
+  }
+
+  for (const message of allMessages) {
     if (!byStudent.has(message.studentId)) {
       byStudent.set(message.studentId, { name: message.studentName });
     }
   }
+
   return [...byStudent.entries()]
     .map(([studentId, meta]) =>
-      threadFromMessages(studentId, meta.name, messages, meta.phone),
+      threadFromMessages(studentId, meta.name, allMessages, meta.phone),
     )
-    .filter((thread) => thread.messages.length > 0)
-    .sort((a, b) => (b.lastAt || "").localeCompare(a.lastAt || ""));
+    .sort((a, b) => {
+      if (b.unreadForTeacher !== a.unreadForTeacher) {
+        return b.unreadForTeacher - a.unreadForTeacher;
+      }
+      if (b.messages.length > 0 && a.messages.length === 0) return -1;
+      if (a.messages.length > 0 && b.messages.length === 0) return 1;
+      if (b.lastAt && a.lastAt) return b.lastAt.localeCompare(a.lastAt);
+      return a.studentName.localeCompare(b.studentName);
+    });
 }
 
 export async function appendChatMessage(input: {

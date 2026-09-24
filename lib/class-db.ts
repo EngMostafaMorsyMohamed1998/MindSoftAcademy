@@ -664,31 +664,85 @@ export async function ensureChatTable(): Promise<boolean> {
   }
 }
 
+const MSG_PREFIX = "msg-";
+
+async function insertFallbackChatMessage(message: ChatMessage): Promise<boolean> {
+  if (!hasLiveDatabase()) return false;
+  const payload = JSON.stringify(message);
+  const id = `${MSG_PREFIX}${message.id}`;
+  try {
+    await prisma.$executeRaw`
+      INSERT INTO "ClassSurprise" ("id", "payload")
+      VALUES (${id}, ${payload})
+      ON CONFLICT ("id") DO UPDATE SET "payload" = EXCLUDED."payload"
+    `;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function readFallbackChatMessages(studentId?: string): Promise<ChatMessage[]> {
+  if (!hasLiveDatabase()) return [];
+  try {
+    const rows = await prisma.$queryRaw<Array<{ id: string; payload: string }>>`
+      SELECT "id", "payload" FROM "ClassSurprise" WHERE "id" LIKE ${`${MSG_PREFIX}%`}
+    `;
+    const list: ChatMessage[] = [];
+    for (const row of rows) {
+      try {
+        const parsed = JSON.parse(row.payload) as ChatMessage;
+        if (parsed && typeof parsed.id === "string" && typeof parsed.body === "string") {
+          if (!studentId || parsed.studentId === studentId) {
+            list.push(parsed);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return list;
+  } catch {
+    return [];
+  }
+}
+
 export async function readChatMessageRows(studentId?: string): Promise<ChatMessage[] | null> {
   if (!hasLiveDatabase()) return null;
+  const map = new Map<string, ChatMessage>();
   await ensureChatTable();
   try {
     const rows = await prisma.classMessage.findMany({
       where: studentId ? { studentId } : undefined,
       orderBy: { createdAt: "asc" },
     });
-    return rows.map((row) => ({
-      id: row.id,
-      studentId: row.studentId,
-      studentName: row.studentName,
-      from: row.from === "teacher" ? "teacher" : "student",
-      body: row.body,
-      createdAt: row.createdAt.toISOString(),
-      readByTeacher: row.readByTeacher,
-      readByStudent: row.readByStudent,
-    }));
+    for (const row of rows) {
+      map.set(row.id, {
+        id: row.id,
+        studentId: row.studentId,
+        studentName: row.studentName,
+        from: row.from === "teacher" ? "teacher" : "student",
+        body: row.body,
+        createdAt: row.createdAt.toISOString(),
+        readByTeacher: row.readByTeacher,
+        readByStudent: row.readByStudent,
+      });
+    }
   } catch {
-    return null;
+    // Dedicated table may be temporarily unreachable
   }
+  const fallback = await readFallbackChatMessages(studentId);
+  for (const m of fallback) {
+    if (!map.has(m.id)) {
+      map.set(m.id, m);
+    }
+  }
+  return [...map.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
 export async function insertChatMessageRow(message: ChatMessage): Promise<boolean> {
   if (!hasLiveDatabase()) return false;
+  let saved = false;
   await ensureChatTable();
   try {
     await prisma.classMessage.create({
@@ -703,18 +757,20 @@ export async function insertChatMessageRow(message: ChatMessage): Promise<boolea
         readByStudent: message.readByStudent,
       },
     });
-    return true;
+    saved = true;
   } catch {
     try {
       await prisma.$executeRaw`
         INSERT INTO "ClassMessage" ("id","studentId","studentName","from","body","createdAt","readByTeacher","readByStudent")
         VALUES (${message.id}, ${message.studentId}, ${message.studentName}, ${message.from}, ${message.body}, ${asDate(message.createdAt)}, ${message.readByTeacher}, ${message.readByStudent})
       `;
-      return true;
+      saved = true;
     } catch {
-      return false;
+      // try fallback below
     }
   }
+  const fallbackOk = await insertFallbackChatMessage(message);
+  return saved || fallbackOk;
 }
 
 export async function markChatReadRows(studentId: string, reader: "student" | "teacher"): Promise<boolean> {
@@ -732,10 +788,28 @@ export async function markChatReadRows(studentId: string, reader: "student" | "t
         data: { readByStudent: true },
       });
     }
-    return true;
   } catch {
-    return false;
+    // ignore
   }
+  try {
+    const fallback = await readFallbackChatMessages(studentId);
+    for (const msg of fallback) {
+      let changed = false;
+      if (reader === "teacher" && msg.from === "student" && !msg.readByTeacher) {
+        msg.readByTeacher = true;
+        changed = true;
+      } else if (reader === "student" && msg.from === "teacher" && !msg.readByStudent) {
+        msg.readByStudent = true;
+        changed = true;
+      }
+      if (changed) {
+        await insertFallbackChatMessage(msg);
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return true;
 }
 
 export async function upsertHomeworkRow(row: HomeworkResult): Promise<boolean> {
