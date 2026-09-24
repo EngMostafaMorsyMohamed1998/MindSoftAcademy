@@ -144,8 +144,8 @@ export function SystemStatusCard({
             </div>
             <div className="h-6 w-px bg-primary/10" />
             <div>
-              <p className="text-base font-bold text-accent">{report?.subscriptionCount ?? 0}</p>
-              <p className="text-[10px] text-foreground/50">طلبات اشتراك</p>
+              <p className="text-base font-bold text-accent">{report?.paidCount ?? 0}</p>
+              <p className="text-[10px] text-foreground/50">سدادات مسجّلة</p>
             </div>
             <div className="h-6 w-px bg-primary/10" />
             <div>

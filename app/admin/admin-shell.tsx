@@ -52,7 +52,7 @@ import { HomeworkSlipButton } from "@/components/homework-slip-button";
 import { CertificateCard } from "@/components/certificate-card";
 import { CertificatePrintButton } from "@/components/certificate-print-button";
 import { PresenceBoard } from "@/components/presence-board";
-import { SubscriptionInbox } from "@/components/subscription-inbox";
+import { ClassPaymentDesk } from "@/components/class-payment-desk";
 import { SystemStatusCard } from "@/components/system-status-card";
 import { SurpriseBoard } from "@/components/surprise-board";
 import { ESSAY_MARKS, markForGrade } from "@/lib/essay-marks";
@@ -60,7 +60,6 @@ import { surpriseOpen, surpriseRemaining, type SurpriseAnswer, type SurpriseQues
 import { weekdayName, type WeekSlot } from "@/lib/week-plan";
 import type { ClassGroup } from "@/lib/class-groups";
 import type { MissBoardRow } from "@/lib/miss-board";
-import type { SubscriptionRequestView } from "@/lib/subscription";
 import type { SystemHealthReport } from "@/app/actions/system-health";
 
 const initial: FormState = { error: null };
@@ -95,7 +94,6 @@ export function AdminShell({
   month,
   homework,
   examples,
-  subscriptionRequests = [],
   healthReport = null,
   initialTab = "roster",
 }: {
@@ -126,7 +124,6 @@ export function AdminShell({
   month: string;
   homework: HomeworkResult[];
   examples: ClassLessonExample[];
-  subscriptionRequests?: SubscriptionRequestView[];
   healthReport?: SystemHealthReport | null;
   initialTab?: Tab;
 }) {
@@ -303,7 +300,7 @@ export function AdminShell({
 
   const dailyTabs: { id: Tab; label: string; icon: typeof KeyRound; count?: number }[] = [
     { id: "roster", label: t(locale, "tabRoster"), icon: Users, count: roster.length },
-    { id: "codes", label: t(locale, "tabCodes"), icon: KeyRound, count: subscriptionRequests.filter((row) => row.status === "pending").length || unusedCodes || codes.length },
+    { id: "codes", label: t(locale, "tabCodes"), icon: KeyRound, count: unusedCodes || codes.length },
     { id: "class", label: t(locale, "tabClass"), icon: ClipboardCheck },
     { id: "grades", label: t(locale, "tabGrades"), icon: Printer, count: pendingEssays || homeworkBehind || undefined },
   ];
@@ -973,7 +970,7 @@ export function AdminShell({
 
       {tab === "codes" ? (
         <div className="mt-6 space-y-6">
-          <SubscriptionInbox requests={subscriptionRequests} locale={locale} />
+          <ClassPaymentDesk locale={locale} />
           <section>
             <h2 className="text-lg font-semibold">{t(locale, "codesListTitle")}</h2>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -1798,7 +1795,6 @@ export function AdminShell({
               </tbody>
             </table>
           </div>
-          <SubscriptionInbox requests={subscriptionRequests} locale={locale} />
         </section>
       ) : null}
     </div>

@@ -45,12 +45,6 @@ export default async function Page() {
           <div className="flex items-center gap-2">
             <HeaderTools locale={locale} theme={theme} />
             <Link
-              href="/subscribe"
-              className="inline-flex items-center justify-center px-2 py-2 text-xs font-semibold text-primary sm:px-3"
-            >
-              اشتراك الكورس
-            </Link>
-            <Link
               href="/admin/login"
               className="hidden items-center justify-center rounded-full border border-primary/20 px-3 py-2 text-xs font-semibold text-primary sm:inline-flex"
             >

@@ -16,7 +16,6 @@ import { getLocale } from "@/lib/locale";
 import { getTheme } from "@/lib/theme";
 import { LogoutButton } from "@/app/dashboard/logout-button";
 import { connection } from "next/server";
-import { listSubscriptionRequests } from "@/lib/subscription-store";
 import { checkSystemHealth } from "@/app/actions/system-health";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +33,7 @@ export default async function AdminPage({
     tab === "certificates" || tab === "class" || tab === "groups" || tab === "codes" || tab === "roster" || tab === "grades" || tab === "profit" || tab === "tools"
       ? tab
       : "roster";
-  const [codes, exams, homework, attendance, payments, announcement, examWindow, weekPlan, classGroups, misses, sessions, essayGrades, monthlyFee, surprise, certificates, telegramLinks, devices, deviceLimit, telegramUsername, teacherChatId, examples, subscriptionRequests, healthReport] = await Promise.all([
+  const [codes, exams, homework, attendance, payments, announcement, examWindow, weekPlan, classGroups, misses, sessions, essayGrades, monthlyFee, surprise, certificates, telegramLinks, devices, deviceLimit, telegramUsername, teacherChatId, examples, healthReport] = await Promise.all([
     listVisibleCodes(),
     listExams(),
     listHomeworkResults(),
@@ -56,7 +55,6 @@ export default async function AdminPage({
     fetchTelegramBotUsername(),
     getTeacherTelegramChatId(),
     listLessonExamples(),
-    listSubscriptionRequests(),
     checkSystemHealth(),
   ]);
   const surpriseAnswers = surprise ? await listSurpriseAnswers(surprise.id) : [];
@@ -119,7 +117,6 @@ export default async function AdminPage({
           month={cairoMonth()}
           homework={homework}
           examples={examples}
-          subscriptionRequests={subscriptionRequests}
           healthReport={healthReport}
         />
       </main>

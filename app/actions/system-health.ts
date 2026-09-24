@@ -3,7 +3,6 @@
 import { isTeacher } from "@/lib/teacher-session";
 import { prisma } from "@/lib/prisma";
 import { readStore } from "@/lib/access-store-io";
-import { listSubscriptionRequests } from "@/lib/subscription-store";
 
 export type SystemHealthReport = {
   dbConnected: boolean;
@@ -11,7 +10,7 @@ export type SystemHealthReport = {
   dbError: string | null;
   blobConfigured: boolean;
   studentCount: number;
-  subscriptionCount: number;
+  paidCount: number;
   messageCount: number;
   checkedAt: string;
 };
@@ -33,10 +32,7 @@ export async function checkSystemHealth(): Promise<SystemHealthReport | null> {
     dbError = error instanceof Error ? error.message.slice(0, 120) : "تعذر الاتصال بقاعدة البيانات";
   }
 
-  const [store, subscriptions] = await Promise.all([
-    readStore().catch(() => null),
-    listSubscriptionRequests().catch(() => []),
-  ]);
+  const store = await readStore().catch(() => null);
 
   return {
     dbConnected,
@@ -44,7 +40,7 @@ export async function checkSystemHealth(): Promise<SystemHealthReport | null> {
     dbError,
     blobConfigured: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
     studentCount: store?.codes?.length ?? 0,
-    subscriptionCount: subscriptions.length,
+    paidCount: store?.payments?.filter((row) => row.paid).length ?? 0,
     messageCount: store?.messages?.length ?? 0,
     checkedAt: new Date().toISOString(),
   };
@@ -58,15 +54,11 @@ export async function exportFullDataBackup(): Promise<{
 }> {
   if (!(await isTeacher())) return { ok: false, error: "المراجعة للمدرس فقط" };
   try {
-    const [store, subscriptions] = await Promise.all([
-      readStore(),
-      listSubscriptionRequests(),
-    ]);
+    const store = await readStore();
 
     const backup = {
       exportedAt: new Date().toISOString(),
       platform: "MindSoft Academy",
-      subscriptions,
       codes: store.codes,
       payments: store.payments,
       homework: store.homework,
