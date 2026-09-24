@@ -4,7 +4,9 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: npm ci && npm run build
+    # The build needs TypeScript, Tailwind, and tsx, which live in devDependencies,
+    # and the host sets NODE_ENV=production, so ask for them explicitly.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
