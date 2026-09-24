@@ -954,18 +954,45 @@ function preferSurprise(
   return Date.parse(left.closesAt) >= Date.parse(right.closesAt) ? left : right;
 }
 
+/**
+ * Every student page polls the surprise, and reading the whole class store on
+ * each poll costs about twenty queries. Hold the answer for a few seconds and
+ * clear it whenever the question changes.
+ */
+const SURPRISE_TTL_MS = 5000;
+let surpriseCache: { at: number; question: SurpriseQuestion | null } | null = null;
+let surpriseAnswersCache: { at: number; rows: SurpriseAnswer[] } | null = null;
+
+function clearSurpriseCache(): void {
+  surpriseCache = null;
+  surpriseAnswersCache = null;
+}
+
 export async function getSurprise(): Promise<SurpriseQuestion | null> {
+  if (surpriseCache && Date.now() - surpriseCache.at < SURPRISE_TTL_MS) {
+    return surpriseCache.question;
+  }
   const dedicated = await dedicatedSurprise();
   const fromStore = parseSurprise((await readStore()).surprise);
   const fromLocal = parseSurprise((await readLocalStore())?.surprise);
-  return preferSurprise(preferSurprise(dedicated?.question ?? null, fromStore), fromLocal);
+  const question = preferSurprise(
+    preferSurprise(dedicated?.question ?? null, fromStore),
+    fromLocal,
+  );
+  surpriseCache = { at: Date.now(), question };
+  return question;
 }
 
 export async function listSurpriseAnswers(surpriseId?: string): Promise<SurpriseAnswer[]> {
+  if (surpriseAnswersCache && Date.now() - surpriseAnswersCache.at < SURPRISE_TTL_MS) {
+    const cached = surpriseAnswersCache.rows;
+    return surpriseId ? cached.filter((row) => row.surpriseId === surpriseId) : cached;
+  }
   const dedicated = await dedicatedSurprise();
   const rows = dedicated?.answers.length
     ? dedicated.answers
     : parseSurpriseAnswers((await readStore()).surpriseAnswers);
+  surpriseAnswersCache = { at: Date.now(), rows };
   return surpriseId ? rows.filter((row) => row.surpriseId === surpriseId) : rows;
 }
 
@@ -997,6 +1024,7 @@ export async function startSurprise(chapterId: ChapterId): Promise<SurpriseQuest
   store.surprise = question;
   store.surpriseAnswers = [];
   await writeStore(store, { replaceSurprise: true });
+  clearSurpriseCache();
   return question;
 }
 
@@ -1015,6 +1043,7 @@ export async function closeSurprise(): Promise<void> {
     store.surprise = { ...store.surprise, closesAt: new Date().toISOString() };
   }
   await writeStore(store, { replaceSurprise: true });
+  clearSurpriseCache();
 }
 
 export async function answerSurprise(input: {
@@ -1047,6 +1076,7 @@ export async function answerSurprise(input: {
   store.surprise = question;
   store.surpriseAnswers = [...current, row];
   await writeStore(store, { replaceSurprise: true });
+  clearSurpriseCache();
   return row;
 }
 
