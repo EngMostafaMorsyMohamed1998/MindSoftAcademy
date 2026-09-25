@@ -1,0 +1,25 @@
+# Firebase App Hosting runs this Next.js app on Cloud Run.
+# Secrets such as DATABASE_URL and AUTH_SECRET are set in the Firebase console,
+# not in this file.
+runConfig:
+  cpu: 1
+  memoryMiB: 1024
+  minInstances: 0
+  maxInstances: 4
+  concurrency: 40
+
+env:
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://mindsoftacademy.com
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_TELEGRAM_BOT
+    value: mindsoft_academy_bot
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: TELEGRAM_BOT_USERNAME
+    value: mindsoft_academy_bot
+    availability:
+      - RUNTIME
